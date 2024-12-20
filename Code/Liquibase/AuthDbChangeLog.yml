@@ -294,3 +294,14 @@ databaseChangeLog:
                   type: INT
                   constraints:
                     nullable: false
+  - changeSet:
+      id: add-session-index
+      author: seogyoung
+      changes:
+        - createIndex:
+            indexName: Session_Key_Index
+            tableName: Session
+            columns:
+              - column:
+                  name: Key
+                  

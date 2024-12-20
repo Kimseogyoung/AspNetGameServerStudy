@@ -29,9 +29,13 @@ namespace WebStudyServer
             DapperExtension.Init<ChannelModel>("Key");
             DapperExtension.Init<DeviceModel>("Key");
             DapperExtension.Init<SessionModel>("AccountId");
+            DapperExtension.Init<PlayerMapModel>("AccountId");
 
             DapperExtension.Init<PlayerModel>("Id");
-            DapperExtension.Init<PlayerMapModel>("AccountId");
+            DapperExtension.Init<CookieModel>("PlayerId", "Num");
+            DapperExtension.Init<KingdomObjModel>("Id");
+            DapperExtension.Init<PointModel>("PlayerId", "Num");
+            DapperExtension.Init<TicketModel>("PlayerId", "Num");
         }
 
         private void AddRepo<TRepo>(IServiceCollection services) where TRepo : RepoBase

@@ -139,4 +139,267 @@ databaseChangeLog:
                   type: DOUBLE 
                   constraints:
                     nullable: false
+  - changeSet:
+      id: create-cookie-table
+      author: seogyoung
+      changes:
+        - createTable:
+            tableName: Cookie
+            columns:
+              - column:
+                  name: PlayerId
+                  type: BIGINT UNSIGNED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: Num
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: StarExp
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: AccStarExp
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: Star
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: Flag
+                  type: BIGINT UNSIGNED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: State
+                  type: INT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            columnNames: PlayerId, Num
+            tableName: Cookie      
+  - changeSet:
+      id: create-kingdomobj-table
+      author: seogyoung
+      changes:
+        - createTable:
+            tableName: KingdomObj
+            columns:
+              - column:
+                  name: Id
+                  type: BIGINT UNSIGNED
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: PlayerId
+                  type: BIGINT UNSIGNED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: Type
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: Num
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: State
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: EndTime
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: StartTileX
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: StartTileY
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: EndTileX
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: EndTileY
+                  type: INT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: KingdomObj_Key_Index
+            tableName: KingdomObj
+            columns:
+              - column:
+                  name: PlayerId
+              - column:
+                  name: Num
+        - addAutoIncrement:
+            tableName: KingdomObj
+            columnDataType:  BIGINT UNSIGNED
+            columnName: Id
+            defaultOnNull: false
+            generationType: ALWAYS
+            startWith: 1
+  - changeSet:
+      id: create-point-table
+      author: seogyoung
+      changes:
+        - createTable:
+            tableName: Point
+            columns:
+              - column:
+                  name: PlayerId
+                  type: BIGINT UNSIGNED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: Num
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: Amount
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: AccAmount
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            columnNames: PlayerId, Num
+            tableName: Point
+  - changeSet:
+      id: create-ticket-table
+      author: seogyoung
+      changes:
+        - createTable:
+            tableName: Ticket
+            columns:
+              - column:
+                  name: PlayerId
+                  type: BIGINT UNSIGNED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: Num
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: Amount
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: AccAmount
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: EndTime
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            columnNames: PlayerId, Num
+            tableName: Ticket
+  - changeSet:
+      id: create-time-column
+      author: seogyoung
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: Cookie
+            baseColumnNames: PlayerId
+            referencedTableName: Player
+            referencedColumnNames: Id
+            constraintName: FK_Cookie_Player
+        - addForeignKeyConstraint:
+            baseTableName: KingdomObj
+            baseColumnNames: PlayerId
+            referencedTableName: Player
+            referencedColumnNames: Id
+            constraintName: FK_KingdomObj_Player
+        - addForeignKeyConstraint:
+            baseTableName: Point
+            baseColumnNames: PlayerId
+            referencedTableName: Player
+            referencedColumnNames: Id
+            constraintName: FK_Point_Player
+        - addForeignKeyConstraint:
+            baseTableName: Ticket
+            baseColumnNames: PlayerId
+            referencedTableName: Player
+            referencedColumnNames: Id
+            constraintName: FK_Ticket_Player
+        - addColumn:
+            tableName: Cookie
+            columns:
+              - column:
+                  name: UpdateTime
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: CreateTime
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: KingdomObj
+            columns:
+              - column:
+                  name: UpdateTime
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: CreateTime
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: Point
+            columns:
+              - column:
+                  name: UpdateTime
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: CreateTime
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: Ticket
+            columns:
+              - column:
+                  name: UpdateTime
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: CreateTime
+                  type: DATETIME
+                  constraints:
+                    nullable: false
               

@@ -62,4 +62,26 @@ namespace Proto
         PREPARED = 1,
         CHANGED_NAME_FIRST = 2,
     }
+
+    public enum EKingdomObjType
+    {
+        NONE = 0,
+        STRUCTURE = 1, // 건물
+        DECORATION = 2, // 기타 장식물 등
+    }
+
+    public enum EKingdomObjState
+    {
+        NONE = 0,
+        CONSTRUCTING = 1,
+        READY = 2,
+        IN_PROGRESS = 3,
+        STORED = 4          // 창고에 보관 중
+    }
+
+    public enum ECookieState
+    {
+        NONE = 0,
+        AVAILABLE = 1 
+    }
 }
