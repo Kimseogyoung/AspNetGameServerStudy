@@ -1,5 +1,5 @@
 using ProtoBuf;
-
+using Proto;
 namespace Protocol
 {
 	[ProtoContract]

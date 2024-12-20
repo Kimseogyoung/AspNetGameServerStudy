@@ -3,6 +3,14 @@
     "ClassGenerator": {
       "commandName": "Project",
       "commandLineArgs": "--xlsxPath \"..\\..\\Data\\Excel\\Packet\" --csvPath \"..\\..\\Data\\Csv\\Packet\" --outputPath \"..\\Protocol\\Packet\""
+    },
+    "PacketGenerater": {
+      "commandName": "Project",
+      "commandLineArgs": "--type \"Packet\" --xlsxPath \"..\\..\\Data\\Excel\\Packet\" --csvPath \"..\\..\\Data\\Csv\\Packet\" --outputPath \"..\\Protocol\\Packet\""
+    },
+    "ModelGenerater": {
+      "commandName": "Project",
+      "commandLineArgs": "--type \"Model\" --xlsxPath \"..\\..\\Data\\Excel\\Model\" --csvPath \"..\\..\\Data\\Csv\\Model\" --mdlOutputPath \"..\\Server\\Model\" --pakOutputPath \"..\\Protocol\\Packet\\Model\" --liquibaseOutputPath \"..\\Liquibase\""
     }
   }
 }

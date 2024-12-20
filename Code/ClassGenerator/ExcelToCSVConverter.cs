@@ -1,4 +1,6 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System.Linq;
 using System.Text;
 
 namespace ClassGenerator
@@ -24,16 +26,26 @@ namespace ClassGenerator
                     }
 
                     bool isFirstRow = true;
-
+                    var headerColCnt = 0;
                     // 각 행(row)을 순차적으로 처리
                     foreach (var row in worksheet.Rows())
                     {
+                        if (isFirstRow)
+                        {
+                            var headerValues = row.Cells().Select(x => x.Value.ToString());
+                            headerColCnt = headerValues.Count();
+                            isFirstRow = false; // 첫 번째 행 처리 완료
+                            csvContent.AppendLine(string.Join(",", headerValues));
+                            continue;
+                        }
+
                         // 각 셀(cell)을 순차적으로 처리하고, 값 가져오기
                         var cellValues = new List<string>();
-                        foreach (var cell in row.Cells())
+                        for (var colNum = 1; colNum <= headerColCnt; colNum++)
                         {
                             // 셀 값을 CSV 형식으로 추가 (콤마로 구분)
-                            string cellValue = cell.Value.ToString().Replace(",", ""); // 콤마 포함 방지
+                            var cell = row.Cell(colNum);
+                            var cellValue = cell.Value.ToString().Replace(",", ""); // 콤마 포함 방지
                             cellValues.Add(cellValue);
                         }
 
@@ -47,15 +59,7 @@ namespace ClassGenerator
                         }
 
                         // 첫 번째 행이 아니면 줄바꿈 추가
-                        if (!isFirstRow)
-                        {
-                            csvContent.AppendLine(string.Join(",", cellValues));
-                        }
-                        else
-                        {
-                            isFirstRow = false; // 첫 번째 행 처리 완료
-                            csvContent.AppendLine(string.Join(",", cellValues));
-                        }
+                        csvContent.AppendLine(string.Join(",", cellValues));
                     }
 
                     // 워크시트 처리 후 빈 줄 추가 (워크시트 간 구분)

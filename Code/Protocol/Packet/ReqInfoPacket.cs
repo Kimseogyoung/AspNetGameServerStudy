@@ -6,8 +6,8 @@ namespace Protocol
 	public partial class ReqInfoPacket
 	{
     
-        [ProtoMember(1)]
-        public long Seq { get; set; }
+    		[ProtoMember(1)]
+    		public long Seq { get; set; }
         
 	}
 }

@@ -4,88 +4,16 @@ using System.Security.Cryptography;
 
 namespace ClassGenerator
 {
-    class Generator
+    class PacketGenerator
     {
-        public static void Main(string[] args)
+        public static void Run(string csvPath, string outputPath)
         {
-            // 기본 값 설정
-            string argXlsxPath = "";
-            string argCsvPath = "";
-            string argOutputPath = "";
-
-            var projectPath = GetProjPath();
-
-            // 명령줄 인수 처리
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (args[i] == "--xlsxPath" && i + 1 < args.Length)
-                {
-                    argXlsxPath = args[i + 1];
-                }
-                else if (args[i] == "--csvPath" && i + 1 < args.Length)
-                {
-                    argCsvPath = args[i + 1];
-                }
-                else if (args[i] == "--outputPath" && i + 1 < args.Length)
-                {
-                    argOutputPath = args[i + 1];
-                }
-            }
-
-            string xlsxPath = Path.Join(projectPath, argXlsxPath);
-            string csvPath = Path.Join(projectPath, argCsvPath);
-            string outputPath = Path.Join(projectPath, argOutputPath);
-
-            if (string.IsNullOrEmpty(xlsxPath))
-            {
-                throw new Exception("NULL_EMPTY_XLSX");
-            }
-
-            if (string.IsNullOrEmpty(csvPath))
-            {
-                throw new Exception("NULL_EMPTY_CSV");
-            }
-
-            if (string.IsNullOrEmpty(outputPath))
-            {
-                throw new Exception("NULL_EMPTY__OUTPUT");
-            }
-
-            ConvertXlsxToCsv(xlsxPath, csvPath);
-
             // CSV 파일 읽기
-            var classDefList = ParseCsv(xlsxPath);
+            var classDefList = ParseCsv(csvPath);
             GenerateClasses(classDefList, outputPath);
         }
 
-        public static List<ClassDefinition> ConvertXlsxToCsv(string xlsxPath, string csvPath)
-        {
-            var files = Directory.GetFiles(xlsxPath);
-            var classDefinitionList = new List<ClassDefinition>();
-
-            // 디렉토리가 없으면 생성
-            var csvDirectoryPath = Path.GetDirectoryName(csvPath);
-            if (!string.IsNullOrEmpty(csvDirectoryPath) && !Directory.Exists(csvDirectoryPath))
-            {
-                Directory.CreateDirectory(csvDirectoryPath);
-            }
-
-            foreach (var file in files)
-            {
-                if (!file.EndsWith(".xlsx"))
-                {
-                    continue;
-                }
-
-                var fileName = Path.GetFileName(file).Replace("xlsx", "csv");
-
-                var filePath = Path.Join(csvDirectoryPath, fileName);
-                ExcelToCSVConverter.ConvertExcelToCSV(file, filePath);
-            }
-            return classDefinitionList;
-        }
-
-        public static List<ClassDefinition> ParseCsv(string csvPath)
+        private static List<ClassDefinition> ParseCsv(string csvPath)
         {
             var files = Directory.GetFiles(csvPath);
             var classDefinitionList = new List<ClassDefinition>();
@@ -103,7 +31,9 @@ namespace ClassGenerator
                 for (int i = 1; i < lines.Length; i++)
                 {
                     var values = lines[i].Split(',');
-                    if (values[0].StartsWith("#"))
+                    values = values.Concat(Enumerable.Repeat("", c_maxColCnt - values.Length)).ToArray(); 
+
+                    if (string.IsNullOrEmpty(lines[i]) || values[0].StartsWith("#"))
                     {
                         // 주석 무시
                         continue;
@@ -116,7 +46,7 @@ namespace ClassGenerator
                         {
                             ClassInfo = classInfo,
                             ClassName = values[1],
-                            ProtocolName = values.Length > 6 ? values[6] : string.Empty
+                            ProtocolName = values[6]
                         });
                     }
                     else
@@ -136,14 +66,12 @@ namespace ClassGenerator
             return classDefinitionList;
         }
 
-        public static void GenerateClasses(List<ClassDefinition> classDefinitions, string output)
+        private static void GenerateClasses(List<ClassDefinition> classDefinitions, string output)
         {
             var projectPath = GetProjPath();
             string templatePath = Path.Join(projectPath, "Template");
-            string basicTemplatePath = Path.Join(templatePath, "PacketTemplate.txt");
             string reqTemplatePath = Path.Join(templatePath, "ReqPacketTemplate.txt");
             string resTemplatePath = Path.Join(templatePath, "ResPacketTemplate.txt");
-            _pakTemplate = File.ReadAllText(basicTemplatePath);
             _reqPakTemplate = File.ReadAllText(reqTemplatePath);
             _resPakTemplate = File.ReadAllText(resTemplatePath);
 
@@ -182,7 +110,6 @@ namespace ClassGenerator
                         defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ResInfoPacket", Idx = 1 , FieldValue = "= new();" });
                         break;
                     default:
-                        template = _pakTemplate;
                         break;
                 }
 
@@ -235,7 +162,7 @@ namespace ClassGenerator
             return projectPath == null? string.Empty : projectPath;
         }
 
-        private static string _pakTemplate = string.Empty;
+        private const int c_maxColCnt = 7;
         private static string _reqPakTemplate = string.Empty;
         private static string _resPakTemplate = string.Empty;
     }
