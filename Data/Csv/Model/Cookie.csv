@@ -1,0 +1,9 @@
+Name,Type,Value,Desc,ProtocolType,Key
+PlayerId,BIGINT UNSIGNED,,,Model,pk fk
+Num,INT,,,,pk
+StarExp,INT,,,,
+AccStarExp,INT,,,,
+Star,INT,,,,
+Flag,INT,,,,
+State,ENUM:ECookieState,,,,
+

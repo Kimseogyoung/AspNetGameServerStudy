@@ -72,5 +72,14 @@ namespace Protocol
     		
     		public List<KingdomObjPacket> KingdomObjList { get; set; } = default; //
         
+    		
+    		public List<CookiePacket> CookieList { get; set; } = default; //
+        
+    		
+    		public List<PointPacket> PointList { get; set; } = default; //
+        
+    		
+    		public List<TicketPacket> TicketList { get; set; } = default; //
+        
 	}
 }

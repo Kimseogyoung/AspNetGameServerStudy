@@ -21,4 +21,7 @@ FreeCash,DOUBLE,,,,
 AccRealCash,DOUBLE,,,Model,
 AccFreeCash,DOUBLE,,,Model,
 KingdomObjList,LIST:KingdomObjPacket,,,Packet,
+CookieList,LIST:CookiePacket,,,Packet,
+PointList,LIST:PointPacket,,,Packet,
+TicketList,LIST:TicketPacket,,,Packet,
 
