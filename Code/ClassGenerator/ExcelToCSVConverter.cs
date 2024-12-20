@@ -70,6 +70,12 @@ namespace ClassGenerator
                 }
 
                 // CSV 파일로 저장
+                var dirPath = Path.GetDirectoryName(csvFilePath);
+                if (!string.IsNullOrEmpty(dirPath) && !Directory.Exists(dirPath))
+                {
+                    Directory.CreateDirectory(dirPath);
+                }
+
                 File.WriteAllText(csvFilePath, csvContent.ToString());
             }
 

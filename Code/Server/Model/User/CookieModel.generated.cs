@@ -1,9 +1,10 @@
 using ProtoBuf;
 using Proto;
-namespace Protocol
+
+namespace WebStudyServer.Model
 {
 	
-	public partial class CookieModel
+	public partial class CookieModel : ModelBase
 	{
     
     		

@@ -104,7 +104,8 @@ namespace ClassGenerator
 
         private static List<ClassDefinition> ConvertXlsxToCsv(string xlsxPath, string csvPath)
         {
-            var files = Directory.GetFiles(xlsxPath);
+            var rootDirName = Path.GetFileName(csvPath);
+            var files = Directory.GetFiles(xlsxPath, "*.xlsx", SearchOption.AllDirectories);
             var classDefinitionList = new List<ClassDefinition>();
 
             // 디렉토리가 없으면 생성
@@ -113,17 +114,14 @@ namespace ClassGenerator
                 Directory.CreateDirectory(csvPath);
             }
 
-            foreach (var file in files)
+            foreach (var xlsxFile in files)
             {
-                if (!file.EndsWith(".xlsx"))
-                {
-                    continue;
-                }
+                var dirName = Path.GetFileName(Path.GetDirectoryName(xlsxFile));
+                var csvDirName = rootDirName == dirName ? "" : dirName;
+                var csvFileName = Path.GetFileName(xlsxFile).Replace("xlsx", "csv");
 
-                var fileName = Path.GetFileName(file).Replace("xlsx", "csv");
-
-                var filePath = Path.Join(csvPath, fileName);
-                ExcelToCSVConverter.ConvertExcelToCSV(file, filePath);
+                var filePath = Path.Join(csvPath, csvDirName, csvFileName);
+                ExcelToCSVConverter.ConvertExcelToCSV(xlsxFile, filePath);
             }
             return classDefinitionList;
         }

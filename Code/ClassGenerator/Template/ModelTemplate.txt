@@ -1,9 +1,10 @@
 using ProtoBuf;
 using Proto;
-namespace Protocol
+
+namespace WebStudyServer.Model
 {
 	{{ClassAttribute}}
-	public partial class {{ClassName}}
+	public partial class {{ClassName}} : ModelBase
 	{
     {{ for field in Fields }}
 		{{field.Attribute}}

@@ -16,16 +16,13 @@ namespace ClassGenerator
 
         public static List<ModelDefinition> ParseCsv(string csvPath)
         {
-            var files = Directory.GetFiles(csvPath);
+            var rootDirName = Path.GetFileName(csvPath);
+            var files = Directory.GetFiles(csvPath, "*.csv", SearchOption.AllDirectories);
             var classDefinitionList = new List<ModelDefinition>();
 
             foreach (var file in files)
             {
-                if (!file.EndsWith(".csv"))
-                {
-                    continue;
-                }
-
+                var dirName = Path.GetFileName(Path.GetDirectoryName(file));
                 var lines = File.ReadAllLines(file);
                 var className = Path.GetFileName(file).Replace(".csv", "");
 
@@ -41,6 +38,7 @@ namespace ClassGenerator
                         continue;
                     }
 
+                    var folderName = dirName != rootDirName ? dirName : "";
                     var fieldName = values[0];
                     var typeArr = values[1].Split(":");
                     var fieldType = typeArr[0];
@@ -98,6 +96,7 @@ namespace ClassGenerator
 
                     classDefinitionList.Add(new ModelDefinition
                     {
+                        FolderName = folderName,
                         ClassName = className,
                         FieldName = fieldName,
                         FieldCodeType = fieldCodeType,
@@ -146,17 +145,23 @@ namespace ClassGenerator
             foreach (var (className, defList) in modelDefListDict)
             {
                 var parsedTemplate = Template.Parse(_mdlTemplate);
-                var fields = new dynamic[defList.Count];
+                var fieldList = new List<dynamic>();
                 for (var i = 0; i < defList.Count; i++)
                 {
-                    fields[i] = new Dictionary<string, object> {
+                    if (defList[i].ProtocolType == "Packet")
+                    {
+                        continue;
+                    }
+
+                    var attribute = $"[ProtoMember({i})]";
+                    var field = new Dictionary<string, object> {
                         {"Type",  defList[i].FieldCodeType },
                         {"Name",  defList[i].FieldName },
                         {"Attribute",  "" },
                         {"Value",  defList[i].FieldValue},
                         {"Desc", defList[i].Description }
                     };
-
+                    fieldList.Add(field);
                 }
 
                 var classNameWithMdl = $"{className}Model";
@@ -164,12 +169,13 @@ namespace ClassGenerator
                 {
                     { "ClassName",  classNameWithMdl},
                     { "ClassAttribute", ""},
-                    { "Fields", fields},
+                    { "Fields", fieldList},
                 };
 
                 var result = parsedTemplate.Render(scriptObject);
                 var fileName = $"{classNameWithMdl}.generated.cs";
-                var outputFilePath = Path.GetFullPath(Path.Join(mdlOutputPath, fileName));
+                var folderName = defList[0].FolderName;
+                var outputFilePath = Path.GetFullPath(Path.Join(mdlOutputPath, folderName, fileName));
                 var directoryPath = Path.GetDirectoryName(outputFilePath);
 
                 // 디렉토리가 없으면 생성
@@ -227,19 +233,24 @@ namespace ClassGenerator
         {
             foreach (var (className, defList) in modelDefListDict)
             {
-                var parsedTemplate = Template.Parse(_mdlTemplate);
-                var fields = new dynamic[defList.Count];
+                var parsedTemplate = Template.Parse(_pakTemplate);
+                var fieldList = new List<dynamic>();
                 for (var i = 0; i < defList.Count; i++)
                 {
+                    if (defList[i].ProtocolType == "Model")
+                    {
+                        continue;
+                    }
+
                     var attribute = $"[ProtoMember({i})]";
-                    fields[i] = new Dictionary<string, object> {
+                    var field = new Dictionary<string, object> {
                         {"Type",  defList[i].FieldCodeType },
                         {"Name",  defList[i].FieldName },
                         {"Attribute",  attribute },
                         {"Value",  defList[i].FieldValue},
                         {"Desc", defList[i].Description }
                     };
-
+                    fieldList.Add(field);
                 }
 
                 var classNameWithPak = $"{className}Packet";
@@ -247,12 +258,13 @@ namespace ClassGenerator
                 {
                     { "ClassName",  classNameWithPak},
                     { "ClassAttribute", "[ProtoContract]"},
-                    { "Fields", fields},
+                    { "Fields", fieldList},
                 };
 
                 var result = parsedTemplate.Render(scriptObject);
                 var fileName = $"{classNameWithPak}.generated.cs";
-                var outputFilePath = Path.GetFullPath(Path.Join(pakOutputPath, fileName));
+                var folderName = defList[0].FolderName;
+                var outputFilePath = Path.GetFullPath(Path.Join(pakOutputPath, folderName, fileName));
                 var directoryPath = Path.GetDirectoryName(outputFilePath);
 
                 // 디렉토리가 없으면 생성
@@ -281,6 +293,7 @@ namespace ClassGenerator
 
     public class ModelDefinition
     {
+        public string FolderName { get; set; }
         public string ClassName { get; set; }
         public string FieldName { get; set; }
         public string FieldCodeType { get; set; }

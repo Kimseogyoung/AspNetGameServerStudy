@@ -6,12 +6,6 @@ namespace Protocol
 	public partial class PlayerPacket
 	{
     
-    		[ProtoMember(0)]
-    		public ulong Id { get; set; } = default; //
-        
-    		[ProtoMember(1)]
-    		public ulong AccountId { get; set; } = default; //
-        
     		[ProtoMember(2)]
     		public ulong SfId { get; set; } = default; //
         
@@ -29,9 +23,6 @@ namespace Protocol
         
     		[ProtoMember(7)]
     		public int Exp { get; set; } = default; //
-        
-    		[ProtoMember(8)]
-    		public int AccExp { get; set; } = default; //
         
     		[ProtoMember(9)]
     		public int ProfileTitleNum { get; set; } = default; //
@@ -54,20 +45,11 @@ namespace Protocol
     		[ProtoMember(15)]
     		public double Gold { get; set; } = default; //
         
-    		[ProtoMember(16)]
-    		public double AccGold { get; set; } = default; //
-        
     		[ProtoMember(17)]
     		public double RealCash { get; set; } = default; //
         
     		[ProtoMember(18)]
     		public double FreeCash { get; set; } = default; //
-        
-    		[ProtoMember(19)]
-    		public double AccRealCash { get; set; } = default; //
-        
-    		[ProtoMember(20)]
-    		public double AccFreeCash { get; set; } = default; //
         
     		[ProtoMember(21)]
     		public List<KingdomObjPacket> KingdomObjList { get; set; } = default; //

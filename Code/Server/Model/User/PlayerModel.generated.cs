@@ -1,9 +1,10 @@
 using ProtoBuf;
 using Proto;
-namespace Protocol
+
+namespace WebStudyServer.Model
 {
 	
-	public partial class PlayerModel
+	public partial class PlayerModel : ModelBase
 	{
     
     		
@@ -68,18 +69,6 @@ namespace Protocol
         
     		
     		public double AccFreeCash { get; set; } = default; //
-        
-    		
-    		public List<KingdomObjPacket> KingdomObjList { get; set; } = default; //
-        
-    		
-    		public List<CookiePacket> CookieList { get; set; } = default; //
-        
-    		
-    		public List<PointPacket> PointList { get; set; } = default; //
-        
-    		
-    		public List<TicketPacket> TicketList { get; set; } = default; //
         
 	}
 }

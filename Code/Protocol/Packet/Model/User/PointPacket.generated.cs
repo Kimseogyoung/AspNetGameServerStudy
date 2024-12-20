@@ -6,9 +6,6 @@ namespace Protocol
 	public partial class PointPacket
 	{
     
-    		[ProtoMember(0)]
-    		public ulong PlayerId { get; set; } = default; //
-        
     		[ProtoMember(1)]
     		public int Num { get; set; } = default; //
         
