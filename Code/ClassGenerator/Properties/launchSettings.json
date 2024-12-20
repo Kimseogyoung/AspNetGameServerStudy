@@ -2,7 +2,7 @@
   "profiles": {
     "ClassGenerator": {
       "commandName": "Project",
-      "commandLineArgs": "--inputPath \"..\\..\\Csv\\Packet\" --outputPath \"..\\Protocol\\Packet\""
+      "commandLineArgs": "--xlsxPath \"..\\..\\Data\\Excel\\Packet\" --csvPath \"..\\..\\Data\\Csv\\Packet\" --outputPath \"..\\Protocol\\Packet\""
     }
   }
 }

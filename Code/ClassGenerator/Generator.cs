@@ -9,7 +9,8 @@ namespace ClassGenerator
         public static void Main(string[] args)
         {
             // 기본 값 설정
-            string argInputPath = "";
+            string argXlsxPath = "";
+            string argCsvPath = "";
             string argOutputPath = "";
 
             var projectPath = GetProjPath();
@@ -17,9 +18,13 @@ namespace ClassGenerator
             // 명령줄 인수 처리
             for (int i = 0; i < args.Length; i++)
             {
-                if (args[i] == "--inputPath" && i + 1 < args.Length)
+                if (args[i] == "--xlsxPath" && i + 1 < args.Length)
                 {
-                    argInputPath = args[i + 1];
+                    argXlsxPath = args[i + 1];
+                }
+                else if (args[i] == "--csvPath" && i + 1 < args.Length)
+                {
+                    argCsvPath = args[i + 1];
                 }
                 else if (args[i] == "--outputPath" && i + 1 < args.Length)
                 {
@@ -27,12 +32,18 @@ namespace ClassGenerator
                 }
             }
 
-            string inputPath = Path.Join(projectPath, argInputPath);
+            string xlsxPath = Path.Join(projectPath, argXlsxPath);
+            string csvPath = Path.Join(projectPath, argCsvPath);
             string outputPath = Path.Join(projectPath, argOutputPath);
 
-            if (string.IsNullOrEmpty(inputPath))
+            if (string.IsNullOrEmpty(xlsxPath))
             {
-                throw new Exception("NULL_EMPTY_INPUT");
+                throw new Exception("NULL_EMPTY_XLSX");
+            }
+
+            if (string.IsNullOrEmpty(csvPath))
+            {
+                throw new Exception("NULL_EMPTY_CSV");
             }
 
             if (string.IsNullOrEmpty(outputPath))
@@ -40,15 +51,43 @@ namespace ClassGenerator
                 throw new Exception("NULL_EMPTY__OUTPUT");
             }
 
+            ConvertXlsxToCsv(xlsxPath, csvPath);
+
             // CSV 파일 읽기
-            var classDefList = ParseCsv(inputPath);
+            var classDefList = ParseCsv(xlsxPath);
             GenerateClasses(classDefList, outputPath);
         }
 
-
-        public static List<ClassDefinition> ParseCsv(string inputPath)
+        public static List<ClassDefinition> ConvertXlsxToCsv(string xlsxPath, string csvPath)
         {
-            var files = Directory.GetFiles(inputPath);
+            var files = Directory.GetFiles(xlsxPath);
+            var classDefinitionList = new List<ClassDefinition>();
+
+            // 디렉토리가 없으면 생성
+            var csvDirectoryPath = Path.GetDirectoryName(csvPath);
+            if (!string.IsNullOrEmpty(csvDirectoryPath) && !Directory.Exists(csvDirectoryPath))
+            {
+                Directory.CreateDirectory(csvDirectoryPath);
+            }
+
+            foreach (var file in files)
+            {
+                if (!file.EndsWith(".xlsx"))
+                {
+                    continue;
+                }
+
+                var fileName = Path.GetFileName(file).Replace("xlsx", "csv");
+
+                var filePath = Path.Join(csvDirectoryPath, fileName);
+                ExcelToCSVConverter.ConvertExcelToCSV(file, filePath);
+            }
+            return classDefinitionList;
+        }
+
+        public static List<ClassDefinition> ParseCsv(string csvPath)
+        {
+            var files = Directory.GetFiles(csvPath);
             var classDefinitionList = new List<ClassDefinition>();
 
             foreach (var file in files)
