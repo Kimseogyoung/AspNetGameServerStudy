@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
@@ -10,6 +11,7 @@ using WebStudyServer.Component;
 using WebStudyServer.Filter;
 using WebStudyServer.Manager;
 using WebStudyServer.Service;
+using Server.Service;
 
 namespace WebStudyServer
 {
@@ -33,6 +35,7 @@ namespace WebStudyServer
         private void AddFilters(IServiceCollection services)
         {
             services.AddScoped<LogFilter>();
+            services.AddScoped<AuthFilter>();
             services.AddScoped<AuthTransactionFilter>();
             services.AddScoped<UserTransactionFilter>();
         }
@@ -43,6 +46,10 @@ namespace WebStudyServer
             services.AddScoped<UserLockService>();
 
             services.AddScoped<AuthService>();
+            services.AddScoped<GameService>();
+
+            services.AddScoped<UserComponent>();
+            services.AddScoped<PlayerComponent>();
 
             services.AddScoped<AuthComponent>();
             services.AddScoped<AccountComponent>();

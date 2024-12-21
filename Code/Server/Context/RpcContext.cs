@@ -13,6 +13,7 @@ namespace WebStudyServer
     public class RpcContext
     {
         public string SessionKey { get; private set; } = string.Empty;
+        public ESessionLoadState SessionLoadState { get; private set; } = ESessionLoadState.INITIALIZED;
         public ulong AccountId { get; private set; }
         public ulong PlayerId { get; private set; }
         public int ShardId { get; private set; }
@@ -74,14 +75,14 @@ namespace WebStudyServer
 
         public void LoadSession(HttpContext httpContext)
         {
-            if (_sessionState == ESessionLoadState.LOADED)
+            if (SessionLoadState != ESessionLoadState.INITIALIZED)
             {
                 _logger.Debug("SkipLoadSession");
                 return;
             }
 
             _logger.Debug("LoadSession");
-            _sessionState = ESessionLoadState.LOADED;
+            SessionLoadState = ESessionLoadState.LOADED;
 
             var sessionKey = GetQueryValue(httpContext, MsgProtocol.Query_SessionKey);
             SetSessionKey(sessionKey);
@@ -101,6 +102,7 @@ namespace WebStudyServer
             if (!sessionComp.TryGetByKey(sessionKey, out var mgrSession))
             {
                 _logger.Error("NOT_FOUND_SESSION Key({Key})", sessionKey);
+                SessionLoadState = ESessionLoadState.NOT_FOUND;
                 return;
             }
 
@@ -108,6 +110,7 @@ namespace WebStudyServer
 
             if (mgrSession.IsExpire())
             {
+                SessionLoadState = ESessionLoadState.EXPIRED;
                 return;
             }
 
@@ -210,10 +213,11 @@ namespace WebStudyServer
         {
             INITIALIZED,
             LOADED,
+            EXPIRED,
+            NOT_FOUND
         }
 
         // 유저 정보
-        private ESessionLoadState _sessionState = ESessionLoadState.INITIALIZED;
         private readonly ILogger _logger;
     }
 }

@@ -34,7 +34,8 @@ namespace WebStudyServer.Component
             else
             {
                 // 기존 플레이어 로드
-                mdlPlayer = _userRepo.GetPlayer(playerId);
+                var mgrPlayer = GetPlayer();
+                return mgrPlayer;
             }
 
             if (mdlPlayer == null)
@@ -51,7 +52,17 @@ namespace WebStudyServer.Component
                 _authRepo.Commit(); // TODO: 개선
             }
 
-            var mgrPlayer = new PlayerManager(_userRepo, mdlPlayer);
+            var newMgrPlayer = new PlayerManager(_userRepo, mdlPlayer);
+            return newMgrPlayer;
+        }
+
+        public PlayerManager GetPlayer()
+        {
+            var playerId = _userRepo.RpcContext.PlayerId;
+            ReqHelper.ValidContext(playerId != 0, "ZERO_PLAYER_ID", () => new { PlayerId = playerId });
+
+            ReqHelper.ValidContext(_userRepo.TryGetPlayer(playerId, out var outMdlPlayer), "NOT_FOUND_PLAYER", ()=> new {PlayerId = playerId});
+            var mgrPlayer = new PlayerManager(_userRepo, outMdlPlayer);
             return mgrPlayer;
         }
 

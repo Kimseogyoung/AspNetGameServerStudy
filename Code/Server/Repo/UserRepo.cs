@@ -45,7 +45,7 @@ namespace WebStudyServer.Repo
             return outPlayer != null;
         }
 
-        public PlayerModel GetPlayer(ulong id)
+        public bool TryGetPlayer(ulong id, out PlayerModel outPlayer)
         {
             PlayerModel mdlPlayer = null;
 
@@ -54,7 +54,8 @@ namespace WebStudyServer.Repo
                 mdlPlayer = sqlConnection.SelectByPk<PlayerModel>(new { Id = id }, transaction);
             });
 
-            return mdlPlayer;
+            outPlayer = mdlPlayer;
+            return outPlayer != null;
         }
 
         public void UpdatePlayer(PlayerModel mdlPlayer)

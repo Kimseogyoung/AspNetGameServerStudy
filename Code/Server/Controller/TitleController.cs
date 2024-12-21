@@ -6,26 +6,26 @@ using WebStudyServer.Service;
 
 namespace WebStudyServer.Controllers
 {
+    // 인증 필요 X
     [ApiController]
-    [Route("game")]
+    [Route("title")]
     [ServiceFilter(typeof(LogFilter))]
-    [ServiceFilter(typeof(AuthFilter))]
     [ServiceFilter(typeof(UserTransactionFilter))]
-    public class GameController : ControllerBase
+    public class TitleController : ControllerBase
     {
-        public GameController(GameService gameService, ILogger<GameController> logger)
+        public TitleController(GameService gameService, ILogger<GameController> logger)
         {
             _gameService = gameService;
             _logger = logger;
         }
 
-        [HttpPost("change-name")]
-        public ActionResult<GameChangeNameResPacket> ChangeName(GameChangeNameReqPacket req)
+        [HttpPost("enter")]
+        public ActionResult<GameEnterResPacket> Enter(GameEnterReqPacket req)
         {
-            var resultName = _gameService.ChangeNameFirst(req.PlayerName);
-            return new GameChangeNameResPacket
+            var result = _gameService.Enter();
+
+            return new GameEnterResPacket
             {
-                PlayerName = resultName,
             };
         }
 

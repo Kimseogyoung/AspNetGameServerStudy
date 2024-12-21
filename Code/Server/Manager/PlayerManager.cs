@@ -20,9 +20,14 @@ namespace WebStudyServer.Manager
             _userRepo.UpdatePlayer(Model);
         }
 
+        public bool IsValidState(EPlayerState state)
+        {
+            return Model.State <= state;
+        }
+
         public void ValidState(EPlayerState state)
         {
-            ReqHelper.ValidContext(Model.State < state, "ALREADY_PASSED_PLAYER_STATE", () => new { MdlState = Model.State, ValState = state });
+            ReqHelper.ValidContext(IsValidState(state), "ALREADY_PASSED_PLAYER_STATE", () => new { MdlState = Model.State, ValState = state });
         }
 
         public void ChangeName(string name)

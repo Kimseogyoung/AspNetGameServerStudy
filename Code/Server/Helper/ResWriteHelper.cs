@@ -27,6 +27,11 @@ namespace WebStudyServer.Helper
                             await httpContext.Response.WriteAsync(text);
                             break;
                         }
+                    case MsgProtocol.ProtoBufContentType:
+                        {
+                            await ProtoBufOutputFormatter.WriteResponseBodyAsync2(httpContext, body);
+                            break;
+                        }
                  /*   case MsgProtocol.MsgPackProtocol:
                         var bytes = MessagePackSerializer.Serialize(type, body, _msgPackOptions);
                         await httpContext.Response.Body.WriteAsync(bytes);
@@ -60,7 +65,7 @@ namespace WebStudyServer.Helper
             await httpContext.Response.Body.WriteAsync(bodyByteArr);
         }
 
-        public static byte[] GetSerializedBodyByteArr(HttpContext httpContext, object body, Type type)
+/*        public static byte[] GetSerializedBodyByteArr(HttpContext httpContext, object body, Type type)
         {
             var outContentType = GetOutputContentType(httpContext);
             switch (outContentType)
@@ -68,14 +73,17 @@ namespace WebStudyServer.Helper
                 case MsgProtocol.JsonContentType:
                     var jsonData = SerializeHelper.JsonSerialize(body);
                     return UTF8Encoding.UTF8.GetBytes(jsonData);
-          /*      case MsgProtocol.MsgPackProtocol:
+                case MsgProtocol.ProtoBufContentType:
+
+                    break;
+          *//*      case MsgProtocol.MsgPackProtocol:
                     var bytes = MessagePackSerializer.Serialize(type, body, _msgPackOptions);
                     return bytes;
-                case MsgProtocol.MsgPackNoLz4Protocol:*/
+                case MsgProtocol.MsgPackNoLz4Protocol:*//*
                 default:
                     throw new GameException("NO_HANDLING_CONTENT_TYPE");
             }
-        }
+        }*/
 
         public static string GetOutputContentType(HttpContext httpContext)
         {
