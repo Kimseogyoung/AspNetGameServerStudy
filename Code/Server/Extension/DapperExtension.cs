@@ -104,7 +104,7 @@ namespace WebStudyServer.Extension
                     // 조건이 null이 아니면 WHERE 절에 추가
                     if (value != null)
                     {
-                        whereClauses.Add($"{key} = @{key}");
+                        whereClauses.Add($"`{key}` = @{key}");
                     }
                 }
 

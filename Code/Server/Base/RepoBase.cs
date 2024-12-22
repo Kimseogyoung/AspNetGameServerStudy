@@ -34,6 +34,7 @@ namespace WebStudyServer.Base
             return _executor.Excute((sqlConnection, transaction) =>
             {
                 using var command = sqlConnection.CreateCommand();
+                command.Transaction = transaction;
                 command.CommandType = CommandType.Text;
                 command.CommandText = commandText;
 

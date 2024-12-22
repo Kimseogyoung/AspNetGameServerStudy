@@ -20,8 +20,8 @@
             }
             catch (Exception ex)
             {
-                //var errorHandler = httpCtx.RequestServices.GetRequiredService<ErrorHandler>();
-                //await errorHandler.Handle(httpCtx, ex);
+                var errorHandler = httpCtx.RequestServices.GetRequiredService<ErrorHandler>();
+                await errorHandler.HandleWithException(httpCtx, ex);
             }
             finally
             {

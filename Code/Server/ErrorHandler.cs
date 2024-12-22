@@ -24,6 +24,11 @@ namespace WebStudyServer
             return HandleInternal(httpContext, exc);
         }
 
+        public Task HandleWithException(HttpContext httpContext, Exception exception)
+        {
+            return HandleInternal(httpContext, exception);
+        }
+
         private Task HandleInternal(HttpContext httpContext, Exception exception)
         {
             dynamic dynArgs = "";

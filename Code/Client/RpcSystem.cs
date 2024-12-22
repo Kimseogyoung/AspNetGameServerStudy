@@ -38,34 +38,54 @@ namespace Client
             where REQ : IReqPacket, new()
             where RES : IResPacket, new()
         {
+            req.Info = new ReqInfoPacket
+            {
+                Seq = 0
+            };
+
             // 요청 URL
             var protocolName = req.GetProtocolName();
             var url = $"{_host}/{protocolName}";
+            var fullUrl = MakeQueryString(url);
 
             // 요청 데이터 (JSON 형식)
             var reqBodyString = Serialize<REQ>(req);
             var content = new StringContent(reqBodyString, Encoding.UTF8, _contentType);
 
             // POST 요청 보내기
-            var response = await _httpClient.PostAsync(url, content);
-            var resContentType = response.Content.Headers.ContentType.MediaType.ToString();
+            var response = await _httpClient.PostAsync(fullUrl, content);
 
             // 응답 처리
             if (response.IsSuccessStatusCode)
             {
-                string responseData = await response.Content.ReadAsStringAsync();
-                var res = Deserialize<RES>(resContentType, responseData);
-                Console.WriteLine("응답: " + responseData);
+                var resContentType = response.Content.Headers.ContentType.MediaType.ToString();
+                var responseByteArr = await response.Content.ReadAsByteArrayAsync();
+                var res = Deserialize<RES>(resContentType, responseByteArr);
+
+                var json = JsonSerializer.Serialize(res);
+                Console.WriteLine("응답: " + json);
+                return res;
+            }
+            else if(response.StatusCode == HttpStatusCode.InternalServerError)
+            {
+                // TODO: 예외처리
+                var resContentType = response.Content.Headers.ContentType.MediaType.ToString();
+                Console.WriteLine($"에러: {response.StatusCode}");
+                var responseByteArr = await response.Content.ReadAsByteArrayAsync();
+                var errorRes = Deserialize<ErrorResponsePacket>(resContentType, responseByteArr);
+                var res = new RES();
+                res.Info = errorRes.Info;
+
+                var json = JsonSerializer.Serialize(res);
+                Console.WriteLine("응답: " + json);
+
                 return res;
             }
             else
             {
-                // TODO: 예외처리
-                Console.WriteLine($"에러: {response.StatusCode}");
-                string responseData = await response.Content.ReadAsStringAsync();
-                var errorRes = Deserialize<ErrorResponsePacket>(resContentType, responseData);
                 var res = new RES();
-                res.Info = errorRes.Info;
+                res.Info.ResultCode = (int)EErrorCode.NO_HANDLING_ERROR;
+                res.Info.ResultMsg = $"{response.StatusCode}Code";
                 return res;
             }
         }
@@ -92,7 +112,7 @@ namespace Client
             return string.Empty;
         }
 
-        private RES Deserialize<RES>(string contentType, string data) where RES : IResPacket, new()
+        private RES Deserialize<RES>(string contentType, byte[] byteArr) where RES : IResPacket, new()
         {
             var res = new RES();
             res.Info.ResultCode = (int)EErrorCode.NO_HANDLING_ERROR;
@@ -100,12 +120,12 @@ namespace Client
             switch (contentType)
             {
                 case MsgProtocol.JsonContentType:
-                    res = JsonSerializer.Deserialize<RES>(data);
+                    var stringData = Encoding.UTF8.GetString(byteArr);
+                    res = JsonSerializer.Deserialize<RES>(stringData);
                     break;
                 case MsgProtocol.ProtoBufContentType:
-                    var byteArr = Encoding.UTF8.GetBytes(data);
-                    using (var ms = new MemoryStream(byteArr))
                     {
+                        using var ms = new MemoryStream(byteArr);
                         res = ProtoBuf.Serializer.Deserialize<RES>(ms);
                     }
                     break;
@@ -119,6 +139,13 @@ namespace Client
             }
 
             return res;
+        }
+
+        private string MakeQueryString(string url)
+        {
+            var timestamp = GetTimestamp();
+            var fullUrl = $"{url}?sessionkey={_sessionKey}&timestamp={timestamp}";
+            return fullUrl;
         }
 
         private long GetTimestamp()

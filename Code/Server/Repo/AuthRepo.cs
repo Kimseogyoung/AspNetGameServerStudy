@@ -23,6 +23,7 @@ namespace WebStudyServer.Repo
         public static AuthRepo CreateInstance(RpcContext rpcContext)
         {
             var authRepo = new AuthRepo(rpcContext);
+            authRepo.Init(0);
             return authRepo;
         }
 
@@ -159,7 +160,7 @@ namespace WebStudyServer.Repo
 
             _executor.Excute((sqlConnection, transaction) =>
             {
-                mdlSession = sqlConnection.SelectByPk<SessionModel>(new { Key = key}, transaction);
+                mdlSession = sqlConnection.SelectByConditions<SessionModel>(new { Key = key}, transaction);
             });
 
             return mdlSession;

@@ -29,8 +29,44 @@ namespace Client
             };
 
             var res = await _rpcSystem.RequestAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(req);
+            _rpcSystem.SetSessionKey(res.SessionKey);
             Console.WriteLine(res.SessionKey);
         }
+
+        public async Task RequestSignInAsync(string channelId)
+        {
+            var req = new AuthSignInReqPacket
+            {
+                ChannelId = channelId
+            };
+
+            var res = await _rpcSystem.RequestAsync<AuthSignInReqPacket, AuthSignInResPacket>(req);
+            _rpcSystem.SetSessionKey(res.SessionKey);
+            Console.WriteLine(res.SessionKey);
+        }
+
+        public async Task RequestEnterAsync()
+        {
+            var req = new GameEnterReqPacket();
+            var res = await _rpcSystem.RequestAsync<GameEnterReqPacket, GameEnterResPacket>(req);
+            
+            _player = res.Player;
+        }
+
+        public async Task RequestChangeNameAsync(string name)
+        {
+            var befName = _player.ProfileName;
+            var req = new GameChangeNameReqPacket
+            {
+                PlayerName = name
+            };
+
+            var res = await _rpcSystem.RequestAsync<GameChangeNameReqPacket, GameChangeNameResPacket>(req);
+            Console.WriteLine($"Name  {befName} -> {res.PlayerName}");
+            _player.ProfileName = res.PlayerName;
+        }
+
+        private PlayerPacket _player;
 
         private RpcSystem _rpcSystem;
     }

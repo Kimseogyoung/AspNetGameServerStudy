@@ -9,5 +9,8 @@ namespace Protocol
         [ProtoMember(1)]
         public ResInfoPacket Info { get; set; } = new();
         
+        [ProtoMember(2)]
+        public PlayerPacket Player { get; set; } 
+        
 	}
 }
