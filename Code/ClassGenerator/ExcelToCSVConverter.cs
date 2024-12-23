@@ -45,7 +45,11 @@ namespace ClassGenerator
                         {
                             // 셀 값을 CSV 형식으로 추가 (콤마로 구분)
                             var cell = row.Cell(colNum);
-                            var cellValue = cell.Value.ToString().Replace(",", ""); // 콤마 포함 방지
+                            var cellValue = cell.Value.ToString();
+                            if (cellValue.Contains(","))
+                            {
+                                cellValue = $"\"{cellValue}\"";
+                            }
                             cellValues.Add(cellValue);
                         }
 

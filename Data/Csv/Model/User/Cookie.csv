@@ -1,5 +1,5 @@
 Name,Type,Value,Desc,ProtocolType,Key
-PlayerId,BIGINT UNSIGNED,,,Model,pk fk
+PlayerId,BIGINT UNSIGNED,,,Model,"pk, fk"
 Num,INT,,,,pk
 StarExp,INT,,,,
 AccStarExp,INT,,,,
