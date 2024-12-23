@@ -17,7 +17,7 @@ namespace WebStudyServer.Model
     		public ulong SfId { get; set; } = default; //
         
     		
-    		public string ProfileName { get; set; } = ""; //
+    		public string ProfileName { get; set; } = default; //
         
     		
     		public int Lv { get; set; } = 1; //
@@ -69,6 +69,12 @@ namespace WebStudyServer.Model
         
     		
     		public double AccFreeCash { get; set; } = default; //
+        
+    		
+    		public DateTime UpdateTime { get; set; } = default; //
+        
+    		
+    		public DateTime CreateTime { get; set; } = default; //
         
 	}
 }
