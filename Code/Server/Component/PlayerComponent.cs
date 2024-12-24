@@ -22,14 +22,40 @@ namespace WebStudyServer.Component
             PlayerModel mdlPlayer = null;
             if (playerId == 0)
             {
+                var newPlayerId = accountId * 10;
                 // 신규 플레이어 생성
                 mdlPlayer = _userRepo.CreatePlayer(new PlayerModel
                 {
+                    Id = newPlayerId,
                     AccountId = accountId,
                     Lv = 1,
                     ProfileName = IdHelper.GenerateRandomName(), // TODO: 중복 닉네임 제한 하고싶음.
                 });
                 _userRepo.RpcContext.SetPlayerId(mdlPlayer.Id);
+
+                if (mdlPlayer == null)
+                    throw new Exception("NOT_FOUND_PLAYER"); // TODO:  오류 발생
+
+                if (!_authRepo.TryGetPlayerMap(accountId, out _))
+                {
+                    _authRepo.CreatePlayerMap(new PlayerMapModel
+                    {
+                        AccountId = accountId,
+                        PlayerId = mdlPlayer.Id,
+                        ShardId = _userRepo.ShardId,
+                    });
+                }
+
+                var mdlSession = _authRepo.GetSessionByAccountId(accountId);
+                if (mdlSession != null)
+                {
+                    mdlSession.PlayerId = newPlayerId;
+                    _authRepo.UpdateSession(mdlSession);
+                }
+                _authRepo.Commit(); // TODO: 개선
+
+                var newMgrPlayer = new PlayerManager(_userRepo, mdlPlayer);
+                return newMgrPlayer;
             }
             else
             {
@@ -37,23 +63,6 @@ namespace WebStudyServer.Component
                 var mgrPlayer = GetPlayer();
                 return mgrPlayer;
             }
-
-            if (mdlPlayer == null)
-                throw new Exception("NOT_FOUND_PLAYER"); // TODO:  오류 발생
-
-            if (!_authRepo.TryGetPlayerMap(accountId, out _))
-            {
-                _authRepo.CreatePlayerMap(new PlayerMapModel
-                {
-                    AccountId = accountId,
-                    PlayerId = mdlPlayer.Id,
-                    ShardId = _userRepo.ShardId,
-                });
-                _authRepo.Commit(); // TODO: 개선
-            }
-
-            var newMgrPlayer = new PlayerManager(_userRepo, mdlPlayer);
-            return newMgrPlayer;
         }
 
         public PlayerManager GetPlayer()

@@ -1,5 +1,6 @@
 ﻿using Proto;
 using System.ComponentModel.DataAnnotations;
+using WebStudyServer.Model;
 
 namespace WebStudyServer.Service
 {
@@ -25,6 +26,6 @@ namespace WebStudyServer.Service
 
     public class GameEnterResult
     {
-        
+        public PlayerModel Player { get; set; }
     }
 }

@@ -1,12 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
-using Microsoft.VisualBasic.FileIO;
-using SharpYaml;
-using System;
-using System.Net;
-using WebStudyServer;
 using WebStudyServer.Base;
 using WebStudyServer.Repo;
 using WebStudyServer.Repo.Database;

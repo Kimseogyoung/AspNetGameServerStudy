@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Protocol;
 using Server.Service;
@@ -13,9 +14,10 @@ namespace WebStudyServer.Controllers
     [ServiceFilter(typeof(UserTransactionFilter))]
     public class TitleController : ControllerBase
     {
-        public TitleController(GameService gameService, ILogger<GameController> logger)
+        public TitleController(GameService gameService, IMapper mapper, ILogger<GameController> logger)
         {
             _gameService = gameService;
+            _mapper = mapper;
             _logger = logger;
         }
 
@@ -26,10 +28,12 @@ namespace WebStudyServer.Controllers
 
             return new GameEnterResPacket
             {
+                Player = _mapper.Map<PlayerPacket>(result.Player)
             };
         }
 
         private readonly GameService _gameService;
+        private readonly IMapper _mapper;
         private readonly ILogger _logger;
     }
 }

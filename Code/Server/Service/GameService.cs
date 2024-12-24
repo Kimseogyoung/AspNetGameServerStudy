@@ -28,7 +28,7 @@ namespace Server.Service
                 mgrPlayer.PreparePlayer();
             }
 
-            return new GameEnterResult { };
+            return new GameEnterResult { Player = mgrPlayer.Model };
         }
 
         public string ChangeNameFirst(string name)
