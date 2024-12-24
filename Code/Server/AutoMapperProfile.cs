@@ -1,15 +1,21 @@
 ﻿
 using AutoMapper;
+using Protocol;
+using WebStudyServer.Model;
 namespace WebStudyServer
 {
     public class AutoMapperProfile : Profile
 {
         public AutoMapperProfile()
         {
-/*            // CreateRequest -> User
-            CreateMap<CreateRequest, User>();
+            // CreateRequest -> User
+            CreateMap<PlayerModel, PlayerPacket>();
+            CreateMap<CookieModel, CookiePacket>();
+            CreateMap<PointModel, PointPacket>();
+            CreateMap<TicketModel, TicketPacket>();
+            CreateMap<KingdomObjModel, KingdomObjPacket>();
 
-            // UpdateRequest -> User
+/*            // UpdateRequest -> User
             CreateMap<UpdateRequest, User>()
                 .ForAllMembers(x => x.Condition(
                     (src, dest, prop) =>

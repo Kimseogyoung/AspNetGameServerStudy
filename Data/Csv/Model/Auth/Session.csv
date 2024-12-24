@@ -1,13 +1,13 @@
 Name,Type,Value,Desc,ProtocolType,Key
-Key,VARCHAR(30),,,,pk
+Key,VARCHAR(50),,,,pk
 AccountId,BIGINT UNSIGNED,,,Model,fk
 PlayerId,BIGINT UNSIGNED,,,Model,
 ShardId,INT,,,,
-DeviceKey,VARCHAR(30),,,,
+DeviceKey,VARCHAR(50),,,,
 ExpireTimestamp,BIGINT,,,,
 State,ENUM:ESessionState,,,,
-ClientSecret,VARCHAR(30),,,,
-EncryptSecret,VARCHAR(30),,,,
-EncryptIV,VARCHAR(30),,,,
-PublicIp,VARCHAR(30),,,,
+ClientSecret,VARCHAR(50),,,,
+EncryptSecret,VARCHAR(50),,,,
+EncryptIV,VARCHAR(50),,,,
+PublicIp,VARCHAR(50),,,,
 

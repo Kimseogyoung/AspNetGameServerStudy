@@ -116,6 +116,16 @@
               "columnNames": "Id",
               "tableName": "Account"
             }
+          },
+          {
+            "addAutoIncrement": {
+              "tableName": "Account",
+              "columnDataType": "BIGINT UNSIGNED",
+              "columnName": "Id",
+              "defaultOnNull": false,
+              "generationType": "ALWAYS",
+              "startWith": 1
+            }
           }
         ]
       }
@@ -436,7 +446,7 @@
                 {
                   "column": {
                     "name": "Key",
-                    "type": "VARCHAR(30)",
+                    "type": "VARCHAR(50)",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -476,7 +486,7 @@
                 {
                   "column": {
                     "name": "DeviceKey",
-                    "type": "VARCHAR(30)",
+                    "type": "VARCHAR(50)",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -506,7 +516,7 @@
                 {
                   "column": {
                     "name": "ClientSecret",
-                    "type": "VARCHAR(30)",
+                    "type": "VARCHAR(50)",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -516,7 +526,7 @@
                 {
                   "column": {
                     "name": "EncryptSecret",
-                    "type": "VARCHAR(30)",
+                    "type": "VARCHAR(50)",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -526,7 +536,7 @@
                 {
                   "column": {
                     "name": "EncryptIV",
-                    "type": "VARCHAR(30)",
+                    "type": "VARCHAR(50)",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -536,7 +546,7 @@
                 {
                   "column": {
                     "name": "PublicIp",
-                    "type": "VARCHAR(30)",
+                    "type": "VARCHAR(50)",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
