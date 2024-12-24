@@ -1,0 +1,5 @@
+Name,Type,Value,Desc,ProtocolType,Key
+PlayerId,BIGINT UNSIGNED,,,Model,index
+AccountId,BIGINT UNSIGNED,,,Model,pk
+ShardId,INT,,,Model,
+

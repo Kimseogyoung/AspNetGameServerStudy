@@ -1,0 +1,588 @@
+{
+  "databaseChangeLog": [
+    {
+      "preConditions": [
+        {
+          "runningAs": {
+            "username": "root"
+          }
+        }
+      ]
+    },
+    {
+      "changeSet": {
+        "id": "Account",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "Account",
+              "columns": [
+                {
+                  "column": {
+                    "name": "Id",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ShardId",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "State",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ClientSecret",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "AdditionalPlayerCnt",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Flag",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Age",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "Id",
+              "tableName": "Account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "Channel",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "Channel",
+              "columns": [
+                {
+                  "column": {
+                    "name": "Key",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "AccountId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Type",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Token",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "State",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "Key",
+              "tableName": "Channel"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "Channel",
+              "baseColumnNames": "AccountId",
+              "referencedTableName": "Account",
+              "referencedColumnNames": "Id",
+              "constraintName": "FK_Channel_Account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "Device",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "Device",
+              "columns": [
+                {
+                  "column": {
+                    "name": "Key",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "AccountId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Idfa",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "GeoIpCountry",
+                    "type": "VARCHAR(10)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Country",
+                    "type": "VARCHAR(10)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Language",
+                    "type": "VARCHAR(10)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "State",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "Key",
+              "tableName": "Device"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "Device",
+              "baseColumnNames": "AccountId",
+              "referencedTableName": "Account",
+              "referencedColumnNames": "Id",
+              "constraintName": "FK_Device_Account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "PlayerMap",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "PlayerMap",
+              "columns": [
+                {
+                  "column": {
+                    "name": "PlayerId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "AccountId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ShardId",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "AccountId",
+              "tableName": "PlayerMap"
+            }
+          },
+          {
+            "createIndex": {
+              "indexName": "PlayerMap_PlayerId_Index",
+              "tableName": "PlayerMap",
+              "columns": [
+                {
+                  "column": {
+                    "name": "PlayerId"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "Session",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "Session",
+              "columns": [
+                {
+                  "column": {
+                    "name": "Key",
+                    "type": "VARCHAR(30)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "AccountId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "PlayerId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ShardId",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "DeviceKey",
+                    "type": "VARCHAR(30)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ExpireTimestamp",
+                    "type": "BIGINT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "State",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ClientSecret",
+                    "type": "VARCHAR(30)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "EncryptSecret",
+                    "type": "VARCHAR(30)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "EncryptIV",
+                    "type": "VARCHAR(30)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "PublicIp",
+                    "type": "VARCHAR(30)",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "Key",
+              "tableName": "Session"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "Session",
+              "baseColumnNames": "AccountId",
+              "referencedTableName": "Account",
+              "referencedColumnNames": "Id",
+              "constraintName": "FK_Session_Account"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

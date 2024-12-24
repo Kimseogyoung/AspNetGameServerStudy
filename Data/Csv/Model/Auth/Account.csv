@@ -1,0 +1,9 @@
+Name,Type,Value,Desc,ProtocolType,Key
+Id,BIGINT UNSIGNED,,,Model,pk
+ShardId,INT,,,,
+State,ENUM:EAccountState,,,,
+ClientSecret,VARCHAR(50),,,,
+AdditionalPlayerCnt,INT,,,,
+Flag,BIGINT UNSIGNED,,,,
+Age,INT,,,,
+

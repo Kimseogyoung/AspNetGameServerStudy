@@ -1,0 +1,13 @@
+Name,Type,Value,Desc,ProtocolType,Key
+Key,VARCHAR(30),,,,pk
+AccountId,BIGINT UNSIGNED,,,Model,fk
+PlayerId,BIGINT UNSIGNED,,,Model,
+ShardId,INT,,,,
+DeviceKey,VARCHAR(30),,,,
+ExpireTimestamp,BIGINT,,,,
+State,ENUM:ESessionState,,,,
+ClientSecret,VARCHAR(30),,,,
+EncryptSecret,VARCHAR(30),,,,
+EncryptIV,VARCHAR(30),,,,
+PublicIp,VARCHAR(30),,,,
+

@@ -367,15 +367,20 @@ namespace ClassGenerator
                                     };
                                     databaseChange.ChangeSet.Changes.Add(addFkChange);
                                     break;
-                                    /*                            case "index":
-                                                                    var createIndex = new CreateIndex
-                                                                    {
-                                                                        IndexName = $"{className}_{def.FieldName}_Index",
-                                                                        TableName = className,
-                                                                        Columns = new List<IndexColumn>() { new IndexColumn { Name = def.FieldName} }
-                                                                    };
-                                                                    change.CreateIndex = new List<CreateIndex>() { createIndex };
-                                                                    break;*/
+                                case "index":
+
+                                    var createIndex = new CreateIndex
+                                    {
+                                        IndexName = $"{className}_{def.FieldName}_Index",
+                                        TableName = className,
+                                        Columns = new List<Columns>() { new Columns { Column = new Column { Name = def.FieldName } } }
+                                    };
+                                    var createIndexChange = new Change
+                                    {
+                                        CreateIndex = createIndex
+                                    };
+                                    databaseChange.ChangeSet.Changes.Add(createIndexChange);
+                                    break;
                             }
                         }
                     }
