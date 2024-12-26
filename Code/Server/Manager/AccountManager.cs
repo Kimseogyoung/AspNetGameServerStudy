@@ -1,5 +1,4 @@
 ﻿using WebStudyServer.Model;
-using WebStudyServer.Model;
 using WebStudyServer.Repo;
 
 namespace WebStudyServer.Manager
@@ -10,6 +9,11 @@ namespace WebStudyServer.Manager
 
         public AccountManager(AuthRepo authRepo, AccountModel model) : base(authRepo, model)
         {
+        }
+
+        public bool IsActive()
+        {
+            return Model.State >= Proto.EAccountState.NONE;
         }
 
 

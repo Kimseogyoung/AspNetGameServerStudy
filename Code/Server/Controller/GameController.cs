@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Protocol;
 using Server.Service;
@@ -13,10 +14,22 @@ namespace WebStudyServer.Controllers
     [ServiceFilter(typeof(UserTransactionFilter))]
     public class GameController : ControllerBase
     {
-        public GameController(GameService gameService, ILogger<GameController> logger)
+        public GameController(GameService gameService, IMapper mapper, ILogger<GameController> logger)
         {
             _gameService = gameService;
+            _mapper = mapper;
             _logger = logger;
+        }
+
+        [HttpPost("enter")]
+        public ActionResult<GameEnterResPacket> Enter(GameEnterReqPacket req)
+        {
+            var result = _gameService.Enter();
+
+            return new GameEnterResPacket
+            {
+                Player = _mapper.Map<PlayerPacket>(result.Player)
+            };
         }
 
         [HttpPost("change-name")]
@@ -30,6 +43,7 @@ namespace WebStudyServer.Controllers
         }
 
         private readonly GameService _gameService;
+        private readonly IMapper _mapper;
         private readonly ILogger _logger;
     }
 }

@@ -24,7 +24,7 @@ namespace WebStudyServer.Controllers
 
             return new AuthSignUpResPacket
             {
-                SessionKey = result.SessionKey
+                Result = result,
             };
         }
 
@@ -34,7 +34,7 @@ namespace WebStudyServer.Controllers
             var result = _authService.SignIn(req.ChannelId);
             return new AuthSignInResPacket
             {
-                SessionKey = result.SessionKey
+                Result = result
             };
         }
 

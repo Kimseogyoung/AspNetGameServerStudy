@@ -28,23 +28,32 @@ while (isRunning)
     }
     Console.WriteLine("숫자를 입력하세요: ");
 
-    var input = Console.ReadLine();
-    var inputArr = input?.Split(" ");
-    var inputNum = inputArr == null ? 0 : int.Parse(inputArr[0]);
-    var inputString = inputArr == null || inputArr.Length <= 1 ? string.Empty : inputArr[1];
-
-    if (inputNum == 0)
+    try
     {
-        isRunning = false;
-    }
+        var input = Console.ReadLine();
+        var inputArr = input?.Split(" ");
+        var inputNum = inputArr == null ? 0 : int.Parse(inputArr[0]);
+        var inputString = inputArr == null || inputArr.Length <= 1 ? string.Empty : inputArr[1];
 
-    if (!funcDict.TryGetValue(inputNum, out var outApiFund))
+        if (inputNum == 0)
+        {
+            isRunning = false;
+        }
+
+        if (!funcDict.TryGetValue(inputNum, out var outApiFund))
+        {
+            Console.WriteLine($"잘못 입력했습니다. {inputNum}");
+            continue;
+        }
+
+        await outApiFund.Action.Invoke(inputString);
+    }
+    catch(Exception ex)
     {
-        Console.WriteLine($"잘못 입력했습니다. {inputNum}");
-        continue;
+        Console.WriteLine($"ERROR:{ex.Message.ToString()}, {ex.StackTrace}");
+        ctxSystem.Clear();
+        ctxSystem.Init();
     }
-
-    await outApiFund.Action.Invoke(inputString);
 }
 
 ctxSystem.Clear();

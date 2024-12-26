@@ -1,4 +1,5 @@
 ﻿using WebStudyServer.Base;
+using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -9,6 +10,13 @@ namespace WebStudyServer.Component
     {
         public AccountComponent(AuthRepo authRepo) : base(authRepo)
         {
+        }
+
+        public AccountManager GetActiveAccount(ulong accountId)
+        {
+            ReqHelper.ValidContext(TryGetAccount(accountId, out var mgrAccount), "NOT_FOUND_ACCOUNT", ()=> new {AccountId = accountId});
+            ReqHelper.ValidContext(mgrAccount.IsActive(), "NOT_ACTIVE_ACCOUNT", () => new { AccountId = accountId, State = mgrAccount.Model.State });
+            return mgrAccount;
         }
 
         public bool TryGetAccount(ulong accountId, out AccountManager mgrAccount)

@@ -10,7 +10,7 @@ namespace Protocol
         public ResInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public string SessionKey { get; set; } 
+        public SignInResultPacket Result { get; set; } 
         
 	}
 }

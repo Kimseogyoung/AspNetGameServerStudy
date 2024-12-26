@@ -15,7 +15,7 @@ namespace WebStudyServer.Filter
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             ReqHelper.ValidContext(_rpcContext.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { SessionKey = _rpcContext.SessionKey, SessionLoadState = _rpcContext.SessionLoadState });
-            ReqHelper.ValidContext(_rpcContext.PlayerId != 0, "NOT_FOUND_PLAYER_IN_AUTH_FILTER", () => new { SessionKey= _rpcContext.SessionKey });
+            ReqHelper.ValidContext(_rpcContext.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_AUTH_FILTER", () => new { SessionKey= _rpcContext.SessionKey });
         }
 
         private readonly RpcContext _rpcContext;

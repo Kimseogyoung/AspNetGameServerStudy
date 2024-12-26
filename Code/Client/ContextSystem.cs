@@ -18,7 +18,8 @@ namespace Client
 
         public void Clear()
         {
-
+            _player = null;
+            _rpcSystem.Clear();
         }
 
         public async Task RequestSignUpAsync(string deviceKey)
@@ -29,8 +30,7 @@ namespace Client
             };
 
             var res = await _rpcSystem.RequestAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(req);
-            _rpcSystem.SetSessionKey(res.SessionKey);
-            Console.WriteLine(res.SessionKey);
+            _rpcSystem.SetSessionKey(res.Result.SessionKey);
         }
 
         public async Task RequestSignInAsync(string channelId)
@@ -41,8 +41,7 @@ namespace Client
             };
 
             var res = await _rpcSystem.RequestAsync<AuthSignInReqPacket, AuthSignInResPacket>(req);
-            _rpcSystem.SetSessionKey(res.SessionKey);
-            Console.WriteLine(res.SessionKey);
+            _rpcSystem.SetSessionKey(res.Result.SessionKey);
         }
 
         public async Task RequestEnterAsync()

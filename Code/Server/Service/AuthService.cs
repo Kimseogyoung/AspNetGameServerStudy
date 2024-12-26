@@ -3,6 +3,7 @@ using WebStudyServer;
 using WebStudyServer.Repo;
 using Proto;
 using WebStudyServer.GAME;
+using Protocol;
 
 namespace WebStudyServer.Service
 {
@@ -13,7 +14,7 @@ namespace WebStudyServer.Service
             _authComp = authComp;
         }
 
-        public AuthSignInResult SignUp(string idfv)
+        public SignInResultPacket SignUp(string idfv)
         {
             // idfv 찾기.           
             if (_authComp.Device.TryGetDevice(idfv, out var mgrDevice))
@@ -27,13 +28,13 @@ namespace WebStudyServer.Service
                     {
                         var originMgrSession = _authComp.Session.Touch(originMgrAccount.Id);
                         originMgrSession.Start();
-                        return new AuthSignInResult
-                        {
-                            AccountState = originMgrAccount.Model.State,
+                        return new SignInResultPacket
+                        {                           
                             SessionKey = originMgrSession.Model.Key,
                             ChannelKey = originMgrChannel.Model.Key,
+                            AccountState = originMgrAccount.Model.State,
                             AccountEnv = APP.Cfg.EnvName,
-                            ClientSecret = "",
+                            ClientSecret = ""                      
                         };
                     }
                 }
@@ -53,30 +54,35 @@ namespace WebStudyServer.Service
             // 세션 갱신 및 리턴
             mgrSession.Start();
 
-            return new AuthSignInResult
+            return new SignInResultPacket
             {
-                AccountState = mgrAccount.Model.State,
                 SessionKey = mgrSession.Model.Key,
                 ChannelKey = mgrChannel.Model.Key,
+                AccountState = mgrAccount.Model.State,
                 AccountEnv = APP.Cfg.EnvName,
-                ClientSecret = "",
+                ClientSecret = ""
             };
         }
 
-        public AuthSignInResult SignIn(string channelId)
+        public SignInResultPacket SignIn(string channelId)
         {
             // 채널 찾기
-
-            if (!_authComp.Channel.TryGetChannel(channelId, out var mgrChannel))
-            {
-
-            }
-            //
+            var mgrChannel = _authComp.Channel.GetChannel(channelId);
 
             // 채널 -> Account 찾기
+            var mgrAccount = _authComp.Account.GetActiveAccount(mgrChannel.Model.AccountId);
 
             // 세션 갱신 및 리턴
-            return null;
+            var mgrSession = _authComp.Session.Touch(mgrAccount.Id);
+            mgrSession.Start();
+            return new SignInResultPacket
+            {
+                SessionKey = mgrSession.Model.Key,
+                ChannelKey = mgrChannel.Model.Key,
+                AccountState = mgrAccount.Model.State,
+                AccountEnv = APP.Cfg.EnvName,
+                ClientSecret = ""
+            };
         }
 
         private readonly AuthComponent _authComp;

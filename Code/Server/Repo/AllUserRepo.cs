@@ -32,7 +32,7 @@ namespace WebStudyServer.Repo
                 var sql = "SELECT * FROM Player WHERE ProfileName = @ProfileName";
                 executor.Excute((sqlConnection, transaction) =>
                 {
-                    var mdlPlayer = sqlConnection.QueryFirst<PlayerModel>(sql, new { ProfileName = name }, transaction);
+                    var mdlPlayer = sqlConnection.QueryFirstOrDefault<PlayerModel>(sql, new { ProfileName = name }, transaction);
                     if(mdlPlayer != null)
                     {
                         foundMdlPlayer = mdlPlayer;

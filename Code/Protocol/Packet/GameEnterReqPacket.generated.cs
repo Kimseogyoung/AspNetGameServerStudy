@@ -9,6 +9,6 @@ namespace Protocol
         [ProtoMember(1)]
         public ReqInfoPacket Info { get; set; } 
         
-        public string GetProtocolName() => "title/enter";
+        public string GetProtocolName() => "game/enter";
 	}
 }

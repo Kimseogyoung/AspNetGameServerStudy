@@ -72,8 +72,10 @@ namespace ClassGenerator
             string templatePath = Path.Join(projectPath, "Template");
             string reqTemplatePath = Path.Join(templatePath, "ReqPacketTemplate.txt");
             string resTemplatePath = Path.Join(templatePath, "ResPacketTemplate.txt");
+            string commonTemplatePath = Path.Join(templatePath, "CommonPacketTemplate.txt");
             _reqPakTemplate = File.ReadAllText(reqTemplatePath);
             _resPakTemplate = File.ReadAllText(resTemplatePath);
+            _commonPakTemplate = File.ReadAllText(commonTemplatePath);
 
             var groupedClassDict = new Dictionary<string, List<ClassDefinition>>();
 
@@ -110,6 +112,8 @@ namespace ClassGenerator
                         defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ResInfoPacket", Idx = 1 , FieldValue = "= new();" });
                         break;
                     default:
+                        template = _commonPakTemplate;
+                        classAttribute = "[ProtoContract]";
                         break;
                 }
 
@@ -165,6 +169,7 @@ namespace ClassGenerator
         private const int c_maxColCnt = 7;
         private static string _reqPakTemplate = string.Empty;
         private static string _resPakTemplate = string.Empty;
+        private static string _commonPakTemplate = string.Empty;
     }
 
     public class ClassDefinition

@@ -10,8 +10,6 @@ using System.Net;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Client
 {
@@ -26,7 +24,12 @@ namespace Client
 
         public void Clear()
         {
-            //_httpClient = null;
+            _seq = 0;
+            _sessionKey = "";
+            _prevTimestamp = 0;
+            _host = "";
+            _contentType = "";
+            _httpClient = null;
         }
 
         public void SetSessionKey(string key)
@@ -78,8 +81,7 @@ namespace Client
 
                 var json = JsonSerializer.Serialize(res);
                 Console.WriteLine("응답: " + json);
-
-                return res;
+                throw new Exception("ERROR");
             }
             else
             {
