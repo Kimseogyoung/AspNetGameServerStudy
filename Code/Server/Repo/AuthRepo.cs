@@ -39,7 +39,7 @@ namespace WebStudyServer.Repo
             return newAccount; // 새로 생성된 계정 모델 반환
         }
 
-        public AccountModel GetAccount(ulong id)
+        public bool TryGetAccount(ulong id, out AccountModel outAccount)
         {
             AccountModel mdlAccount = null;
 
@@ -48,7 +48,8 @@ namespace WebStudyServer.Repo
                 mdlAccount = sqlConnection.SelectByPk<AccountModel>(new { Id = id }, transaction);
             });
 
-            return mdlAccount;
+            outAccount = mdlAccount;
+            return outAccount != null;
         }
 
         public void UpdateAccount(AccountModel mdlAccount)
@@ -73,7 +74,7 @@ namespace WebStudyServer.Repo
             return newDevice; // 새로 생성된 계정 모델 반환
         }
 
-        public DeviceModel GetDevice(string deviceKey)
+        public bool TryGetDevice(string deviceKey, out DeviceModel outDevice)
         {
             DeviceModel mdlDevice = null;
 
@@ -81,8 +82,8 @@ namespace WebStudyServer.Repo
             {
                 mdlDevice = sqlConnection.SelectByPk<DeviceModel>(new { Key = deviceKey }, transaction);
             });
-
-            return mdlDevice;
+            outDevice = mdlDevice;
+            return outDevice != null;
         }
 
         public void UpdateDevice(DeviceModel mdlDevice)
@@ -120,7 +121,7 @@ namespace WebStudyServer.Repo
         }
 
 
-        public ChannelModel GetChannel(string key)
+        public bool TryGetChannel(string key, out ChannelModel outChannel)
         {
             ChannelModel mdlChannel = null;
 
@@ -129,7 +130,8 @@ namespace WebStudyServer.Repo
                 mdlChannel = sqlConnection.SelectByPk<ChannelModel>(new { Key = key }, transaction);
             });
 
-            return mdlChannel;
+            outChannel = mdlChannel;
+            return outChannel != null;
         }
 
         public void UpdateChannel(ChannelModel mdlChannel)
@@ -154,7 +156,7 @@ namespace WebStudyServer.Repo
             return newSession; // 새로 생성된 계정 모델 반환
         }
 
-        public SessionModel GetSession(string key)
+        public bool TryGetSession(string key, out SessionModel outSession)
         {
             SessionModel mdlSession = null;
 
@@ -162,11 +164,12 @@ namespace WebStudyServer.Repo
             {
                 mdlSession = sqlConnection.SelectByConditions<SessionModel>(new { Key = key}, transaction);
             });
+            outSession = mdlSession;
 
-            return mdlSession;
+            return outSession != null;
         }
 
-        public SessionModel GetSessionByAccountId(ulong accountId)
+        public bool TryGetSessionByAccountId(ulong accountId, out SessionModel outSession)
         {
             SessionModel mdlSession = null;
 
@@ -175,7 +178,8 @@ namespace WebStudyServer.Repo
                 mdlSession = sqlConnection.SelectByConditions<SessionModel>(new { AccountId = accountId }, transaction);
             });
 
-            return mdlSession;
+            outSession = mdlSession;
+            return outSession != null;
         }
 
         public void UpdateSession(SessionModel mdlSession)

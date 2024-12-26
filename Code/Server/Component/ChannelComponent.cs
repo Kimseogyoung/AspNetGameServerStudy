@@ -26,15 +26,22 @@ namespace WebStudyServer.Component
             return true;
         }
 
-        public bool TryGetChannel(string key, out ChannelManager mgrAccount)
+        public ChannelManager GetChannel(string key)
         {
-            mgrAccount = null;
+            ReqHelper.ValidContext(TryGetChannel(key, out var mgrChannel), "NOT_FOUND_CHANNEL", () => new { ChannelKey = key });
+            return mgrChannel;
+        }
 
-            var repoChannel = _authRepo.GetChannel(key);
-            if (repoChannel == null)
+        public bool TryGetChannel(string key, out ChannelManager mgrChannel)
+        {
+            mgrChannel = null;
+
+            if (!_authRepo.TryGetChannel(key, out var mdlChannel))
+            {
                 return false;
+            }
 
-            mgrAccount = new ChannelManager(_authRepo, repoChannel);
+            mgrChannel = new ChannelManager(_authRepo, mdlChannel);
             return true;
         }
 

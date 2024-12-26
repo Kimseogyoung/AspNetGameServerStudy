@@ -15,11 +15,12 @@ namespace WebStudyServer.Component
         {
             mgrDevice = null;
 
-            var repoDevice = _authRepo.GetDevice(idfv);
-            if (repoDevice == null)
+            if (!_authRepo.TryGetDevice(idfv, out var mdlDevice))
+            {
                 return false;
+            }
 
-            mgrDevice = new DeviceManager(_authRepo, repoDevice);
+            mgrDevice = new DeviceManager(_authRepo, mdlDevice);
             return true;
         }
 

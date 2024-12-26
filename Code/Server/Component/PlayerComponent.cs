@@ -36,22 +36,19 @@ namespace WebStudyServer.Component
                 if (mdlPlayer == null)
                     throw new Exception("NOT_FOUND_PLAYER"); // TODO:  오류 발생
 
-                if (!_authRepo.TryGetPlayerMap(accountId, out _))
+                _authRepo.CreatePlayerMap(new PlayerMapModel
                 {
-                    _authRepo.CreatePlayerMap(new PlayerMapModel
-                    {
-                        AccountId = accountId,
-                        PlayerId = mdlPlayer.Id,
-                        ShardId = _userRepo.ShardId,
-                    });
-                }
+                    AccountId = accountId,
+                    PlayerId = mdlPlayer.Id,
+                    ShardId = _userRepo.ShardId,
+                });
 
-                var mdlSession = _authRepo.GetSessionByAccountId(accountId);
-                if (mdlSession != null)
+                if (_authRepo.TryGetSessionByAccountId(accountId, out var mdlSession))
                 {
                     mdlSession.PlayerId = newPlayerId;
                     _authRepo.UpdateSession(mdlSession);
                 }
+
                 _authRepo.Commit(); // TODO: 개선
 
                 var newMgrPlayer = new PlayerManager(_userRepo, mdlPlayer);

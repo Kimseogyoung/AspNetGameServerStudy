@@ -15,11 +15,12 @@ namespace WebStudyServer.Component
         {
             mgrAccount = null;
 
-            var repoAccount = _authRepo.GetAccount(accountId);
-            if (repoAccount == null)
+            if (!_authRepo.TryGetAccount(accountId, out var mdlAccount))
+            {
                 return false;
+            }
 
-            mgrAccount = new AccountManager(_authRepo, repoAccount);
+            mgrAccount = new AccountManager(_authRepo, mdlAccount);
             return true;
         }
 

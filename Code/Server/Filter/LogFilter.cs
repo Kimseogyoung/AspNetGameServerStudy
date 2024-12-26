@@ -43,7 +43,7 @@ namespace WebStudyServer.Filter
                 { "Body", resBody },
             };
 
-            _logger.Info("Res Method({Method}) Path({Path}) Code({Code}) Body({Body})", httpReq.Method, httpReq.Path.ToString, httpRes.StatusCode, resBody);
+            _logger.Info("Res Method({Method}) Path({Path}) Code({Code}) Body({Body})", httpReq.Method, httpReq.Path, httpRes.StatusCode, resBody);
         }
 
         private readonly ILogger _logger;

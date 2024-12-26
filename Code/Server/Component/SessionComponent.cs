@@ -22,11 +22,12 @@ namespace WebStudyServer.Component
         {
             mgrSession = null;
 
-            var repoSession = _authRepo.GetSessionByAccountId(accountId);
-            if (repoSession == null)
+            if (!_authRepo.TryGetSessionByAccountId(accountId, out var mdlSession))
+            {
                 return false;
+            }
 
-            mgrSession = new SessionManager(_authRepo, repoSession);
+            mgrSession = new SessionManager(_authRepo, mdlSession);
             return true;
         }
 
@@ -34,18 +35,18 @@ namespace WebStudyServer.Component
         {
             mgrSession = null;
 
-            var repoSession = _authRepo.GetSession(key);
-            if (repoSession == null)
+            if (!_authRepo.TryGetSession(key, out var mdlSession))
+            {
                 return false;
+            }
 
-            mgrSession = new SessionManager(_authRepo, repoSession);
+            mgrSession = new SessionManager(_authRepo, mdlSession);
             return true;
         }
 
         public SessionManager Touch(ulong accountId)
         {
-            var repoSession = _authRepo.GetSessionByAccountId(accountId);
-            if (repoSession == null)
+            if (!_authRepo.TryGetSessionByAccountId(accountId, out var mdlSession))
             {
                 var newSession = new SessionModel
                 {
@@ -62,9 +63,10 @@ namespace WebStudyServer.Component
                     DeviceKey = "",
                 };
 
-                repoSession = _authRepo.CreateSession(newSession);
+                mdlSession = _authRepo.CreateSession(newSession);
+
             }
-            var mgrSession = new SessionManager(_authRepo, repoSession);
+            var mgrSession = new SessionManager(_authRepo, mdlSession);
             return mgrSession;
         }
     }

@@ -67,6 +67,10 @@ namespace WebStudyServer.Service
         {
             // 채널 찾기
 
+            if (!_authComp.Channel.TryGetChannel(channelId, out var mgrChannel))
+            {
+
+            }
             //
 
             // 채널 -> Account 찾기
