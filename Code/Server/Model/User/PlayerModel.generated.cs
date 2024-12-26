@@ -70,11 +70,5 @@ namespace WebStudyServer.Model
     		
     		public double AccFreeCash { get; set; } = default; //
         
-    		
-    		public DateTime UpdateTime { get; set; } = default; //
-        
-    		
-    		public DateTime CreateTime { get; set; } = default; //
-        
 	}
 }

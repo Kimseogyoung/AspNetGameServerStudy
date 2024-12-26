@@ -16,11 +16,5 @@ namespace WebStudyServer.Model
     		
     		public int ShardId { get; set; } = default; //
         
-    		
-    		public DateTime UpdateTime { get; set; } = default; //
-        
-    		
-    		public DateTime CreateTime { get; set; } = default; //
-        
 	}
 }

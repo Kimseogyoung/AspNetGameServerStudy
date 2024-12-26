@@ -22,11 +22,5 @@ namespace WebStudyServer.Model
     		
     		public EChannelState State { get; set; } = default; //
         
-    		
-    		public DateTime UpdateTime { get; set; } = default; //
-        
-    		
-    		public DateTime CreateTime { get; set; } = default; //
-        
 	}
 }

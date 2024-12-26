@@ -145,6 +145,9 @@ namespace ClassGenerator
                 groupedClassDict[definition.ClassName].Add(definition);
             }
 
+            GenerateModel(groupedClassDict, mdlOutputPath);
+            GeneratePacket(groupedClassDict, pakOutputPath);
+
             foreach (var (tableName, defList) in groupedClassDict)
             {
                 defList.Add(new ModelDefinition
@@ -168,8 +171,6 @@ namespace ClassGenerator
                 });
             }
 
-            GenerateModel(groupedClassDict, mdlOutputPath);
-            GeneratePacket(groupedClassDict, pakOutputPath);
 
             GenerateLiquibaseChangeLog(groupedClassDict, liquibaseOutputPath);
         }

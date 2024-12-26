@@ -22,11 +22,5 @@ namespace WebStudyServer.Model
     		
     		public DateTime EndTime { get; set; } = default; //
         
-    		
-    		public DateTime UpdateTime { get; set; } = default; //
-        
-    		
-    		public DateTime CreateTime { get; set; } = default; //
-        
 	}
 }
