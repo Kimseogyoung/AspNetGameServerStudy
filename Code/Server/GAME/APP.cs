@@ -5,23 +5,29 @@ namespace WebStudyServer.GAME
 {
     public static class APP
     {
-        public static Config Cfg => _cfg;
-        public static ProtoHelper PRT => _prt;
+        public static ConfigSystem Cfg => _cfg;
+        public static ProtoSystem Prt => _prt;
         public static IdGenerator IdGenerator => _idGen;
 
         public static void Init(IConfiguration config, IHostEnvironment environ)
         {
-            _cfg.Init(config, environ);
+            if (_isInit)
+            {
+                // TODO: 로그
+                return;
+            }
 
-            var csvPath = Path.GetFullPath(config.GetValue("Proto:CsvPath", ""));
-            _prt.Init(csvPath);
+            _isInit = true;
+            _cfg.Init(config, environ);
+            _prt.Init(config, environ);
 
             var workerId = Cfg.ServerNum == -1 ? new Random().Next(1024) : Cfg.ServerNum;
             _idGen = new IdGenerator(workerId);
         }
 
+        private static bool _isInit = false;
         private static IdGenerator _idGen = null;
-        private static Config _cfg = new Config();
-        private static ProtoHelper _prt = new ProtoHelper();
+        private static ConfigSystem _cfg = new ConfigSystem();
+        private static ProtoSystem _prt = new ProtoSystem();
     }
 }

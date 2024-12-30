@@ -1,4 +1,5 @@
-﻿using WebStudyServer.Model;
+﻿using Proto;
+using WebStudyServer.Model;
 using WebStudyServer.Repo;
 
 namespace WebStudyServer.Manager
@@ -13,9 +14,7 @@ namespace WebStudyServer.Manager
 
         public bool IsActive()
         {
-            return Model.State >= Proto.EAccountState.NONE;
+            return Model.State >= EAccountState.NONE;
         }
-
-
     }
 }

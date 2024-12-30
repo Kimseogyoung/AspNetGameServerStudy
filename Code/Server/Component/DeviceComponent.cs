@@ -1,4 +1,5 @@
-﻿using WebStudyServer.Base;
+﻿using Proto;
+using WebStudyServer.Base;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -31,7 +32,7 @@ namespace WebStudyServer.Component
                 Key = idfv,
                 Idfa = "",
                 AccountId = _authRepo.RpcContext.AccountId,
-                State = Proto.EDeviceState.ACTIVE,
+                State = EDeviceState.ACTIVE,
                 Country = "",
                 GeoIpCountry = "",
                 Language = ""

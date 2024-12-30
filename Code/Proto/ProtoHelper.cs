@@ -134,7 +134,7 @@ namespace Proto
 
                 if (!string.IsNullOrEmpty(pkName))
                 {
-                    // PK가 없는 경우
+                    // PK가 있는 경우 
                     var property = typeof(TProto).GetProperty(pkName);
                     var value = property.GetValue(prtList[i]);
                     _protoDict[protoClassType].IdxDict.Add(value, i); // TODO: Hash 찾기로 바꾸기

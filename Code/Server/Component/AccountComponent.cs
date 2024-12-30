@@ -1,4 +1,5 @@
-﻿using WebStudyServer.Base;
+﻿using Proto;
+using WebStudyServer.Base;
 using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
@@ -37,7 +38,7 @@ namespace WebStudyServer.Component
             var newAccount = new AccountModel
             {
                 ShardId = 0, // TODO: ShardId
-                State = Proto.EAccountState.ACTIVE,
+                State = EAccountState.ACTIVE,
                 AdditionalPlayerCnt = 0,
                 ClientSecret = ""
             };

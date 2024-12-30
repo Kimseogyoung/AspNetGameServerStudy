@@ -8,7 +8,7 @@ using Protocol;
 
 namespace WebStudyServer
 { 
-    public class Config
+    public class ConfigSystem
     {
         public string LogFolder { get; private set; } = string.Empty;
         public LogLevel LogLevel { get; private set; } = LogLevel.Debug;

@@ -16,7 +16,7 @@ namespace WebStudyServer.Manager
         public void PreparePlayer()
         {
             // Player 초기 세팅
-            Model.State = Proto.EPlayerState.PREPARED;
+            Model.State = EPlayerState.PREPARED;
             _userRepo.UpdatePlayer(Model);
         }
 
