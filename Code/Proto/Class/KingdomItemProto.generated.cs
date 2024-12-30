@@ -2,7 +2,7 @@ using ProtoBuf;
 namespace Proto
 {
 	[ProtoContract]
-	public partial class KingdomObjProto : ProtoBase
+	public partial class KingdomItemProto : ProtoBase
 	{
     
     		[ProtoMember(2)]
@@ -12,10 +12,10 @@ namespace Proto
     		public string Name { get; set; }
         
     		[ProtoMember(4)]
-    		public EKingdomObjType Type { get; set; }
+    		public EKingdomItemType Type { get; set; }
         
     		[ProtoMember(5)]
-    		public EKingdomObjSpecialType SpecialType { get; set; }
+    		public EKingdomItemSpecialType SpecialType { get; set; }
         
     		[ProtoMember(6)]
     		public string SizeX { get; set; }
@@ -27,13 +27,13 @@ namespace Proto
     		public int ProductionSec { get; set; }
         
     		[ProtoMember(9)]
-    		public EObjType ProductionType { get; set; }
+    		public EObjType ProductObjType { get; set; }
         
     		[ProtoMember(10)]
-    		public string ProductionNum { get; set; }
+    		public string ProductObjNum { get; set; }
         
     		[ProtoMember(11)]
-    		public string ProductionAmount { get; set; }
+    		public string ProductObjAmount { get; set; }
         
     		[ProtoMember(12)]
     		public int MaxLv { get; set; }

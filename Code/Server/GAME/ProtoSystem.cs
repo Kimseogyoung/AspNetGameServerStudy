@@ -21,14 +21,14 @@ namespace WebStudyServer
 
         public void Bind()
         {
-            _prt.Bind<KingdomObjProto>();
+            _prt.Bind<KingdomItemProto>();
             _prt.Bind<PointProto>();
             _prt.Bind<TicketProto>();
             _prt.Bind<CookieProto>();
         }
 
         public CookieProto GetCookiePrt(int cookieNum) => _prt.Get<CookieProto>(cookieNum);
-        public KingdomObjProto GetKingdomObjPrt(int kingdomObjNum) => _prt.Get<KingdomObjProto>(kingdomObjNum);
+        public KingdomItemProto GetKingdomItemPrt(int kingdomObjNum) => _prt.Get<KingdomItemProto>(kingdomObjNum);
         public PointProto GetPointPrt(EObjType objType) => _prt.Get<PointProto>(objType);
         public PointProto GetPointPrt(int pointNum) => GetPointPrt((EObjType)pointNum);
         public TicketProto GetTicketPrt(EObjType objType) => _prt.Get<TicketProto>(objType);

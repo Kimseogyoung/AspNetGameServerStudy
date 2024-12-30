@@ -19,23 +19,24 @@ namespace ClassGenerator
                 int worksheetIndex = 0;
                 foreach (var worksheet in workbook.Worksheets)
                 {
-                    // 두 번째 워크시트부터 첫 번째 행 삭제
-                    if (worksheetIndex >= 1)
+
+                    var headerRow = worksheet.Rows(1, 1);
+                    var headerValues = headerRow.Cells().Select(x => x.Value.ToString()).Where(x => !string.IsNullOrEmpty(x));
+                    var headerColCnt = headerValues.Count();
+                    // 첫 번째 워크시트만 헤더 추가
+                    if (worksheetIndex == 0)
                     {
-                        worksheet.Rows(1, 1).Delete(); // 첫 번째 행(헤더) 삭제
+                        csvContent.AppendLine(string.Join(",", headerValues));
+                        //worksheet.Rows(1, 1).Delete(); // 첫 번째 행(헤더) 삭제
                     }
 
                     bool isFirstRow = true;
-                    var headerColCnt = 0;
                     // 각 행(row)을 순차적으로 처리
                     foreach (var row in worksheet.Rows())
                     {
                         if (isFirstRow)
                         {
-                            var headerValues = row.Cells().Select(x => x.Value.ToString());
-                            headerColCnt = headerValues.Count();
-                            isFirstRow = false; // 첫 번째 행 처리 완료
-                            csvContent.AppendLine(string.Join(",", headerValues));
+                            isFirstRow = false; // 첫 번째 행 스킵
                             continue;
                         }
 

@@ -13,7 +13,7 @@ namespace WebStudyServer
             CreateMap<CookieModel, CookiePacket>();
             CreateMap<PointModel, PointPacket>();
             CreateMap<TicketModel, TicketPacket>();
-            CreateMap<KingdomObjModel, KingdomObjPacket>();
+            CreateMap<KingdomItemModel, KingdomItemPacket>();
 
 /*            // UpdateRequest -> User
             CreateMap<UpdateRequest, User>()

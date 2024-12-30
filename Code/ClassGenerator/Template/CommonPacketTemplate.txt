@@ -3,10 +3,11 @@ using Proto;
 namespace Protocol
 {
 	{{ClassAttribute}}
-	public partial class {{ClassName}}	{
-    {{ for field in Fields }}
-    {{field.Attribute}}
-    public {{field.Type}} {{field.Name}} { get; set; } {{field.Value}}
-    {{ end }}
+	public partial class {{ClassName}}	
+        {
+        {{ for field in Fields }}
+        {{field.Attribute}}
+        public {{field.Type}} {{field.Name}} { get; set; } {{field.Value}}
+        {{ end }}
 	}
 }

@@ -4,7 +4,7 @@ using Proto;
 namespace WebStudyServer.Model
 {
 	
-	public partial class KingdomObjModel : ModelBase
+	public partial class KingdomItemModel : ModelBase
 	{
     
     		
@@ -14,13 +14,13 @@ namespace WebStudyServer.Model
     		public ulong PlayerId { get; set; } = default; //
         
     		
-    		public EKingdomObjType Type { get; set; } = default; //
+    		public EKingdomItemType Type { get; set; } = default; //
         
     		
     		public int Num { get; set; } = default; //
         
     		
-    		public EKingdomObjState State { get; set; } = default; //
+    		public EKingdomItemState State { get; set; } = default; //
         
     		
     		public DateTime EndTime { get; set; } = default; //

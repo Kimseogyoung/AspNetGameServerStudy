@@ -2,7 +2,7 @@ using ProtoBuf;
 namespace Proto
 {
 
-	public enum EKingdomObjType 
+	public enum EKingdomItemType 
 	{ 
 		NONE = 0, //
 		STRUCTURE = 1, //
@@ -10,7 +10,7 @@ namespace Proto
 		TRASH = 3, //
 	}
 
-	public enum EKingdomObjState 
+	public enum EKingdomItemState 
 	{ 
 		NONE = 0, //
 		CONSTRUCTING = 1, //
@@ -19,7 +19,7 @@ namespace Proto
 		STORED = 4, //
 	}
 
-	public enum EKingdomObjSpecialType 
+	public enum EKingdomItemSpecialType 
 	{ 
 		NONE = 0, //
 		FORGE = 0, //
@@ -50,7 +50,7 @@ namespace Proto
 		TICKET_END = 300, //
 		ITEM = 1000, //
 		COOKIE = 10000, //
-		KINGDOM_OBJ = 100000, //
+		KINGDOM_ITEM = 100000, //
 	}
 
 	public enum ESessionState 
@@ -112,9 +112,9 @@ namespace Proto
 		{
 			var list = new List<Type>();
 		
-			list.Add(typeof(EKingdomObjType)); 
-			list.Add(typeof(EKingdomObjState)); 
-			list.Add(typeof(EKingdomObjSpecialType)); 
+			list.Add(typeof(EKingdomItemType)); 
+			list.Add(typeof(EKingdomItemState)); 
+			list.Add(typeof(EKingdomItemSpecialType)); 
 			list.Add(typeof(ECookieState)); 
 			list.Add(typeof(EObjType)); 
 			list.Add(typeof(ESessionState)); 

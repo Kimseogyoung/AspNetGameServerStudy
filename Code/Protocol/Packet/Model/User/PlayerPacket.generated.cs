@@ -46,21 +46,24 @@ namespace Protocol
     		public double Gold { get; set; } = default; //
         
     		[ProtoMember(14)]
-    		public double RealCash { get; set; } = default; //
+    		public double StarCandy { get; set; } = default; //
         
     		[ProtoMember(15)]
-    		public double FreeCash { get; set; } = default; //
+    		public double RealCash { get; set; } = default; //
         
     		[ProtoMember(16)]
-    		public List<KingdomObjPacket> KingdomObjList { get; set; } = default; //
+    		public double FreeCash { get; set; } = default; //
         
     		[ProtoMember(17)]
-    		public List<CookiePacket> CookieList { get; set; } = default; //
+    		public List<KingdomItemPacket> KingdomItemList { get; set; } = default; //
         
     		[ProtoMember(18)]
-    		public List<PointPacket> PointList { get; set; } = default; //
+    		public List<CookiePacket> CookieList { get; set; } = default; //
         
     		[ProtoMember(19)]
+    		public List<PointPacket> PointList { get; set; } = default; //
+        
+    		[ProtoMember(20)]
     		public List<TicketPacket> TicketList { get; set; } = default; //
         
 	}

@@ -1,5 +1,5 @@
-Num,Name,Type,SpecialType,SizeX,SizeY,ProductionSec,ProductionType,ProductionNum,ProductionAmount,MaxLv
-int:pk,string,enum:EKingdomObjType,enum:EKingdomObjSpecialType,string,string,int,enum:EObjType,string,string,int
+Num,Name,Type,SpecialType,SizeX,SizeY,ProductionSec,ProductObjType,ProductObjNum,ProductObjAmount,MaxLv
+int:pk,string,enum:EKingdomItemType,enum:EKingdomItemSpecialType,string,string,int,enum:EObjType,string,string,int
 110001,뚝딱 대장간,STRUCTURE,FORGE,3,3,0,NONE,0,0,10
 110002,쿠키 하우스,STRUCTURE,NONE,3,3,10,STAR_CANDY,0,10,10
 130001,설탕 노움의 집,DECORATION,NONE,2,2,0,NONE,0,0,0

@@ -3,17 +3,17 @@ using Proto;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class KingdomObjPacket
+	public partial class KingdomItemPacket
 	{
     
     		[ProtoMember(1)]
-    		public EKingdomObjType Type { get; set; } = default; //
+    		public EKingdomItemType Type { get; set; } = default; //
         
     		[ProtoMember(2)]
     		public int Num { get; set; } = default; //
         
     		[ProtoMember(3)]
-    		public EKingdomObjState State { get; set; } = default; //
+    		public EKingdomItemState State { get; set; } = default; //
         
     		[ProtoMember(4)]
     		public DateTime EndTime { get; set; } = default; //

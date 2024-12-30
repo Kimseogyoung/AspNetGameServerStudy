@@ -1,15 +1,15 @@
 Name,Key,Value,Desc
-EKingdomObjType,NONE,0,
-EKingdomObjType,STRUCTURE,1,
-EKingdomObjType,DECORATION,2,
-EKingdomObjType,TRASH,3,
-EKingdomObjState,NONE,0,
-EKingdomObjState,CONSTRUCTING,1,
-EKingdomObjState,READY,2,
-EKingdomObjState,IN_PROGRESS,3,
-EKingdomObjState,STORED,4,
-EKingdomObjSpecialType,NONE,0,
-EKingdomObjSpecialType,FORGE,0,
+EKingdomItemType,NONE,0,
+EKingdomItemType,STRUCTURE,1,
+EKingdomItemType,DECORATION,2,
+EKingdomItemType,TRASH,3,
+EKingdomItemState,NONE,0,
+EKingdomItemState,CONSTRUCTING,1,
+EKingdomItemState,READY,2,
+EKingdomItemState,IN_PROGRESS,3,
+EKingdomItemState,STORED,4,
+EKingdomItemSpecialType,NONE,0,
+EKingdomItemSpecialType,FORGE,0,
 ECookieState,NONE,0,
 ECookieState,AVAILABLE,1,
 
@@ -30,7 +30,7 @@ EObjType,TICKET_STAMINA,201
 EObjType,TICKET_END,300
 EObjType,ITEM,1000
 EObjType,COOKIE,10000
-EObjType,KINGDOM_OBJ,100000
+EObjType,KINGDOM_ITEM,100000
 
 ESessionState,NONE,0
 ESessionState,ACTIVE,1

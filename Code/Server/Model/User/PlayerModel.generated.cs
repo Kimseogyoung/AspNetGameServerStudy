@@ -59,6 +59,12 @@ namespace WebStudyServer.Model
     		public double AccGold { get; set; } = default; //
         
     		
+    		public double StarCandy { get; set; } = default; //
+        
+    		
+    		public double AccStarCandy { get; set; } = default; //
+        
+    		
     		public double RealCash { get; set; } = default; //
         
     		
