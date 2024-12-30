@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="protobuf-net.Core" Version="3.2.45" />
+  </ItemGroup>
+
 </Project>

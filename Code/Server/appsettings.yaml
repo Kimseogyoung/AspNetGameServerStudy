@@ -4,6 +4,8 @@ UserLockTimeoutSpan: 00:10:00
 SessionExpireSpan: 00:20:00
 IsShowErrorDetail: true
 UseStrictValidation: true
+Proto:
+    CsvPath: ../../Data/Csv/Proto
 Protocol:
     ForceContentType: application/protobuf
 Logging:

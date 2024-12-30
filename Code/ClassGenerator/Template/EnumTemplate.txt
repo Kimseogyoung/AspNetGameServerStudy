@@ -1,0 +1,22 @@
+using ProtoBuf;
+namespace Proto
+{
+{{ for enum in Enums }}
+	public enum {{enum.Name}} 
+	{ {{ for field in enum.Fields }}
+		{{field.Key}} = {{field.Value}}, //{{field.Desc}}{{ end }}
+	}
+{{ end }}
+
+	public class PrtEnum
+	{
+		public static IEnumerable<Type> GetEnums()
+		{
+			var list = new List<Type>();
+		{{ for enum in Enums }}
+	list.Add(typeof({{enum.Name}})); {{ end }}
+			return list;
+		}
+
+	}
+}

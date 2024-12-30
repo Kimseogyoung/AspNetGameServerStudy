@@ -97,6 +97,30 @@ namespace ClassGenerator
                         ModelGenerator.Run(csvPath, mdlOutputPath, pakOutputPath, liquibaseOutputPath);
                         break;
                     }
+                case "Proto":
+                    {
+                        string outputPath = Path.Join(projectPath, argOutputPath);
+                        if (string.IsNullOrEmpty(outputPath))
+                        {
+                            throw new Exception("NULL_EMPTY__OUTPUT");
+                        }
+
+                        // CSV 파일 읽기
+                        ProtoGenerater.Run(csvPath, outputPath);
+                        break;
+                    }
+                case "Enum":
+                    {
+                        string outputPath = Path.Join(projectPath, argOutputPath);
+                        if (string.IsNullOrEmpty(outputPath))
+                        {
+                            throw new Exception("NULL_EMPTY__OUTPUT");
+                        }
+
+                        // CSV 파일 읽기
+                        EnumGenerater.Run(csvPath, outputPath);
+                        break;
+                    }
                 default:
                     throw new Exception($"NO_HANDLING_GENERATER_TYPE:{type}");
             }

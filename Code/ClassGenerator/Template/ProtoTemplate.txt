@@ -1,0 +1,12 @@
+using ProtoBuf;
+namespace Proto
+{
+	{{ClassAttribute}}
+	public partial class {{ClassName}} : ProtoBase
+	{
+    {{ for field in Fields }}
+		{{field.Attribute}}
+		public {{field.Type}} {{field.Name}} { get; set; }
+    {{ end }}
+	}
+}

@@ -11,6 +11,14 @@
     "ModelGenerater": {
       "commandName": "Project",
       "commandLineArgs": "--type \"Model\" --xlsxPath \"..\\..\\Data\\Excel\\Model\" --csvPath \"..\\..\\Data\\Csv\\Model\" --mdlOutputPath \"..\\Server\\Model\" --pakOutputPath \"..\\Protocol\\Packet\\Model\" --liquibaseOutputPath \"..\\Liquibase\""
+    },
+    "ProtoGenerater": {
+      "commandName": "Project",
+      "commandLineArgs": "--type \"Proto\" --xlsxPath \"..\\..\\Data\\Excel\\Proto\" --csvPath \"..\\..\\Data\\Csv\\Proto\" --outputPath \"..\\Proto\\Class\""
+    },
+    "EnumGenerater": {
+      "commandName": "Project",
+      "commandLineArgs": "--type \"Enum\" --xlsxPath \"..\\..\\Data\\Excel\\Enum\" --csvPath \"..\\..\\Data\\Csv\\Enum\" --outputPath \"..\\Proto\""
     }
   }
 }
