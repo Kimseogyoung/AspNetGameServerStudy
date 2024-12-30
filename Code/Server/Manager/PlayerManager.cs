@@ -11,6 +11,7 @@ namespace WebStudyServer.Manager
 
         public PlayerManager(UserRepo userRepo, PlayerModel model) : base(userRepo, model)
         {
+
         }
 
         public void PreparePlayer()
