@@ -52,6 +52,7 @@ namespace WebStudyServer
 
             services.AddScoped<UserComponent>();
             services.AddScoped<PlayerComponent>();
+            services.AddScoped<PlayerDetailComponent>();
 
             services.AddScoped<AuthComponent>();
             services.AddScoped<AccountComponent>();

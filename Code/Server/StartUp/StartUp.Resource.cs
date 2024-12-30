@@ -26,6 +26,7 @@ namespace WebStudyServer
             DapperExtension.Init<PlayerMapModel>("AccountId");
 
             DapperExtension.Init<PlayerModel>("Id");
+            DapperExtension.Init<PlayerDetailModel>("PlayerId");
             DapperExtension.Init<CookieModel>("PlayerId", "Num");
             DapperExtension.Init<KingdomItemModel>("Id");
             DapperExtension.Init<PointModel>("PlayerId", "Num");

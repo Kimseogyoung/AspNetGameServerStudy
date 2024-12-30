@@ -170,86 +170,6 @@
                 },
                 {
                   "column": {
-                    "name": "Gold",
-                    "type": "DOUBLE",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "AccGold",
-                    "type": "DOUBLE",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "StarCandy",
-                    "type": "DOUBLE",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "AccStarCandy",
-                    "type": "DOUBLE",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "RealCash",
-                    "type": "DOUBLE",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "FreeCash",
-                    "type": "DOUBLE",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "AccRealCash",
-                    "type": "DOUBLE",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "AccFreeCash",
-                    "type": "DOUBLE",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
                     "name": "UpdateTime",
                     "type": "DATETIME",
                     "constraints": {
@@ -580,23 +500,13 @@
     },
     {
       "changeSet": {
-        "id": "KingdomObj",
+        "id": "PlayerDetail",
         "author": "seogyoung",
         "changes": [
           {
             "createTable": {
-              "tableName": "KingdomObj",
+              "tableName": "PlayerDetail",
               "columns": [
-                {
-                  "column": {
-                    "name": "Id",
-                    "type": "BIGINT UNSIGNED",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
                 {
                   "column": {
                     "name": "PlayerId",
@@ -609,8 +519,8 @@
                 },
                 {
                   "column": {
-                    "name": "Type",
-                    "type": "INT",
+                    "name": "Gold",
+                    "type": "DOUBLE",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -619,8 +529,8 @@
                 },
                 {
                   "column": {
-                    "name": "Num",
-                    "type": "INT",
+                    "name": "AccGold",
+                    "type": "DOUBLE",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -629,8 +539,8 @@
                 },
                 {
                   "column": {
-                    "name": "State",
-                    "type": "INT",
+                    "name": "StarCandy",
+                    "type": "DOUBLE",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -639,8 +549,8 @@
                 },
                 {
                   "column": {
-                    "name": "EndTime",
-                    "type": "DATETIME",
+                    "name": "AccStarCandy",
+                    "type": "DOUBLE",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -649,8 +559,8 @@
                 },
                 {
                   "column": {
-                    "name": "StartTileX",
-                    "type": "INT",
+                    "name": "RealCash",
+                    "type": "DOUBLE",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -659,8 +569,8 @@
                 },
                 {
                   "column": {
-                    "name": "StartTileY",
-                    "type": "INT",
+                    "name": "FreeCash",
+                    "type": "DOUBLE",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -669,8 +579,8 @@
                 },
                 {
                   "column": {
-                    "name": "EndTileX",
-                    "type": "INT",
+                    "name": "AccRealCash",
+                    "type": "DOUBLE",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -679,8 +589,8 @@
                 },
                 {
                   "column": {
-                    "name": "EndTileY",
-                    "type": "INT",
+                    "name": "AccFreeCash",
+                    "type": "DOUBLE",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -712,45 +622,17 @@
           },
           {
             "addPrimaryKey": {
-              "columnNames": "Id",
-              "tableName": "KingdomObj"
-            }
-          },
-          {
-            "createIndex": {
-              "indexName": "KingdomObj_Key_Index",
-              "tableName": "KingdomObj",
-              "columns": [
-                {
-                  "column": {
-                    "name": "PlayerId"
-                  }
-                },
-                {
-                  "column": {
-                    "name": "Num"
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "addAutoIncrement": {
-              "tableName": "KingdomObj",
-              "columnDataType": "BIGINT UNSIGNED",
-              "columnName": "Id",
-              "defaultOnNull": false,
-              "generationType": "ALWAYS",
-              "startWith": 1
+              "columnNames": "PlayerId",
+              "tableName": "PlayerDetail"
             }
           },
           {
             "addForeignKeyConstraint": {
-              "baseTableName": "KingdomObj",
+              "baseTableName": "PlayerDetail",
               "baseColumnNames": "PlayerId",
               "referencedTableName": "Player",
               "referencedColumnNames": "Id",
-              "constraintName": "FK_KingdomObj_Player"
+              "constraintName": "FK_PlayerDetail_Player"
             }
           }
         ]

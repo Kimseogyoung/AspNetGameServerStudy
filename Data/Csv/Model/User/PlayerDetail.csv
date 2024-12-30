@@ -1,0 +1,11 @@
+Name,Type,Value,Desc,ProtocolType,Key
+PlayerId,BIGINT UNSIGNED,,,Model,"pk, fk"
+Gold,DOUBLE,,,,
+AccGold,DOUBLE,,,Model,
+StarCandy,DOUBLE,,,,
+AccStarCandy,DOUBLE,,,Model,
+RealCash,DOUBLE,,,,
+FreeCash,DOUBLE,,,,
+AccRealCash,DOUBLE,,,Model,
+AccFreeCash,DOUBLE,,,Model,
+

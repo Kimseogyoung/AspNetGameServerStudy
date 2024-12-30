@@ -66,5 +66,39 @@ namespace WebStudyServer.Repo
             });
         }
         #endregion
+
+        #region PlayerDetail
+        public PlayerDetailModel CreatePlayerDetail(PlayerDetailModel newPlayer)
+        {
+            // 데이터베이스에 삽입
+            _executor.Excute((sqlConnection, transaction) =>
+            {
+                newPlayer = sqlConnection.Insert<PlayerDetailModel>(newPlayer, transaction);
+            });
+
+            return newPlayer; // 새로 생성된 플레이어 모델 반환
+        }
+
+        public bool TryGetPlayerDetail(ulong id, out PlayerDetailModel outPlayer)
+        {
+            PlayerDetailModel mdlPlayer = null;
+
+            _executor.Excute((sqlConnection, transaction) =>
+            {
+                mdlPlayer = sqlConnection.SelectByPk<PlayerDetailModel>(new { PlayerId = id }, transaction);
+            });
+
+            outPlayer = mdlPlayer;
+            return outPlayer != null;
+        }
+
+        public void UpdatePlayerDetail(PlayerDetailModel mdlPlayer)
+        {
+            _executor.Excute((sqlConnection, transaction) =>
+            {
+                sqlConnection.Update(mdlPlayer, transaction);
+            });
+        }
+        #endregion
     }
 }

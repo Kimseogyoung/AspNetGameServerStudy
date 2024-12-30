@@ -5,7 +5,7 @@ using WebStudyServer.Helper;
 
 namespace WebStudyServer.Manager
 {
-    public class PlayerManager : UserManagerBase<PlayerModel>
+    public partial class PlayerManager : UserManagerBase<PlayerModel>
     {
         public ulong Id => Model.Id;
 

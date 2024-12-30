@@ -3,6 +3,7 @@ using WebStudyServer;
 using Proto;
 using WebStudyServer.Repo;
 using WebStudyServer.Helper;
+using Protocol;
 
 namespace Server.Service
 {
@@ -14,6 +15,7 @@ namespace Server.Service
             _allUserRepo = allUserRepo;
         }
 
+        #region GAME
         public GameEnterResult Enter()
         {
             var mgrPlayer = _userComp.Player.TouchPlayer();
@@ -45,6 +47,31 @@ namespace Server.Service
 
             return mgrPlayer.Model.ProfileName;
         }
+        #endregion
+
+        #region KINGDOM_ITEM
+        public KingdomItemBuyResPacket KingdomItemBuy(int reqKingdomItemNum, CostObjPacket costObj)
+        {
+            var mgrPlayer = _userComp.Player.TouchPlayer();
+            
+            return new KingdomItemBuyResPacket {};
+        }
+
+        public KingdomItemConstructResPacket KingdomItemConstruct()
+        {
+            return new KingdomItemConstructResPacket { };
+        }
+
+        public KingdomItemCancelResPacket KingdomItemCancel()
+        {
+            return new KingdomItemCancelResPacket { };
+        }
+
+        public KingdomItemDecTimeResPacket KingdomItemDecTime()
+        {
+            return new KingdomItemDecTimeResPacket { };
+        }
+        #endregion
 
         private readonly UserComponent _userComp;
         private readonly AllUserRepo _allUserRepo;
