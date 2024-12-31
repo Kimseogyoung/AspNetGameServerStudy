@@ -73,8 +73,12 @@ namespace Server.Service
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqKingdomItemNum);
 
-            // TODO: Item 최대 보유량 체크
-            //
+            // Item 최대 보유량 체크
+            var hasItemCnt = _userRepo.KingdomItem.GetKingdomItemCnt(prtKingdomItem.Num);
+            ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_ITEM_CNT", 
+                () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
+            
+            // Cost일치하는지 체크
 
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
             var resultCostObj = mgrPlayerDetail.DecCost(costObj, $"BUY_KINGDOM_ITEM:{reqKingdomItemNum}");

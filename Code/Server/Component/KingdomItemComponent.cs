@@ -6,6 +6,7 @@ using WebStudyServer.Repo.Database;
 using WebStudyServer.Extension;
 using Proto;
 using WebStudyServer.Helper;
+using IdGen;
 
 namespace WebStudyServer.Component
 {
@@ -31,6 +32,18 @@ namespace WebStudyServer.Component
             var mgrTIcket = new TicketManager(_userRepo, mdlTicket);
             return mgrTIcket;
         }*/
+        
+        public int GetKingdomItemCnt(int num)
+        {
+            var cnt = 0;
+            _executor.Excute((sqlConnection, transaction) =>
+            {
+                var mdlList = sqlConnection.SelectListByConditions<KingdomItemModel>(new { Num = num }, transaction);
+                cnt = mdlList.Count();
+            });
+
+            return cnt;
+        }
 
         public KingdomItemManager Create(KingdomItemProto prt)
         {
