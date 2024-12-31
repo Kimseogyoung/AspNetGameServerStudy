@@ -24,18 +24,24 @@ namespace Proto
     		public string SizeY { get; set; }
         
     		[ProtoMember(8)]
-    		public int ProductionSec { get; set; }
+    		public int ConstructSec { get; set; }
         
     		[ProtoMember(9)]
-    		public EObjType ProductObjType { get; set; }
+    		public int MaxCnt { get; set; }
         
     		[ProtoMember(10)]
-    		public string ProductObjNum { get; set; }
+    		public int ProductionSec { get; set; }
         
     		[ProtoMember(11)]
-    		public string ProductObjAmount { get; set; }
+    		public EObjType ProductObjType { get; set; }
         
     		[ProtoMember(12)]
+    		public string ProductObjNum { get; set; }
+        
+    		[ProtoMember(13)]
+    		public string ProductObjAmount { get; set; }
+        
+    		[ProtoMember(14)]
     		public int MaxLv { get; set; }
         
 	}

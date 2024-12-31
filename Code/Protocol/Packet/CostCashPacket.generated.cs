@@ -3,7 +3,7 @@ using Proto;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class CashCostPacket	
+	public partial class CostCashPacket	
         {
         
                 [ProtoMember(1)]

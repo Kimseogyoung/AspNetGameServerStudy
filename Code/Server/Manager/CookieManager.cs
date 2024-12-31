@@ -11,7 +11,7 @@ namespace WebStudyServer.Manager
         {
         }
 
-        public double IncStarExp(int amount)
+        public double IncStarExp(int amount, string reason)
         {
             var befStarExp = _model.StarExp;
             var befAccStarExp = _model.AccStarExp;

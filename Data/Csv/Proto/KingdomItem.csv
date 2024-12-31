@@ -1,9 +1,9 @@
-Num,Name,Type,SpecialType,SizeX,SizeY,ProductionSec,ProductObjType,ProductObjNum,ProductObjAmount,MaxLv
-int:pk,string,enum:EKingdomItemType,enum:EKingdomItemSpecialType,string,string,int,enum:EObjType,string,string,int
-110001,뚝딱 대장간,STRUCTURE,FORGE,3,3,0,NONE,0,0,10
-110002,쿠키 하우스,STRUCTURE,NONE,3,3,10,STAR_CANDY,0,10,10
-130001,설탕 노움의 집,DECORATION,NONE,2,2,0,NONE,0,0,0
-180001,나무,DECORATION,NONE,2,2,0,NONE,0,0,0
-180002,나무,DECORATION,NONE,2,2,0,NONE,0,0,0
-190001,나무 조각,TRASH,NONE,1,1,0,NONE,0,0,0
+Num,Name,Type,SpecialType,SizeX,SizeY,ConstructSec,MaxCnt,ProductionSec,ProductObjType,ProductObjNum,ProductObjAmount,MaxLv
+int:pk,string,enum:EKingdomItemType,enum:EKingdomItemSpecialType,string,string,int,int,int,enum:EObjType,string,string,int
+110001,뚝딱 대장간,STRUCTURE,FORGE,3,3,10,1,0,NONE,0,0,10
+110002,쿠키 하우스,STRUCTURE,NONE,3,3,60,5,10,STAR_CANDY,0,10,10
+130001,설탕 노움의 집,DECORATION,NONE,2,2,0,10000,0,NONE,0,0,0
+180001,나무,DECORATION,NONE,2,2,0,10000,0,NONE,0,0,0
+180002,나무,DECORATION,NONE,2,2,0,10000,0,NONE,0,0,0
+190001,나무 조각,TRASH,NONE,1,1,0,10000,0,NONE,0,0,0
 

@@ -16,7 +16,7 @@ namespace Protocol
         public int RemainSec { get; set; } 
         
         [ProtoMember(4)]
-        public CashCostPacket CashCost { get; set; } 
+        public CostCashPacket CashCost { get; set; } 
         
         public string GetProtocolName() => "kingdom-item/dec-time";
 	}

@@ -3,6 +3,7 @@ using WebStudyServer.Model;
 using Proto;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
+using Protocol;
 
 namespace WebStudyServer.Manager
 {
@@ -14,7 +15,21 @@ namespace WebStudyServer.Manager
         {
         }
     
-        private double DecCost(EObjType objType, int objNum, double objAmount)
+        // TODO: Reward관련 내용 별도 멤버변수로 빼는것 고려
+        public ObjPacket DecCost(CostObjPacket valCostObj, string reason)
+        {
+            var amount = DecCost(valCostObj.Type, valCostObj.Num, valCostObj.Amount, reason);
+            var obj = new ObjPacket
+            {
+                Amount = amount,
+                ChgAmount = valCostObj.Amount,
+                Type = valCostObj.Type,
+                Num = valCostObj.Num,
+            };
+            return obj;
+        }
+
+        public double DecCost(EObjType objType, int objNum, double objAmount, string reason)
         {
             // TODO: 마이너스, 소수점 체크
             var objTypeCategory = objType.ToObjTyeCategory();
@@ -22,20 +37,20 @@ namespace WebStudyServer.Manager
             {
                 // TODO: 보유량 체크
                 case EObjType.GOLD:
-                    var gold = DecGoldInternal(objAmount);
+                    var gold = DecGoldInternal(objAmount, reason);
                     return gold;
                 case EObjType.STAR_CANDY:
                     break;
                 case EObjType.TOTAL_CASH:
-                    var totalCash = DecCashnternal(objAmount);
+                    var totalCash = DecCashInternal(objAmount, reason);
                     return totalCash;
                 case EObjType.POINT_START:
                     var pointNum = (int)objType;
-                    var pointAmount = DecPointInternal(pointNum, objAmount);
+                    var pointAmount = DecPointInternal(pointNum, objAmount, reason);
                     return pointAmount;
                 case EObjType.TICKET_START:
                     var ticketNum = (int)objType;
-                    var ticketAmount = DecTicketInternal(ticketNum, objAmount);
+                    var ticketAmount = DecTicketInternal(ticketNum, objAmount, reason);
                     return ticketAmount;
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_COST_OBJ_TYPE", new { ObjType = objType });
@@ -44,35 +59,59 @@ namespace WebStudyServer.Manager
             return 0;
         }
 
-        private double IncReward(EObjType objType, int objNum, double objAmount)
+        public List<ObjPacket> IncReward(List<RewardObjPacket> valRewardListObj, string reason)
+        {
+            var objList = new List<ObjPacket>();
+            foreach(var valReward in valRewardListObj)
+            {
+                var obj = IncReward(valReward, reason);
+                objList.Add(obj);
+            }
+            return objList;
+        }
+
+        public ObjPacket IncReward(RewardObjPacket valRewardObj, string reason)
+        {
+            var amount = DecCost(valRewardObj.Type, valRewardObj.Num, valRewardObj.Amount, reason);
+            var obj = new ObjPacket
+            {
+                Amount = amount,
+                ChgAmount = valRewardObj.Amount,
+                Type = valRewardObj.Type,
+                Num = valRewardObj.Num,
+            };
+            return obj;
+        }
+
+        public double IncReward(EObjType objType, int objNum, double objAmount, string reason)
         {
             // TODO: 마이너스, 소수점 체크
             var objTypeCategory = objType.ToObjTyeCategory();
             switch (objTypeCategory)
             {
                 case EObjType.GOLD:
-                    var gold = IncGoldInternal(objAmount);
+                    var gold = IncGoldInternal(objAmount, reason);
                     return gold;
                 case EObjType.STAR_CANDY:
                     break;
                 case EObjType.REAL_CASH:
-                    var realCash = IncRealCashInternal(objAmount);
+                    var realCash = IncRealCashInternal(objAmount, reason);
                     return realCash;
                 case EObjType.FREE_CASH:
-                    var freeCash = IncFreeCashInternal(objAmount);
+                    var freeCash = IncFreeCashInternal(objAmount, reason);
                     return freeCash;
                 case EObjType.POINT_START:
                     var pointNum = (int)objType;
-                    var pointAmount = IncPointInternal(pointNum, objAmount);
+                    var pointAmount = IncPointInternal(pointNum, objAmount, reason);
                     return pointAmount;
                 case EObjType.TICKET_START:
                     var ticketNum = (int)objType;
-                    var ticketAmount = IncTicketInternal(ticketNum, objAmount);
+                    var ticketAmount = IncTicketInternal(ticketNum, objAmount, reason);
                     return ticketAmount;
                 case EObjType.ITEM:
                     break;
                 case EObjType.COOKIE:
-                    var cookieStarExp = IncCookieInternal(objNum, (int)objAmount);
+                    var cookieStarExp = IncCookieInternal(objNum, (int)objAmount, reason);
                     return cookieStarExp;
                 case EObjType.KINGDOM_ITEM:
                     break;
@@ -84,7 +123,9 @@ namespace WebStudyServer.Manager
         }
 
         #region GOLD
-        private double DecGoldInternal(double amount)
+        public double DecGold(double amount, string reason) => DecGoldInternal(amount, reason);
+        public double IncGold(double amount, string reason) => IncGoldInternal(amount, reason);
+        private double DecGoldInternal(double amount, string reason)
         {
             var befGold = _model.Gold;
             var befAccGold = _model.AccGold;
@@ -95,7 +136,7 @@ namespace WebStudyServer.Manager
             return _model.Gold;
         }
 
-        private double IncGoldInternal(double amount)
+        private double IncGoldInternal(double amount, string reason)
         {
             var befGold = _model.Gold;
             var befAccGold = _model.AccGold;
@@ -108,7 +149,10 @@ namespace WebStudyServer.Manager
         #endregion
 
         #region CASH
-        private double DecCashnternal(double amount)
+        public double DecCash(double amount, string reason) => DecCashInternal(amount, reason);
+        public double IncFreeCash(double amount, string reason) => IncFreeCashInternal(amount, reason);
+        public double IncRealCash(double amount, string reason) => IncRealCashInternal(amount, reason);
+        private double DecCashInternal(double amount, string reason)
         {
             var befFreeCash = _model.FreeCash;
             var befAccFreeCash = _model.AccFreeCash;
@@ -139,7 +183,7 @@ namespace WebStudyServer.Manager
             return totalCash;
         }
 
-        private double IncFreeCashInternal(double amount)
+        private double IncFreeCashInternal(double amount, string reason)
         {
             var befGold = _model.FreeCash;
             var befAccGold = _model.AccFreeCash;
@@ -150,7 +194,7 @@ namespace WebStudyServer.Manager
             return _model.FreeCash;
         }
 
-        private double IncRealCashInternal(double amount)
+        private double IncRealCashInternal(double amount, string reason)
         {
             var befGold = _model.RealCash;
             var befAccGold = _model.AccRealCash;
@@ -163,42 +207,42 @@ namespace WebStudyServer.Manager
         #endregion
 
         #region POINT
-        private double DecPointInternal(int pointNum, double amount)
+        private double DecPointInternal(int pointNum, double amount, string reason)
         {
             var mgrPoint = _userRepo.Point.Touch((EObjType)pointNum);
-            var pointAmount = mgrPoint.DecAmount(amount);
+            var pointAmount = mgrPoint.DecAmount(amount, reason);
             return pointAmount;
         }
 
-        private double IncPointInternal(int pointNum, double amount)
+        private double IncPointInternal(int pointNum, double amount, string reason)
         {
             var mgrPoint = _userRepo.Point.Touch((EObjType)pointNum);
-            var pointAmount = mgrPoint.IncAmount(amount);
+            var pointAmount = mgrPoint.IncAmount(amount, reason);
             return pointAmount;
         }
         #endregion
 
         #region TICKET
-        private double DecTicketInternal(int ticketNum, double amount)
+        private double DecTicketInternal(int ticketNum, double amount, string reason)
         {
             var mgrPoint = _userRepo.Ticket.Touch((EObjType)ticketNum);
-            var pointAmount = mgrPoint.DecAmount(amount);
+            var pointAmount = mgrPoint.DecAmount(amount, reason);
             return pointAmount;
         }
 
-        private double IncTicketInternal(int ticketNum, double amount)
+        private double IncTicketInternal(int ticketNum, double amount, string reason)
         {
             var mgrPoint = _userRepo.Ticket.Touch((EObjType)ticketNum);
-            var pointAmount = mgrPoint.IncAmount(amount);
+            var pointAmount = mgrPoint.IncAmount(amount, reason);
             return pointAmount;
         }
         #endregion
 
         #region COOKIE
-        private double IncCookieInternal(int cookieNum, int starExp)
+        private double IncCookieInternal(int cookieNum, int starExp, string reason)
         {
             var mgrPoint = _userRepo.Cookie.Touch(cookieNum);
-            var pointAmount = mgrPoint.IncStarExp(starExp);
+            var pointAmount = mgrPoint.IncStarExp(starExp, reason);
             return pointAmount;
         }
         #endregion

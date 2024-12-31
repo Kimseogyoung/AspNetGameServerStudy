@@ -17,10 +17,12 @@ namespace WebStudyServer.Base
             _executor = executor;
         }
 
-        public T Create(T newValue)
+        protected T Create(T newValue)
         {
             // 데이터베이스에 삽입
             T mdl = null;
+            newValue.UpdateTime = DateTime.UtcNow;
+            newValue.CreateTime = DateTime.UtcNow;
             _executor.Excute((sqlConnection, transaction) =>
             {
                 mdl = sqlConnection.Insert<T>(newValue, transaction);
@@ -31,6 +33,7 @@ namespace WebStudyServer.Base
 
         public void Update(T mdl)
         {
+            mdl.UpdateTime = DateTime.UtcNow;
             _executor.Excute((sqlConnection, transaction) =>
             {
                 sqlConnection.Update(mdl, transaction);

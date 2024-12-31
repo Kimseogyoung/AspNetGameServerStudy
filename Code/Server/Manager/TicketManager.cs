@@ -13,7 +13,7 @@ namespace WebStudyServer.Manager
         {
         }
 
-        public double DecAmount(double amount)
+        public double DecAmount(double amount, string reason)
         {
             var befAmount = _model.Amount;
             var befAccAmount = _model.AccAmount;
@@ -24,7 +24,7 @@ namespace WebStudyServer.Manager
             return _model.Amount;
         }
 
-        public double IncAmount(double amount)
+        public double IncAmount(double amount, string reason)
         {
             var befAmount = _model.Amount;
             var befAccAmount = _model.AccAmount;

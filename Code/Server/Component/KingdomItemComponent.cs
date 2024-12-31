@@ -32,7 +32,28 @@ namespace WebStudyServer.Component
             return mgrTIcket;
         }*/
 
-        public bool TryGetInternal(ulong id, out KingdomItemModel outKingdomItem)
+        public KingdomItemManager Create(KingdomItemProto prt)
+        {
+            var mdlKingdomItem = base.Create(new KingdomItemModel
+            {
+                Num = prt.Num,
+                State = EKingdomItemState.STORED,
+                PlayerId = _userRepo.RpcContext.PlayerId,
+                Type = prt.Type,
+            });
+
+            var mgrKingdomItem = new KingdomItemManager(_userRepo, mdlKingdomItem, prt);
+            return mgrKingdomItem;
+        }
+
+        public KingdomItemManager Get(ulong id)
+        {
+            ReqHelper.ValidContext(TryGetInternal(id, out var mdlKingdomItem), "NOT_FOUND_KINGDOM_ITEM", () => new { Id = id });
+            var mgrKingdomItem = new KingdomItemManager(_userRepo, mdlKingdomItem);
+            return mgrKingdomItem;
+        }
+
+        private bool TryGetInternal(ulong id, out KingdomItemModel outKingdomItem)
         {
             KingdomItemModel mdlKingdomItem = null;
 
