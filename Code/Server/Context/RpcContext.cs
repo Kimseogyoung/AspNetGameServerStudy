@@ -96,8 +96,8 @@ namespace WebStudyServer
             //
 
             var authRepo = AuthRepo.CreateInstance(this);
-            var sessionComp = SessionComponent.CreateInstance(authRepo);
             authRepo.Init(0);
+            var sessionComp = authRepo.Session;
 
             if (!sessionComp.TryGetByKey(sessionKey, out var mgrSession))
             {

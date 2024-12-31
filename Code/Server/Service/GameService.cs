@@ -4,21 +4,23 @@ using Proto;
 using WebStudyServer.Repo;
 using WebStudyServer.Helper;
 using Protocol;
+using WebStudyServer.Model;
 
 namespace Server.Service
 {
     public class GameService : ServiceBase
     {
-        public GameService(AllUserRepo allUserRepo, UserComponent userComp, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
+        public GameService(AllUserRepo allUserRepo, AuthRepo authRepo, UserRepo userRepo, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
         {
-            _userComp = userComp;
+            _authRepo = authRepo;
+            _userRepo = userRepo;
             _allUserRepo = allUserRepo;
         }
 
         #region GAME
         public GameEnterResult Enter()
         {
-            var mgrPlayer = _userComp.Player.TouchPlayer();
+            var mgrPlayer = _userRepo.Player.Touch();
 
             if (mgrPlayer.Model.State >= Proto.EPlayerState.PREPARED)
             {
@@ -28,6 +30,21 @@ namespace Server.Service
             else
             {
                 mgrPlayer.PreparePlayer();
+
+                var accountId = mgrPlayer.Model.AccountId;
+                _authRepo.PlayerMap.Create(new PlayerMapModel
+                {
+                    AccountId = accountId,
+                    PlayerId = mgrPlayer.Id,
+                    ShardId = _userRepo.ShardId,
+                });
+
+                if (_authRepo.Session.TryGetByAccountId(accountId, out var mdlSession))
+                {
+                    mdlSession.SetPlayerId(mgrPlayer.Id);
+                }
+
+                _authRepo.Commit(); // TODO: 개선
             }
 
             return new GameEnterResult { Player = mgrPlayer.Model };
@@ -35,7 +52,7 @@ namespace Server.Service
 
         public string ChangeNameFirst(string name)
         {
-            var mgrPlayer = _userComp.Player.TouchPlayer();
+            var mgrPlayer = _userRepo.Player.Touch();
 
             mgrPlayer.ValidState(EPlayerState.CHANGED_NAME_FIRST);
 
@@ -52,7 +69,7 @@ namespace Server.Service
         #region KINGDOM_ITEM
         public KingdomItemBuyResPacket KingdomItemBuy(int reqKingdomItemNum, CostObjPacket costObj)
         {
-            var mgrPlayer = _userComp.Player.TouchPlayer();
+            var mgrPlayer = _userRepo.Player.Touch();
             
             return new KingdomItemBuyResPacket {};
         }
@@ -73,7 +90,8 @@ namespace Server.Service
         }
         #endregion
 
-        private readonly UserComponent _userComp;
+        private readonly AuthRepo _authRepo;
+        private readonly UserRepo _userRepo;
         private readonly AllUserRepo _allUserRepo;
     }
 }

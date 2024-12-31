@@ -1,39 +1,41 @@
 ﻿using Proto;
 using WebStudyServer.Base;
+using WebStudyServer.Extension;
 using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
+using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class AccountComponent : AuthComponentBase
     {
-        public AccountComponent(AuthRepo authRepo) : base(authRepo)
+        public AccountComponent(AuthRepo authRepo, DBSqlExecutor executor) : base(authRepo, executor)
         {
         }
 
-        public AccountManager GetActiveAccount(ulong accountId)
+        public AccountManager GetActive(ulong accountId)
         {
-            ReqHelper.ValidContext(TryGetAccount(accountId, out var mgrAccount), "NOT_FOUND_ACCOUNT", ()=> new {AccountId = accountId});
+            ReqHelper.ValidContext(TryGet(accountId, out var mgrAccount), "NOT_FOUND_ACCOUNT", ()=> new {AccountId = accountId});
             ReqHelper.ValidContext(mgrAccount.IsActive(), "NOT_ACTIVE_ACCOUNT", () => new { AccountId = accountId, State = mgrAccount.Model.State });
             return mgrAccount;
         }
 
-        public bool TryGetAccount(ulong accountId, out AccountManager mgrAccount)
+        public bool TryGet(ulong id, out AccountManager outAccount)
         {
-            mgrAccount = null;
+            AccountModel mdlAccount = null;
 
-            if (!_authRepo.TryGetAccount(accountId, out var mdlAccount))
+            _executor.Excute((sqlConnection, transaction) =>
             {
-                return false;
-            }
+                mdlAccount = sqlConnection.SelectByPk<AccountModel>(new { Id = id }, transaction);
+            });
 
-            mgrAccount = new AccountManager(_authRepo, mdlAccount);
-            return true;
+            outAccount = new AccountManager(_authRepo, mdlAccount);
+            return mdlAccount != null;
         }
 
-        public AccountManager CreateAccount()
+        public AccountManager Create()
         {
             var newAccount = new AccountModel
             {
@@ -43,12 +45,31 @@ namespace WebStudyServer.Component
                 ClientSecret = ""
             };
 
-            var repoAccount = _authRepo.CreateAccount(newAccount);
+            var repoAccount = CreateAccountInternal(newAccount);
             var mgrAccount = new AccountManager(_authRepo, repoAccount);
 
             _authRepo.RpcContext.SetAccountId(mgrAccount.Id);
             _authRepo.RpcContext.SetShardId(mgrAccount.Model.ShardId);
             return mgrAccount;
+        }
+
+        public void UpdateAccount(AccountModel mdlAccount)
+        {
+            _executor.Excute((sqlConnection, transaction) =>
+            {
+                sqlConnection.Update(mdlAccount, transaction);
+            });
+        }
+
+        private AccountModel CreateAccountInternal(AccountModel newAccount)
+        {
+            // 데이터베이스에 삽입
+            _executor.Excute((sqlConnection, transaction) =>
+            {
+                newAccount = sqlConnection.Insert<AccountModel>(newAccount, transaction);
+            });
+
+            return newAccount; // 새로 생성된 계정 모델 반환
         }
     }
 }

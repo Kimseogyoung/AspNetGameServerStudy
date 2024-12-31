@@ -1,5 +1,8 @@
-﻿using MySqlConnector;
+﻿using Microsoft.AspNetCore.Components;
+using MySqlConnector;
 using System.Data;
+using WebStudyServer.Extension;
+using WebStudyServer.Model;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Base
@@ -7,17 +10,19 @@ namespace WebStudyServer.Base
     public abstract class RepoBase
     {
         public int ShardId { get; private set; }
-
-        protected int _shardCnt => _dbConnStrList.Count;
         protected DBSqlExecutor _executor { get; private set; } = null!;
         protected abstract List<string> _dbConnStrList { get; }
+        protected abstract void PrepareComp();
 
         public void Init(int shardId)
         {
             var dbConnectionStr = GetDbConnectionStr();
             ShardId = shardId;
             _executor = DBSqlExecutor.Create(dbConnectionStr, System.Data.IsolationLevel.ReadCommitted);
+
+            PrepareComp();
         }
+
 
         public void Commit()
         {
@@ -57,5 +62,6 @@ namespace WebStudyServer.Base
 
             return _dbConnStrList[ShardId];
         }
+        private int _shardCnt => _dbConnStrList.Count;
     }
 }

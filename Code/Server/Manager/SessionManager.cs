@@ -24,11 +24,21 @@ namespace WebStudyServer.Manager
             Model.DeviceKey = _authRepo.RpcContext.DeviceKey;
             Model.EncryptIV = "";
             Model.EncryptSecret = "";
-            _authRepo.UpdateSession(Model);
+            _authRepo.Session.Update(Model);
 
             _authRepo.RpcContext.SetSessionKey(sessionKey);
         }
 
+        public void SetPlayerId(ulong playerId)
+        {
+            if (Model.PlayerId == playerId)
+            {
+                return;
+            }
+
+            Model.PlayerId = playerId;
+            _authRepo.Session.Update(Model);
+        }
 
         public bool IsExpire()
         {

@@ -78,7 +78,7 @@ namespace WebStudyServer.Manager
 
             _model.Gold -= amount;
             _model.AccGold -= amount;
-            _userRepo.UpdatePlayerDetail(_model);
+            _userRepo.PlayerDetail.Update(_model);
             return _model.Gold;
         }
 
@@ -89,7 +89,7 @@ namespace WebStudyServer.Manager
 
             _model.Gold += amount;
             _model.AccGold += amount;
-            _userRepo.UpdatePlayerDetail(_model);
+            _userRepo.PlayerDetail.Update(_model);
             return _model.Gold;
         }
         #endregion
@@ -120,7 +120,7 @@ namespace WebStudyServer.Manager
                 _model.AccFreeCash -= freeCashCost;
             }
 
-            _userRepo.UpdatePlayerDetail(_model);
+            _userRepo.PlayerDetail.Update(_model);
 
             var totalCash = _model.RealCash + _model.FreeCash;
             return totalCash;
@@ -133,7 +133,7 @@ namespace WebStudyServer.Manager
 
             _model.FreeCash += amount;
             _model.AccFreeCash += amount;
-            _userRepo.UpdatePlayerDetail(_model);
+            _userRepo.PlayerDetail.Update(_model);
             return _model.FreeCash;
         }
 
@@ -144,7 +144,7 @@ namespace WebStudyServer.Manager
 
             _model.RealCash += amount;
             _model.AccRealCash += amount;
-            _userRepo.UpdatePlayerDetail(_model);
+            _userRepo.PlayerDetail.Update(_model);
             return _model.RealCash;
         }
         #endregion

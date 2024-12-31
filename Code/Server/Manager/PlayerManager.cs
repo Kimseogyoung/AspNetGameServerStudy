@@ -8,17 +8,16 @@ namespace WebStudyServer.Manager
     public partial class PlayerManager : UserManagerBase<PlayerModel>
     {
         public ulong Id => Model.Id;
-
+       
         public PlayerManager(UserRepo userRepo, PlayerModel model) : base(userRepo, model)
         {
-
         }
 
         public void PreparePlayer()
         {
             // Player 초기 세팅
             Model.State = EPlayerState.PREPARED;
-            _userRepo.UpdatePlayer(Model);
+            _userRepo.Player.Update(Model);
         }
 
         public bool IsValidState(EPlayerState state)
@@ -34,7 +33,7 @@ namespace WebStudyServer.Manager
         public void ChangeName(string name)
         {
             Model.ProfileName = name;
-            _userRepo.UpdatePlayer(Model);
+            _userRepo.Player.Update(Model);
         }
     }
 }

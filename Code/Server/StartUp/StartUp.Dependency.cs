@@ -50,15 +50,6 @@ namespace WebStudyServer
             services.AddScoped<AuthService>();
             services.AddScoped<GameService>();
 
-            services.AddScoped<UserComponent>();
-            services.AddScoped<PlayerComponent>();
-            services.AddScoped<PlayerDetailComponent>();
-
-            services.AddScoped<AuthComponent>();
-            services.AddScoped<AccountComponent>();
-            services.AddScoped<ChannelComponent>();
-            services.AddScoped<DeviceComponent>();
-            services.AddScoped<SessionComponent>();
             services.AddScoped<RpcContext>();
         }
 
