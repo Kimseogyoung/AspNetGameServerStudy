@@ -9,7 +9,7 @@ using WebStudyServer.Extension;
 
 namespace WebStudyServer.Component
 {
-    public class PlayerComponent : UserComponentBase
+    public class PlayerComponent : UserComponentBase<PlayerModel>
     {
         public PlayerComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
         {
@@ -73,17 +73,6 @@ namespace WebStudyServer.Component
             return mgrPlayer;
         }
 
-        private PlayerModel Create(PlayerModel newPlayer)
-        {
-            // 데이터베이스에 삽입
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                newPlayer = sqlConnection.Insert<PlayerModel>(newPlayer, transaction);
-            });
-
-            return newPlayer; // 새로 생성된 플레이어 모델 반환
-        }
-
         public bool TryGetByAccountId(ulong accountId, out PlayerModel outPlayer)
         {
             PlayerModel mdlPlayer = null;
@@ -108,14 +97,6 @@ namespace WebStudyServer.Component
 
             outPlayer = mdlPlayer;
             return outPlayer != null;
-        }
-
-        public void Update(PlayerModel mdlPlayer)
-        {
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                sqlConnection.Update(mdlPlayer, transaction);
-            });
         }
     }
 }

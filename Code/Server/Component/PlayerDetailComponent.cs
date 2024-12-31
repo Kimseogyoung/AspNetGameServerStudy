@@ -7,7 +7,7 @@ using WebStudyServer.Extension;
 
 namespace WebStudyServer.Component
 {
-    public class PlayerDetailComponent : UserComponentBase
+    public class PlayerDetailComponent : UserComponentBase<PlayerDetailModel>
     {
         public PlayerDetailComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
         {
@@ -30,17 +30,6 @@ namespace WebStudyServer.Component
             return mgrPlayerDetail;
         }
 
-        public PlayerDetailModel Create(PlayerDetailModel newPlayer)
-        {
-            // 데이터베이스에 삽입
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                newPlayer = sqlConnection.Insert<PlayerDetailModel>(newPlayer, transaction);
-            });
-
-            return newPlayer; // 새로 생성된 플레이어 모델 반환
-        }
-
         public bool TryGet(ulong id, out PlayerDetailModel outPlayer)
         {
             PlayerDetailModel mdlPlayer = null;
@@ -52,14 +41,6 @@ namespace WebStudyServer.Component
 
             outPlayer = mdlPlayer;
             return outPlayer != null;
-        }
-
-        public void Update(PlayerDetailModel mdlPlayer)
-        {
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                sqlConnection.Update(mdlPlayer, transaction);
-            });
         }
     }
 }

@@ -2,6 +2,7 @@
 using WebStudyServer.Model;
 using Proto;
 using WebStudyServer.Extension;
+using WebStudyServer.Helper;
 
 namespace WebStudyServer.Manager
 {
@@ -15,9 +16,11 @@ namespace WebStudyServer.Manager
     
         private double DecCost(EObjType objType, int objNum, double objAmount)
         {
+            // TODO: 마이너스, 소수점 체크
             var objTypeCategory = objType.ToObjTyeCategory();
             switch (objTypeCategory)
             {
+                // TODO: 보유량 체크
                 case EObjType.GOLD:
                     var gold = DecGoldInternal(objAmount);
                     return gold;
@@ -27,9 +30,13 @@ namespace WebStudyServer.Manager
                     var totalCash = DecCashnternal(objAmount);
                     return totalCash;
                 case EObjType.POINT_START:
-                    break;
+                    var pointNum = (int)objType;
+                    var pointAmount = DecPointInternal(pointNum, objAmount);
+                    return pointAmount;
                 case EObjType.TICKET_START:
-                    break;
+                    var ticketNum = (int)objType;
+                    var ticketAmount = DecTicketInternal(ticketNum, objAmount);
+                    return ticketAmount;
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_COST_OBJ_TYPE", new { ObjType = objType });
             }
@@ -39,6 +46,7 @@ namespace WebStudyServer.Manager
 
         private double IncReward(EObjType objType, int objNum, double objAmount)
         {
+            // TODO: 마이너스, 소수점 체크
             var objTypeCategory = objType.ToObjTyeCategory();
             switch (objTypeCategory)
             {
@@ -54,13 +62,18 @@ namespace WebStudyServer.Manager
                     var freeCash = IncFreeCashInternal(objAmount);
                     return freeCash;
                 case EObjType.POINT_START:
-                    break;
+                    var pointNum = (int)objType;
+                    var pointAmount = IncPointInternal(pointNum, objAmount);
+                    return pointAmount;
                 case EObjType.TICKET_START:
-                    break;
+                    var ticketNum = (int)objType;
+                    var ticketAmount = IncTicketInternal(ticketNum, objAmount);
+                    return ticketAmount;
                 case EObjType.ITEM:
                     break;
                 case EObjType.COOKIE:
-                    break;
+                    var cookieStarExp = IncCookieInternal(objNum, (int)objAmount);
+                    return cookieStarExp;
                 case EObjType.KINGDOM_ITEM:
                     break;
                 default:
@@ -149,29 +162,47 @@ namespace WebStudyServer.Manager
         }
         #endregion
 
-     /*   #region POINT
+        #region POINT
         private double DecPointInternal(int pointNum, double amount)
         {
-            
-            var befGold = _model.Gold;
-            var befAccGold = _model.AccGold;
-
-            _model.Gold -= amount;
-            _model.AccGold -= amount;
-            _userRepo.UpdatePlayer(_model);
-            return _model.Gold;
+            var mgrPoint = _userRepo.Point.Touch((EObjType)pointNum);
+            var pointAmount = mgrPoint.DecAmount(amount);
+            return pointAmount;
         }
 
-        private double IncGoldInternal(double amount)
+        private double IncPointInternal(int pointNum, double amount)
         {
-            var befGold = _model.Gold;
-            var befAccGold = _model.AccGold;
-
-            _model.Gold += amount;
-            _model.AccGold += amount;
-            _userRepo.UpdatePlayer(_model);
-            return _model.Gold;
+            var mgrPoint = _userRepo.Point.Touch((EObjType)pointNum);
+            var pointAmount = mgrPoint.IncAmount(amount);
+            return pointAmount;
         }
-        #endregion*/
+        #endregion
+
+        #region TICKET
+        private double DecTicketInternal(int ticketNum, double amount)
+        {
+            var mgrPoint = _userRepo.Ticket.Touch((EObjType)ticketNum);
+            var pointAmount = mgrPoint.DecAmount(amount);
+            return pointAmount;
+        }
+
+        private double IncTicketInternal(int ticketNum, double amount)
+        {
+            var mgrPoint = _userRepo.Ticket.Touch((EObjType)ticketNum);
+            var pointAmount = mgrPoint.IncAmount(amount);
+            return pointAmount;
+        }
+        #endregion
+
+        #region COOKIE
+        private double IncCookieInternal(int cookieNum, int starExp)
+        {
+            var mgrPoint = _userRepo.Cookie.Touch(cookieNum);
+            var pointAmount = mgrPoint.IncStarExp(starExp);
+            return pointAmount;
+        }
+        #endregion
+
+
     }
 }

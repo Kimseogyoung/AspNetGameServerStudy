@@ -8,6 +8,10 @@ namespace WebStudyServer.Repo
     {
         public PlayerComponent Player => _playerComponent;
         public PlayerDetailComponent PlayerDetail => _playerDetailComponent;
+        public PointComponent Point => _pointComponent;
+        public TicketComponent Ticket => _ticketComponent;
+        public CookieComponent Cookie => _cookieComponent;
+        public KingdomItemComponent KingdomItem => _kingdomItemComponent;
         public RpcContext RpcContext { get; private set; }
 
         public UserRepo(RpcContext rpcContext)
@@ -20,6 +24,10 @@ namespace WebStudyServer.Repo
             // TODO: Lazy
             _playerComponent = new PlayerComponent(this, _executor);
             _playerDetailComponent = new PlayerDetailComponent(this, _executor);
+            _pointComponent = new PointComponent(this, _executor);
+            _ticketComponent = new TicketComponent(this, _executor);
+            _cookieComponent = new CookieComponent(this, _executor);
+            _kingdomItemComponent = new KingdomItemComponent(this, _executor);
         }
 
         public static UserRepo CreateInstance(RpcContext rpcContext)
@@ -33,5 +41,9 @@ namespace WebStudyServer.Repo
 
         private PlayerComponent _playerComponent;
         private PlayerDetailComponent _playerDetailComponent;
+        private PointComponent _pointComponent;
+        private TicketComponent _ticketComponent;
+        private CookieComponent _cookieComponent;
+        private KingdomItemComponent _kingdomItemComponent;
     }
 }
