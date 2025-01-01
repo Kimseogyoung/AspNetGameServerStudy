@@ -108,15 +108,51 @@ namespace Server.Service
             return new KingdomBuyDecoResPacket { };
         }
 
-        public KingdomConstructStructureResPacket KingdomItemConstruct(ulong reqKingdomItemId, CostObjPacket reqConstructCostObj, TilePosPacket reqStartTilePos, TilePosPacket reqEndTilePos)
+        public KingdomConstructStructureResPacket KingdomConstructStructure(ulong reqKingdomStructureId, CostObjPacket reqConstructCostObj, TilePosPacket reqStartTilePos, TilePosPacket reqEndTilePos)
         {
-            var mgrKingdomStructure = _userRepo.KingdomStructure.Get(reqKingdomItemId);
+            var mgrKingdomStructure = _userRepo.KingdomStructure.Get(reqKingdomStructureId);
+            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
 
             // TODO: Tile 위치 중복 체크
-            //
+            _userRepo.PlacedKingdomItem.ValidEmptyTile(reqStartTilePos, reqEndTilePos);
 
+            // Cost일치하는지 체크
+            var reason = $"CONSTURCT_KINGDOM_STRUCTURE:{reqKingdomStructureId}";
+            var prtKingdomItem = mgrKingdomStructure.Prt;
+            var valCostObj = ReqHelper.ValidCost(reqConstructCostObj, prtKingdomItem.ConstructObjType, prtKingdomItem.ConstructObjNum, prtKingdomItem.ConstructObjAmount, reason);
+
+            // 처리
+            // 처리: 건설 재료 소모
+            var chgCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
+
+            // 처리: 타일 설치
+            var placedKingdomItem = _userRepo.PlacedKingdomItem.Create(mgrKingdomStructure.Prt, reqStartTilePos.X, reqStartTilePos.Y, mgrKingdomStructure);
+
+            // 처리: 건설 완료(상태 변경)
             mgrKingdomStructure.Construct();
             return new KingdomConstructStructureResPacket { };
+        }
+
+        public KingdomConstructDecoResPacket KingdomConstructDeco(int reqKingdomItemNum, TilePosPacket reqStartTilePos, TilePosPacket reqEndTilePos)
+        {
+            var mgrKingdomDeco = _userRepo.KingdomDeco.Touch(reqKingdomItemNum);
+
+            // TODO: Tile 위치 중복 체크
+            _userRepo.PlacedKingdomItem.ValidEmptyTile(reqStartTilePos, reqEndTilePos);
+
+            // 처리 (즉시 설치)
+            // 처리: 타일 설치
+            var placedKingdomItem = _userRepo.PlacedKingdomItem.Create(mgrKingdomDeco.Prt, reqStartTilePos.X, reqStartTilePos.Y);
+
+            // 처리: 건설 완료 (보유 개수 차감)
+            mgrKingdomDeco.Construct();
+            return new KingdomConstructDecoResPacket { };
+        }
+
+        public void KingdomFinishConstructStructure(ulong reqKingdomStructureId)
+        {
+            var mgrKingdomItem = _userRepo.KingdomStructure.Get(reqKingdomStructureId);
+            mgrKingdomItem.FinishConstruct();
         }
 
         public KingdomStoreResPacket KingdomItemCancel(ulong kingdomItemId)

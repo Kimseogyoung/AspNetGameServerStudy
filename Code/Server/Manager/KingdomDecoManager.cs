@@ -37,40 +37,51 @@ namespace WebStudyServer.Manager
             _userRepo.KingdomDeco.Update(_model);
         }
 
-       /* public void Construct(int startTileX, int startTileY, int endTileX, int endTileY)
+        public void Construct()
         {
-            _model.StartTileX = startTileX;
-            _model.StartTileY = startTileY;
-            _model.EndTileX = endTileX;
-            _model.EndTileY = endTileY;
-            _model.State = EKingdomItemState.CONSTRUCTING;
-            _model.EndTime = _rpcContext.ServerTime + TimeSpan.FromSeconds(Prt.ConstructSec);
-            _userRepo.KingdomItem.Update(_model);
+            var cnt = 1;
+            ReqHelper.ValidContext(_model.UnplacedCnt >= cnt, "NOT_ENOUGH_DECO_CNT", () => new { Num = _model.Num, UnplacedCnt = _model.UnplacedCnt, DecCnt = cnt });
+            var befTotalCnt = _model.TotalCnt;
+            var befUnplacedCnt = _model.UnplacedCnt;
+
+            _model.UnplacedCnt -= cnt;
+            _userRepo.KingdomDeco.Update(_model);
         }
 
-        public void ConstructDone()
-        {
-            _model.EndTime = DateTime.MinValue;
-            _model.State = EKingdomItemState.READY;
-            _userRepo.KingdomItem.Update(_model);
-        }
+        /* public void Construct(int startTileX, int startTileY, int endTileX, int endTileY)
+         {
+             _model.StartTileX = startTileX;
+             _model.StartTileY = startTileY;
+             _model.EndTileX = endTileX;
+             _model.EndTileY = endTileY;
+             _model.State = EKingdomItemState.CONSTRUCTING;
+             _model.EndTime = _rpcContext.ServerTime + TimeSpan.FromSeconds(Prt.ConstructSec);
+             _userRepo.KingdomItem.Update(_model);
+         }
 
-        public void Cancel()
-        {
-            _model.StartTileX = 0;
-            _model.StartTileY = 0;
-            _model.EndTileX = 0;
-            _model.EndTileY = 0;
-            _model.State = EKingdomItemState.STORED;
-            _model.EndTime = DateTime.MinValue;
-            _userRepo.KingdomItem.Update(_model);
-        }
+         public void ConstructDone()
+         {
+             _model.EndTime = DateTime.MinValue;
+             _model.State = EKingdomItemState.READY;
+             _userRepo.KingdomItem.Update(_model);
+         }
 
-        public void DecTime()
-        {
-            _model.EndTime = DateTime.MinValue;
-            _model.State = EKingdomItemState.READY;
-            _userRepo.KingdomItem.Update(_model);
-        }*/
+         public void Cancel()
+         {
+             _model.StartTileX = 0;
+             _model.StartTileY = 0;
+             _model.EndTileX = 0;
+             _model.EndTileY = 0;
+             _model.State = EKingdomItemState.STORED;
+             _model.EndTime = DateTime.MinValue;
+             _userRepo.KingdomItem.Update(_model);
+         }
+
+         public void DecTime()
+         {
+             _model.EndTime = DateTime.MinValue;
+             _model.State = EKingdomItemState.READY;
+             _userRepo.KingdomItem.Update(_model);
+         }*/
     }
 }

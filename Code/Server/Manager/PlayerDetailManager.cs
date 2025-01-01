@@ -31,25 +31,31 @@ namespace WebStudyServer.Manager
 
         public double DecCost(EObjType objType, int objNum, double objAmount, string reason)
         {
-            // TODO: 마이너스, 소수점 체크
+            // 마이너스, 소수점 체크
+            ReqHelper.ValidUnderFlowParam(objAmount, reason);
+            var valObjAmount = ReqHelper.ValidWithoutDecimal(objAmount, reason);
+
             var objTypeCategory = objType.ToObjTyeCategory();
             switch (objTypeCategory)
             {
                 // TODO: 보유량 체크
                 case EObjType.GOLD:
-                    var gold = DecGoldInternal(objAmount, reason);
+                    var gold = DecGoldInternal(valObjAmount, reason);
                     return gold;
                 case EObjType.TOTAL_CASH:
-                    var totalCash = DecCashInternal(objAmount, reason);
+                    var totalCash = DecCashInternal(valObjAmount, reason);
                     return totalCash;
                 case EObjType.POINT_START:
                     var pointNum = (int)objType;
-                    var pointAmount = DecPointInternal(pointNum, objAmount, reason);
+                    var pointAmount = DecPointInternal(pointNum, valObjAmount, reason);
                     return pointAmount;
                 case EObjType.TICKET_START:
                     var ticketNum = (int)objType;
-                    var ticketAmount = DecTicketInternal(ticketNum, objAmount, reason);
+                    var ticketAmount = DecTicketInternal(ticketNum, valObjAmount, reason);
                     return ticketAmount;
+                case EObjType.ITEM:
+                    // TODO
+                    break;
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_COST_OBJ_TYPE", new { ObjType = objType });
             }
@@ -85,34 +91,34 @@ namespace WebStudyServer.Manager
         {
             // 마이너스, 소수점 체크
             ReqHelper.ValidUnderFlowParam(objAmount, reason);
-            ReqHelper.ValidWithoutDecimal(objAmount, reason);
+            var valObjAmount = ReqHelper.ValidWithoutDecimal(objAmount, reason);
 
             var objTypeCategory = objType.ToObjTyeCategory();
             switch (objTypeCategory)
             {
                 case EObjType.GOLD:
-                    var gold = IncGoldInternal(objAmount, reason);
+                    var gold = IncGoldInternal(valObjAmount, reason);
                     return gold;
                 case EObjType.EXP:
                     break;
                 case EObjType.REAL_CASH:
-                    var realCash = IncRealCashInternal(objAmount, reason);
+                    var realCash = IncRealCashInternal(valObjAmount, reason);
                     return realCash;
                 case EObjType.FREE_CASH:
-                    var freeCash = IncFreeCashInternal(objAmount, reason);
+                    var freeCash = IncFreeCashInternal(valObjAmount, reason);
                     return freeCash;
                 case EObjType.POINT_START:
                     var pointNum = (int)objType;
-                    var pointAmount = IncPointInternal(pointNum, objAmount, reason);
+                    var pointAmount = IncPointInternal(pointNum, valObjAmount, reason);
                     return pointAmount;
                 case EObjType.TICKET_START:
                     var ticketNum = (int)objType;
-                    var ticketAmount = IncTicketInternal(ticketNum, objAmount, reason);
+                    var ticketAmount = IncTicketInternal(ticketNum, valObjAmount, reason);
                     return ticketAmount;
                 case EObjType.ITEM:
                     break;
                 case EObjType.COOKIE:
-                    var cookieStarExp = IncCookieInternal(objNum, (int)objAmount, reason);
+                    var cookieStarExp = IncCookieInternal(objNum, (int)valObjAmount, reason);
                     return cookieStarExp;
                 case EObjType.KINGDOM_ITEM:
                     break;

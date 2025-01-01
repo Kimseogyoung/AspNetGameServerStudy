@@ -30,8 +30,10 @@ namespace WebStudyServer.Manager
             _userRepo.KingdomStructure.Update(_model);
         }
 
-        public void ConstructDone()
+        public void FinishConstruct()
         {
+            // TODO: 종료 시간 검증
+
             _model.EndTime = DateTime.MinValue;
             _model.State = EKingdomItemState.READY;
             _userRepo.KingdomStructure.Update(_model);

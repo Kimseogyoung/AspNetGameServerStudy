@@ -21,9 +21,6 @@ namespace Protocol
         [ProtoMember(5)]
         public TilePosPacket StartTilePos { get; set; } 
         
-        [ProtoMember(6)]
-        public TilePosPacket EndTilePos { get; set; } 
-        
         public string GetProtocolName() => "kingdom/construct-structure";
 	}
 }

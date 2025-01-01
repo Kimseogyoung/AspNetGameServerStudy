@@ -1,5 +1,5 @@
 ﻿Num,Name,Type,SpecialType,SizeX,SizeY,MaxCnt,MaxLv,CastleLv,ConstructSec,ConstructObjType,ConstructObjNum,ConstructObjAmount,CostObjType,CostObjNum,CostObjAmount,ProductionSec,ProductObjType,ProductObjNum,ProductObjAmount,DecoPoint
-int:pk,string,enum:EKingdomItemType,enum:EKingdomItemSpecialType,string,string,int,int,int,int,enum:EObjType,int,int,enum:EObjType,int,int,int,enum:EObjType,int,int,int
+int:pk,string,enum:EKingdomItemType,enum:EKingdomItemSpecialType,int,int,int,int,int,int,enum:EObjType,int,int,enum:EObjType,int,int,int,enum:EObjType,int,int,int
 110001,뚝딱 대장간,STRUCTURE,NONE,3,3,3,10,0,10,ITEM,19001,5,GOLD,0,4000,0,NONE,0,0,24
 110002,쿠키 하우스,STRUCTURE,NONE,3,3,5,10,0,60,ITEM,19001,5,TOTAL_CASH,0,800,10,ITEM,11101,1,40
 130001,설탕 노움의 집,DECO,NONE,2,2,10000,0,0,0,NONE,0,0,GOLD,0,2000,0,NONE,0,0,9

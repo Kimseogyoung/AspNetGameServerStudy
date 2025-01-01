@@ -18,10 +18,10 @@ namespace Proto
     		public EKingdomItemSpecialType SpecialType { get; set; }
         
     		[ProtoMember(6)]
-    		public string SizeX { get; set; }
+    		public int SizeX { get; set; }
         
     		[ProtoMember(7)]
-    		public string SizeY { get; set; }
+    		public int SizeY { get; set; }
         
     		[ProtoMember(8)]
     		public int MaxCnt { get; set; }
