@@ -95,7 +95,7 @@ namespace ClassGenerator
                             fieldCodeType = $"List<{typeArr[1]}>";
                             break;
                         default:
-                            if (fieldType.StartsWith("VARCHAR"))
+                            if (fieldType.StartsWith("VARCHAR") || fieldType.Contains("TEXT"))
                             {
                                 fieldSQLType = fieldType;
                                 fieldCodeType = "string";
@@ -145,11 +145,17 @@ namespace ClassGenerator
                 groupedClassDict[definition.ClassName].Add(definition);
             }
 
-            GenerateModel(groupedClassDict, mdlOutputPath);
             GeneratePacket(groupedClassDict, pakOutputPath);
+            GenerateModel(groupedClassDict, mdlOutputPath);
 
             foreach (var (tableName, defList) in groupedClassDict)
             {
+                var mdlCnt = GetModelFieldCnt(defList);
+                if (mdlCnt == 0)
+                {
+                    continue;
+                }
+
                 defList.Add(new ModelDefinition
                 {
                     ClassName = tableName,
@@ -179,6 +185,12 @@ namespace ClassGenerator
         {
             foreach (var (className, defList) in modelDefListDict)
             {
+                var mdlCnt = GetModelFieldCnt(defList);
+                if (mdlCnt == 0)
+                {
+                    continue;
+                }
+
                 var parsedTemplate = Template.Parse(_mdlTemplate);
                 var fieldList = new List<dynamic>();
 
@@ -223,6 +235,12 @@ namespace ClassGenerator
             var folderTableNameDict = new Dictionary<string, List<string>>();
             foreach(var (key, defList) in modelDefListDict)
             {
+                var mdlCnt = GetModelFieldCnt(defList);
+                if (mdlCnt == 0)
+                {
+                    continue;
+                }
+
                 var folderName = defList[0].FolderName;
                 if (folderTableNameDict.ContainsKey(folderName))
                 {
@@ -454,6 +472,12 @@ namespace ClassGenerator
             var binDirPath = Path.GetDirectoryName(exeCfgDirPath);
             var projectPath = Path.GetDirectoryName(binDirPath);
             return projectPath == null? string.Empty : projectPath;
+        }
+
+        private static int GetModelFieldCnt(List<ModelDefinition> defList)
+        {
+            var mdlCnt = defList.Count(x => string.IsNullOrEmpty(x.ProtocolType) || x.ProtocolType == "Model");
+            return mdlCnt;
         }
 
         private const int c_maxColCnt = 6;

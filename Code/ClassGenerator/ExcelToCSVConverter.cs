@@ -21,12 +21,15 @@ namespace ClassGenerator
                 {
 
                     var headerRow = worksheet.Rows(1, 1);
-                    var headerValues = headerRow.Cells().Select(x => x.Value.ToString()).Where(x => !string.IsNullOrEmpty(x));
-                    var headerColCnt = headerValues.Count();
+                    var headerValueList = headerRow.Cells().Select(x => x.Value.ToString()).Where(x => !string.IsNullOrEmpty(x)).ToList();
+                    var headerColCnt = headerValueList.Count();
+                    var skipHeaderCols = headerValueList.Where(x => x.StartsWith("#")).Select(x => headerValueList.IndexOf(x) + 1);
+
                     // 첫 번째 워크시트만 헤더 추가
                     if (worksheetIndex == 0)
                     {
-                        csvContent.AppendLine(string.Join(",", headerValues));
+                        // 주석이 아닌 것만.
+                        csvContent.AppendLine(string.Join(",", headerValueList.Where(x => !x.StartsWith("#"))));
                         //worksheet.Rows(1, 1).Delete(); // 첫 번째 행(헤더) 삭제
                     }
 
@@ -44,6 +47,11 @@ namespace ClassGenerator
                         var cellValues = new List<string>();
                         for (var colNum = 1; colNum <= headerColCnt; colNum++)
                         {
+                            if (skipHeaderCols.Contains(colNum))
+                            {
+                                continue;
+                            }
+
                             // 셀 값을 CSV 형식으로 추가 (콤마로 구분)
                             var cell = row.Cell(colNum);
                             var cellValue = cell.Value.ToString();
@@ -81,7 +89,7 @@ namespace ClassGenerator
                     Directory.CreateDirectory(dirPath);
                 }
 
-                File.WriteAllText(csvFilePath, csvContent.ToString());
+                File.WriteAllText(csvFilePath, csvContent.ToString(), Encoding.UTF8);
             }
 
             Console.WriteLine($"XSLX -> CSV: {excelFilePath} -> {csvFilePath}");
