@@ -1,0 +1,7 @@
+Name,Type,Value,Desc,ProtocolType,Key
+PlayerId,BIGINT UNSIGNED,,,Model,"pk, fk, c_index"
+Num,INT,,,,pk
+Type,ENUM:EItemType,,,,c_index
+Amount,DOUBLE,,,,
+AccAmount,DOUBLE,,,,
+

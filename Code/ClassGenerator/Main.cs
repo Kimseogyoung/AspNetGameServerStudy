@@ -144,6 +144,11 @@ namespace ClassGenerator
                 var csvDirName = rootDirName == dirName ? "" : dirName;
                 var csvFileName = Path.GetFileName(xlsxFile).Replace("xlsx", "csv");
 
+                if (csvFileName.StartsWith("_"))
+                {
+                    continue;
+                }
+
                 var filePath = Path.Join(csvPath, csvDirName, csvFileName);
                 ExcelToCSVConverter.ConvertExcelToCSV(xlsxFile, filePath);
             }

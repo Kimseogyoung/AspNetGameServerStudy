@@ -3,7 +3,7 @@ using Proto;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class KingdomItemConstructReqPacket : IReqPacket
+	public partial class KingdomConstructDecoReqPacket : IReqPacket
 	{
     
         [ProtoMember(1)]
@@ -24,6 +24,6 @@ namespace Protocol
         [ProtoMember(6)]
         public int EndTileY { get; set; } 
         
-        public string GetProtocolName() => "kingdom-item/construct";
+        public string GetProtocolName() => "kingdom/construct-deco";
 	}
 }

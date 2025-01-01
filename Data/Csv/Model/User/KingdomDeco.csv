@@ -1,0 +1,7 @@
+Name,Type,Value,Desc,ProtocolType,Key
+Num,INT,,,,pk
+PlayerId,BIGINT UNSIGNED,,,Model,"pk, fk "
+TotalCnt,INT,,,,
+UnplacedCnt,INT,,,,
+State,ENUM:EKingdomItemState,,,,
+

@@ -6,20 +6,20 @@ using WebStudyServer.GAME;
 
 namespace WebStudyServer.Manager
 {
-    public partial class KingdomItemManager : UserManagerBase<KingdomItemModel>
+    public partial class KingdomDecoManager : UserManagerBase<KingdomDecoModel>
     {
         public KingdomItemProto Prt { get; private set; }
-        public KingdomItemManager(UserRepo userRepo, KingdomItemModel model, KingdomItemProto prt) : base(userRepo, model)
+        public KingdomDecoManager(UserRepo userRepo, KingdomDecoModel model, KingdomItemProto prt) : base(userRepo, model)
         {
             Prt = prt;
         }
 
-        public KingdomItemManager(UserRepo userRepo, KingdomItemModel model) : base(userRepo, model)
+        public KingdomDecoManager(UserRepo userRepo, KingdomDecoModel model) : base(userRepo, model)
         {
             Prt = APP.Prt.GetKingdomItemPrt(model.Num);
         }
 
-        public void Construct(int startTileX, int startTileY, int endTileX, int endTileY)
+       /* public void Construct(int startTileX, int startTileY, int endTileX, int endTileY)
         {
             _model.StartTileX = startTileX;
             _model.StartTileY = startTileY;
@@ -53,6 +53,6 @@ namespace WebStudyServer.Manager
             _model.EndTime = DateTime.MinValue;
             _model.State = EKingdomItemState.READY;
             _userRepo.KingdomItem.Update(_model);
-        }
+        }*/
     }
 }

@@ -10,6 +10,7 @@ namespace WebStudyServer.Base
     {
         protected DBSqlExecutor _executor;
         protected UserRepo _userRepo;
+        protected RpcContext _rpcContext => _userRepo.RpcContext;
 
         public UserComponentBase(UserRepo userRepo, DBSqlExecutor executor)
         {

@@ -10,9 +10,9 @@ using IdGen;
 
 namespace WebStudyServer.Component
 {
-    public class KingdomItemComponent : UserComponentBase<KingdomItemModel>
+    public class KingdomTileMapComponent : UserComponentBase<KingdomTileMapModel>
     {
-        public KingdomItemComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
+        public KingdomTileMapComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
         {
 
         }
@@ -33,19 +33,8 @@ namespace WebStudyServer.Component
             return mgrTIcket;
         }*/
         
-        public int GetKingdomItemCnt(int num)
-        {
-            var cnt = 0;
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                var mdlList = sqlConnection.SelectListByConditions<KingdomItemModel>(new { Num = num }, transaction);
-                cnt = mdlList.Count();
-            });
 
-            return cnt;
-        }
-
-        public KingdomItemManager Create(KingdomItemProto prt)
+     /*   public KingdomItemManager Create(KingdomItemProto prt)
         {
             var mdlKingdomItem = base.Create(new KingdomItemModel
             {
@@ -82,6 +71,6 @@ namespace WebStudyServer.Component
                     () => new { Id = id, PlayerId = _userRepo.RpcContext.PlayerId, KingdomItemPlayerId = mdlKingdomItem.PlayerId });
             }
             return outKingdomItem != null;
-        }
+        }*/
     }
 }

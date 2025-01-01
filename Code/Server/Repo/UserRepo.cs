@@ -11,7 +11,10 @@ namespace WebStudyServer.Repo
         public PointComponent Point => _pointComponent;
         public TicketComponent Ticket => _ticketComponent;
         public CookieComponent Cookie => _cookieComponent;
-        public KingdomItemComponent KingdomItem => _kingdomItemComponent;
+        public ItemComponent Item => _itemComponent;
+        public KingdomStructureComponent KingdomStructure => _kingdomStructureComponent;
+        public KingdomDecoComponent KingdomDeco => _kingdomDecoComponent;
+        public KingdomTileMapComponent KingdomTileMap => _kingdomTileMapComponent;
         public RpcContext RpcContext { get; private set; }
 
         public UserRepo(RpcContext rpcContext)
@@ -27,7 +30,10 @@ namespace WebStudyServer.Repo
             _pointComponent = new PointComponent(this, _executor);
             _ticketComponent = new TicketComponent(this, _executor);
             _cookieComponent = new CookieComponent(this, _executor);
-            _kingdomItemComponent = new KingdomItemComponent(this, _executor);
+            _kingdomStructureComponent = new KingdomStructureComponent(this, _executor);
+            _kingdomDecoComponent = new KingdomDecoComponent(this, _executor);
+            _kingdomTileMapComponent = new KingdomTileMapComponent(this, _executor);
+            _itemComponent = new ItemComponent(this, _executor);
         }
 
         public static UserRepo CreateInstance(RpcContext rpcContext)
@@ -44,6 +50,9 @@ namespace WebStudyServer.Repo
         private PointComponent _pointComponent;
         private TicketComponent _ticketComponent;
         private CookieComponent _cookieComponent;
-        private KingdomItemComponent _kingdomItemComponent;
+        private ItemComponent _itemComponent;
+        private KingdomStructureComponent _kingdomStructureComponent;
+        private KingdomDecoComponent _kingdomDecoComponent;
+        private KingdomTileMapComponent _kingdomTileMapComponent;
     }
 }

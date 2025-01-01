@@ -1,4 +1,4 @@
-Type,Name,#주석
-enum:EObjType:pk,string,
-POINT_MILEAGE,마일리지,
+﻿Type,Name
+enum:EObjType:pk,string
+POINT_MILEAGE,마일리지
 

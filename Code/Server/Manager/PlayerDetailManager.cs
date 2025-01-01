@@ -39,8 +39,6 @@ namespace WebStudyServer.Manager
                 case EObjType.GOLD:
                     var gold = DecGoldInternal(objAmount, reason);
                     return gold;
-                case EObjType.STAR_CANDY:
-                    break;
                 case EObjType.TOTAL_CASH:
                     var totalCash = DecCashInternal(objAmount, reason);
                     return totalCash;
@@ -92,7 +90,7 @@ namespace WebStudyServer.Manager
                 case EObjType.GOLD:
                     var gold = IncGoldInternal(objAmount, reason);
                     return gold;
-                case EObjType.STAR_CANDY:
+                case EObjType.EXP:
                     break;
                 case EObjType.REAL_CASH:
                     var realCash = IncRealCashInternal(objAmount, reason);

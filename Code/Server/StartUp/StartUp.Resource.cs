@@ -28,7 +28,11 @@ namespace WebStudyServer
             DapperExtension.Init<PlayerModel>("Id");
             DapperExtension.Init<PlayerDetailModel>("PlayerId");
             DapperExtension.Init<CookieModel>("PlayerId", "Num");
-            DapperExtension.Init<KingdomItemModel>("Id");
+            //DapperExtension.Init<KingdomItemModel>("Id");
+            DapperExtension.Init<KingdomTileMapModel>("PlayerId");
+            DapperExtension.Init<KingdomStructureModel>("Id");
+            DapperExtension.Init<KingdomDecoModel>("PlayerId", "Num");
+            DapperExtension.Init<ItemModel>("PlayerId", "Num");
             DapperExtension.Init<PointModel>("PlayerId", "Num");
             DapperExtension.Init<TicketModel>("PlayerId", "Num");
         }

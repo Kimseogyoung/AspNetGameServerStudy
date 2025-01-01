@@ -11,16 +11,16 @@ namespace WebStudyServer.Model
     		public ulong PlayerId { get; set; } = default; //
         
     		
+    		public double Exp { get; set; } = default; //
+        
+    		
+    		public double AccExp { get; set; } = default; //
+        
+    		
     		public double Gold { get; set; } = default; //
         
     		
     		public double AccGold { get; set; } = default; //
-        
-    		
-    		public double StarCandy { get; set; } = default; //
-        
-    		
-    		public double AccStarCandy { get; set; } = default; //
         
     		
     		public double RealCash { get; set; } = default; //

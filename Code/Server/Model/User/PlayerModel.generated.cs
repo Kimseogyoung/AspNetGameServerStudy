@@ -23,16 +23,13 @@ namespace WebStudyServer.Model
     		public int Lv { get; set; } = 1; //
         
     		
+    		public int CastleLv { get; set; } = 0; //
+        
+    		
     		public ulong Flag { get; set; } = default; //
         
     		
     		public EPlayerState State { get; set; } = default; //
-        
-    		
-    		public int Exp { get; set; } = default; //
-        
-    		
-    		public int AccExp { get; set; } = default; //
         
     		
     		public int ProfileTitleNum { get; set; } = default; //

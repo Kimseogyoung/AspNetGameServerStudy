@@ -1,0 +1,11 @@
+Name,Type,Value,Desc,ProtocolType,Key
+StructureItemId,BIGINT UNSIGNED,,,Packet,fk
+Type,ENUM:EKingdomItemType,,,Packet,c_index
+Num,INT,,,Packet,
+State,ENUM:EPlacedKingdomItemState,,,Packet,
+StartTileX,INT,,,Packet,
+StartTileY,INT,,,Packet,
+SizeX,INT,,,Packet,
+SizeY,INT,,,Packet,
+Rotation,INT,,,Packet,
+

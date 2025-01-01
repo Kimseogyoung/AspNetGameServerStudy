@@ -70,6 +70,16 @@
                 },
                 {
                   "column": {
+                    "name": "CastleLv",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
                     "name": "Flag",
                     "type": "BIGINT UNSIGNED",
                     "constraints": {
@@ -81,26 +91,6 @@
                 {
                   "column": {
                     "name": "State",
-                    "type": "INT",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "Exp",
-                    "type": "INT",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "AccExp",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -322,37 +312,17 @@
     },
     {
       "changeSet": {
-        "id": "KingdomItem",
+        "id": "Item",
         "author": "seogyoung",
         "changes": [
           {
             "createTable": {
-              "tableName": "KingdomItem",
+              "tableName": "Item",
               "columns": [
-                {
-                  "column": {
-                    "name": "Id",
-                    "type": "BIGINT UNSIGNED",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
                 {
                   "column": {
                     "name": "PlayerId",
                     "type": "BIGINT UNSIGNED",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "Type",
-                    "type": "INT",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -371,7 +341,7 @@
                 },
                 {
                   "column": {
-                    "name": "State",
+                    "name": "Type",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -381,7 +351,27 @@
                 },
                 {
                   "column": {
-                    "name": "EndTime",
+                    "name": "Amount",
+                    "type": "DOUBLE",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "AccAmount",
+                    "type": "DOUBLE",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
                     "type": "DATETIME",
                     "constraints": {
                       "primaryKey": false,
@@ -391,7 +381,65 @@
                 },
                 {
                   "column": {
-                    "name": "StartTileX",
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "PlayerId, Num",
+              "tableName": "Item"
+            }
+          },
+          {
+            "createIndex": {
+              "indexName": "Item_Key_Index",
+              "tableName": "Item",
+              "columns": [
+                {
+                  "column": {
+                    "name": "PlayerId"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Type"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "Item",
+              "baseColumnNames": "PlayerId",
+              "referencedTableName": "Player",
+              "referencedColumnNames": "Id",
+              "constraintName": "FK_Item_Player"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "KingdomDeco",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "KingdomDeco",
+              "columns": [
+                {
+                  "column": {
+                    "name": "Num",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -401,7 +449,17 @@
                 },
                 {
                   "column": {
-                    "name": "StartTileY",
+                    "name": "PlayerId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "TotalCnt",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -411,7 +469,7 @@
                 },
                 {
                   "column": {
-                    "name": "EndTileX",
+                    "name": "UnplacedCnt",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -421,7 +479,7 @@
                 },
                 {
                   "column": {
-                    "name": "EndTileY",
+                    "name": "State",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -454,14 +512,124 @@
           },
           {
             "addPrimaryKey": {
+              "columnNames": "Num, PlayerId",
+              "tableName": "KingdomDeco"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "KingdomDeco",
+              "baseColumnNames": "PlayerId",
+              "referencedTableName": "Player",
+              "referencedColumnNames": "Id",
+              "constraintName": "FK_KingdomDeco_Player"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "KingdomStructure",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "KingdomStructure",
+              "columns": [
+                {
+                  "column": {
+                    "name": "Id",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "PlayerId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Num",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "State",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Flag",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "EndTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
               "columnNames": "Id",
-              "tableName": "KingdomItem"
+              "tableName": "KingdomStructure"
             }
           },
           {
             "createIndex": {
-              "indexName": "KingdomItem_Key_Index",
-              "tableName": "KingdomItem",
+              "indexName": "KingdomStructure_Key_Index",
+              "tableName": "KingdomStructure",
               "columns": [
                 {
                   "column": {
@@ -478,7 +646,7 @@
           },
           {
             "addAutoIncrement": {
-              "tableName": "KingdomItem",
+              "tableName": "KingdomStructure",
               "columnDataType": "BIGINT UNSIGNED",
               "columnName": "Id",
               "defaultOnNull": false,
@@ -488,11 +656,91 @@
           },
           {
             "addForeignKeyConstraint": {
-              "baseTableName": "KingdomItem",
+              "baseTableName": "KingdomStructure",
               "baseColumnNames": "PlayerId",
               "referencedTableName": "Player",
               "referencedColumnNames": "Id",
-              "constraintName": "FK_KingdomItem_Player"
+              "constraintName": "FK_KingdomStructure_Player"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "KingdomTileMap",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "KingdomTileMap",
+              "columns": [
+                {
+                  "column": {
+                    "name": "PlayerId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Snapshot",
+                    "type": "TEXT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "State",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "PlayerId",
+              "tableName": "KingdomTileMap"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "KingdomTileMap",
+              "baseColumnNames": "PlayerId",
+              "referencedTableName": "Player",
+              "referencedColumnNames": "Id",
+              "constraintName": "FK_KingdomTileMap_Player"
             }
           }
         ]
@@ -519,6 +767,26 @@
                 },
                 {
                   "column": {
+                    "name": "Exp",
+                    "type": "DOUBLE",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "AccExp",
+                    "type": "DOUBLE",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
                     "name": "Gold",
                     "type": "DOUBLE",
                     "constraints": {
@@ -530,26 +798,6 @@
                 {
                   "column": {
                     "name": "AccGold",
-                    "type": "DOUBLE",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "StarCandy",
-                    "type": "DOUBLE",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "AccStarCandy",
                     "type": "DOUBLE",
                     "constraints": {
                       "primaryKey": false,

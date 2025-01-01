@@ -3,7 +3,7 @@ using Proto;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class KingdomItemBuyReqPacket : IReqPacket
+	public partial class KingdomBuyDecoReqPacket : IReqPacket
 	{
     
         [ProtoMember(1)]
@@ -15,6 +15,6 @@ namespace Protocol
         [ProtoMember(3)]
         public CostObjPacket CostObj { get; set; } 
         
-        public string GetProtocolName() => "kingdom-item/buy";
+        public string GetProtocolName() => "kingdom/buy-deco";
 	}
 }

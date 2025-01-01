@@ -21,42 +21,52 @@ namespace WebStudyServer.Controllers
             _logger = logger;
         }
 
-        [HttpPost("buy")]
-        public ActionResult<KingdomItemBuyResPacket> Buy(KingdomItemBuyReqPacket req)
+        [HttpPost("buy-structure")]
+        public ActionResult<KingdomBuyStructureResPacket> BuyStructure(KingdomBuyStructureReqPacket req)
         {
             var result = _gameService.Enter();
 
-            return new KingdomItemBuyResPacket
+            return new KingdomBuyStructureResPacket
             {
             };
         }
 
-        [HttpPost("construct")]
-        public ActionResult<KingdomItemConstructResPacket> Construct(KingdomItemConstructReqPacket req)
+        [HttpPost("buy-deco")]
+        public ActionResult<KingdomBuyDecoResPacket> BuyDeco(KingdomBuyDecoReqPacket req)
         {
             var result = _gameService.Enter();
 
-            return new KingdomItemConstructResPacket
+            return new KingdomBuyDecoResPacket
             {
             };
         }
 
-        [HttpPost("cancel")]
-        public ActionResult<KingdomItemCancelResPacket> Cancel(KingdomItemCancelReqPacket req)
+        [HttpPost("construct-structure")]
+        public ActionResult<KingdomConstructStructureResPacket> ConstructStructure(KingdomConstructStructureReqPacket req)
         {
             var result = _gameService.Enter();
 
-            return new KingdomItemCancelResPacket
+            return new KingdomConstructStructureResPacket
             {
             };
         }
 
-        [HttpPost("dec-time")]
-        public ActionResult<KingdomItemDecTimeResPacket> Enter(KingdomItemDecTimeReqPacket req)
+        [HttpPost("store")]
+        public ActionResult<KingdomStoreResPacket> Store(KingdomStoreReqPacket req)
         {
             var result = _gameService.Enter();
 
-            return new KingdomItemDecTimeResPacket
+            return new KingdomStoreResPacket
+            {
+            };
+        }
+
+        [HttpPost("dec-time-structure")]
+        public ActionResult<KingdomDecTimeStructureResPacket> DecTime(KingdomDecTimeStructureReqPacket req)
+        {
+            var result = _gameService.Enter();
+
+            return new KingdomDecTimeStructureResPacket
             {
             };
         }

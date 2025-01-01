@@ -6,7 +6,7 @@ namespace Proto
 	{ 
 		NONE = 0, //
 		STRUCTURE = 1, //
-		DECORATION = 2, //
+		DECO = 2, //
 		TRASH = 3, //
 	}
 
@@ -15,7 +15,7 @@ namespace Proto
 		NONE = 0, //
 		CONSTRUCTING = 1, //
 		READY = 2, //
-		IN_PROGRESS = 3, //
+		CRAFTING = 3, //
 		STORED = 4, //
 	}
 
@@ -31,11 +31,37 @@ namespace Proto
 		AVAILABLE = 1, //
 	}
 
+	public enum EKingdomTileMapState 
+	{ 
+		NONE = 0, //
+	}
+
+	public enum EPlacedKingdomItemState 
+	{ 
+		NONE = 0, //
+		DELETED = -1, //
+	}
+
+	public enum EKingdomStructureFlagType 
+	{ 
+		NONE = 0, //
+		BUILD = 1, //
+	}
+
+	public enum EItemType 
+	{ 
+		NONE = 0, //
+		CONSUMABLE = 1, //
+		FUNCTIONAL = 2, //
+		RELIC = 3, //
+		CRAFTING = 4, //
+	}
+
 	public enum EObjType 
 	{ 
 		NONE = 0, //
-		GOLD = 1, //
-		STAR_CANDY = 2, //
+		EXP = 1, //
+		GOLD = 2, //
 		FREE_CASH = 3, //
 		REAL_CASH = 4, //
 		TOTAL_CASH = 5, //
@@ -48,8 +74,8 @@ namespace Proto
 		TICKET_START = 200, //
 		TICKET_STAMINA = 201, //
 		TICKET_END = 300, //
-		ITEM = 1000, //
-		COOKIE = 10000, //
+		COOKIE = 1000, //
+		ITEM = 10000, //
 		KINGDOM_ITEM = 100000, //
 	}
 
@@ -116,6 +142,10 @@ namespace Proto
 			list.Add(typeof(EKingdomItemState)); 
 			list.Add(typeof(EKingdomItemSpecialType)); 
 			list.Add(typeof(ECookieState)); 
+			list.Add(typeof(EKingdomTileMapState)); 
+			list.Add(typeof(EPlacedKingdomItemState)); 
+			list.Add(typeof(EKingdomStructureFlagType)); 
+			list.Add(typeof(EItemType)); 
 			list.Add(typeof(EObjType)); 
 			list.Add(typeof(ESessionState)); 
 			list.Add(typeof(EAccountState)); 

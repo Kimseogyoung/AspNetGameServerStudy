@@ -69,12 +69,12 @@ namespace Server.Service
         #endregion
 
         #region KINGDOM_ITEM
-        public KingdomItemBuyResPacket KingdomItemBuy(int reqKingdomItemNum, CostObjPacket costObj)
+        public KingdomBuyStructureResPacket KingdomItemBuy(int reqKingdomItemNum, CostObjPacket costObj)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqKingdomItemNum);
 
             // Item 최대 보유량 체크
-            var hasItemCnt = _userRepo.KingdomItem.GetKingdomItemCnt(prtKingdomItem.Num);
+            var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
             ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_ITEM_CNT", 
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
             
@@ -83,32 +83,32 @@ namespace Server.Service
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
             var resultCostObj = mgrPlayerDetail.DecCost(costObj, $"BUY_KINGDOM_ITEM:{reqKingdomItemNum}");
 
-            var mgrKingdomItem = _userRepo.KingdomItem.Create(prtKingdomItem);
-            return new KingdomItemBuyResPacket {};
+            var mgrKingdomStructure = _userRepo.KingdomStructure.Create(prtKingdomItem);
+            return new KingdomBuyStructureResPacket { };
         }
 
-        public KingdomItemConstructResPacket KingdomItemConstruct(ulong kingdomItemId, int startTileX, int startTileY, int endTileX, int endTileY)
+        public KingdomConstructStructureResPacket KingdomItemConstruct(ulong kingdomItemId, int startTileX, int startTileY, int endTileX, int endTileY)
         {
-            var mgrKingdomItem = _userRepo.KingdomItem.Get(kingdomItemId);
+            var mgrKingdomItem = _userRepo.KingdomStructure.Get(kingdomItemId);
 
             // TODO: Tile 위치 중복 체크
             //
 
             mgrKingdomItem.Construct(startTileX, startTileY, endTileX, endTileY);
-            return new KingdomItemConstructResPacket { };
+            return new KingdomConstructStructureResPacket { };
         }
 
-        public KingdomItemCancelResPacket KingdomItemCancel(ulong kingdomItemId)
+        public KingdomStoreResPacket KingdomItemCancel(ulong kingdomItemId)
         {
-            var mgrKingdomItem = _userRepo.KingdomItem.Get(kingdomItemId);
+            var mgrKingdomItem = _userRepo.KingdomStructure.Get(kingdomItemId);
 
             mgrKingdomItem.Cancel();
-            return new KingdomItemCancelResPacket { };
+            return new KingdomStoreResPacket { };
         }
 
-        public KingdomItemDecTimeResPacket KingdomItemDecTime(ulong kingdomItemId, int remainSec, CostCashPacket reqCostCash)
+        public KingdomDecTimeStructureResPacket KingdomItemDecTime(ulong kingdomItemId, int remainSec, CostCashPacket reqCostCash)
         {
-            var mgrKingdomItem = _userRepo.KingdomItem.Get(kingdomItemId);
+            var mgrKingdomItem = _userRepo.KingdomStructure.Get(kingdomItemId);
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
 
             // TODO: 남은 시간, 캐시 보유량 일치하는지 검증
@@ -116,7 +116,7 @@ namespace Server.Service
 
             var cashAmount = mgrPlayerDetail.DecCash(reqCostCash.Amount, $"DEC_TIME_KINGDOM_ITEM:{kingdomItemId}");
             mgrKingdomItem.DecTime();
-            return new KingdomItemDecTimeResPacket { };
+            return new KingdomDecTimeStructureResPacket { };
         }
         #endregion
 

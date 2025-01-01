@@ -16,43 +16,43 @@ namespace Protocol
     		public int Lv { get; set; } = 1; //
         
     		[ProtoMember(4)]
-    		public ulong Flag { get; set; } = default; //
+    		public int CastleLv { get; set; } = 0; //
         
     		[ProtoMember(5)]
-    		public EPlayerState State { get; set; } = default; //
+    		public ulong Flag { get; set; } = default; //
         
     		[ProtoMember(6)]
-    		public int Exp { get; set; } = default; //
+    		public EPlayerState State { get; set; } = default; //
         
     		[ProtoMember(7)]
-    		public int ProfileTitleNum { get; set; } = default; //
+    		public double Exp { get; set; } = default; //
         
     		[ProtoMember(8)]
-    		public int ProfileIconNum { get; set; } = default; //
+    		public double AccExp { get; set; } = default; //
         
     		[ProtoMember(9)]
-    		public int ProfileFrameNum { get; set; } = default; //
+    		public int ProfileTitleNum { get; set; } = default; //
         
     		[ProtoMember(10)]
-    		public int ProfileCookieNum { get; set; } = default; //
+    		public int ProfileIconNum { get; set; } = default; //
         
     		[ProtoMember(11)]
-    		public ulong GuildId { get; set; } = default; //
+    		public int ProfileFrameNum { get; set; } = default; //
         
     		[ProtoMember(12)]
-    		public int KingdomExp { get; set; } = default; //
+    		public int ProfileCookieNum { get; set; } = default; //
         
     		[ProtoMember(13)]
-    		public double Gold { get; set; } = default; //
+    		public ulong GuildId { get; set; } = default; //
         
     		[ProtoMember(14)]
-    		public double AccGold { get; set; } = default; //
+    		public int KingdomExp { get; set; } = default; //
         
     		[ProtoMember(15)]
-    		public double StarCandy { get; set; } = default; //
+    		public double Gold { get; set; } = default; //
         
     		[ProtoMember(16)]
-    		public double AccStarCandy { get; set; } = default; //
+    		public double AccGold { get; set; } = default; //
         
     		[ProtoMember(17)]
     		public double RealCash { get; set; } = default; //
@@ -67,16 +67,25 @@ namespace Protocol
     		public double AccFreeCash { get; set; } = default; //
         
     		[ProtoMember(21)]
-    		public List<KingdomItemPacket> KingdomItemList { get; set; } = default; //
-        
-    		[ProtoMember(22)]
     		public List<CookiePacket> CookieList { get; set; } = default; //
         
-    		[ProtoMember(23)]
+    		[ProtoMember(22)]
     		public List<PointPacket> PointList { get; set; } = default; //
         
-    		[ProtoMember(24)]
+    		[ProtoMember(23)]
     		public List<TicketPacket> TicketList { get; set; } = default; //
+        
+    		[ProtoMember(24)]
+    		public List<ItemPacket> ItemList { get; set; } = default; //
+        
+    		[ProtoMember(25)]
+    		public List<KingdomStructurePacket> KingdomStructureList { get; set; } = default; //
+        
+    		[ProtoMember(26)]
+    		public List<KingdomDecoPacket> KingdomDecoList { get; set; } = default; //
+        
+    		[ProtoMember(27)]
+    		public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } = default; //
         
 	}
 }
