@@ -19,7 +19,7 @@ namespace WebStudyServer.Manager
             Prt = APP.Prt.GetKingdomItemPrt(model.Num);
         }
 
-        public void Construct(int startTileX, int startTileY, int endTileX, int endTileY)
+        public void Construct()
         {
 /*            _model.StartTileX = startTileX;
             _model.StartTileY = startTileY;

@@ -1,4 +1,4 @@
-Name,Type,Value,Desc,ProtocolType,Key
+﻿Name,Type,Value,Desc,ProtocolType,Key
 Key,VARCHAR(50),,,,pk
 AccountId,BIGINT UNSIGNED,,,Model,fk
 PlayerId,BIGINT UNSIGNED,,,Model,

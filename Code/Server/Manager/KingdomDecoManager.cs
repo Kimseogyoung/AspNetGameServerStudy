@@ -3,6 +3,8 @@ using WebStudyServer.Model;
 using Proto;
 using WebStudyServer.Helper;
 using WebStudyServer.GAME;
+using System.Security.Cryptography.Xml;
+using System.Globalization;
 
 namespace WebStudyServer.Manager
 {
@@ -17,6 +19,22 @@ namespace WebStudyServer.Manager
         public KingdomDecoManager(UserRepo userRepo, KingdomDecoModel model) : base(userRepo, model)
         {
             Prt = APP.Prt.GetKingdomItemPrt(model.Num);
+        }
+
+        public void Inc(int cnt, string reason)
+        {
+            ReqHelper.ValidUnderFlowParam(cnt, $"DECO_CNT:{reason}");
+
+            var befTotalCnt = _model.TotalCnt;
+            var befUnplacedCnt = _model.UnplacedCnt;
+
+            // 최대 보유량 검증
+            ReqHelper.ValidContext(_model.TotalCnt + cnt <= Prt.MaxCnt, "FULL_MAX_DECO_CNT",
+                () => new { Num = _model.Num, TotalCnt = _model.TotalCnt, PrtMaxCnt = Prt.MaxCnt });
+
+            _model.TotalCnt += cnt;
+            _model.UnplacedCnt += cnt;
+            _userRepo.KingdomDeco.Update(_model);
         }
 
        /* public void Construct(int startTileX, int startTileY, int endTileX, int endTileY)

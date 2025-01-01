@@ -748,6 +748,194 @@
     },
     {
       "changeSet": {
+        "id": "PlacedKingdomItem",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "PlacedKingdomItem",
+              "columns": [
+                {
+                  "column": {
+                    "name": "Id",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "PlayerId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "StructureItemId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Type",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Num",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "State",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "StartTileX",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "StartTileY",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "SizeX",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "SizeY",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Rotation",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "Id",
+              "tableName": "PlacedKingdomItem"
+            }
+          },
+          {
+            "createIndex": {
+              "indexName": "PlacedKingdomItem_Key_Index",
+              "tableName": "PlacedKingdomItem",
+              "columns": [
+                {
+                  "column": {
+                    "name": "PlayerId"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Type"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addAutoIncrement": {
+              "tableName": "PlacedKingdomItem",
+              "columnDataType": "BIGINT UNSIGNED",
+              "columnName": "Id",
+              "defaultOnNull": false,
+              "generationType": "ALWAYS",
+              "startWith": 1
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "PlacedKingdomItem",
+              "baseColumnNames": "PlayerId",
+              "referencedTableName": "Player",
+              "referencedColumnNames": "Id",
+              "constraintName": "FK_PlacedKingdomItem_Player"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
         "id": "PlayerDetail",
         "author": "seogyoung",
         "changes": [

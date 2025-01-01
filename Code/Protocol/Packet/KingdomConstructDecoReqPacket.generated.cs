@@ -13,16 +13,10 @@ namespace Protocol
         public int KingdomItemNum { get; set; } 
         
         [ProtoMember(3)]
-        public int StartTileX { get; set; } 
+        public TilePosPacket StartTilePos { get; set; } 
         
         [ProtoMember(4)]
-        public int StartTileY { get; set; } 
-        
-        [ProtoMember(5)]
-        public int EndTileX { get; set; } 
-        
-        [ProtoMember(6)]
-        public int EndTileY { get; set; } 
+        public TilePosPacket EndTilePos { get; set; } 
         
         public string GetProtocolName() => "kingdom/construct-deco";
 	}

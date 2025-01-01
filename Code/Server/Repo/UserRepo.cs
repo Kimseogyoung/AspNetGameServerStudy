@@ -15,6 +15,7 @@ namespace WebStudyServer.Repo
         public KingdomStructureComponent KingdomStructure => _kingdomStructureComponent;
         public KingdomDecoComponent KingdomDeco => _kingdomDecoComponent;
         public KingdomTileMapComponent KingdomTileMap => _kingdomTileMapComponent;
+        public PlacedKingdomItemComponent PlacedKingdomItem => _placedKingdomItemComponent;
         public RpcContext RpcContext { get; private set; }
 
         public UserRepo(RpcContext rpcContext)
@@ -34,6 +35,7 @@ namespace WebStudyServer.Repo
             _kingdomDecoComponent = new KingdomDecoComponent(this, _executor);
             _kingdomTileMapComponent = new KingdomTileMapComponent(this, _executor);
             _itemComponent = new ItemComponent(this, _executor);
+            _placedKingdomItemComponent = new PlacedKingdomItemComponent(this, _executor);
         }
 
         public static UserRepo CreateInstance(RpcContext rpcContext)
@@ -54,5 +56,6 @@ namespace WebStudyServer.Repo
         private KingdomStructureComponent _kingdomStructureComponent;
         private KingdomDecoComponent _kingdomDecoComponent;
         private KingdomTileMapComponent _kingdomTileMapComponent;
+        private PlacedKingdomItemComponent _placedKingdomItemComponent;
     }
 }

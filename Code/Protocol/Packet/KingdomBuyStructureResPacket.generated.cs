@@ -13,7 +13,7 @@ namespace Protocol
         public KingdomStructurePacket KingdomStructure { get; set; } 
         
         [ProtoMember(3)]
-        public ObjPacket CostObj { get; set; } 
+        public ChgObjPacket ChgObj { get; set; } 
         
 	}
 }

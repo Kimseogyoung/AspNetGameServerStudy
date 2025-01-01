@@ -16,13 +16,13 @@ namespace WebStudyServer.Manager
         }
     
         // TODO: Reward관련 내용 별도 멤버변수로 빼는것 고려
-        public ObjPacket DecCost(CostObjPacket valCostObj, string reason)
+        public ChgObjPacket DecCost(ObjPacket valCostObj, string reason)
         {
             var amount = DecCost(valCostObj.Type, valCostObj.Num, valCostObj.Amount, reason);
-            var obj = new ObjPacket
+            var obj = new ChgObjPacket
             {
-                Amount = amount,
-                ChgAmount = valCostObj.Amount,
+                TotalAmount = amount,
+                Amount = valCostObj.Amount,
                 Type = valCostObj.Type,
                 Num = valCostObj.Num,
             };
@@ -57,9 +57,9 @@ namespace WebStudyServer.Manager
             return 0;
         }
 
-        public List<ObjPacket> IncReward(List<RewardObjPacket> valRewardListObj, string reason)
+        public List<ChgObjPacket> IncReward(List<ObjPacket> valRewardListObj, string reason)
         {
-            var objList = new List<ObjPacket>();
+            var objList = new List<ChgObjPacket>();
             foreach(var valReward in valRewardListObj)
             {
                 var obj = IncReward(valReward, reason);
@@ -68,13 +68,13 @@ namespace WebStudyServer.Manager
             return objList;
         }
 
-        public ObjPacket IncReward(RewardObjPacket valRewardObj, string reason)
+        public ChgObjPacket IncReward(ObjPacket valRewardObj, string reason)
         {
             var amount = DecCost(valRewardObj.Type, valRewardObj.Num, valRewardObj.Amount, reason);
-            var obj = new ObjPacket
+            var obj = new ChgObjPacket
             {
-                Amount = amount,
-                ChgAmount = valRewardObj.Amount,
+                TotalAmount = amount,
+                Amount = valRewardObj.Amount,
                 Type = valRewardObj.Type,
                 Num = valRewardObj.Num,
             };
@@ -83,7 +83,10 @@ namespace WebStudyServer.Manager
 
         public double IncReward(EObjType objType, int objNum, double objAmount, string reason)
         {
-            // TODO: 마이너스, 소수점 체크
+            // 마이너스, 소수점 체크
+            ReqHelper.ValidUnderFlowParam(objAmount, reason);
+            ReqHelper.ValidWithoutDecimal(objAmount, reason);
+
             var objTypeCategory = objType.ToObjTyeCategory();
             switch (objTypeCategory)
             {

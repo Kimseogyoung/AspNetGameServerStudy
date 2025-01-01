@@ -19,16 +19,10 @@ namespace Protocol
         public List<CostObjPacket> CostObjList { get; set; } 
         
         [ProtoMember(5)]
-        public int StartTileX { get; set; } 
+        public TilePosPacket StartTilePos { get; set; } 
         
         [ProtoMember(6)]
-        public int StartTileY { get; set; } 
-        
-        [ProtoMember(7)]
-        public int EndTileX { get; set; } 
-        
-        [ProtoMember(8)]
-        public int EndTileY { get; set; } 
+        public TilePosPacket EndTilePos { get; set; } 
         
         public string GetProtocolName() => "kingdom/construct-structure";
 	}

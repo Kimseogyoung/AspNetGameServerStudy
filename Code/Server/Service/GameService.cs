@@ -69,32 +69,53 @@ namespace Server.Service
         #endregion
 
         #region KINGDOM_ITEM
-        public KingdomBuyStructureResPacket KingdomItemBuy(int reqKingdomItemNum, CostObjPacket costObj)
+        public KingdomBuyStructureResPacket KingdomStructureBuy(int reqKingdomItemNum, CostObjPacket reqCostObj)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqKingdomItemNum);
 
             // Item 최대 보유량 체크
-            var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
-            ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_ITEM_CNT", 
-                () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
-            
-            // Cost일치하는지 체크
-
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
-            var resultCostObj = mgrPlayerDetail.DecCost(costObj, $"BUY_KINGDOM_ITEM:{reqKingdomItemNum}");
+            var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
+            ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT", 
+                () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
+
+            // Cost일치하는지 체크
+            var reason = $"BUY_KINGDOM_STRUCTURE:{reqKingdomItemNum}";
+            var valCostObj = ReqHelper.ValidCost(reqCostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
+
+            var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
 
             var mgrKingdomStructure = _userRepo.KingdomStructure.Create(prtKingdomItem);
             return new KingdomBuyStructureResPacket { };
         }
 
-        public KingdomConstructStructureResPacket KingdomItemConstruct(ulong kingdomItemId, int startTileX, int startTileY, int endTileX, int endTileY)
+        public KingdomBuyDecoResPacket KingdomDecoBuy(int reqKingdomItemNum, CostObjPacket reqCostObj)
         {
-            var mgrKingdomItem = _userRepo.KingdomStructure.Get(kingdomItemId);
+            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqKingdomItemNum);
+
+            // Item 최대 보유량 체크
+            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mgrKingdomDeco = _userRepo.KingdomDeco.Touch(prtKingdomItem.Num);
+            ReqHelper.ValidContext(mgrKingdomDeco.Model.TotalCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_DECO_CNT",
+                () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = mgrKingdomDeco.Model.TotalCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
+
+            // Cost일치하는지 체크
+            var reason = $"BUY_KINGDOM_DECO:{reqKingdomItemNum}";
+            var valCostObj = ReqHelper.ValidCost(reqCostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
+
+            var chgCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
+            mgrKingdomDeco.Inc(1, reason);
+            return new KingdomBuyDecoResPacket { };
+        }
+
+        public KingdomConstructStructureResPacket KingdomItemConstruct(ulong reqKingdomItemId, CostObjPacket reqConstructCostObj, TilePosPacket reqStartTilePos, TilePosPacket reqEndTilePos)
+        {
+            var mgrKingdomStructure = _userRepo.KingdomStructure.Get(reqKingdomItemId);
 
             // TODO: Tile 위치 중복 체크
             //
 
-            mgrKingdomItem.Construct(startTileX, startTileY, endTileX, endTileY);
+            mgrKingdomStructure.Construct();
             return new KingdomConstructStructureResPacket { };
         }
 

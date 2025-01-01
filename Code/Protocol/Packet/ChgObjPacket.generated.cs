@@ -3,7 +3,7 @@ using Proto;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class ObjPacket	
+	public partial class ChgObjPacket	
         {
         
                 [ProtoMember(1)]
@@ -14,6 +14,9 @@ namespace Protocol
                 
                 [ProtoMember(3)]
                 public double Amount { get; set; } 
+                
+                [ProtoMember(4)]
+                public double TotalAmount { get; set; } 
                 
 	}
 }

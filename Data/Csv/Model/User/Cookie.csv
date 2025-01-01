@@ -1,4 +1,4 @@
-Name,Type,Value,Desc,ProtocolType,Key
+﻿Name,Type,Value,Desc,ProtocolType,Key
 PlayerId,BIGINT UNSIGNED,,,Model,"pk, fk"
 Num,INT,,,,pk
 StarExp,INT,,,,

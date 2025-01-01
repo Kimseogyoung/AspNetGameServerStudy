@@ -16,7 +16,7 @@ namespace Protocol
         public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } 
         
         [ProtoMember(4)]
-        public List<ObjPacket> CostObjList { get; set; } 
+        public List<ChgObjPacket> ChgObjList { get; set; } 
         
 	}
 }
