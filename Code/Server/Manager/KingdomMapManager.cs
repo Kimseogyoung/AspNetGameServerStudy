@@ -41,20 +41,6 @@ namespace WebStudyServer.Manager
             }
         }
 
-        public void ValidPlaceTile(List<ChgKingdomItemPacket> reqChgKingdomitemList, List<ChgKingdomItemPacket> reqPlaceKingdomitemList)
-        {
-            var totalTilePosList = new List<TilePosPacket>();
-            foreach (var reqChgKingdomItem in reqChgKingdomitemList)
-            {
-                var tilePosRanges = GetTilePosRanges(reqChgKingdomItem.TilePos.X, reqChgKingdomItem.TilePos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
-                ReqHelper.ValidContext(Snapshot.PlacedObjDict.TryGetValue(reqChgKingdomItem.PlacedItemId, out var placedItem), "NOT_FOUND_PLACE_KINGDOM_ITEM", () => new { PlaceItemId = reqChgKingdomItem.PlacedItemId });
-                ReqHelper.ValidContext(placedItem.Type == EKingdomItemType.STRUCTURE, "NOT_STRUCTURE_TYPE", () => new { PlaceItemId = reqChgKingdomItem.PlacedItemId });
-                ReqHelper.ValidContext(placedItem.State == EPlacedKingdomItemState.NONE, "NOT_NONE_STATE", () => new { PlaceItemId = reqChgKingdomItem.PlacedItemId });
-                ReqHelper.ValidContext(placedItem.Num == reqChgKingdomItem.Num, "NOT_SAME_NUM", () => new { PlaceItemId = reqChgKingdomItem.PlacedItemId, ReqNum = reqChgKingdomItem.Num, ItemNum = placedItem.Num });
-                ReqHelper.ValidContext(placedItem.StartTileX == reqChgKingdomItem.TilePos.X && placedItem.StartTileY == reqChgKingdomItem.TilePos.Y, "NOT_SAME_TILE_POS", () => new { PlaceItemId = reqChgKingdomItem.PlacedItemId, ReqTilePos = reqChgKingdomItem.TilePos, ItemTilePos = new TilePosPacket { X = placedItem.StartTileX, Y = placedItem.StartTileY } });
-            }
-        }
-
         public TilePosPacket ValidEmptyTile(TilePosPacket reqStartPos, KingdomItemProto prtKingdomItem)
         {
             var tilePosRanges = GetTilePosRanges(reqStartPos.X, reqStartPos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
@@ -71,28 +57,17 @@ namespace WebStudyServer.Manager
             }
 
             return reqStartPos;
-            // NOTE: PlacedKingdomItem 데이터 버전
-            // TODO: StartTileX, Y에 인덱스 걸기
-            /*            타일 범위는(InputStartTileX, InputStartTileY)부터(InputStartTileX + InputSizeX - 1, InputStartTileY + InputSizeY - 1)
-
-                        InputStartTileX + InputSizeX - 1 < StartTileX(검색 범위가 오브젝트의 왼쪽에 위치)
-                        InputStartTileX > StartTileX + SizeX - 1(검색 범위가 오브젝트의 오른쪽에 위치)
-                        InputStartTileY + InputSizeY - 1 < StartTileY(검색 범위가 오브젝트의 위쪽에 위치)
-                        InputStartTileY > StartTileY + SizeY - 1(검색 범위가 오브젝트의 아래쪽에 위치)
-
-                        NOT(
-                        InputStartTileX + InputSizeX - 1 < StartTileX OR
-                        InputStartTileX > StartTileX + SizeX - 1 OR
-                        InputStartTileY + InputSizeY - 1 < StartTileY OR
-                        InputStartTileY > StartTileY + SizeY - 1
-                        )*/
         }
 
         // TODO: 너무 길어서 개선 필요
         // Store, Chg, Place 액션을 전부 모아서  복제 맵에서 검증 및 실행 시뮬레이션 함.
         // 결과가 유효한지 한번에 검증. 유효하면 Snapshot 리턴
-        public KingdomMapSnapshotPacket ValiePlaceMapSnapshot(List<ulong> reqStoreIdList, List<ChgKingdomItemPacket> reqChgItemList, List<ChgKingdomItemPacket> reqPlaceItemList)
+        public KingdomMapSnapshotPacket ValiePlaceItemsSnapshot(List<ulong> reqStoreIdList, List<ChgKingdomItemPacket> reqChgItemList, List<ChgKingdomItemPacket> reqPlaceItemList, 
+            out Dictionary<ulong, int> structureDeltaCntDict, out Dictionary<int, int> decoDeltaCntDict)
         {
+            structureDeltaCntDict = new();
+            decoDeltaCntDict = new();
+
             var copySnapshot = this.Snapshot.DeepCopy();
 
             // 보관/이동시킬 타일 정보 생성 (Store, Chg 리스트)
@@ -100,12 +75,28 @@ namespace WebStudyServer.Manager
             deleteItemIdList.AddRange(reqChgItemList.Select(x => x.PlacedItemId));
 
             var deleteTilePosList = new List<TilePosPacket>();
-            foreach (var storePlaceItemId in deleteItemIdList)
+            foreach (var deletedPlaceItemId in deleteItemIdList)
             {
-                ReqHelper.ValidContext(copySnapshot.PlacedObjDict.TryGetValue(storePlaceItemId, out var placedItem), "NOT_FOUND_PLACED_KINGDOM_ITEM", () => new { PlaceItemId = storePlaceItemId });
+                ReqHelper.ValidContext(copySnapshot.PlacedObjDict.TryGetValue(deletedPlaceItemId, out var placedItem), "NOT_FOUND_PLACED_KINGDOM_ITEM", () => new { PlaceItemId = deletedPlaceItemId });
+
+                if (reqStoreIdList.Contains(deletedPlaceItemId))
+                {
+                    // Store하는 경우
+                    switch(placedItem.Type)
+                    {
+                        case EKingdomItemType.STRUCTURE:
+                            structureDeltaCntDict.TryAdd(deletedPlaceItemId, 0);
+                            structureDeltaCntDict[placedItem.Id]++;
+                            break;
+                        case EKingdomItemType.DECO:
+                            decoDeltaCntDict.TryAdd(placedItem.Num, 0);
+                            decoDeltaCntDict[placedItem.Num]++;
+                            break;
+                    }
+                }
 
                 // 오브젝트 정보 삭제
-                copySnapshot.PlacedObjDict.Remove(storePlaceItemId);
+                copySnapshot.PlacedObjDict.Remove(deletedPlaceItemId);
                 var tilePoses = GetTilePosRanges(placedItem.StartTileX, placedItem.StartTileY, placedItem.SizeX, placedItem.SizeY);
                 deleteTilePosList.AddRange(tilePoses);
 
@@ -171,6 +162,19 @@ namespace WebStudyServer.Manager
                 copySnapshot.PlacedObjDict.Add(newPlacedObj.Id, newPlacedObj);
                 ReqHelper.ValidContext(copySnapshot.TileMap[newPlacedObj.StartTileY][newPlacedObj.StartTileX] == 0, "NOT_EMPTY_TILE2", () => new { ReqX = newPlacedObj.StartTileX, ReqY = newPlacedObj.StartTileY, TileItemId = newPlacedObj.Id });
                 copySnapshot.TileMap[newPlacedObj.StartTileY][newPlacedObj.StartTileX] = newPlacedObj.Id;
+
+                // Store하는 경우
+                switch (newPlacedObj.Type)
+                {
+                    case EKingdomItemType.STRUCTURE:
+                        structureDeltaCntDict.TryAdd(newPlacedObj.StructureItemId, 0);
+                        structureDeltaCntDict[newPlacedObj.StructureItemId]--;
+                        break;
+                    case EKingdomItemType.DECO:
+                        decoDeltaCntDict.TryAdd(newPlacedObj.Num, 0);
+                        decoDeltaCntDict[newPlacedObj.Num]--;
+                        break;
+                }
             }
 
             // ChgItem 배치
@@ -197,11 +201,22 @@ namespace WebStudyServer.Manager
                 copySnapshot.TileMap[newPlacedObj.StartTileY][newPlacedObj.StartTileX] = newPlacedObj.Id;
             }
 
-            this.Snapshot = copySnapshot;
+/*            this.Snapshot = copySnapshot;
             _model.Snapshot = SerializeHelper.JsonSerialize(this.Snapshot);
-            _userRepo.KingdomMap.Update(_model);
+            _userRepo.KingdomMap.Update(_model);*/
 
             return copySnapshot;
+        }
+
+        public void SaveSnapshot(KingdomMapSnapshotPacket newSnapshot = null)
+        {
+            if (newSnapshot != null)
+            {
+                this.Snapshot = newSnapshot;
+            }
+
+            _model.Snapshot = SerializeHelper.JsonSerialize(this.Snapshot);
+            _userRepo.KingdomMap.Update(_model);
         }
 
         public List<PlacedKingdomItemPacket> ValidExistPlacedItemList(List<ulong> placedItemList)
@@ -225,7 +240,7 @@ namespace WebStudyServer.Manager
             ConstructItemInternal(mgrDecoManager.Prt, valStartTilePos, 0);
         }
 
-        public void StoreItemList(List<PlacedKingdomItemPacket> placedKingdomItemlist)
+/*        public void StoreItemList(List<PlacedKingdomItemPacket> placedKingdomItemlist)
         {
             foreach (var placedKingdomItem in placedKingdomItemlist)
             {
@@ -246,9 +261,8 @@ namespace WebStudyServer.Manager
                 }
             }
 
-            _model.Snapshot = SerializeHelper.JsonSerialize(this.Snapshot);
-            _userRepo.KingdomMap.Update(_model);
-        }
+            SaveSnapshot();
+        }*/
 
         private void RefreshTileMap()
         {
@@ -316,9 +330,7 @@ namespace WebStudyServer.Manager
             }
 
             this.Snapshot.PlacedObjDict.Add(newPlacedObj.Id, newPlacedObj);
-
-            _model.Snapshot = SerializeHelper.JsonSerialize(this.Snapshot);
-            _userRepo.KingdomMap.Update(_model);
+            SaveSnapshot();
         }
 
         private bool HasOverlappingTiles(List<TilePosPacket> placeTilePosList)

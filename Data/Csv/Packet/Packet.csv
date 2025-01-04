@@ -69,6 +69,17 @@ res,KingdomChangeItemRes,,,,,
 ,KingdomChangeItemRes,PlacedKingdomItemList,List<PlacedKingdomItemPacket>,2,,
 ,KingdomChangeItemRes,KingdomStructureList,List<KingdomStructurePacket>,3,,
 ,KingdomChangeItemRes,KingdomDecoList,List<KingdomDecoPacket>,4,,
+req,KingdomFinishConstructStructureReq,,,,,kingdom/finish-construct-structure
+,KingdomFinishConstructStructureReq,KingdomStructureId,ulong,2,,
+,KingdomFinishConstructStructureReq,KingdomItemNum,int,3,,
+res,KingdomFinishConstructStructureRes,,,,,
+,KingdomFinishConstructStructureRes,KingdomStructure,KingdomStructurePacket,2,,
+req,KingdomFinishCraftStructureReq,,,,,kingdom/finish-craft-structure
+,KingdomFinishCraftStructureReq,KingdomStructureId,ulong,2,,
+,KingdomFinishCraftStructureReq,KingdomItemNum,int,3,,
+res,KingdomFinishCraftStructureRes,,,,,
+,KingdomFinishCraftStructureRes,KingdomStructure,KingdomStructurePacket,2,,
+,KingdomFinishCraftStructureRes,ChgObjList,List<ChgObjPacket>,3,,
 
 common,ChgObj,,,,,
 ,ChgObj,Type,EObjType,1,,

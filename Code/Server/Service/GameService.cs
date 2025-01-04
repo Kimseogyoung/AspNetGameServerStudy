@@ -152,28 +152,73 @@ namespace Server.Service
 
             // 처리: 건설 완료 (보유 개수 차감)
             mgrKingdomMap.ConstructDeco(mgrKingdomDeco, valTileStartPos);
-            mgrKingdomDeco.Construct();
+            mgrKingdomDeco.Place();
 
             return new KingdomConstructDecoResPacket { };
         }
 
-        public void KingdomFinishConstructStructure(ulong reqKingdomStructureId)
+        public KingdomFinishConstructStructureResPacket KingdomFinishConstructStructure(KingdomFinishConstructStructureReqPacket req)
         {
-            var mgrKingdomItem = _userRepo.KingdomStructure.Get(reqKingdomStructureId);
-            mgrKingdomItem.FinishConstruct();
+            var mgrKingdomItem = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
+            mgrKingdomItem.SetReady(EKingdomItemState.CONSTRUCTING);
+            return new KingdomFinishConstructStructureResPacket { };
         }
 
         public KingdomChangeItemResPacket KingdomItemChange(KingdomChangeItemReqPacket req)
         {
             var mgrKingdomMap = _userRepo.KingdomMap.Touch();
-            // TODO: Store + Create 한 변화량을 구하고, 보유 수량 검증
+            
+            // Chg + Place 리스트중에 겹치는거 없는지 검증
+            var valSnapshot = mgrKingdomMap.ValiePlaceItemsSnapshot(req.StoreKingdomItemIdList, req.ChgKingdomItemList, req.PlaceKingdomItemList, 
+                out var valStructureDeltaCntDict, out var valDecoDeltaCntDict);
 
-            // Chg + Place 리스트중에 겹치는거 없는지 확인하고 적용
-            mgrKingdomMap.ValiePlaceMapSnapshot(req.StoreKingdomItemIdList, req.ChgKingdomItemList, req.PlaceKingdomItemList);
+            // Store + Create 한 변화량으로, 보유 수량 검증
+            var mgrKingdomStructureList = _userRepo.KingdomStructure.GetAllList(valStructureDeltaCntDict.Keys.ToList());
+            var mgrKingdomDecoList = _userRepo.KingdomDeco.GetAllList(valDecoDeltaCntDict.Keys.ToList());
+            foreach (var mgrKingdomStructure in mgrKingdomStructureList)
+            {
+                var cnt = valStructureDeltaCntDict[mgrKingdomStructure.Model.Id];
+                mgrKingdomStructure.ValidChgAction(cnt);
+            }
 
-            //  Store + Create 한 변화량 적용
+            foreach (var mgrKingdomDeco in mgrKingdomDecoList)
+            {
+                var cnt = valDecoDeltaCntDict[mgrKingdomDeco.Model.Num];
+                mgrKingdomDeco.ValidChgAction(cnt);
+            }
 
-          
+            // 처리
+            // Store + Create 한 변화량 적용
+            foreach(var mgrKingdomStructure in mgrKingdomStructureList)
+            {
+                var cnt = valStructureDeltaCntDict[mgrKingdomStructure.Model.Id];
+                if (cnt > 0)
+                {
+                    mgrKingdomStructure.Store();
+                }
+                else if (cnt < 0)
+                {
+                    mgrKingdomStructure.Place();
+                }
+            }
+
+            foreach (var mgrKingdomDeco in mgrKingdomDecoList)
+            {
+                var cnt = valDecoDeltaCntDict[mgrKingdomDeco.Model.Num];
+                if (cnt > 0)
+                {
+                    mgrKingdomDeco.Store(cnt);
+                }
+                else if (cnt < 0)
+                {
+                    mgrKingdomDeco.Place(-cnt);
+                }
+            }
+            // 맵 스냅샷 저장
+            mgrKingdomMap.SaveSnapshot(valSnapshot);
+
+            // 로그
+
             return new KingdomChangeItemResPacket { };
         }
 
@@ -188,6 +233,13 @@ namespace Server.Service
             var cashAmount = mgrPlayerDetail.DecCash(req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
             mgrKingdomItem.DecTime();
             return new KingdomDecTimeStructureResPacket { };
+        }
+
+        public KingdomFinishCraftStructureResPacket KingdomFinishConstructStructure(KingdomFinishCraftStructureReqPacket req)
+        {
+            var mgrKingdomItem = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
+            mgrKingdomItem.SetReady(EKingdomItemState.CRAFTING);
+            return new KingdomFinishCraftStructureResPacket { };
         }
         #endregion
 

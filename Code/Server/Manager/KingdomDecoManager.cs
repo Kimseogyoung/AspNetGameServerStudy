@@ -38,9 +38,23 @@ namespace WebStudyServer.Manager
             _userRepo.KingdomDeco.Update(_model);
         }
 
-        public void Construct()
+        public void ValidChgAction(int cnt)
         {
-            var cnt = 1;
+            if (cnt > 0)
+            {
+                // 창고로 cnt만큼 Store => Placed된게 Cnt만큼  있어야함
+                var placedCnt = _model.TotalCnt - _model.UnplacedCnt;
+                ReqHelper.ValidContext(placedCnt >= cnt, "NOT_ENOUGH_PLACED_KINGDOM_STRUCTURE", () => new { PlacedCnt = placedCnt, StoreCnt = cnt});
+            }
+            else if (cnt < 0)
+            {
+                // cnt만큼 배치해야함 => Unplaced된게 Cnt만큼 있어야함
+                ReqHelper.ValidContext(_model.UnplacedCnt >= cnt, "NOT_ENOUGH_UNPLACED_KINGDOM_STRUCTURE", () => new { State = _model.State });
+            }
+        }
+
+        public void Place(int cnt = 1)
+        {
             ReqHelper.ValidContext(_model.UnplacedCnt >= cnt, "NOT_ENOUGH_DECO_CNT", () => new { Num = _model.Num, UnplacedCnt = _model.UnplacedCnt, DecCnt = cnt });
             var befTotalCnt = _model.TotalCnt;
             var befUnplacedCnt = _model.UnplacedCnt;
@@ -49,7 +63,7 @@ namespace WebStudyServer.Manager
             _userRepo.KingdomDeco.Update(_model);
         }
 
-        public void Store(PlacedKingdomItemPacket placedKingdomItem, int cnt = 1)
+        public void Store(int cnt = 1)
         {
             var placedCnt = _model.TotalCnt - _model.UnplacedCnt;
             ReqHelper.ValidContext(placedCnt >= cnt, "NOT_ENOUGH_DECO_CNT", () => new { Num = _model.Num, UnplacedCnt = _model.UnplacedCnt, DecCnt = cnt });
