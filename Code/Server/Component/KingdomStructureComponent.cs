@@ -48,6 +48,31 @@ namespace WebStudyServer.Component
             return mgrKingdomStructure;
         }
 
+        public List<KingdomStructureManager> GetAllList(List<ulong> idList)
+        {
+            if(idList.Count == 0)
+            {
+                return new List<KingdomStructureManager>();
+            }
+
+            var mdlKingdomStructureList = GetListInternal(idList);
+            ReqHelper.ValidContext(mdlKingdomStructureList.Count != idList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST", () => new { IdList = idList, MdlIdList = mdlKingdomStructureList.Select(x => x.Id) });
+            var mgrKingdomStructureList = mdlKingdomStructureList.Select(x=>new KingdomStructureManager(_userRepo, x)).ToList();
+            return mgrKingdomStructureList;
+        }
+
+        private List<KingdomStructureModel> GetListInternal(List<ulong> idList)
+        {
+            List<KingdomStructureModel> mdlKingdomStructureList = null;
+
+            _executor.Excute((sqlConnection, transaction) =>
+            {
+                mdlKingdomStructureList = sqlConnection.SelectListByConditions<KingdomStructureModel>(new { Id = idList }, transaction).ToList();
+            });
+
+            return mdlKingdomStructureList;
+        }
+
         private bool TryGetInternal(ulong id, out KingdomStructureModel outKingdomStructure)
         {
             KingdomStructureModel mdlKingdomStructure = null;

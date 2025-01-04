@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
@@ -151,7 +152,16 @@ namespace WebStudyServer.Extension
                     // 조건이 null이 아니면 WHERE 절에 추가
                     if (value != null)
                     {
-                        whereClauses.Add($"{key} = @{key}");
+                        if (value is IList valueList && valueList.Count > 0)
+                        {
+                            // IN 절 처리
+                            var inClause = string.Join(", ", valueList.Cast<object>().Select((v, i) => $"@{key}_{i}"));
+                            whereClauses.Add($"{key} IN ({inClause})");
+                        }
+                        else
+                        {
+                            whereClauses.Add($"{key} = @{key}");
+                        }
                     }
                 }
 

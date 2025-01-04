@@ -5,6 +5,7 @@ using WebStudyServer.Helper;
 using WebStudyServer.GAME;
 using System.Security.Cryptography.Xml;
 using System.Globalization;
+using Protocol;
 
 namespace WebStudyServer.Manager
 {
@@ -46,6 +47,19 @@ namespace WebStudyServer.Manager
 
             _model.UnplacedCnt -= cnt;
             _userRepo.KingdomDeco.Update(_model);
+        }
+
+        public void Store(PlacedKingdomItemPacket placedKingdomItem, int cnt = 1)
+        {
+            var placedCnt = _model.TotalCnt - _model.UnplacedCnt;
+            ReqHelper.ValidContext(placedCnt >= cnt, "NOT_ENOUGH_DECO_CNT", () => new { Num = _model.Num, UnplacedCnt = _model.UnplacedCnt, DecCnt = cnt });
+            var befTotalCnt = _model.TotalCnt;
+            var befUnplacedCnt = _model.UnplacedCnt;
+
+            _model.UnplacedCnt += cnt;
+            _userRepo.KingdomDeco.Update(_model);
+
+            //placedKingdomItem 로그
         }
 
         /* public void Construct(int startTileX, int startTileY, int endTileX, int endTileY)

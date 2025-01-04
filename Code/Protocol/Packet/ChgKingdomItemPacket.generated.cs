@@ -10,9 +10,12 @@ namespace Protocol
                 public ulong PlacedItemId { get; set; } 
                 
                 [ProtoMember(2)]
-                public int Num { get; set; } 
+                public ulong StructureId { get; set; } 
                 
                 [ProtoMember(3)]
+                public int Num { get; set; } 
+                
+                [ProtoMember(4)]
                 public TilePosPacket TilePos { get; set; } 
                 
 	}

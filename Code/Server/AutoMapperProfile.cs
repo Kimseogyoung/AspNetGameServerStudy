@@ -16,7 +16,7 @@ namespace WebStudyServer
             CreateMap<ItemModel, ItemPacket>();
             CreateMap<KingdomStructureModel, KingdomStructurePacket>();
             CreateMap<KingdomDecoModel, KingdomDecoPacket>();
-            CreateMap<KingdomTileMapModel, KingdomTileMapPacket>();
+            CreateMap<KingdomMapModel, KingdomMapPacket>();
 
             /*            // UpdateRequest -> User
                         CreateMap<UpdateRequest, User>()

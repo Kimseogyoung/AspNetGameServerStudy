@@ -14,7 +14,7 @@ namespace WebStudyServer.Repo
         public ItemComponent Item => _itemComponent;
         public KingdomStructureComponent KingdomStructure => _kingdomStructureComponent;
         public KingdomDecoComponent KingdomDeco => _kingdomDecoComponent;
-        public KingdomTileMapComponent KingdomTileMap => _kingdomTileMapComponent;
+        public KingdomMapComponent KingdomMap => _kingdomTileMapComponent;
         public PlacedKingdomItemComponent PlacedKingdomItem => _placedKingdomItemComponent;
         public RpcContext RpcContext { get; private set; }
 
@@ -33,7 +33,7 @@ namespace WebStudyServer.Repo
             _cookieComponent = new CookieComponent(this, _executor);
             _kingdomStructureComponent = new KingdomStructureComponent(this, _executor);
             _kingdomDecoComponent = new KingdomDecoComponent(this, _executor);
-            _kingdomTileMapComponent = new KingdomTileMapComponent(this, _executor);
+            _kingdomTileMapComponent = new KingdomMapComponent(this, _executor);
             _itemComponent = new ItemComponent(this, _executor);
             _placedKingdomItemComponent = new PlacedKingdomItemComponent(this, _executor);
         }
@@ -55,7 +55,7 @@ namespace WebStudyServer.Repo
         private ItemComponent _itemComponent;
         private KingdomStructureComponent _kingdomStructureComponent;
         private KingdomDecoComponent _kingdomDecoComponent;
-        private KingdomTileMapComponent _kingdomTileMapComponent;
+        private KingdomMapComponent _kingdomTileMapComponent;
         private PlacedKingdomItemComponent _placedKingdomItemComponent;
     }
 }

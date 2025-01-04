@@ -10,10 +10,7 @@ namespace Protocol
         public ReqInfoPacket Info { get; set; } 
         
         [ProtoMember(2)]
-        public List<ulong> KingdomStructureIdList { get; set; } 
-        
-        [ProtoMember(3)]
-        public List<int> KingdomDecoItemNumList { get; set; } 
+        public List<ulong> KingdomPlacedItemIdList { get; set; } 
         
         public string GetProtocolName() => "kingdom/store";
 	}

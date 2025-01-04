@@ -46,6 +46,32 @@ namespace WebStudyServer.Component
             return mgrKingdomDeco;
         }
 
+
+        public List<KingdomDecoManager> GetAllList(List<int> numList)
+        {
+            if (numList.Count == 0)
+            {
+                return new List<KingdomDecoManager>();
+            }
+
+            var mdlKingdomDecoList = GetListInternal(numList);
+            ReqHelper.ValidContext(mdlKingdomDecoList.Count != numList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST", () => new { NumList = numList, MdlNumList = mdlKingdomDecoList.Select(x => x.Num) });
+            var mgrKingdomStructureList = mdlKingdomDecoList.Select(x => new KingdomDecoManager(_userRepo, x)).ToList();
+            return mgrKingdomStructureList;
+        }
+
+        private List<KingdomDecoModel> GetListInternal(List<int> numList)
+        {
+            List<KingdomDecoModel> mdlKingdomDecoList = null;
+
+            _executor.Excute((sqlConnection, transaction) =>
+            {
+                mdlKingdomDecoList = sqlConnection.SelectListByConditions<KingdomDecoModel>(new { PlayerId = _rpcContext.PlayerId, Num = numList }, transaction).ToList();
+            });
+
+            return mdlKingdomDecoList;
+        }
+
         private bool TryGetInternal(int num, out KingdomDecoModel outKingdomDeco)
         {
             KingdomDecoModel mdlKingdomDeco = null;

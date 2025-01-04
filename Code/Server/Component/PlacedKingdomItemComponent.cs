@@ -18,22 +18,24 @@ namespace WebStudyServer.Component
         }
 
         // NOTE: Pos에 해당하는 위치(범위) 타일이 비어있는지
-        public void ValidEmptyTile(TilePosPacket reqStartPos, KingdomItemProto prtKingdomItem)
+        public void ValidEmptyTile(KingdomMapManager mgrKingdomMap, TilePosPacket reqStartPos, KingdomItemProto prtKingdomItem)
         {
+
+            // NOTE: PlacedKingdomItem 데이터 버전
             // TODO: StartTileX, Y에 인덱스 걸기
-/*            타일 범위는(InputStartTileX, InputStartTileY)부터(InputStartTileX + InputSizeX - 1, InputStartTileY + InputSizeY - 1)
+            /*            타일 범위는(InputStartTileX, InputStartTileY)부터(InputStartTileX + InputSizeX - 1, InputStartTileY + InputSizeY - 1)
 
-            InputStartTileX + InputSizeX - 1 < StartTileX(검색 범위가 오브젝트의 왼쪽에 위치)
-            InputStartTileX > StartTileX + SizeX - 1(검색 범위가 오브젝트의 오른쪽에 위치)
-            InputStartTileY + InputSizeY - 1 < StartTileY(검색 범위가 오브젝트의 위쪽에 위치)
-            InputStartTileY > StartTileY + SizeY - 1(검색 범위가 오브젝트의 아래쪽에 위치)
+                        InputStartTileX + InputSizeX - 1 < StartTileX(검색 범위가 오브젝트의 왼쪽에 위치)
+                        InputStartTileX > StartTileX + SizeX - 1(검색 범위가 오브젝트의 오른쪽에 위치)
+                        InputStartTileY + InputSizeY - 1 < StartTileY(검색 범위가 오브젝트의 위쪽에 위치)
+                        InputStartTileY > StartTileY + SizeY - 1(검색 범위가 오브젝트의 아래쪽에 위치)
 
-            NOT(
-            InputStartTileX + InputSizeX - 1 < StartTileX OR
-            InputStartTileX > StartTileX + SizeX - 1 OR
-            InputStartTileY + InputSizeY - 1 < StartTileY OR
-            InputStartTileY > StartTileY + SizeY - 1
-            )*/
+                        NOT(
+                        InputStartTileX + InputSizeX - 1 < StartTileX OR
+                        InputStartTileX > StartTileX + SizeX - 1 OR
+                        InputStartTileY + InputSizeY - 1 < StartTileY OR
+                        InputStartTileY > StartTileY + SizeY - 1
+                        )*/
         }
 
         public PlacedKingdomItemManager Create(KingdomItemProto prt, int posX, int posY, KingdomStructureManager mgrKingdomStructure = null)

@@ -6,16 +6,19 @@ using WebStudyServer.Helper;
 using Protocol;
 using WebStudyServer.Model;
 using WebStudyServer.GAME;
+using AutoMapper;
+using WebStudyServer.Manager;
 
 namespace Server.Service
 {
     public class GameService : ServiceBase
     {
-        public GameService(AllUserRepo allUserRepo, AuthRepo authRepo, UserRepo userRepo, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
+        public GameService(AllUserRepo allUserRepo, AuthRepo authRepo, UserRepo userRepo, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
         {
             _authRepo = authRepo;
             _userRepo = userRepo;
             _allUserRepo = allUserRepo;
+            _mapper = mapper;
         }
 
         #region GAME
@@ -68,10 +71,10 @@ namespace Server.Service
         }
         #endregion
 
-        #region KINGDOM_ITEM
-        public KingdomBuyStructureResPacket KingdomStructureBuy(int reqKingdomItemNum, CostObjPacket reqCostObj)
+        #region KINGDOM
+        public KingdomBuyStructureResPacket KingdomStructureBuy(KingdomBuyStructureReqPacket req)
         {
-            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqKingdomItemNum);
+            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
@@ -80,8 +83,8 @@ namespace Server.Service
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
 
             // Cost일치하는지 체크
-            var reason = $"BUY_KINGDOM_STRUCTURE:{reqKingdomItemNum}";
-            var valCostObj = ReqHelper.ValidCost(reqCostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
+            var reason = $"BUY_KINGDOM_STRUCTURE:{req.KingdomItemNum}";
+            var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
 
             var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
 
@@ -89,9 +92,9 @@ namespace Server.Service
             return new KingdomBuyStructureResPacket { };
         }
 
-        public KingdomBuyDecoResPacket KingdomDecoBuy(int reqKingdomItemNum, CostObjPacket reqCostObj)
+        public KingdomBuyDecoResPacket KingdomDecoBuy(KingdomBuyDecoReqPacket req)
         {
-            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqKingdomItemNum);
+            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
@@ -100,52 +103,57 @@ namespace Server.Service
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = mgrKingdomDeco.Model.TotalCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
 
             // Cost일치하는지 체크
-            var reason = $"BUY_KINGDOM_DECO:{reqKingdomItemNum}";
-            var valCostObj = ReqHelper.ValidCost(reqCostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
+            var reason = $"BUY_KINGDOM_DECO:{req.KingdomItemNum}";
+            var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
 
             var chgCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
             mgrKingdomDeco.Inc(1, reason);
             return new KingdomBuyDecoResPacket { };
         }
 
-        public KingdomConstructStructureResPacket KingdomConstructStructure(ulong reqKingdomStructureId, CostObjPacket reqConstructCostObj, TilePosPacket reqStartTilePos, TilePosPacket reqEndTilePos)
+        public KingdomConstructStructureResPacket KingdomConstructStructure(KingdomConstructStructureReqPacket req)
         {
-            var mgrKingdomStructure = _userRepo.KingdomStructure.Get(reqKingdomStructureId);
+            var mgrKingdomStructure = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mgrKingdomMap = _userRepo.KingdomMap.Touch();
 
-            // TODO: Tile 위치 중복 체크
-            _userRepo.PlacedKingdomItem.ValidEmptyTile(reqStartTilePos, reqEndTilePos);
+            // Tile 위치 중복 체크
+            var valTileStartPos = mgrKingdomMap.ValidEmptyTile(req.StartTilePos, mgrKingdomStructure.Prt);
 
             // Cost일치하는지 체크
-            var reason = $"CONSTURCT_KINGDOM_STRUCTURE:{reqKingdomStructureId}";
+            var reason = $"CONSTURCT_KINGDOM_STRUCTURE:{req.KingdomStructureId}";
             var prtKingdomItem = mgrKingdomStructure.Prt;
-            var valCostObj = ReqHelper.ValidCost(reqConstructCostObj, prtKingdomItem.ConstructObjType, prtKingdomItem.ConstructObjNum, prtKingdomItem.ConstructObjAmount, reason);
+            // TODO: List형태 필요한지 고려해보고 수정
+            var valCostObj = ReqHelper.ValidCost(req.CostObjList[0], prtKingdomItem.ConstructObjType, prtKingdomItem.ConstructObjNum, prtKingdomItem.ConstructObjAmount, reason);
 
-            // 처리
             // 처리: 건설 재료 소모
             var chgCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
 
-            // 처리: 타일 설치
-            var placedKingdomItem = _userRepo.PlacedKingdomItem.Create(mgrKingdomStructure.Prt, reqStartTilePos.X, reqStartTilePos.Y, mgrKingdomStructure);
+            // DELETEME: Map 형태로 저장 형식 변경            // 처리: 타일 설치
+            // var placedKingdomItem = _userRepo.PlacedKingdomItem.Create(mgrKingdomStructure.Prt, reqStartTilePos.X, reqStartTilePos.Y, mgrKingdomStructure);
 
-            // 처리: 건설 완료(상태 변경)
+            // 처리: 건설 시작(상태 변경)
+            mgrKingdomMap.ConstructStructure(mgrKingdomStructure, valTileStartPos);
             mgrKingdomStructure.Construct();
             return new KingdomConstructStructureResPacket { };
         }
 
-        public KingdomConstructDecoResPacket KingdomConstructDeco(int reqKingdomItemNum, TilePosPacket reqStartTilePos, TilePosPacket reqEndTilePos)
+        public KingdomConstructDecoResPacket KingdomConstructDeco(KingdomConstructDecoReqPacket req)
         {
-            var mgrKingdomDeco = _userRepo.KingdomDeco.Touch(reqKingdomItemNum);
+            var mgrKingdomDeco = _userRepo.KingdomDeco.Touch(req.KingdomItemNum);
+            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mgrKingdomMap = _userRepo.KingdomMap.Touch();
 
-            // TODO: Tile 위치 중복 체크
-            _userRepo.PlacedKingdomItem.ValidEmptyTile(reqStartTilePos, reqEndTilePos);
+            // Tile 위치 중복 체크
+            var valTileStartPos = mgrKingdomMap.ValidEmptyTile(req.StartTilePos, mgrKingdomDeco.Prt);
 
-            // 처리 (즉시 설치)
-            // 처리: 타일 설치
-            var placedKingdomItem = _userRepo.PlacedKingdomItem.Create(mgrKingdomDeco.Prt, reqStartTilePos.X, reqStartTilePos.Y);
+            // DELETEME: Map 형태로 저장 형식 변경 // 처리: 타일 설치
+            // var placedKingdomItem = _userRepo.PlacedKingdomItem.Create(mgrKingdomDeco.Prt, reqStartTilePos.X, reqStartTilePos.Y);
 
             // 처리: 건설 완료 (보유 개수 차감)
+            mgrKingdomMap.ConstructDeco(mgrKingdomDeco, valTileStartPos);
             mgrKingdomDeco.Construct();
+
             return new KingdomConstructDecoResPacket { };
         }
 
@@ -155,23 +163,29 @@ namespace Server.Service
             mgrKingdomItem.FinishConstruct();
         }
 
-        public KingdomStoreResPacket KingdomItemCancel(ulong kingdomItemId)
+        public KingdomChangeItemResPacket KingdomItemChange(KingdomChangeItemReqPacket req)
         {
-            var mgrKingdomItem = _userRepo.KingdomStructure.Get(kingdomItemId);
+            var mgrKingdomMap = _userRepo.KingdomMap.Touch();
+            // TODO: Store + Create 한 변화량을 구하고, 보유 수량 검증
 
-            mgrKingdomItem.Cancel();
-            return new KingdomStoreResPacket { };
+            // Chg + Place 리스트중에 겹치는거 없는지 확인하고 적용
+            mgrKingdomMap.ValiePlaceMapSnapshot(req.StoreKingdomItemIdList, req.ChgKingdomItemList, req.PlaceKingdomItemList);
+
+            //  Store + Create 한 변화량 적용
+
+          
+            return new KingdomChangeItemResPacket { };
         }
 
-        public KingdomDecTimeStructureResPacket KingdomItemDecTime(ulong kingdomItemId, int remainSec, CostCashPacket reqCostCash)
+        public KingdomDecTimeStructureResPacket KingdomItemDecTime(KingdomDecTimeStructureReqPacket req)
         {
-            var mgrKingdomItem = _userRepo.KingdomStructure.Get(kingdomItemId);
+            var mgrKingdomItem = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
 
             // TODO: 남은 시간, 캐시 보유량 일치하는지 검증
             //
 
-            var cashAmount = mgrPlayerDetail.DecCash(reqCostCash.Amount, $"DEC_TIME_KINGDOM_ITEM:{kingdomItemId}");
+            var cashAmount = mgrPlayerDetail.DecCash(req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
             mgrKingdomItem.DecTime();
             return new KingdomDecTimeStructureResPacket { };
         }
@@ -180,5 +194,6 @@ namespace Server.Service
         private readonly AuthRepo _authRepo;
         private readonly UserRepo _userRepo;
         private readonly AllUserRepo _allUserRepo;
+        private readonly IMapper _mapper;
     }
 }

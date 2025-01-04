@@ -3,6 +3,7 @@ using WebStudyServer.Model;
 using Proto;
 using WebStudyServer.Helper;
 using WebStudyServer.GAME;
+using Protocol;
 
 namespace WebStudyServer.Manager
 {
@@ -21,12 +22,15 @@ namespace WebStudyServer.Manager
 
         public void Construct()
         {
-/*            _model.StartTileX = startTileX;
-            _model.StartTileY = startTileY;
-            _model.EndTileX = endTileX;
-            _model.EndTileY = endTileY;*/
             _model.State = EKingdomItemState.CONSTRUCTING;
             _model.EndTime = _rpcContext.ServerTime + TimeSpan.FromSeconds(Prt.ConstructSec);
+
+            if (Prt.ConstructSec == 0)
+            {
+                _model.State = EKingdomItemState.READY;
+                _model.EndTime = DateTime.MinValue;
+            }
+
             _userRepo.KingdomStructure.Update(_model);
         }
 
@@ -39,12 +43,8 @@ namespace WebStudyServer.Manager
             _userRepo.KingdomStructure.Update(_model);
         }
 
-        public void Cancel()
+        public void Store(PlacedKingdomItemPacket placedKingdomItem)
         {
-/*            _model.StartTileX = 0;
-            _model.StartTileY = 0;
-            _model.EndTileX = 0;
-            _model.EndTileY = 0;*/
             _model.State = EKingdomItemState.STORED;
             _model.EndTime = DateTime.MinValue;
             _userRepo.KingdomStructure.Update(_model);

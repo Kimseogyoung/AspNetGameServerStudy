@@ -15,6 +15,9 @@ namespace Protocol
         [ProtoMember(3)]
         public List<ChgKingdomItemPacket> ChgKingdomItemList { get; set; } 
         
+        [ProtoMember(3)]
+        public List<ChgKingdomItemPacket> PlaceKingdomItemList { get; set; } 
+        
         public string GetProtocolName() => "kingdom/change-item";
 	}
 }

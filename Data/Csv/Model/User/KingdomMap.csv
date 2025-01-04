@@ -1,5 +1,7 @@
 ﻿Name,Type,Value,Desc,ProtocolType,Key
 PlayerId,BIGINT UNSIGNED,,,Model,"pk, fk"
+XSize,INT,,,,
+Ysize,INT,,,,
 Snapshot,TEXT,,,,
 State,ENUM:EKingdomTileMapState,,,,
 
