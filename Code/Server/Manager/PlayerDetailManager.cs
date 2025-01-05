@@ -14,7 +14,16 @@ namespace WebStudyServer.Manager
         public PlayerDetailManager(UserRepo userRepo, PlayerDetailModel model/*, PointComponent*/) : base(userRepo, model)
         {
         }
-    
+
+        public CashPacket GetCashPacket()
+        {
+            return new CashPacket
+            {
+                FreeCash = _model.FreeCash,
+                RealCash = _model.RealCash,
+            };
+        }
+
         // TODO: Reward관련 내용 별도 멤버변수로 빼는것 고려
         public ChgObjPacket DecCost(ObjPacket valCostObj, string reason)
         {

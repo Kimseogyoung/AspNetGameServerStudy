@@ -10,6 +10,7 @@ namespace WebStudyServer.Manager
     public partial class KingdomStructureManager : UserManagerBase<KingdomStructureModel>
     {
         public KingdomItemProto Prt { get; private set; }
+
         public KingdomStructureManager(UserRepo userRepo, KingdomStructureModel model, KingdomItemProto prt) : base(userRepo, model)
         {
             Prt = prt;

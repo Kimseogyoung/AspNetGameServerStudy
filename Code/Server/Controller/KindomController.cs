@@ -46,11 +46,26 @@ namespace WebStudyServer.Controllers
             return result;
         }
 
-        [HttpPost("store")]
-        public ActionResult<KingdomStoreResPacket> Store(KingdomStoreReqPacket req)
+        [HttpPost("change-item")]
+        public ActionResult<KingdomChangeItemResPacket> Store(KingdomChangeItemReqPacket req)
         {
-            var result = _gameService.KingdomItemStore(req);
+            var result = _gameService.KingdomItemChange(req);
             return result;  
+        }
+
+
+        [HttpPost("finish-craft-structure")]
+        public ActionResult<KingdomFinishCraftStructureResPacket> FinishConstructStructure(KingdomFinishCraftStructureReqPacket req)
+        {
+            var result = _gameService.KingdomFinishCraftStructure(req);
+            return result;
+        }
+
+        [HttpPost("finish-construct-structure")]
+        public ActionResult<KingdomFinishConstructStructureResPacket> FinishConstructStructure(KingdomFinishConstructStructureReqPacket req)
+        {
+            var result = _gameService.KingdomFinishConstructStructure(req);
+            return result;
         }
 
         [HttpPost("dec-time-structure")]

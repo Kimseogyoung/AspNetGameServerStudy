@@ -7,7 +7,6 @@ using Protocol;
 using WebStudyServer.Model;
 using WebStudyServer.GAME;
 using AutoMapper;
-using WebStudyServer.Manager;
 
 namespace Server.Service
 {
@@ -89,7 +88,11 @@ namespace Server.Service
             var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
 
             var mgrKingdomStructure = _userRepo.KingdomStructure.Create(prtKingdomItem);
-            return new KingdomBuyStructureResPacket { };
+            return new KingdomBuyStructureResPacket
+            {
+                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
+                ChgObj = resultCostObj,
+            };
         }
 
         public KingdomBuyDecoResPacket KingdomDecoBuy(KingdomBuyDecoReqPacket req)
@@ -108,7 +111,11 @@ namespace Server.Service
 
             var chgCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
             mgrKingdomDeco.Inc(1, reason);
-            return new KingdomBuyDecoResPacket { };
+            return new KingdomBuyDecoResPacket
+            {
+                KingdomDeco = _mapper.Map<KingdomDecoPacket>(mgrKingdomDeco.Model),
+                ChgObj = chgCostObj,
+            };
         }
 
         public KingdomConstructStructureResPacket KingdomConstructStructure(KingdomConstructStructureReqPacket req)
@@ -135,7 +142,12 @@ namespace Server.Service
             // 처리: 건설 시작(상태 변경)
             mgrKingdomMap.ConstructStructure(mgrKingdomStructure, valTileStartPos);
             mgrKingdomStructure.Construct();
-            return new KingdomConstructStructureResPacket { };
+            return new KingdomConstructStructureResPacket
+            {
+                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
+                PlacedKingdomItemList = mgrKingdomMap.Snapshot.PlacedObjDict.Values.ToList(),
+                ChgObjList = new List<ChgObjPacket> { chgCostObj },
+            };
         }
 
         public KingdomConstructDecoResPacket KingdomConstructDeco(KingdomConstructDecoReqPacket req)
@@ -154,14 +166,21 @@ namespace Server.Service
             mgrKingdomMap.ConstructDeco(mgrKingdomDeco, valTileStartPos);
             mgrKingdomDeco.Place();
 
-            return new KingdomConstructDecoResPacket { };
+            return new KingdomConstructDecoResPacket
+            {
+                KingdomDeco = _mapper.Map<KingdomDecoPacket>(mgrKingdomDeco.Model),
+                PlacedKingdomItemList = mgrKingdomMap.Snapshot.PlacedObjDict.Values.ToList(),
+            };
         }
 
         public KingdomFinishConstructStructureResPacket KingdomFinishConstructStructure(KingdomFinishConstructStructureReqPacket req)
         {
             var mgrKingdomItem = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
             mgrKingdomItem.SetReady(EKingdomItemState.CONSTRUCTING);
-            return new KingdomFinishConstructStructureResPacket { };
+            return new KingdomFinishConstructStructureResPacket
+            {
+                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
+            };
         }
 
         public KingdomChangeItemResPacket KingdomItemChange(KingdomChangeItemReqPacket req)
@@ -219,7 +238,12 @@ namespace Server.Service
 
             // 로그
 
-            return new KingdomChangeItemResPacket { };
+            return new KingdomChangeItemResPacket
+            {
+                KingdomStructureList = _mapper.Map<List<KingdomStructurePacket>>(mgrKingdomStructureList),
+                KingdomDecoList = _mapper.Map<List<KingdomDecoPacket>>(mgrKingdomDecoList),
+                PlacedKingdomItemList = mgrKingdomMap.Snapshot.PlacedObjDict.Values.ToList(),
+            };
         }
 
         public KingdomDecTimeStructureResPacket KingdomItemDecTime(KingdomDecTimeStructureReqPacket req)
@@ -232,14 +256,22 @@ namespace Server.Service
 
             var cashAmount = mgrPlayerDetail.DecCash(req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
             mgrKingdomItem.DecTime();
-            return new KingdomDecTimeStructureResPacket { };
+            return new KingdomDecTimeStructureResPacket
+            {
+                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
+                Cash = mgrPlayerDetail.GetCashPacket(),
+            };
         }
 
-        public KingdomFinishCraftStructureResPacket KingdomFinishConstructStructure(KingdomFinishCraftStructureReqPacket req)
+        public KingdomFinishCraftStructureResPacket KingdomFinishCraftStructure(KingdomFinishCraftStructureReqPacket req)
         {
             var mgrKingdomItem = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
             mgrKingdomItem.SetReady(EKingdomItemState.CRAFTING);
-            return new KingdomFinishCraftStructureResPacket { };
+            return new KingdomFinishCraftStructureResPacket
+            {
+                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
+                ChgObjList = new List<ChgObjPacket>(), // TODO: Creft 결과
+            };
         }
         #endregion
 

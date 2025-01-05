@@ -7,10 +7,10 @@ namespace Protocol
         {
         
                 [ProtoMember(1)]
-                public long FreeCash { get; set; } 
+                public double FreeCash { get; set; } 
                 
                 [ProtoMember(2)]
-                public long RealCash { get; set; } 
+                public double RealCash { get; set; } 
                 
 	}
 }
