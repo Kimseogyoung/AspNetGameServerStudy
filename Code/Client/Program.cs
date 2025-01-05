@@ -2,17 +2,26 @@
 using Client;
 using Protocol;
 
-var ctxSystem = new ContextSystem();
-ctxSystem.Init();
+APP.Init("../../Data/Csv/Proto");
+APP.Prt.Bind();
 
 var funcDict = new Dictionary<int, ApiFunc>()
 {
-    { 1, new ApiFunc(){ ApiPath = typeof(AuthSignUpReqPacket).ToString(), Desc = "회원 가입", Action = async (value) =>  await ctxSystem.RequestSignUpAsync(Guid.NewGuid().ToString())} },
-    { 2, new ApiFunc(){ ApiPath = typeof(AuthSignInReqPacket).ToString(), Desc = "기존 계정 로그인",Action = async (value) =>  await ctxSystem.RequestSignInAsync(value)} },
+    { 1, new ApiFunc(){ ApiPath = typeof(AuthSignUpReqPacket).ToString(), Desc = "회원 가입", 
+        Action = async (valueArr) =>  await APP.Ctx.RequestSignUpAsync(Guid.NewGuid().ToString())} },
+    { 2, new ApiFunc(){ ApiPath = typeof(AuthSignInReqPacket).ToString(), Desc = "기존 계정 로그인 (ChannelKey)",
+        Action = async (valueArr) =>  await APP.Ctx.RequestSignInAsync(valueArr[0])} },
 
 
-    { 100, new ApiFunc(){ ApiPath = typeof(GameEnterReqPacket).ToString(), Desc = "플레이어 로드", Action = async (value) =>  await ctxSystem.RequestEnterAsync()} },
-    { 101, new ApiFunc(){ ApiPath = typeof(GameChangeNameReqPacket).ToString(), Desc = "닉네임 초기 설정", Action = async (value) =>  await ctxSystem.RequestChangeNameAsync(value)} },
+    { 100, new ApiFunc(){ ApiPath = typeof(GameEnterReqPacket).ToString(), Desc = "플레이어 로드", 
+        Action = async (valueArr) =>  await APP.Ctx.RequestEnterAsync()} },
+    { 101, new ApiFunc(){ ApiPath = typeof(GameChangeNameReqPacket).ToString(), Desc = "닉네임 초기 설정 (Name)", 
+        Action = async (valueArr) =>  await APP.Ctx.RequestChangeNameAsync(valueArr[0])} },
+    
+    { 201, new ApiFunc(){ ApiPath = typeof(KingdomBuyStructureReqPacket).ToString(), Desc = "KingdomItem 구매 (Num)", 
+        Action = async (valueArr) =>  await APP.Ctx.RequestKingdomItemBuy((int.Parse(valueArr[0]))) } },
+    { 202, new ApiFunc(){ ApiPath = typeof(KingdomConstructStructureReqPacket).ToString(), Desc = "KingdomItem 건설 (StructureId, X, Y)", 
+        Action = async (valueArr) =>  await APP.Ctx.RequestKingdomItemConstruct(ulong.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) } },
 
     { 0, new ApiFunc(){ ApiPath = "", Desc = "종료" } }
 };
@@ -33,7 +42,7 @@ while (isRunning)
         var input = Console.ReadLine();
         var inputArr = input?.Split(" ");
         var inputNum = inputArr == null ? 0 : int.Parse(inputArr[0]);
-        var inputString = inputArr == null || inputArr.Length <= 1 ? string.Empty : inputArr[1];
+        //var inputString = inputArr == null || inputArr.Length <= 1 ? string.Empty : inputArr[1];
 
         if (inputNum == 0)
         {
@@ -46,14 +55,15 @@ while (isRunning)
             continue;
         }
 
-        await outApiFund.Action.Invoke(inputString);
+        var inputStrArr = inputArr.Skip(1).ToArray();
+        await outApiFund.Action.Invoke(inputStrArr);
     }
     catch(Exception ex)
     {
         Console.WriteLine($"ERROR:{ex.Message.ToString()}, {ex.StackTrace}");
-        ctxSystem.Clear();
-        ctxSystem.Init();
+        APP.Ctx.Clear();
+        APP.Ctx.Init();
     }
 }
 
-ctxSystem.Clear();
+APP.Ctx.Clear();

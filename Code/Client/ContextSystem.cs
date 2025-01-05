@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Client
 {
-    public class ContextSystem
+    public partial class ContextSystem
     {
         public void Init()
         {
@@ -50,6 +50,8 @@ namespace Client
             var res = await _rpcSystem.RequestAsync<GameEnterReqPacket, GameEnterResPacket>(req);
             
             _player = res.Player;
+
+            RefreshKingdom();
         }
 
         public async Task RequestChangeNameAsync(string name)
@@ -66,7 +68,6 @@ namespace Client
         }
 
         private PlayerPacket _player;
-
         private RpcSystem _rpcSystem;
     }
 }

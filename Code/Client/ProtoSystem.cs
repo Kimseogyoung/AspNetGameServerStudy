@@ -1,0 +1,33 @@
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Proto;
+namespace Client
+{
+    public class ProtoSystem
+    {
+        public void Init(string inCsvPath)
+        {
+            var csvPath = Path.GetFullPath(inCsvPath);
+            _prt.Init(csvPath);
+        }
+
+        public void Bind()
+        {
+            _prt.Bind<KingdomItemProto>();
+            _prt.Bind<ItemProto>();
+            _prt.Bind<PointProto>();
+            _prt.Bind<TicketProto>();
+            _prt.Bind<CookieProto>();
+        }
+
+        public CookieProto GetCookiePrt(int cookieNum) => _prt.Get<CookieProto>(cookieNum);
+        public KingdomItemProto GetKingdomItemPrt(int kingdomObjNum) => _prt.Get<KingdomItemProto>(kingdomObjNum);
+        public ItemProto GetItemPrt(int itemNum) => _prt.Get<ItemProto>(itemNum);
+        public PointProto GetPointPrt(EObjType objType) => _prt.Get<PointProto>(objType);
+        public PointProto GetPointPrt(int pointNum) => GetPointPrt((EObjType)pointNum);
+        public TicketProto GetTicketPrt(EObjType objType) => _prt.Get<TicketProto>(objType);
+        public TicketProto GetTicketPrt(int ticketNum) => GetTicketPrt((EObjType)ticketNum);
+
+        private static ProtoHelper _prt = new ProtoHelper();
+    }
+}

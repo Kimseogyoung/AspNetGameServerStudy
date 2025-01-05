@@ -46,7 +46,7 @@ namespace WebStudyServer
             }
 
             // TODO: 로그
-            _logger.Error("Error:{Code}:{Hash}:{Msg} Args({Args})", errorCode, errorHash, errorMsg, errorArgs);
+            _logger.Error("Error:{Code}:{Hash}:{Msg} Args({Args}) StackTrace({StackTrace})", errorCode, errorHash, errorMsg, errorArgs, exception.StackTrace);
 
             // TODO: 에러 리포트
             // sentry

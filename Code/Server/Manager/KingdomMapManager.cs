@@ -7,6 +7,7 @@ using Protocol.Packet.Custom;
 using Protocol;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Proto.Helper;
 
 namespace WebStudyServer.Manager
 {
@@ -75,7 +76,7 @@ namespace WebStudyServer.Manager
             FillSnapshotTileMap(snapshot, pak.SizeX, pak.SizeY);
             foreach (var placedItem in placedObjDict.Values)
             {
-                var tilePoses = GetTilePosRanges(placedItem.StartTileX, placedItem.StartTileY, placedItem.SizeX, placedItem.SizeY);
+                var tilePoses = KingdomHelper.GetTilePosRanges(placedItem.StartTileX, placedItem.StartTileY, placedItem.SizeX, placedItem.SizeY);
                 foreach (var tilePos in tilePoses)
                 {
                     snapshot.TileMap[tilePos.Y][tilePos.X] = placedItem.Id;
@@ -95,7 +96,7 @@ namespace WebStudyServer.Manager
 
         public TilePosPacket ValidEmptyTile(TilePosPacket reqStartPos, KingdomItemProto prtKingdomItem)
         {
-            var tilePosRanges = GetTilePosRanges(reqStartPos.X, reqStartPos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
+            var tilePosRanges = KingdomHelper.GetTilePosRanges(reqStartPos.X, reqStartPos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
 
             foreach (var tilePos in tilePosRanges)
             {
@@ -126,7 +127,7 @@ namespace WebStudyServer.Manager
             var deleteItemIdList = reqStoreIdList;
             deleteItemIdList.AddRange(reqChgItemList.Select(x => x.PlacedItemId));
 
-            var deleteTilePosList = new List<TilePosPacket>();
+            var deleteTilePosList = new List<TilePos>();
             foreach (var deletedPlaceItemId in deleteItemIdList)
             {
                 ReqHelper.ValidContext(copySnapshot.PlacedObjDict.TryGetValue(deletedPlaceItemId, out var placedItem), "NOT_FOUND_PLACED_KINGDOM_ITEM", () => new { PlaceItemId = deletedPlaceItemId });
@@ -149,7 +150,7 @@ namespace WebStudyServer.Manager
 
                 // 오브젝트 정보 삭제
                 copySnapshot.PlacedObjDict.Remove(deletedPlaceItemId);
-                var tilePoses = GetTilePosRanges(placedItem.StartTileX, placedItem.StartTileY, placedItem.SizeX, placedItem.SizeY);
+                var tilePoses = KingdomHelper.GetTilePosRanges(placedItem.StartTileX, placedItem.StartTileY, placedItem.SizeX, placedItem.SizeY);
                 deleteTilePosList.AddRange(tilePoses);
 
                 // 보관/이동 타일 기존 정보 삭제
@@ -163,18 +164,18 @@ namespace WebStudyServer.Manager
             // 1. Chg, Place 들 끼리 서로 충돌하지 않는지 검증.
             // 2. Chg, Place(새 위치)들이 기존 타일과 충돌하는지 검증    
             // 이게 확인되면 그대로 저장해도 OK
-            var placeTilePosList = new List<TilePosPacket>(); // . Chg, Place 합산 Tile리스트
+            var placeTilePosList = new List<TilePos>(); // . Chg, Place 합산 Tile리스트
             foreach (var reqChgItem in reqChgItemList)
             {
                 var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqChgItem.Num);
-                var tilePosRanges = GetTilePosRanges(reqChgItem.TilePos.X, reqChgItem.TilePos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
+                var tilePosRanges = KingdomHelper.GetTilePosRanges(reqChgItem.TilePos.X, reqChgItem.TilePos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
                 placeTilePosList.AddRange(tilePosRanges);
             }
 
             foreach (var reqPlaceItem in reqPlaceItemList)
             {
                 var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqPlaceItem.Num);
-                var tilePosRanges = GetTilePosRanges(reqPlaceItem.TilePos.X, reqPlaceItem.TilePos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
+                var tilePosRanges = KingdomHelper.GetTilePosRanges(reqPlaceItem.TilePos.X, reqPlaceItem.TilePos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
                 placeTilePosList.AddRange(tilePosRanges);
             }
 
@@ -338,7 +339,7 @@ namespace WebStudyServer.Manager
                 Type = EKingdomItemType.STRUCTURE,
             };
 
-            var tilePosRanges = GetTilePosRanges(valStartTilePos.X, valStartTilePos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
+            var tilePosRanges = KingdomHelper.GetTilePosRanges(valStartTilePos.X, valStartTilePos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
             foreach (var tilePos in tilePosRanges)
             {
                 this.Snapshot.TileMap[tilePos.Y][tilePos.X] = newPlacedObj.Id;
@@ -348,13 +349,15 @@ namespace WebStudyServer.Manager
             SaveSnapshot();
         }
 
-        private bool HasOverlappingTiles(List<TilePosPacket> placeTilePosList)
+        private bool HasOverlappingTiles(List<TilePos> placeTilePosList)
         {
-            var uniqueTileSet = new HashSet<(int, int)>();  // (X, Y) 튜플을 사용
+            // TODO: 수정. 굳이 HashSet 만들 필요 X
+
+            var uniqueTileSet = new HashSet<TilePos>();  // (X, Y) 튜플을 사용
 
             foreach (var tile in placeTilePosList)
             {
-                var tilePosition = (tile.X, tile.Y);  // X, Y를 튜플로 변환
+                var tilePosition = tile;  // X, Y를 튜플로 변환
                 if (!uniqueTileSet.Add(tilePosition)) // 중복이 있으면 Add가 false를 반환
                 {
                     return true; // 중복된 좌표가 있으면 true 반환
@@ -403,28 +406,6 @@ namespace WebStudyServer.Manager
             else if (tileMapYSize > sizeY || tileMapXSize > sizeX)
             {
                 // TODO: 이 경우가 실제로 일어나는지 로그 
-            }
-        }
-
-        private static IEnumerable<TilePosPacket> GetTilePosRanges(int startX, int startY, int sizeX, int sizeY)
-        {
-            var tilePosRangeList = new List<TilePosPacket>();
-            for (var y = 0; y < sizeX; y++)
-            {
-                for (var x = 0; x < sizeY; x++)
-                {
-/*                    tilePosRangeList.Add(new TilePosPacket
-                    {
-                        X = startPos.X + x,
-                        Y = startPos.Y + y,
-                    });
-*/
-                    yield return new TilePosPacket
-                    {
-                        X = startX + x,
-                        Y = startY + y,
-                    };
-                }
             }
         }
     }

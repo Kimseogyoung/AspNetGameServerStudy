@@ -10,7 +10,7 @@ namespace Client
     {
         public string ApiPath { get; set; }
         public string Desc { get; set; }
-        public Func<string, Task> Action { get; set; }
+        public Func<string[], Task> Action { get; set; }
     }
 
 }

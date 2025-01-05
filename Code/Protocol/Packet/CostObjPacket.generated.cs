@@ -15,10 +15,10 @@ namespace Protocol
                 [ProtoMember(3)]
                 public double Amount { get; set; } 
                 
-                [ProtoMember(3)]
+                [ProtoMember(4)]
                 public double BefAmount { get; set; } 
                 
-                [ProtoMember(3)]
+                [ProtoMember(5)]
                 public double AftAmount { get; set; } 
                 
 	}
