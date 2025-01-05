@@ -17,7 +17,7 @@ namespace WebStudyServer.Component
         {
             if (!TryGetInternal(cookieNum, out var mdlCookie))
             {
-                mdlCookie = Create(new CookieModel
+                mdlCookie = CreateMdl(new CookieModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = cookieNum,

@@ -21,7 +21,7 @@ namespace WebStudyServer.Component
 
             if (!TryGetInternal(ticketNum, out var mdlTicket))
             {
-                mdlTicket = Create(new TicketModel
+                mdlTicket = CreateMdl(new TicketModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = ticketNum,

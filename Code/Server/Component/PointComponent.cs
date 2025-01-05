@@ -21,7 +21,7 @@ namespace WebStudyServer.Component
 
             if (!TryGetInternal(pointNum, out var mdlPoint))
             {
-                mdlPoint = Create(new PointModel
+                mdlPoint = CreateMdl(new PointModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = pointNum,

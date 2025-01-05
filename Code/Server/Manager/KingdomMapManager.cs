@@ -6,13 +6,14 @@ using WebStudyServer.GAME;
 using Protocol.Packet.Custom;
 using Protocol;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace WebStudyServer.Manager
 {
     public partial class KingdomMapManager : UserManagerBase<KingdomMapModel>
     {
-        public int XSize => _model.XSize;
-        public int YSize => _model.XSize;
+        public int XSize => _model.SizeX;
+        public int YSize => _model.SizeX;
         public KingdomMapSnapshotPacket Snapshot { get; private set; }
 
         public KingdomMapManager(UserRepo userRepo, KingdomMapModel model) : base(userRepo, model)
@@ -39,6 +40,57 @@ namespace WebStudyServer.Manager
 
                 RefreshTileMap();
             }
+        }
+
+        public static (KingdomMapModel Mdl, KingdomMapSnapshotPacket Snapshot) CreateKingdomMapModelDummy(KingdomMapPacket pak, List<KingdomStructureModel> mdlKingdomStructureList)
+        {
+            var checkedKingdomStructureIdList = new List<ulong>();
+            var deletePlacedItemList = new List<PlacedKingdomItemPacket>();
+            foreach (var placedItem in pak.PlacedKingdomItemList)
+            {
+                if(placedItem.Type == EKingdomItemType.STRUCTURE)
+                {
+                    var mdlKingdomStructure = mdlKingdomStructureList.Find(x => x.Num == placedItem.Num);
+                    if(mdlKingdomStructure == null)
+                    {
+                        // TODO: 로그
+                        // Struecture가 없는 경우 삭제 (DefaultPlacedItemList에 잘못된 값 들어감.)
+                        //
+                        deletePlacedItemList.Add(placedItem);
+                        continue;
+                    }
+                    checkedKingdomStructureIdList.Add(mdlKingdomStructure.Id);
+                    placedItem.StructureItemId = mdlKingdomStructure.Id;
+                }
+            }
+
+            var idCounter = (ulong)pak.PlacedKingdomItemList.Count();
+            var placedObjDict = pak.PlacedKingdomItemList.Where(x=> !deletePlacedItemList.Contains(x)).ToDictionary(x => x.Id, x => x);
+            var snapshot = new KingdomMapSnapshotPacket
+            {
+                ObjIdCounter = idCounter,
+                PlacedObjDict = placedObjDict,
+            };
+
+            FillSnapshotTileMap(snapshot, pak.SizeX, pak.SizeY);
+            foreach (var placedItem in placedObjDict.Values)
+            {
+                var tilePoses = GetTilePosRanges(placedItem.StartTileX, placedItem.StartTileY, placedItem.SizeX, placedItem.SizeY);
+                foreach (var tilePos in tilePoses)
+                {
+                    snapshot.TileMap[tilePos.Y][tilePos.X] = placedItem.Id;
+                }
+            }
+
+            var mdlKingdomMap = new KingdomMapModel
+            {
+                Snapshot = SerializeHelper.JsonSerialize(snapshot),
+                State = pak.State,
+                SizeX = pak.SizeX,
+                SizeY = pak.SizeY,
+            };
+
+            return (mdlKingdomMap, snapshot);
         }
 
         public TilePosPacket ValidEmptyTile(TilePosPacket reqStartPos, KingdomItemProto prtKingdomItem)
@@ -216,7 +268,7 @@ namespace WebStudyServer.Manager
             }
 
             _model.Snapshot = SerializeHelper.JsonSerialize(this.Snapshot);
-            _userRepo.KingdomMap.Update(_model);
+            _userRepo.KingdomMap.UpdateMdl(_model);
         }
 
         public List<PlacedKingdomItemPacket> ValidExistPlacedItemList(List<ulong> placedItemList)
@@ -266,44 +318,7 @@ namespace WebStudyServer.Manager
 
         private void RefreshTileMap()
         {
-            if (this.Snapshot.TileMap.Count == 0) // 완전 빈 상태
-            {
-                for (var y = 0; y < this.YSize; y++)
-                {
-                    this.Snapshot.TileMap.Add(new List<ulong>());
-                    for (var x = 0; x < this.XSize; x++)
-                    {
-                        this.Snapshot.TileMap[y].Add(0);
-                    }
-                }
-                return;
-            }
-
-            var tileMapYSize = this.Snapshot.TileMap.Count;
-            var tileMapXSize = this.Snapshot.TileMap[0].Count;
-
-            if (tileMapYSize < this.YSize || tileMapXSize < this.XSize)
-            {
-                for (var y = 0; y < this.YSize; y++)
-                {
-                    if (y >= this.Snapshot.TileMap.Count)
-                    {
-                        this.Snapshot.TileMap.Add(new List<ulong>());
-                    }
-
-                    for (var x = 0; x < this.XSize; x++)
-                    {
-                        if (x >= this.Snapshot.TileMap[y].Count)
-                        {
-                            this.Snapshot.TileMap[y].Add(0);
-                        }
-                    }
-                }
-            }
-            else if (tileMapYSize > this.YSize || tileMapXSize > this.XSize)
-            {
-                // TODO: 이 경우가 실제로 일어나는지 로그 
-            }
+            FillSnapshotTileMap(this.Snapshot, this.XSize, this.YSize);
         }
 
         private void ConstructItemInternal(KingdomItemProto prtKingdomItem, TilePosPacket valStartTilePos, ulong structId)
@@ -349,8 +364,49 @@ namespace WebStudyServer.Manager
             return false; // 중복되는 좌표가 없으면 false 반환
         }
 
+        private static void FillSnapshotTileMap(KingdomMapSnapshotPacket snapshot, int sizeX, int sizeY)
+        {
+            if (snapshot.TileMap.Count == 0) // 완전 빈 상태
+            {
+                for (var y = 0; y < sizeY; y++)
+                {
+                    snapshot.TileMap.Add(new List<ulong>());
+                    for (var x = 0; x < sizeX; x++)
+                    {
+                        snapshot.TileMap[y].Add(0);
+                    }
+                }
+                return;
+            }
 
-        private IEnumerable<TilePosPacket> GetTilePosRanges(int startX, int startY, int sizeX, int sizeY)
+            var tileMapYSize = snapshot.TileMap.Count;
+            var tileMapXSize = snapshot.TileMap[0].Count;
+
+            if (tileMapYSize < sizeY || tileMapXSize < sizeX)
+            {
+                for (var y = 0; y < sizeY; y++)
+                {
+                    if (y >= snapshot.TileMap.Count)
+                    {
+                        snapshot.TileMap.Add(new List<ulong>());
+                    }
+
+                    for (var x = 0; x < sizeX; x++)
+                    {
+                        if (x >= snapshot.TileMap[y].Count)
+                        {
+                            snapshot.TileMap[y].Add(0);
+                        }
+                    }
+                }
+            }
+            else if (tileMapYSize > sizeY || tileMapXSize > sizeX)
+            {
+                // TODO: 이 경우가 실제로 일어나는지 로그 
+            }
+        }
+
+        private static IEnumerable<TilePosPacket> GetTilePosRanges(int startX, int startY, int sizeX, int sizeY)
         {
             var tilePosRangeList = new List<TilePosPacket>();
             for (var y = 0; y < sizeX; y++)

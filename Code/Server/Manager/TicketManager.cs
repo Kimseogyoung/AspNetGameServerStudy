@@ -20,7 +20,7 @@ namespace WebStudyServer.Manager
 
             _model.Amount -= amount;
             _model.AccAmount -= amount;
-            _userRepo.Ticket.Update(_model);
+            _userRepo.Ticket.UpdateMdl(_model);
             return _model.Amount;
         }
 
@@ -31,7 +31,7 @@ namespace WebStudyServer.Manager
 
             _model.Amount += amount;
             _model.AccAmount += amount;
-            _userRepo.Ticket.Update(_model);
+            _userRepo.Ticket.UpdateMdl(_model);
             return _model.Amount;
         }
     }

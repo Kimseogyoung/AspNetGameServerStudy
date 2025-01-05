@@ -1,0 +1,70 @@
+{
+	"Lv": 1,
+	"CastleLv": 0,
+	"ProfileTitleNum": 0,
+	"ProfileIconNum": 0,
+	"ProfileFrameNum": 0,
+	"ProfileCookieNum": 0,
+	"Gold": 1000,
+	"AccGold": 1000,
+	"CookieList": [
+		{
+			"Num": 1001, 
+			"StarExp": 1,
+			"AccStarExp": 10,
+			"Star": 0,
+			"State": 1
+		}
+	],
+	"KingdomDecoList": [
+		{
+			"Num": 130001,
+			"TotalCnt": 2,
+			"UnplacedCnt": 0,
+			"State": 2
+		}
+	],
+	"KingdomMap":
+	{
+		"SizeX": 10,
+		"SizeY": 10,
+		"PlacedKingdomItemList": [
+		{
+			"Id": 1, 
+			"StructureItemId": 0,
+			"Type": 2,
+			"Num": 130002,
+			"StartTileX": 3,
+			"StartTileY": 3,
+			"SizeX": 2,
+			"SizeY": 2,
+			"Rotation": 0
+		},
+		{
+			"Id": 2, 
+			"StructureItemId": 0,
+			"Type": 2,
+			"Num": 130002,
+			"StartTileX": 5,
+			"StartTileY": 3,
+			"SizeX": 2,
+			"SizeY": 2,
+			"Rotation": 0
+
+		},
+		{
+			"Id": 3, 
+			"StructureItemId": 0,
+			"Type": 3,
+			"Num": 190001,
+			"StartTileX": 8,
+			"StartTileY": 8,
+			"SizeX": 1,
+			"SizeY": 1,
+			"Rotation": 0
+
+		}
+		]
+	
+	}
+}

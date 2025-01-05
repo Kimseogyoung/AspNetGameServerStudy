@@ -22,7 +22,7 @@ namespace WebStudyServer.Component
 
             if (!TryGetInternal(itemNum, out var mdlDeco))
             {
-                mdlDeco = Create(new KingdomDecoModel
+                mdlDeco = CreateMdl(new KingdomDecoModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = itemNum,
@@ -35,7 +35,7 @@ namespace WebStudyServer.Component
 
         public KingdomDecoManager Create(KingdomItemProto prt)
         {
-            var mdlKingdomDeco = base.Create(new KingdomDecoModel
+            var mdlKingdomDeco = base.CreateMdl(new KingdomDecoModel
             {
                 Num = prt.Num,
                 State = EKingdomItemState.STORED,

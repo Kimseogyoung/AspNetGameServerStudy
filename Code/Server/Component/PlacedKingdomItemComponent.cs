@@ -45,7 +45,7 @@ namespace WebStudyServer.Component
                 ReqHelper.ValidParam(mgrKingdomStructure != null, "NULL_KINGDOM_STRUCTURE_FOR_PLACED_KINGDOM_ITEM");
             }
 
-            var mdlPlacedKingdomItem = base.Create(new PlacedKingdomItemModel
+            var mdlPlacedKingdomItem = base.CreateMdl(new PlacedKingdomItemModel
             {
                 Num = prt.Num,
                 Type = prt.Type,

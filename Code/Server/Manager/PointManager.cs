@@ -20,7 +20,7 @@ namespace WebStudyServer.Manager
 
             _model.Amount -= amount;
             _model.AccAmount -= amount;
-            _userRepo.Point.Update(_model);
+            _userRepo.Point.UpdateMdl(_model);
             return _model.Amount;
         }
 
@@ -31,7 +31,7 @@ namespace WebStudyServer.Manager
 
             _model.Amount += amount;
             _model.AccAmount += amount;
-            _userRepo.Point.Update(_model);
+            _userRepo.Point.UpdateMdl(_model);
             return _model.Amount;
         }
 

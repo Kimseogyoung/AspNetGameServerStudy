@@ -549,7 +549,7 @@
                 },
                 {
                   "column": {
-                    "name": "XSize",
+                    "name": "SizeX",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -559,7 +559,7 @@
                 },
                 {
                   "column": {
-                    "name": "Ysize",
+                    "name": "SizeY",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,

@@ -14,26 +14,20 @@ namespace WebStudyServer.Controllers
     [ServiceFilter(typeof(UserTransactionFilter))]
     public class TitleController : ControllerBase
     {
-        public TitleController(GameService gameService, IMapper mapper, ILogger<GameController> logger)
+        public TitleController(GameService gameService, ILogger<GameController> logger)
         {
             _gameService = gameService;
-            _mapper = mapper;
             _logger = logger;
         }
 
         [HttpPost("enter")]
         public ActionResult<GameEnterResPacket> Enter(GameEnterReqPacket req)
         {
-            var result = _gameService.Enter();
-
-            return new GameEnterResPacket
-            {
-                Player = _mapper.Map<PlayerPacket>(result.Player)
-            };
+            var result = _gameService.Enter(req);
+            return result;
         }
 
         private readonly GameService _gameService;
-        private readonly IMapper _mapper;
         private readonly ILogger _logger;
     }
 }

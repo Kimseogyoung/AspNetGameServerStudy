@@ -30,7 +30,7 @@ namespace WebStudyServer.Component
 
         public KingdomStructureManager Create(KingdomItemProto prt)
         {
-            var mdlKingdomStructure = base.Create(new KingdomStructureModel
+            var mdlKingdomStructure = base.CreateMdl(new KingdomStructureModel
             {
                 Num = prt.Num,
                 State = EKingdomItemState.STORED,

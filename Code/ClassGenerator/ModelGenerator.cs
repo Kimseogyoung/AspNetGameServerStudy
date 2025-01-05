@@ -101,6 +101,14 @@ namespace ClassGenerator
                                 fieldCodeType = "string";
                                 break;
                             }
+
+                            if (protocolType == "Packet")
+                            {
+                                fieldSQLType = fieldType;
+                                fieldCodeType = fieldType;
+                                break;
+                            }
+                            
                             throw new Exception($"NO_HANDLING_FIELD_TYPE:{fieldType}");
                     }
 

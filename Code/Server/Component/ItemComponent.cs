@@ -20,7 +20,7 @@ namespace WebStudyServer.Component
             if (!TryGetInternal(itemNum, out var mdlItem))
             {
                 var prt = APP.Prt.GetItemPrt(itemNum);
-                mdlItem = Create(new ItemModel
+                mdlItem = CreateMdl(new ItemModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = itemNum,

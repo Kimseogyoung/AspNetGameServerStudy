@@ -21,18 +21,22 @@ namespace Server.Service
         }
 
         #region GAME
-        public GameEnterResult Enter()
+        public GameEnterResPacket Enter(GameEnterReqPacket req)
         {
             var mgrPlayer = _userRepo.Player.Touch();
 
             if (mgrPlayer.Model.State >= Proto.EPlayerState.PREPARED)
             {
                 // Prepare 이후 접속시마다 처리해줘야할 것이 있으면 여기서 처리
-                // 
+                var pakPlayer = mgrPlayer.LoadPlayer(_mapper);
+                return new GameEnterResPacket
+                {
+                    Player = pakPlayer,
+                };
             }
             else
             {
-                mgrPlayer.PreparePlayer();
+                var pakPlayer = mgrPlayer.PreparePlayer(_mapper);
 
                 var accountId = mgrPlayer.Model.AccountId;
                 _authRepo.Init(0);
@@ -49,24 +53,31 @@ namespace Server.Service
                 }
 
                 _authRepo.Commit(); // TODO: 개선
-            }
 
-            return new GameEnterResult { Player = mgrPlayer.Model };
+                return new GameEnterResPacket
+                {
+                    Player = pakPlayer,
+                };
+            }
         }
 
-        public string ChangeNameFirst(string name)
+        public GameChangeNameResPacket ChangeNameFirst(GameChangeNameReqPacket req)
         {
+            var reqName = req.PlayerName;
             var mgrPlayer = _userRepo.Player.Touch();
 
             mgrPlayer.ValidState(EPlayerState.CHANGED_NAME_FIRST);
 
             // 중복 체크 (클라에 팝업)
-            ReqHelper.Valid(!_allUserRepo.TryGetPlayerByName(name, out _), EErrorCode.GAME_CHANGE_NAME_EXIST_NAME);
+            ReqHelper.Valid(!_allUserRepo.TryGetPlayerByName(reqName, out _), EErrorCode.GAME_CHANGE_NAME_EXIST_NAME);
 
             // 변경
-            mgrPlayer.ChangeName(name);
+            mgrPlayer.ChangeName(reqName);
 
-            return mgrPlayer.Model.ProfileName;
+            return new GameChangeNameResPacket 
+            {
+                PlayerName = mgrPlayer.Model.ProfileName,
+            };
         }
         #endregion
 

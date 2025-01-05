@@ -5,6 +5,7 @@ using WebStudyServer.StartUp;
 using Microsoft.VisualBasic;
 using System.Diagnostics;
 using Protocol;
+using WebStudyServer.Helper;
 
 namespace WebStudyServer
 { 
@@ -22,6 +23,8 @@ namespace WebStudyServer
         public List<string> UserDbConnectionStrList { get; private set; } = new();
         public List<string> AuthDbConnectionStrList { get; private set; } = new();
         public TimeSpan SessionExpireSpan { get; private set; } = new();
+        public string DefaultPlayerPath { get; private set; } = string.Empty;
+        public PlayerPacket PakDefaultPlayer { get; private set; } = new();
 
         public bool IsShowErrorDetail { get; private set; }
         public bool UseStrictValidation { get; private set; }
@@ -48,6 +51,10 @@ namespace WebStudyServer
             IsShowErrorDetail = config.GetValue("IsShowErrorDetail", false);
             UseStrictValidation = config.GetValue("UseStrictValidation", true);
             ForceContentType = config.GetValue("Protocol:ForceContentType", MsgProtocol.JsonContentType);
+
+            DefaultPlayerPath = config.GetValue("DefaultPlayerPath", "Data/DefaultPlayer.json");
+            var defaultPlayerJson = File.ReadAllText(DefaultPlayerPath);
+            PakDefaultPlayer = SerializeHelper.JsonDeserialize<PlayerPacket>(defaultPlayerJson);
         }
 
         private string GetServerIp()

@@ -7,16 +7,16 @@ namespace Protocol
 	{
     
     		[ProtoMember(1)]
-    		public int XSize { get; set; } = default; //
+    		public int SizeX { get; set; } = default; //
         
     		[ProtoMember(2)]
-    		public int Ysize { get; set; } = default; //
+    		public int SizeY { get; set; } = default; //
         
     		[ProtoMember(3)]
-    		public string Snapshot { get; set; } = default; //
+    		public EKingdomTileMapState State { get; set; } = default; //
         
     		[ProtoMember(4)]
-    		public EKingdomTileMapState State { get; set; } = default; //
+    		public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } = default; //
         
 	}
 }

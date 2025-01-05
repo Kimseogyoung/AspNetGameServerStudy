@@ -9,14 +9,15 @@ namespace WebStudyServer
         public AutoMapperProfile()
         {
             // CreateRequest -> User
-            CreateMap<PlayerModel, PlayerPacket>();
-            CreateMap<CookieModel, CookiePacket>();
-            CreateMap<PointModel, PointPacket>();
-            CreateMap<TicketModel, TicketPacket>();
-            CreateMap<ItemModel, ItemPacket>();
-            CreateMap<KingdomStructureModel, KingdomStructurePacket>();
-            CreateMap<KingdomDecoModel, KingdomDecoPacket>();
-            CreateMap<KingdomMapModel, KingdomMapPacket>();
+            CreateMap<PlayerModel, PlayerPacket>().ReverseMap();
+            CreateMap<PlayerDetailModel, PlayerPacket>().ReverseMap();
+            CreateMap<CookieModel, CookiePacket>().ReverseMap();
+            CreateMap<PointModel, PointPacket>().ReverseMap();
+            CreateMap<TicketModel, TicketPacket>().ReverseMap();
+            CreateMap<ItemModel, ItemPacket>().ReverseMap();
+            CreateMap<KingdomStructureModel, KingdomStructurePacket>().ReverseMap();
+            CreateMap<KingdomDecoModel, KingdomDecoPacket>().ReverseMap();
+            CreateMap<KingdomMapModel, KingdomMapPacket>().ReverseMap();
 
             /*            // UpdateRequest -> User
                         CreateMap<UpdateRequest, User>()

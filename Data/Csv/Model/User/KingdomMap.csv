@@ -1,7 +1,8 @@
 ﻿Name,Type,Value,Desc,ProtocolType,Key
 PlayerId,BIGINT UNSIGNED,,,Model,"pk, fk"
-XSize,INT,,,,
-Ysize,INT,,,,
-Snapshot,TEXT,,,,
+SizeX,INT,,,,
+SizeY,INT,,,,
+Snapshot,TEXT,,,Model,
 State,ENUM:EKingdomTileMapState,,,,
+PlacedKingdomItemList,LIST:PlacedKingdomItemPacket,,,Packet,
 

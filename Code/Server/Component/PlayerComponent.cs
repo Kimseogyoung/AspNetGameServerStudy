@@ -26,12 +26,12 @@ namespace WebStudyServer.Component
             {
                 var newPlayerId = accountId * 10;
                 // 신규 플레이어 생성
-                mdlPlayer = Create(new PlayerModel
+                mdlPlayer = CreateMdl(new PlayerModel
                 {
                     Id = newPlayerId,
                     AccountId = accountId,
-                    Lv = 1,
-                    ProfileName = IdHelper.GenerateRandomName(), // TODO: 중복 닉네임 제한 하고싶음.
+                    SfId = IdHelper.GenerateSfId(),
+                    ProfileName = "",
                 });
                 _userRepo.RpcContext.SetPlayerId(mdlPlayer.Id);
 

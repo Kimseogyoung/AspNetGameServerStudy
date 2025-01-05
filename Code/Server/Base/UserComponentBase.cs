@@ -18,7 +18,7 @@ namespace WebStudyServer.Base
             _executor = executor;
         }
 
-        protected T Create(T newValue)
+        public T CreateMdl(T newValue)
         {
             // 데이터베이스에 삽입
             T mdl = null;
@@ -32,13 +32,25 @@ namespace WebStudyServer.Base
             return mdl; // 새로 생성된 모델 반환
         }
 
-        public void Update(T mdl)
+        public void UpdateMdl(T mdl)
         {
             mdl.UpdateTime = DateTime.UtcNow;
             _executor.Excute((sqlConnection, transaction) =>
             {
                 sqlConnection.Update(mdl, transaction);
             });
+        }
+
+        public List<T> GetMdlList()
+        {
+            List<T> mdlList= null;
+
+            _executor.Excute((sqlConnection, transaction) =>
+            {
+                mdlList = sqlConnection.SelectListByPlayerId<T>(_userRepo.RpcContext.PlayerId, transaction).ToList();
+            });
+
+            return mdlList;
         }
     }
 }

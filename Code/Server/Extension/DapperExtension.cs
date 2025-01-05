@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
 using System.Text;
+using WebStudyServer.Helper;
 using WebStudyServer.Model;
 
 namespace WebStudyServer.Extension
@@ -34,19 +35,22 @@ namespace WebStudyServer.Extension
         {
             var queryParam = GetQueryParameter<T>();
 
+            var tableName = GetTableName<T>();
             // `Id` 속성 존재 여부 확인
-            var hasIdProperty = typeof(T).GetProperty("Id") != null;
+            var hasAutoIncreaseProperty = tableName != "Player" && typeof(T).GetProperty("Id") != null;
 
             string insertSql = $@"
                 INSERT INTO {queryParam.TableName} ({queryParam.Fields}) 
                 VALUES ({queryParam.Parameters});";
 
             // Id가 있는 경우 추가적으로 SELECT 실행
-            if (hasIdProperty)
+            if (hasAutoIncreaseProperty)
             {
                 insertSql += $@"
                 SELECT * FROM {queryParam.TableName} WHERE Id = CONVERT(LAST_INSERT_ID(), UNSIGNED);";
-                    return connection.QuerySingleOrDefault<T>(insertSql, entity, transaction);
+                var mdl =  connection.QuerySingleOrDefault<T>(insertSql, entity, transaction);
+                ReqHelper.ValidParam(mdl != null, "INSERT_FAIL");
+                return mdl;
             }
             else
             {

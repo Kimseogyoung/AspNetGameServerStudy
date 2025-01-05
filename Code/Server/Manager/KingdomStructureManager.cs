@@ -46,7 +46,7 @@ namespace WebStudyServer.Manager
                 _model.EndTime = DateTime.MinValue;
             }
 
-            _userRepo.KingdomStructure.Update(_model);
+            _userRepo.KingdomStructure.UpdateMdl(_model);
         }
 
         public void SetReady(EKingdomItemState correctBefState)
@@ -56,28 +56,28 @@ namespace WebStudyServer.Manager
 
             _model.EndTime = DateTime.MinValue;
             _model.State = EKingdomItemState.READY;
-            _userRepo.KingdomStructure.Update(_model);
+            _userRepo.KingdomStructure.UpdateMdl(_model);
         }
 
         public void Store()
         {
             _model.State = EKingdomItemState.STORED;
             _model.EndTime = DateTime.MinValue;
-            _userRepo.KingdomStructure.Update(_model);
+            _userRepo.KingdomStructure.UpdateMdl(_model);
         }
 
         public void Place()
         {
             _model.State = EKingdomItemState.READY;
             _model.EndTime = DateTime.MinValue;
-            _userRepo.KingdomStructure.Update(_model);
+            _userRepo.KingdomStructure.UpdateMdl(_model);
         }
 
         public void DecTime()
         {
             _model.EndTime = DateTime.MinValue;
             _model.State = EKingdomItemState.READY;
-            _userRepo.KingdomStructure.Update(_model);
+            _userRepo.KingdomStructure.UpdateMdl(_model);
         }
     }
 }

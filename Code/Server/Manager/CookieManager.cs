@@ -18,7 +18,7 @@ namespace WebStudyServer.Manager
 
             _model.StarExp += amount;
             _model.AccStarExp += amount;
-            _userRepo.Cookie.Update(_model);
+            _userRepo.Cookie.UpdateMdl(_model);
             return _model.AccStarExp;
         }
     }

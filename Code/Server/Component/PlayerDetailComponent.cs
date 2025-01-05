@@ -20,7 +20,7 @@ namespace WebStudyServer.Component
 
             if (!TryGet(playerId, out var mdlPlayerDetail))
             {
-                mdlPlayerDetail = Create(new PlayerDetailModel
+                mdlPlayerDetail = CreateMdl(new PlayerDetailModel
                 {
                     PlayerId = playerId,
                 });

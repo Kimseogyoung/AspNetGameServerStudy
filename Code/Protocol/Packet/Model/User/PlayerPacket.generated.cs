@@ -67,25 +67,25 @@ namespace Protocol
     		public double AccFreeCash { get; set; } = default; //
         
     		[ProtoMember(21)]
-    		public List<CookiePacket> CookieList { get; set; } = default; //
+    		public List<CookiePacket> CookieList { get; set; } = new(); //
         
     		[ProtoMember(22)]
-    		public List<PointPacket> PointList { get; set; } = default; //
+    		public List<PointPacket> PointList { get; set; } = new(); //
         
     		[ProtoMember(23)]
-    		public List<TicketPacket> TicketList { get; set; } = default; //
+    		public List<TicketPacket> TicketList { get; set; } = new(); //
         
     		[ProtoMember(24)]
-    		public List<ItemPacket> ItemList { get; set; } = default; //
+    		public List<ItemPacket> ItemList { get; set; } = new(); //
         
     		[ProtoMember(25)]
-    		public List<KingdomStructurePacket> KingdomStructureList { get; set; } = default; //
+    		public List<KingdomStructurePacket> KingdomStructureList { get; set; } = new(); //
         
     		[ProtoMember(26)]
-    		public List<KingdomDecoPacket> KingdomDecoList { get; set; } = default; //
+    		public List<KingdomDecoPacket> KingdomDecoList { get; set; } = new(); //
         
     		[ProtoMember(27)]
-    		public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } = default; //
+    		public KingdomMapPacket KingdomMap { get; set; } = new(); //
         
 	}
 }

@@ -35,7 +35,7 @@ namespace WebStudyServer.Manager
 
             _model.TotalCnt += cnt;
             _model.UnplacedCnt += cnt;
-            _userRepo.KingdomDeco.Update(_model);
+            _userRepo.KingdomDeco.UpdateMdl(_model);
         }
 
         public void ValidChgAction(int cnt)
@@ -60,7 +60,7 @@ namespace WebStudyServer.Manager
             var befUnplacedCnt = _model.UnplacedCnt;
 
             _model.UnplacedCnt -= cnt;
-            _userRepo.KingdomDeco.Update(_model);
+            _userRepo.KingdomDeco.UpdateMdl(_model);
         }
 
         public void Store(int cnt = 1)
@@ -71,7 +71,7 @@ namespace WebStudyServer.Manager
             var befUnplacedCnt = _model.UnplacedCnt;
 
             _model.UnplacedCnt += cnt;
-            _userRepo.KingdomDeco.Update(_model);
+            _userRepo.KingdomDeco.UpdateMdl(_model);
 
             //placedKingdomItem 로그
         }

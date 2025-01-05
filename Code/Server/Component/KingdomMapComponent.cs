@@ -21,7 +21,7 @@ namespace WebStudyServer.Component
         {
             if (!TryGetInternal(out var mdlTicket))
             {
-                mdlTicket = Create(new KingdomMapModel
+                mdlTicket = CreateMdl(new KingdomMapModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Snapshot = "",

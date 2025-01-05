@@ -11,10 +11,10 @@ namespace WebStudyServer.Model
     		public ulong PlayerId { get; set; } = default; //
         
     		
-    		public int XSize { get; set; } = default; //
+    		public int SizeX { get; set; } = default; //
         
     		
-    		public int Ysize { get; set; } = default; //
+    		public int SizeY { get; set; } = default; //
         
     		
     		public string Snapshot { get; set; } = default; //
