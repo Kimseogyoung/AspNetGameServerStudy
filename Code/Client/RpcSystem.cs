@@ -4,6 +4,7 @@ using Proto;
 using Protocol;
 using SharpYaml.Tokens;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -52,8 +53,14 @@ namespace Client
             var fullUrl = MakeQueryString(url);
 
             // 요청 데이터 (JSON 형식)
-            var reqBodyString = Serialize<REQ>(req);
-            var content = new StringContent(reqBodyString, Encoding.UTF8, _contentType);
+            var reqBodyArr = ByteArrSerialize<REQ>(req);
+            //var content = new StringContent(reqBodyString, Encoding.UTF8, _contentType);
+
+            // ByteArrayContent 생성
+            using var content = new ByteArrayContent(reqBodyArr);
+
+            // Content-Type 헤더 설정
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(_contentType);
 
             // POST 요청 보내기
             var response = await _httpClient.PostAsync(fullUrl, content);
@@ -92,7 +99,7 @@ namespace Client
             }
         }
 
-        private string Serialize<REQ>(REQ obj)
+        private string StringSerialize<REQ>(REQ obj)
         {
             switch (_contentType)
             {
@@ -112,6 +119,28 @@ namespace Client
                     break;
             }
             return string.Empty;
+        }
+
+        private byte[] ByteArrSerialize<REQ>(REQ obj)
+        {
+            switch (_contentType)
+            {
+                case MsgProtocol.JsonContentType:
+                    var json = JsonSerializer.Serialize<REQ>(obj);
+                    var jsonByteArray = Encoding.UTF8.GetBytes(json);
+                    return jsonByteArray;
+                case MsgProtocol.ProtoBufContentType:
+                    byte[] serializedData;
+                    using (var ms = new MemoryStream())
+                    {
+                        ProtoBuf.Serializer.Serialize(ms, obj);
+                        serializedData = ms.ToArray();
+                    }
+                    return serializedData;
+                default:
+                    break;
+            }
+            return null;
         }
 
         private RES Deserialize<RES>(string contentType, byte[] byteArr) where RES : IResPacket, new()

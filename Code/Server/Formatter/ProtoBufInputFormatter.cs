@@ -19,10 +19,16 @@ namespace WebStudyServer
         {
             var request = context.HttpContext.Request;
 
+            using var ms = new MemoryStream();
+            await request.Body.CopyToAsync(ms);
+            ms.Position = 0;
+
+            //var byteArr = ms.ToArray();
+
             // Asynchronously read the body into a string
-            var body = await new StreamReader(request.Body).ReadToEndAsync().ConfigureAwait(false);
-            var byteArr = Encoding.UTF8.GetBytes(body);
-            using var ms = new MemoryStream(byteArr);
+            /*     var body = await new StreamReader(request.Body).ReadToEndAsync().ConfigureAwait(false);
+                 var byteArr = Encoding.UTF8.GetBytes(body);
+                 using var ms = new MemoryStream(byteArr);*/
             var result = ProtoBuf.Serializer.Deserialize(context.ModelType, ms);
 
             // Return the result

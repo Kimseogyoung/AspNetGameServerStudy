@@ -22,6 +22,8 @@ var funcDict = new Dictionary<int, ApiFunc>()
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomItemBuy((int.Parse(valueArr[0]))) } },
     { 202, new ApiFunc(){ ApiPath = typeof(KingdomConstructStructureReqPacket).ToString(), Desc = "KingdomItem 건설 (StructureId, X, Y)", 
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomItemConstruct(ulong.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) } },
+    { 203, new ApiFunc(){ ApiPath = typeof(KingdomFinishConstructStructureReqPacket).ToString(), Desc = "KingdomItem 건설 종료 (Num)",
+        Action = async (valueArr) =>  await APP.Ctx.RequestKingdomItemFinish(int.Parse(valueArr[0]))} },
 
     { 0, new ApiFunc(){ ApiPath = "", Desc = "종료" } }
 };

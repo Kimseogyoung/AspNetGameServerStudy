@@ -16,13 +16,28 @@ namespace Client
             var req = new KingdomBuyStructureReqPacket
             {
                 KingdomItemNum = kingdomItemNum,
-                CostObj = new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount}
+                CostObj = new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount},
+                Info =  new ReqInfoPacket(),
             };
 
             var res = await _rpcSystem.RequestAsync<KingdomBuyStructureReqPacket, KingdomBuyStructureResPacket>(req);
 
             SyncKingdomStructure(res.KingdomStructure);
             SyncChgObj(res.ChgObj);
+        }
+
+        public async Task RequestKingdomItemFinish(int kingdomItemNum)
+        {
+            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
+            var req = new KingdomFinishConstructStructureReqPacket
+            {
+                KingdomItemNum = kingdomItemNum,
+                Info = new ReqInfoPacket(),
+            };
+
+            var res = await _rpcSystem.RequestAsync<KingdomFinishConstructStructureReqPacket, KingdomFinishConstructStructureResPacket>(req);
+
+            SyncKingdomStructure(res.KingdomStructure);
         }
 
         public async Task RequestKingdomItemConstruct(ulong kingdomStructureId, int x, int y)
@@ -33,13 +48,14 @@ namespace Client
                 Console.WriteLine($"NOT_FOUND_STRUCTURE_ITEM({kingdomStructureId})");
                 return;
             }
+            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomStructure.Num);
 
             var req = new KingdomConstructStructureReqPacket
             {
                 KingdomStructureId = kingdomStructure.Id,
                 KingdomItemNum = kingdomStructure.Num,
                 StartTilePos = new TilePosPacket { X = x, Y = y },
-                CostObjList = new List<CostObjPacket>() { }
+                CostObjList = new List<CostObjPacket>() { new CostObjPacket { Type = prtKingdomItem.ConstructObjType, Num = prtKingdomItem.ConstructObjNum, Amount = prtKingdomItem.ConstructObjAmount} }
             };
 
             var res = await _rpcSystem.RequestAsync<KingdomConstructStructureReqPacket, KingdomConstructStructureResPacket>(req);
