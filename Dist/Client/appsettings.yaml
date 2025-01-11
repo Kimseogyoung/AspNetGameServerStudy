@@ -1,0 +1,28 @@
+UseSwagger: true
+UseUserLock: true
+UserLockTimeoutSpan: 00:10:00
+SessionExpireSpan: 00:20:00
+IsShowErrorDetail: true
+UseStrictValidation: true
+DefaultPlayerPath: Data/DefaultPlayer.json
+Proto:
+    CsvPath: ../../Data/Csv/Proto
+Protocol:
+    ForceContentType: application/protobuf
+Logging:
+    LogFolder: ../logs
+    LogLevel:
+        Default: Debug
+        Microsoft.AspNetCore: Warning
+        Microsoft.AspNetCore.HttpLogging.HttpLoggingMiddleware: Information
+        Sentry.ISentryClient: Warning
+        DbLoggerCategory.Database.Command: Warning
+        Microsoft.AspNetCore.Mvc.ModelBinding.ModelBinderFactory: Warning
+Db:
+    Version: 8.0.21
+    UserDb:
+        ConnectionStrList:
+            - Server=localhost;Port=3306;Database=UserDb;Uid=root;Pwd=tjrudwlq!; #테스트중이라 그냥 올림. 중요 X
+    AuthDb:
+        ConnectionStrList:
+            - Server=localhost;Port=3306;Database=AuthDb;Uid=root;Pwd=tjrudwlq!;

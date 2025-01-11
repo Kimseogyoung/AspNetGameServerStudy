@@ -1,8 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Client;
 using Protocol;
-
-APP.Init("../../Data/Csv/Proto");
+var initPath = args.Length > 0 ? args[0] : "../../Data/Csv/Proto";
+APP.Init(initPath);
 APP.Prt.Bind();
 
 var funcDict = new Dictionary<int, ApiFunc>()

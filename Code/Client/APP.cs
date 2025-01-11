@@ -15,8 +15,9 @@ namespace Client
                 return;
             }
 
-            var csvPath = Path.Join(GetProjPath(), inCsvPath);  
-            
+            var csvPath = Path.Join(GetProjPath(), inCsvPath);
+            Console.WriteLine(csvPath);
+
             _isInit = true;
             _prt.Init(csvPath);
             _ctx.Init();
@@ -25,9 +26,16 @@ namespace Client
         private static string GetProjPath()
         {
             var exeCfgDirNetPath = Path.GetDirectoryName(AppContext.BaseDirectory);
+
             var exeCfgDirPath = Path.GetDirectoryName(exeCfgDirNetPath);
             var binDirPath = Path.GetDirectoryName(exeCfgDirPath);
             var projectPath = Path.GetDirectoryName(binDirPath);
+
+            if (AppContext.BaseDirectory.Contains("Dist"))
+            {
+                projectPath = exeCfgDirNetPath;
+            }
+
             return projectPath == null ? string.Empty : projectPath;
         }
 
