@@ -20,7 +20,7 @@ namespace Protocol.Packet.Custom
         public List<List<ulong>> TileMap { get; set; } = new List<List<ulong>>();
 
         [ProtoMember(4)]
-        public Dictionary<ulong, PlacedKingdomItemPacket> PlacedObjDict = new Dictionary<ulong, PlacedKingdomItemPacket>();
+        public Dictionary<ulong, PlacedKingdomItemPacket> PlacedObjDict { get; set; } = new Dictionary<ulong, PlacedKingdomItemPacket>();
 
         public KingdomMapSnapshotPacket()
         {

@@ -35,7 +35,8 @@ while (isRunning)
     foreach (var num in funcDict.Keys.OrderBy(x => x))
     {
         var apiPath = funcDict[num].ApiPath;
-        Console.WriteLine($"{num}. {apiPath}");
+        var desc = funcDict[num].Desc;
+        Console.WriteLine($"{num}. {apiPath}, {desc}");
     }
     Console.WriteLine("숫자를 입력하세요: ");
 
@@ -63,8 +64,8 @@ while (isRunning)
     catch(Exception ex)
     {
         Console.WriteLine($"ERROR:{ex.Message.ToString()}, {ex.StackTrace}");
-        APP.Ctx.Clear();
-        APP.Ctx.Init();
+        //APP.Ctx.Clear();
+        //APP.Ctx.Init();
     }
 }
 
