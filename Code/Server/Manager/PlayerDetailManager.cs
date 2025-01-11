@@ -48,6 +48,9 @@ namespace WebStudyServer.Manager
             switch (objTypeCategory)
             {
                 // TODO: 보유량 체크
+                case EObjType.EXP:
+                    var exp = DecExpInternal(valObjAmount, reason);
+                    return exp;
                 case EObjType.GOLD:
                     var gold = DecGoldInternal(valObjAmount, reason);
                     return gold;
@@ -63,16 +66,14 @@ namespace WebStudyServer.Manager
                     var ticketAmount = DecTicketInternal(ticketNum, valObjAmount, reason);
                     return ticketAmount;
                 case EObjType.ITEM:
-                    // TODO
-                    break;
+                    var itemAmount = DecItemInternal(objNum, valObjAmount, reason);
+                    return itemAmount;
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_COST_OBJ_TYPE", new { ObjType = objType });
             }
-
-            return 0;
         }
 
-        public List<ChgObjPacket> IncReward(List<ObjPacket> valRewardListObj, string reason)
+        public List<ChgObjPacket> IncRewardList(List<ObjPacket> valRewardListObj, string reason)
         {
             var objList = new List<ChgObjPacket>();
             foreach(var valReward in valRewardListObj)
@@ -85,7 +86,7 @@ namespace WebStudyServer.Manager
 
         public ChgObjPacket IncReward(ObjPacket valRewardObj, string reason)
         {
-            var amount = DecCost(valRewardObj.Type, valRewardObj.Num, valRewardObj.Amount, reason);
+            var amount = IncReward(valRewardObj.Type, valRewardObj.Num, valRewardObj.Amount, reason);
             var obj = new ChgObjPacket
             {
                 TotalAmount = amount,
@@ -109,7 +110,8 @@ namespace WebStudyServer.Manager
                     var gold = IncGoldInternal(valObjAmount, reason);
                     return gold;
                 case EObjType.EXP:
-                    break;
+                    var exp = IncExpInternal(valObjAmount, reason);
+                    return exp;
                 case EObjType.REAL_CASH:
                     var realCash = IncRealCashInternal(valObjAmount, reason);
                     return realCash;
@@ -125,12 +127,13 @@ namespace WebStudyServer.Manager
                     var ticketAmount = IncTicketInternal(ticketNum, valObjAmount, reason);
                     return ticketAmount;
                 case EObjType.ITEM:
-                    break;
+                    var itemAmount = IncItemInternal(objNum, valObjAmount, reason);
+                    return itemAmount;
                 case EObjType.COOKIE:
                     var cookieStarExp = IncCookieInternal(objNum, (int)valObjAmount, reason);
                     return cookieStarExp;
-                case EObjType.KINGDOM_ITEM:
-                    break;
+/*                case EObjType.KINGDOM_ITEM:
+                    break;*/
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_REWARD_OBJ_TYPE", new { ObjType = objType });
             }
@@ -161,6 +164,32 @@ namespace WebStudyServer.Manager
             _model.AccGold += amount;
             _userRepo.PlayerDetail.UpdateMdl(_model);
             return _model.Gold;
+        }
+        #endregion
+
+        #region EXP
+        public double DecExp(double amount, string reason) => DecExpInternal(amount, reason);
+        public double IncExp(double amount, string reason) => IncExpInternal(amount, reason);
+        private double DecExpInternal(double amount, string reason)
+        {
+            var befExp = _model.Exp;
+            var befAccExp = _model.AccExp;
+
+            _model.Exp -= amount;
+            _model.AccExp -= amount;
+            _userRepo.PlayerDetail.UpdateMdl(_model);
+            return _model.Exp;
+        }
+
+        private double IncExpInternal(double amount, string reason)
+        {
+            var befExp = _model.Exp;
+            var befAccExp = _model.AccExp;
+
+            _model.Exp += amount;
+            _model.AccExp += amount;
+            _userRepo.PlayerDetail.UpdateMdl(_model);
+            return _model.Exp;
         }
         #endregion
 
@@ -260,6 +289,22 @@ namespace WebStudyServer.Manager
             var mgrPoint = _userRepo.Cookie.Touch(cookieNum);
             var pointAmount = mgrPoint.IncStarExp(starExp, reason);
             return pointAmount;
+        }
+        #endregion
+
+        #region ITEM
+        private double DecItemInternal(int itemNum, double amount, string reason)
+        {
+            var mgrItem = _userRepo.Item.Touch(itemNum);
+            var itemAmount = mgrItem.DecAmount(amount, reason);
+            return itemAmount;
+        }
+
+        private double IncItemInternal(int itemNum, double amount, string reason)
+        {
+            var mgrItem = _userRepo.Item.Touch(itemNum);
+            var itemAmount = mgrItem.IncAmount(amount, reason);
+            return itemAmount;
         }
         #endregion
 

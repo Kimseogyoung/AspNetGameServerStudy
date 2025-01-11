@@ -25,6 +25,16 @@ var funcDict = new Dictionary<int, ApiFunc>()
     { 203, new ApiFunc(){ ApiPath = typeof(KingdomFinishConstructStructureReqPacket).ToString(), Desc = "KingdomItem 건설 종료 (Num)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomItemFinish(int.Parse(valueArr[0]))} },
 
+    { 9001, new ApiFunc(){ ApiPath = typeof(CheatRewardReqPacket).ToString(), Desc = "Chaet 보상 획득 (ObjType, ObjNum, ObjAmount)",
+        Action = async (valueArr) =>  {
+            var objType = valueArr.Length > 0 ? valueArr[0] : "";
+            var objNum = valueArr.Length > 1 ? int.Parse(valueArr[1]) : 0;
+            var objAmount = valueArr.Length > 2 ? int.Parse(valueArr[2]) : 10000;
+            await APP.Ctx.RequestCheatReward(objType, objNum, objAmount); 
+            }
+        } 
+    },
+
     { 0, new ApiFunc(){ ApiPath = "", Desc = "종료" } }
 };
 

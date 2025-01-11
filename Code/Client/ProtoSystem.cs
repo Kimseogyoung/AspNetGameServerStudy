@@ -28,6 +28,12 @@ namespace Client
         public TicketProto GetTicketPrt(EObjType objType) => _prt.Get<TicketProto>(objType);
         public TicketProto GetTicketPrt(int ticketNum) => GetTicketPrt((EObjType)ticketNum);
 
+        public IEnumerable<CookieProto> GetCookiePrts() => _prt.GetAll<CookieProto>();
+        public IEnumerable<KingdomItemProto> GetKingdomItemPrts() => _prt.GetAll<KingdomItemProto>();
+        public IEnumerable<ItemProto> GetItemPrts() => _prt.GetAll<ItemProto>();
+        public IEnumerable<PointProto> GetPointPrts() => _prt.GetAll<PointProto>();
+        public IEnumerable<TicketProto> GetTicketPrts() => _prt.GetAll<TicketProto>();
+
         private static ProtoHelper _prt = new ProtoHelper();
     }
 }

@@ -49,6 +49,7 @@ namespace WebStudyServer
 
             services.AddScoped<AuthService>();
             services.AddScoped<GameService>();
+            services.AddScoped<CheatService>();
 
             services.AddScoped<RpcContext>();
         }

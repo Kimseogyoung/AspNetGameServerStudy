@@ -80,6 +80,10 @@ req,KingdomFinishCraftStructureReq,,,,,kingdom/finish-craft-structure
 res,KingdomFinishCraftStructureRes,,,,,
 ,KingdomFinishCraftStructureRes,KingdomStructure,KingdomStructurePacket,2,,
 ,KingdomFinishCraftStructureRes,ChgObjList,List<ChgObjPacket>,3,,
+req,CheatRewardReq,,,,,cheat/reward
+,CheatRewardReq,RewardList,List<ObjPacket>,2,,
+res,CheatRewardRes,,,,,
+,CheatRewardRes,ChgObjList,List<ChgObjPacket>,2,,
 
 common,ChgObj,,,,,
 ,ChgObj,Type,EObjType,1,,
