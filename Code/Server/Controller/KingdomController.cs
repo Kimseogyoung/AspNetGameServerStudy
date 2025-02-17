@@ -71,7 +71,7 @@ namespace WebStudyServer.Controllers
         [HttpPost("dec-time-structure")]
         public ActionResult<KingdomDecTimeStructureResPacket> DecTime(KingdomDecTimeStructureReqPacket req)
         {
-            var result = _gameService.KingdomItemDecTime(req);
+            var result = _gameService.KingdomStructureDecTime(req);
             return result;
         }
 

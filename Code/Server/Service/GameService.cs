@@ -257,7 +257,7 @@ namespace Server.Service
             };
         }
 
-        public KingdomDecTimeStructureResPacket KingdomItemDecTime(KingdomDecTimeStructureReqPacket req)
+        public KingdomDecTimeStructureResPacket KingdomStructureDecTime(KingdomDecTimeStructureReqPacket req)
         {
             var mgrKingdomItem = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();

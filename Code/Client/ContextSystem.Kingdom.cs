@@ -10,7 +10,7 @@ namespace Client
 {
     public partial class ContextSystem
     {
-        public async Task RequestKingdomItemBuy(int kingdomItemNum)
+        public async Task RequestKingdomBuyStructure(int kingdomItemNum)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
             var req = new KingdomBuyStructureReqPacket
@@ -26,7 +26,7 @@ namespace Client
             SyncChgObj(res.ChgObj);
         }
 
-        public async Task RequestKingdomItemFinish(int kingdomItemNum)
+        public async Task RequestKingdomFinishConstructStructure(int kingdomItemNum)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
             var req = new KingdomFinishConstructStructureReqPacket
@@ -40,7 +40,7 @@ namespace Client
             SyncKingdomStructure(res.KingdomStructure);
         }
 
-        public async Task RequestKingdomItemConstruct(ulong kingdomStructureId, int x, int y)
+        public async Task RequestKingdomConstructureStructure(ulong kingdomStructureId, int x, int y)
         {
             var kingdomStructure = _player.KingdomStructureList.FirstOrDefault(x => x.Id == kingdomStructureId);
             if (kingdomStructure == null)
@@ -62,6 +62,60 @@ namespace Client
 
             SyncKingdomStructure(res.KingdomStructure);
             SyncPlacedKingdomItemList(res.PlacedKingdomItemList);
+            SyncChgObjList(res.ChgObjList);
+        }
+
+        public async Task RequestKingdomBuyDeco(int kingdomItemNum)
+        {
+            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
+            var req = new KingdomBuyDecoReqPacket
+            {
+                KingdomItemNum = kingdomItemNum,
+                CostObj = new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount },
+                Info = new ReqInfoPacket(),
+            };
+
+            var res = await _rpcSystem.RequestAsync<KingdomBuyDecoReqPacket, KingdomBuyDecoResPacket>(req);
+
+            SyncKingdomDeco(res.KingdomDeco);
+            SyncChgObj(res.ChgObj);
+        }
+
+        public async Task RequestKingdomConstructDeco(int kingdomItemNum, int x, int y)
+        {
+            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
+            var req = new KingdomConstructDecoReqPacket
+            {
+                KingdomItemNum = kingdomItemNum,
+                Info = new ReqInfoPacket(),
+                StartTilePos = new TilePosPacket { X = x, Y = y },
+            };
+
+            var res = await _rpcSystem.RequestAsync<KingdomConstructDecoReqPacket, KingdomConstructDecoResPacket>(req);
+
+            SyncPlacedKingdomItemList(res.PlacedKingdomItemList);
+            SyncKingdomDeco(res.KingdomDeco);
+        }
+
+        public async Task RequestKingdomFinishCraftStructure(ulong kingdomStructureId)
+        {
+            var kingdomStructure = _player.KingdomStructureList.FirstOrDefault(x => x.Id == kingdomStructureId);
+            if (kingdomStructure == null)
+            {
+                Console.WriteLine($"NOT_FOUND_STRUCTURE_ITEM({kingdomStructureId})");
+                return;
+            }
+
+            var req = new KingdomFinishCraftStructureReqPacket
+            {
+                KingdomStructureId = kingdomStructureId,
+                KingdomItemNum = kingdomStructure.Num,
+                Info = new ReqInfoPacket(),
+            };
+
+            var res = await _rpcSystem.RequestAsync<KingdomFinishCraftStructureReqPacket, KingdomFinishCraftStructureResPacket>(req);
+
+            SyncKingdomStructure(res.KingdomStructure);
             SyncChgObjList(res.ChgObjList);
         }
 

@@ -100,6 +100,24 @@ namespace Client
             RefreshKingdom();
         }
 
+        public void SyncKingdomDeco(KingdomDecoPacket pakKingdomDeco)
+        {
+            var kingdomDeco = _player.KingdomDecoList.Where(x => x.Num == pakKingdomDeco.Num).FirstOrDefault();
+            if (kingdomDeco == null)
+            {
+                _player.KingdomDecoList.Add(pakKingdomDeco);
+            }
+            else
+            {
+                kingdomDeco.Num = pakKingdomDeco.Num;
+                kingdomDeco.TotalCnt = pakKingdomDeco.TotalCnt;
+                kingdomDeco.UnplacedCnt = pakKingdomDeco.UnplacedCnt;
+                kingdomDeco.State = pakKingdomDeco.State;
+            }
+
+            RefreshKingdom();
+        }
+
         private PointPacket GetPointForce(EObjType objType)
         {
             var num = (int)objType;
