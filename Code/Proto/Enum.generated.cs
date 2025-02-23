@@ -31,6 +31,12 @@ namespace Proto
 		AVAILABLE = 1, //
 	}
 
+	public enum ECookieSoulStoneType 
+	{ 
+		COOKIE = 0, //
+		SOUL_STONE = 1, //
+	}
+
 	public enum EKingdomTileMapState 
 	{ 
 		NONE = 0, //
@@ -114,6 +120,7 @@ namespace Proto
 		TICKET_STAMINA = 201, //
 		TICKET_END = 300, //
 		COOKIE = 1000, //
+		SOUL_STONE = 1001, //
 		ITEM = 10000, //
 		KINGDOM_ITEM = 100000, //
 	}
@@ -181,6 +188,7 @@ namespace Proto
 			list.Add(typeof(EKingdomItemState)); 
 			list.Add(typeof(EKingdomItemSpecialType)); 
 			list.Add(typeof(ECookieState)); 
+			list.Add(typeof(ECookieSoulStoneType)); 
 			list.Add(typeof(EKingdomTileMapState)); 
 			list.Add(typeof(EPlacedKingdomItemState)); 
 			list.Add(typeof(EKingdomStructureFlagType)); 

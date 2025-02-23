@@ -1,11 +1,11 @@
-﻿Num,Name,GradeType,RollType,FormationPosType,Hp,Atk,Def,Cri
-int:pk,string,enum:EGradeType,enum:ECookieRollType,enum:EFormationPositionType,int,int,int,int
-1001,용감한 쿠키,COMMON,DEFENDER,FRONT,1,1,1,1
-1002,딸기맛 쿠키,COMMON,FIGHTER,FRONT,2,2,2,2
-2001,레어 쿠키,RARE,ASSASSIN,FRONT,5,5,5,5
-3001,에픽 쿠키,EPIC,BOMBER,FRONT,1,1,1,1
-4001,슈퍼에픽 쿠키,SUPER_EPIC,MAGE,FRONT,10,10,10,10
-5001,에이션트 쿠키,ANCIENT,SUPPORTER,FRONT,20,10,10,10
-6001,레전더리 쿠키1,LEGENDARY,HEALER,FRONT,20,21,21,21
-6002,레전더리 쿠키2,LEGENDARY,SNIPER,REAR,50,10,10,10
+﻿Num,Name,GradeType,RollType,FormationPosType,InitSoulStone,Hp,Atk,Def,Cri
+int:pk,string,enum:EGradeType,enum:ECookieRollType,enum:EFormationPositionType,int,int,int,int,int
+1010,용감한 쿠키,COMMON,DEFENDER,FRONT,20,1,1,1,1
+1020,딸기맛 쿠키,COMMON,FIGHTER,FRONT,20,2,2,2,2
+2010,레어 쿠키,RARE,ASSASSIN,FRONT,20,5,5,5,5
+3010,에픽 쿠키,EPIC,BOMBER,FRONT,20,1,1,1,1
+4010,슈퍼에픽 쿠키,SUPER_EPIC,MAGE,FRONT,20,10,10,10,10
+5010,에이션트 쿠키,ANCIENT,SUPPORTER,FRONT,20,20,10,10,10
+6010,레전더리 쿠키1,LEGENDARY,HEALER,FRONT,20,20,21,21,21
+6020,레전더리 쿠키2,LEGENDARY,SNIPER,REAR,20,50,10,10,10
 

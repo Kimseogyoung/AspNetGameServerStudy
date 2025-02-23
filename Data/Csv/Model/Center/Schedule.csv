@@ -1,0 +1,8 @@
+﻿Name,Type,Value,Desc,ProtocolType,Key
+Num,INT,,,,pk
+ActiveStartTime,DATETIME,,,,
+ActiveEndTime,DATETIME,,,,
+ContentStartTime,DATETIME,,,,
+ContentEndTime,DATETIME,,,,
+State,INT,,,,
+

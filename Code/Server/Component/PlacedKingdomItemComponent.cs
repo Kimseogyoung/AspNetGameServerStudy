@@ -1,4 +1,4 @@
-﻿using WebStudyServer.Base;
+﻿/*using WebStudyServer.Base;
 using WebStudyServer.Manager;
 using WebStudyServer.Repo;
 using WebStudyServer.Model;
@@ -23,7 +23,7 @@ namespace WebStudyServer.Component
 
             // NOTE: PlacedKingdomItem 데이터 버전
             // TODO: StartTileX, Y에 인덱스 걸기
-            /*            타일 범위는(InputStartTileX, InputStartTileY)부터(InputStartTileX + InputSizeX - 1, InputStartTileY + InputSizeY - 1)
+            *//*            타일 범위는(InputStartTileX, InputStartTileY)부터(InputStartTileX + InputSizeX - 1, InputStartTileY + InputSizeY - 1)
 
                         InputStartTileX + InputSizeX - 1 < StartTileX(검색 범위가 오브젝트의 왼쪽에 위치)
                         InputStartTileX > StartTileX + SizeX - 1(검색 범위가 오브젝트의 오른쪽에 위치)
@@ -35,7 +35,7 @@ namespace WebStudyServer.Component
                         InputStartTileX > StartTileX + SizeX - 1 OR
                         InputStartTileY + InputSizeY - 1 < StartTileY OR
                         InputStartTileY > StartTileY + SizeY - 1
-                        )*/
+                        )*//*
         }
 
         public PlacedKingdomItemManager Create(KingdomItemProto prt, int posX, int posY, KingdomStructureManager mgrKingdomStructure = null)
@@ -49,7 +49,7 @@ namespace WebStudyServer.Component
             {
                 Num = prt.Num,
                 Type = prt.Type,
-                StructureItemId = mgrKingdomStructure.Model.Id,
+                StructureItemId = mgrKingdomStructure.Model.SfId,
                 PlayerId = _userRepo.RpcContext.PlayerId,
                 State = EPlacedKingdomItemState.NONE,
                 StartTileX = posX,
@@ -89,3 +89,4 @@ namespace WebStudyServer.Component
         }
     }
 }
+*/

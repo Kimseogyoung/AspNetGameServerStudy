@@ -1,0 +1,20 @@
+﻿Name,Type,Value,Desc,ProtocolType,Key
+SfId,BIGINT UNSIGNED,,,Model,pk
+PlayerId,BIGINT UNSIGNED,,,Model,"fk, c_index"
+ActionNameHash,INT,,,Model,c_index
+ActionName,VARCHAR(30),,,Model,
+ActionDetail,VARCHAR(30),,,Model,
+ChgRealCash,BIGINT,,,Model,
+BefRealCash,BIGINT,,,Model,
+AftRealCash,BIGINT,,,Model,
+AccRealCash,BIGINT,,,Model,
+ChgFreeCash,BIGINT,,,Model,
+BefFreeCash,BIGINT,,,Model,
+AftFreeCash,BIGINT,,,Model,
+AccFreeCash,BIGINT,,,Model,
+ChgTotalCash,BIGINT,,,Model,
+BefTotalCash,BIGINT,,,Model,
+AftTotalCash,BIGINT,,,Model,
+AccTotalCash,BIGINT,,,Model,
+IapActionId,BIGINT UNSIGNED,,,Model,
+

@@ -10,10 +10,10 @@ namespace Protocol
     		public int Num { get; set; } = default; //
         
     		[ProtoMember(2)]
-    		public int StarExp { get; set; } = default; //
+    		public int SoulStone { get; set; } = default; //
         
     		[ProtoMember(3)]
-    		public int AccStarExp { get; set; } = default; //
+    		public int AccSoulStone { get; set; } = default; //
         
     		[ProtoMember(4)]
     		public int Star { get; set; } = default; //

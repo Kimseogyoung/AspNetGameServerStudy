@@ -2,6 +2,7 @@
 using WebStudyServer.Model;
 using Proto;
 using WebStudyServer.Helper;
+using WebStudyServer.GAME;
 
 namespace WebStudyServer.Manager
 {
@@ -11,15 +12,27 @@ namespace WebStudyServer.Manager
         {
         }
 
-        public double IncStarExp(int amount, string reason)
+        public double IncCookie(int amount, string reason)
         {
-            var befStarExp = _model.StarExp;
-            var befAccStarExp = _model.AccStarExp;
+            // TODO: IncSoulStone과 다르게 처리
+            var befStarExp = _model.SoulStone;
+            var befAccStarExp = _model.AccSoulStone;
 
-            _model.StarExp += amount;
-            _model.AccStarExp += amount;
+            _model.SoulStone += amount * 20; // TODO: Cfg
+            _model.AccSoulStone += amount * 20;
             _userRepo.Cookie.UpdateMdl(_model);
-            return _model.AccStarExp;
+            return _model.AccSoulStone;
+        }
+
+        public double IncSoulStone(int amount, string reason)
+        {
+            var befStarExp = _model.SoulStone;
+            var befAccStarExp = _model.AccSoulStone;
+
+            _model.SoulStone += amount;
+            _model.AccSoulStone += amount;
+            _userRepo.Cookie.UpdateMdl(_model);
+            return _model.AccSoulStone;
         }
     }
 }

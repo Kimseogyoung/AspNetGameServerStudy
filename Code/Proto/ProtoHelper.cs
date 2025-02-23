@@ -40,7 +40,8 @@ namespace Proto
         public bool TryGet<TProto>(object key, out TProto? prt) where TProto : ProtoBase, new()
         {
             var protoData = GetPrtDict<TProto>();
-            if (!protoData.IdxDict.TryGetValue(key, out int idx))
+            var hash = GeneratePkHash(key);
+            if (!protoData.IdxDict.TryGetValue(hash, out int idx))
             {
                 prt = null;
                 //var prtName = typeof(TProto).Name;
@@ -57,7 +58,9 @@ namespace Proto
         {
             var protoData = GetPrtDict<TProto>();
 
-            if (!protoData.IdxDict.TryGetValue(key, out int idx))
+            var hash = GeneratePkHash(key);
+
+            if (!protoData.IdxDict.TryGetValue(hash, out int idx))
             {
                 var prtName = typeof(TProto).Name;
                 throw new Exception($"NOT_FOUND_PK:{prtName}:{key}");
@@ -185,15 +188,20 @@ namespace Proto
             return list;
         }
 
-        private int GenerateFastHashTuple(ITuple tuple)
+        private object GeneratePkHash(object pkObj)
         {
-            int hash = c_pkGenInitPrime; // 소수 기반 초기값
-            for (int i = 0; i < tuple.Length; i++)
+            if(pkObj is ITuple tuple)
             {
-                int valueHash = tuple[i]?.GetHashCode() ?? 0;
-                hash = (hash * c_pkGenPrime) ^ valueHash; // XOR + 곱셈 조합
+                int hash = c_pkGenInitPrime; // 소수 기반 초기값
+                for (int i = 0; i < tuple.Length; i++)
+                {
+                    int valueHash = tuple[i]?.GetHashCode() ?? 0;
+                    hash = (hash * c_pkGenPrime) ^ valueHash; // XOR + 곱셈 조합
+                }
+                return hash;
             }
-            return hash; 
+
+            return pkObj;
         }
 
         private int GenerateFastHashList(IEnumerable list)

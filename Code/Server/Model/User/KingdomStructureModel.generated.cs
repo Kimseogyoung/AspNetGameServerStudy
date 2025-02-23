@@ -8,7 +8,7 @@ namespace WebStudyServer.Model
 	{
     
     		
-    		public ulong Id { get; set; } = default; //
+    		public ulong SfId { get; set; } = default; //
         
     		
     		public ulong PlayerId { get; set; } = default; //

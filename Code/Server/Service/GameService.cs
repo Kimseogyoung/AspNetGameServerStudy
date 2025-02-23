@@ -207,7 +207,7 @@ namespace Server.Service
             var mgrKingdomDecoList = _userRepo.KingdomDeco.GetAllList(valDecoDeltaCntDict.Keys.ToList());
             foreach (var mgrKingdomStructure in mgrKingdomStructureList)
             {
-                var cnt = valStructureDeltaCntDict[mgrKingdomStructure.Model.Id];
+                var cnt = valStructureDeltaCntDict[mgrKingdomStructure.Model.SfId];
                 mgrKingdomStructure.ValidChgAction(cnt);
             }
 
@@ -221,7 +221,7 @@ namespace Server.Service
             // Store + Create 한 변화량 적용
             foreach(var mgrKingdomStructure in mgrKingdomStructureList)
             {
-                var cnt = valStructureDeltaCntDict[mgrKingdomStructure.Model.Id];
+                var cnt = valStructureDeltaCntDict[mgrKingdomStructure.Model.SfId];
                 if (cnt > 0)
                 {
                     mgrKingdomStructure.Store();
@@ -282,6 +282,83 @@ namespace Server.Service
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
                 ChgObjList = new List<ChgObjPacket>(), // TODO: Creft 결과
+            };
+        }
+        #endregion
+
+        #region GACHA
+        public GachaNormalResPacket EnhanceCookieStar(GachaNormalReqPacket req)
+        {
+
+            /* var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
+
+             // Item 최대 보유량 체크
+             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+             var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
+             ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
+                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
+
+             // Cost일치하는지 체크
+             var reason = $"BUY_KINGDOM_STRUCTURE:{req.KingdomItemNum}";
+             var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
+
+             var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
+
+             var mgrKingdomStructure = _userRepo.KingdomStructure.Create(prtKingdomItem);*/
+            return new GachaNormalResPacket
+            {
+                /*                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
+                                ChgObj = resultCostObj,*/
+            };
+        }
+        #endregion
+
+        #region COOKIE
+        public CookieEnhanceStarResPacket EnhanceCookieStar(CookieEnhanceStarReqPacket req)
+        {
+           /* var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
+
+            // Item 최대 보유량 체크
+            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
+            ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
+                () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
+
+            // Cost일치하는지 체크
+            var reason = $"BUY_KINGDOM_STRUCTURE:{req.KingdomItemNum}";
+            var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
+
+            var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
+
+            var mgrKingdomStructure = _userRepo.KingdomStructure.Create(prtKingdomItem);*/
+            return new CookieEnhanceStarResPacket
+            {
+/*                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
+                ChgObj = resultCostObj,*/
+            };
+        }
+
+        public CookieEnhanceLvResPacket EnhanceCookieLv(CookieEnhanceLvReqPacket req)
+        {
+            /* var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
+
+             // Item 최대 보유량 체크
+             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+             var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
+             ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
+                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
+
+             // Cost일치하는지 체크
+             var reason = $"BUY_KINGDOM_STRUCTURE:{req.KingdomItemNum}";
+             var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
+
+             var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
+
+             var mgrKingdomStructure = _userRepo.KingdomStructure.Create(prtKingdomItem);*/
+            return new CookieEnhanceLvResPacket
+            {
+                /*                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
+                                ChgObj = resultCostObj,*/
             };
         }
         #endregion

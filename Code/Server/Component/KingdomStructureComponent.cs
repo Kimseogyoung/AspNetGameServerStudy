@@ -6,6 +6,7 @@ using WebStudyServer.Repo.Database;
 using WebStudyServer.Extension;
 using Proto;
 using WebStudyServer.Helper;
+using WebStudyServer.GAME;
 
 namespace WebStudyServer.Component
 {
@@ -32,6 +33,7 @@ namespace WebStudyServer.Component
         {
             var mdlKingdomStructure = base.CreateMdl(new KingdomStructureModel
             {
+                SfId = IdHelper.GenerateSfId(),
                 Num = prt.Num,
                 State = EKingdomItemState.STORED,
                 PlayerId = _userRepo.RpcContext.PlayerId,
@@ -41,22 +43,22 @@ namespace WebStudyServer.Component
             return mgrKingdomStructure;
         }
 
-        public KingdomStructureManager Get(ulong id)
+        public KingdomStructureManager Get(ulong sfId)
         {
-            ReqHelper.ValidContext(TryGetInternal(id, out var mdlKingdomStructure), "NOT_FOUND_KINGDOM_ITEM", () => new { Id = id });
+            ReqHelper.ValidContext(TryGetInternal(sfId, out var mdlKingdomStructure), "NOT_FOUND_KINGDOM_ITEM", () => new { SfId = sfId });
             var mgrKingdomStructure = new KingdomStructureManager(_userRepo, mdlKingdomStructure);
             return mgrKingdomStructure;
         }
 
-        public List<KingdomStructureManager> GetAllList(List<ulong> idList)
+        public List<KingdomStructureManager> GetAllList(List<ulong> sfIdList)
         {
-            if(idList.Count == 0)
+            if(sfIdList.Count == 0)
             {
                 return new List<KingdomStructureManager>();
             }
 
-            var mdlKingdomStructureList = GetListInternal(idList);
-            ReqHelper.ValidContext(mdlKingdomStructureList.Count != idList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST", () => new { IdList = idList, MdlIdList = mdlKingdomStructureList.Select(x => x.Id) });
+            var mdlKingdomStructureList = GetListInternal(sfIdList);
+            ReqHelper.ValidContext(mdlKingdomStructureList.Count != sfIdList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST", () => new { SfIdList = sfIdList, MdlIdList = mdlKingdomStructureList.Select(x => x.SfId) });
             var mgrKingdomStructureList = mdlKingdomStructureList.Select(x=>new KingdomStructureManager(_userRepo, x)).ToList();
             return mgrKingdomStructureList;
         }
@@ -67,26 +69,26 @@ namespace WebStudyServer.Component
 
             _executor.Excute((sqlConnection, transaction) =>
             {
-                mdlKingdomStructureList = sqlConnection.SelectListByConditions<KingdomStructureModel>(new { Id = idList }, transaction).ToList();
+                mdlKingdomStructureList = sqlConnection.SelectListByConditions<KingdomStructureModel>(new { SfId = idList }, transaction).ToList();
             });
 
             return mdlKingdomStructureList;
         }
 
-        private bool TryGetInternal(ulong id, out KingdomStructureModel outKingdomStructure)
+        private bool TryGetInternal(ulong sfId, out KingdomStructureModel outKingdomStructure)
         {
             KingdomStructureModel mdlKingdomStructure = null;
 
             _executor.Excute((sqlConnection, transaction) =>
             {
-                mdlKingdomStructure = sqlConnection.SelectByPk<KingdomStructureModel>(new { Id = id }, transaction);
+                mdlKingdomStructure = sqlConnection.SelectByPk<KingdomStructureModel>(new { SfId = sfId }, transaction);
             });
 
             outKingdomStructure = mdlKingdomStructure;
             if(outKingdomStructure != null)
             {
                 ReqHelper.ValidContext(mdlKingdomStructure.PlayerId == _userRepo.RpcContext.PlayerId, "NOT_EQUAL_KINGDOM_ITEM_PLAYER_ID", 
-                    () => new { Id = id, PlayerId = _userRepo.RpcContext.PlayerId, KingdomStructurePlayerId = mdlKingdomStructure.PlayerId });
+                    () => new { SfId = sfId, PlayerId = _userRepo.RpcContext.PlayerId, KingdomStructurePlayerId = mdlKingdomStructure.PlayerId });
             }
             return outKingdomStructure != null;
         }

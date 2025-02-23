@@ -60,8 +60,8 @@ namespace WebStudyServer.Manager
                         deletePlacedItemList.Add(placedItem);
                         continue;
                     }
-                    checkedKingdomStructureIdList.Add(mdlKingdomStructure.Id);
-                    placedItem.StructureItemId = mdlKingdomStructure.Id;
+                    checkedKingdomStructureIdList.Add(mdlKingdomStructure.SfId);
+                    placedItem.StructureItemId = mdlKingdomStructure.SfId;
                 }
             }
 
@@ -285,7 +285,7 @@ namespace WebStudyServer.Manager
 
         public void ConstructStructure(KingdomStructureManager mgrStructManager, TilePosPacket valStartTilePos)
         {
-            ConstructItemInternal(mgrStructManager.Prt, valStartTilePos, mgrStructManager.Model.Id);
+            ConstructItemInternal(mgrStructManager.Prt, valStartTilePos, mgrStructManager.Model.SfId);
         }
 
         public void ConstructDeco(KingdomDecoManager mgrDecoManager, TilePosPacket valStartTilePos)

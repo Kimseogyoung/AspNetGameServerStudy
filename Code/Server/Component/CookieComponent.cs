@@ -4,6 +4,7 @@ using WebStudyServer.Repo;
 using WebStudyServer.Model;
 using WebStudyServer.Repo.Database;
 using WebStudyServer.Extension;
+using WebStudyServer.GAME;
 
 namespace WebStudyServer.Component
 {
@@ -21,6 +22,22 @@ namespace WebStudyServer.Component
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = cookieNum,
+                });
+            }
+
+            var mgrPoint = new CookieManager(_userRepo, mdlCookie);
+            return mgrPoint;
+        }
+
+        public CookieManager TouchBySoulStone(int soulStoneNum)
+        {
+            var prt = APP.Prt.GetCookieSoulStonePrt(soulStoneNum);
+            if (!TryGetInternal(prt.CookieNum, out var mdlCookie))
+            {
+                mdlCookie = CreateMdl(new CookieModel
+                {
+                    PlayerId = _userRepo.RpcContext.PlayerId,
+                    Num = prt.CookieNum,
                 });
             }
 

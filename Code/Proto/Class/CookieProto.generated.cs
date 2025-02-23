@@ -21,15 +21,18 @@ namespace Proto
     		public EFormationPositionType FormationPosType { get; set; }
         
     		[ProtoMember(7)]
-    		public int Hp { get; set; }
+    		public int InitSoulStone { get; set; }
         
     		[ProtoMember(8)]
-    		public int Atk { get; set; }
+    		public int Hp { get; set; }
         
     		[ProtoMember(9)]
-    		public int Def { get; set; }
+    		public int Atk { get; set; }
         
     		[ProtoMember(10)]
+    		public int Def { get; set; }
+        
+    		[ProtoMember(11)]
     		public int Cri { get; set; }
         
 	}

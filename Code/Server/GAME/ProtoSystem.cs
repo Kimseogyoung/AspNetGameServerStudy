@@ -30,9 +30,12 @@ namespace WebStudyServer
             _prt.Bind<ScheduleProto>();
             _prt.Bind<GachaScheduleProto>();
             _prt.Bind<GachaProbProto>();
+            _prt.Bind<CookieSoulStoneProto>();
         }
 
         public CookieProto GetCookiePrt(int cookieNum) => _prt.Get<CookieProto>(cookieNum);
+        public CookieStarEnhanceProto GetCookieStarEnhancePrt(EGradeType gradeType, int star) => _prt.Get<CookieStarEnhanceProto>((gradeType, star));
+        public CookieSoulStoneProto GetCookieSoulStonePrt(int soulStoneNum) => _prt.Get<CookieSoulStoneProto>(soulStoneNum);
         public KingdomItemProto GetKingdomItemPrt(int kingdomObjNum) => _prt.Get<KingdomItemProto>(kingdomObjNum);
         public ItemProto GetItemPrt(int itemNum) => _prt.Get<ItemProto>(itemNum);
         public PointProto GetPointPrt(EObjType objType) => _prt.Get<PointProto>(objType);

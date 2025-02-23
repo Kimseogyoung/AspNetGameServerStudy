@@ -7,7 +7,7 @@ namespace Protocol
 	{
     
     		[ProtoMember(1)]
-    		public ulong Id { get; set; } = default; //
+    		public ulong SfId { get; set; } = default; //
         
     		[ProtoMember(2)]
     		public int Num { get; set; } = default; //

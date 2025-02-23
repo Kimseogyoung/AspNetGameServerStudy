@@ -34,7 +34,7 @@ namespace Client
                     break;
                 case EObjType.COOKIE:
                     var pakCookie = GetCookieForce(pakChgObj.Num);
-                    pakCookie.StarExp += (int)pakChgObj.Amount;
+                    pakCookie.SoulStone += (int)pakChgObj.Amount;
                     break;
                 case EObjType.ITEM:
                     var pakItem = GetItemForce(pakChgObj.Num);
@@ -84,7 +84,7 @@ namespace Client
 
         public void SyncKingdomStructure(KingdomStructurePacket pakKingdomStructure)
         {
-            var kingdomStructure = _player.KingdomStructureList.Where(x => x.Id == pakKingdomStructure.Id).FirstOrDefault();
+            var kingdomStructure = _player.KingdomStructureList.Where(x => x.SfId == pakKingdomStructure.SfId).FirstOrDefault();
             if (kingdomStructure == null)
             {
                 _player.KingdomStructureList.Add(pakKingdomStructure);

@@ -1,0 +1,11 @@
+﻿Name,Type,Value,Desc,ProtocolType,Key
+SfId,BIGINT UNSIGNED,,,Model,pk
+PlayerId,BIGINT UNSIGNED,,,Model,fk
+ScheduleNum,INT,,,Model,
+Cnt,INT,,,Model,
+ChgRealCash,INT,,,Model,
+ChgFreeCash,INT,,,Model,
+ChgObjType,ENUM:EObjType,,,Model,
+ChgObjAmount,INT,,,Model,
+ExtraData,TEXT,,,Model,
+

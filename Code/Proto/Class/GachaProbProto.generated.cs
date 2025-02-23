@@ -21,10 +21,16 @@ namespace Proto
     		public int CookieWeight { get; set; }
         
     		[ProtoMember(14)]
-    		public int StarExpWeight { get; set; }
+    		public int SoulStoneWeight { get; set; }
         
     		[ProtoMember(15)]
     		public int DetailWeightSum { get; set; }
+        
+    		[ProtoMember(16)]
+    		public int SoulStoneMinCnt { get; set; }
+        
+    		[ProtoMember(17)]
+    		public int SoulStoneMaxCnt { get; set; }
         
 	}
 }

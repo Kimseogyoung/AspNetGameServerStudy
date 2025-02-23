@@ -1,0 +1,114 @@
+{
+  "databaseChangeLog": [
+    {
+      "preConditions": [
+        {
+          "runningAs": {
+            "username": "root"
+          }
+        }
+      ]
+    },
+    {
+      "changeSet": {
+        "id": "Schedule",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "Schedule",
+              "columns": [
+                {
+                  "column": {
+                    "name": "Num",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ActiveStartTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ActiveEndTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ContentStartTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ContentEndTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "State",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "Num",
+              "tableName": "Schedule"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

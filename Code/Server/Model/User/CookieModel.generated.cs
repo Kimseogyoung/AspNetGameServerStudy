@@ -14,10 +14,10 @@ namespace WebStudyServer.Model
     		public int Num { get; set; } = default; //
         
     		
-    		public int StarExp { get; set; } = default; //
+    		public int SoulStone { get; set; } = default; //
         
     		
-    		public int AccStarExp { get; set; } = default; //
+    		public int AccSoulStone { get; set; } = default; //
         
     		
     		public int Star { get; set; } = default; //

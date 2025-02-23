@@ -130,15 +130,16 @@ namespace WebStudyServer.Manager
                     var itemAmount = IncItemInternal(objNum, valObjAmount, reason);
                     return itemAmount;
                 case EObjType.COOKIE:
-                    var cookieStarExp = IncCookieInternal(objNum, (int)valObjAmount, reason);
-                    return cookieStarExp;
-/*                case EObjType.KINGDOM_ITEM:
-                    break;*/
+                    var cookieSoulStone1 = IncCookieInternal(objNum, (int)valObjAmount, reason);
+                    return cookieSoulStone1;
+                case EObjType.SOUL_STONE:
+                    var cookieSoulStone2 = IncCookieInternal(objNum, (int)valObjAmount, reason);
+                    return cookieSoulStone2;
+                /*                case EObjType.KINGDOM_ITEM:
+                                    break;*/
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_REWARD_OBJ_TYPE", new { ObjType = objType });
             }
-
-            return 0;
         }
 
         #region GOLD
@@ -284,10 +285,17 @@ namespace WebStudyServer.Manager
         #endregion
 
         #region COOKIE
-        private double IncCookieInternal(int cookieNum, int starExp, string reason)
+        private double IncCookieInternal(int cookieNum, int amount, string reason)
         {
             var mgrPoint = _userRepo.Cookie.Touch(cookieNum);
-            var pointAmount = mgrPoint.IncStarExp(starExp, reason);
+            var pointAmount = mgrPoint.IncCookie(amount, reason);
+            return pointAmount;
+        }
+
+        private double IncSoulStoneInternal(int soulStoneNum, int amount, string reason)
+        {
+            var mgrPoint = _userRepo.Cookie.TouchBySoulStone(soulStoneNum);
+            var pointAmount = mgrPoint.IncSoulStone(amount, reason);
             return pointAmount;
         }
         #endregion

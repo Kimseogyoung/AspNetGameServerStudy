@@ -42,7 +42,7 @@ namespace Client
 
         public async Task RequestKingdomConstructureStructure(ulong kingdomStructureId, int x, int y)
         {
-            var kingdomStructure = _player.KingdomStructureList.FirstOrDefault(x => x.Id == kingdomStructureId);
+            var kingdomStructure = _player.KingdomStructureList.FirstOrDefault(x => x.SfId == kingdomStructureId);
             if (kingdomStructure == null)
             {
                 Console.WriteLine($"NOT_FOUND_STRUCTURE_ITEM({kingdomStructureId})");
@@ -52,7 +52,7 @@ namespace Client
 
             var req = new KingdomConstructStructureReqPacket
             {
-                KingdomStructureId = kingdomStructure.Id,
+                KingdomStructureId = kingdomStructure.SfId,
                 KingdomItemNum = kingdomStructure.Num,
                 StartTilePos = new TilePosPacket { X = x, Y = y },
                 CostObjList = new List<CostObjPacket>() { new CostObjPacket { Type = prtKingdomItem.ConstructObjType, Num = prtKingdomItem.ConstructObjNum, Amount = prtKingdomItem.ConstructObjAmount} }
@@ -99,7 +99,7 @@ namespace Client
 
         public async Task RequestKingdomFinishCraftStructure(ulong kingdomStructureId)
         {
-            var kingdomStructure = _player.KingdomStructureList.FirstOrDefault(x => x.Id == kingdomStructureId);
+            var kingdomStructure = _player.KingdomStructureList.FirstOrDefault(x => x.SfId == kingdomStructureId);
             if (kingdomStructure == null)
             {
                 Console.WriteLine($"NOT_FOUND_STRUCTURE_ITEM({kingdomStructureId})");
@@ -163,7 +163,7 @@ namespace Client
             tileMapStr.AppendLine("[KingdomStructure]");
             foreach (var placedItem in _player.KingdomMap.PlacedKingdomItemList.Where(x=>x.Type == Proto.EKingdomItemType.STRUCTURE))
             {
-                var pakStructure = _player.KingdomStructureList.FirstOrDefault(x => x.Id == placedItem.StructureItemId);
+                var pakStructure = _player.KingdomStructureList.FirstOrDefault(x => x.SfId == placedItem.StructureItemId);
                 if (pakStructure == null)
                 {
                     tileMapStr.AppendLine($"NOT_FOUND_STRUCTURE_ITEM({placedItem.StructureItemId})");
