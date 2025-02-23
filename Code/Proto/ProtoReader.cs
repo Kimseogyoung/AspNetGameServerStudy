@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -15,13 +16,13 @@ namespace Proto
             RegisterType();
         }
 
-        public List<T> LoadCsv<T>(out Type pkType, out string pkName, string text) where T : class, new()
+        public List<T> LoadCsv<T>(out Type pkType, out List<string> pkNameList, string text) where T : class, new()
         {
             string[] lines = text.Split("\r\n");
             pkType = null;
-            pkName = string.Empty;
+            pkNameList = new List<string>();
 
-            if (!LoadCsvField(out pkName, out List<string> names, out List<string> types, text))
+            if (!LoadCsvField(out pkNameList, out List<string> names, out List<string> types, text))
             {
                 Console.WriteLine("Load Csv Error");
                 return null;
@@ -45,6 +46,7 @@ namespace Proto
             for (int i = 0; i < columns.Count; i++)
             {
                 T obj = new T();
+                var listValueDict = new Dictionary<string, List<string>>();
                 for (int j = 0; j < names.Count; j++)
                 {
                     string propertyName = names[j];
@@ -55,24 +57,56 @@ namespace Proto
 
                     if (value == string.Empty) continue;
 
-                    PropertyInfo property = typeof(T).GetProperty(propertyName);
+                    var property = typeof(T).GetProperty(propertyName);
                     if (property == null)
                     {
                         Console.WriteLine($"property Null {propertyName}");
                         return null;
                     }
 
-                    property.SetValue(obj, ConvertToType(columns[i][j], GetTypeFromString(typeString)));
+                    var propertyType = property.PropertyType;
+                    var targetType = GetTypeFromString(typeString);
+
+                    if (IsListType(propertyType))
+                    {
+                        if (!listValueDict.ContainsKey(propertyName))
+                            listValueDict[propertyName] = new List<string>();
+                        listValueDict[propertyName].Add(value);
+                    }
+                    else
+                    {
+                        property.SetValue(obj, ConvertToType(value, targetType));
+                    }
                 }
+
+                // 리스트형 데이터 추가
+                foreach (var kvp in listValueDict)
+                {
+                    var property = typeof(T).GetProperty(kvp.Key);
+                    if (property != null && IsListType(property.PropertyType))
+                    {
+                        var elementType = property.PropertyType.GetGenericArguments()[0];
+                        var listInstance = (IList)(Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType)));
+
+                        foreach (var val in kvp.Value)
+                        {
+                            listInstance.Add(ConvertToType(val, elementType));
+                        }
+
+                        property.SetValue(obj, listInstance);
+                    }
+                }
+
+
                 results.Add(obj);
             }
             return results;
         }
 
-        public bool LoadCsvField(out string pkName, out List<string> fieldNames, out List<string> fieldTypes, string text)
+        public bool LoadCsvField(out List<string> pkNameList, out List<string> fieldNames, out List<string> fieldTypes, string text)
         {
             string[] lines = text.Split("\r\n");
-            pkName = string.Empty;
+            pkNameList = new List<string>();
             fieldNames = new List<string>();
             fieldTypes = new List<string>();
 
@@ -90,7 +124,8 @@ namespace Proto
                     if (types[i].EndsWith(":pk"))
                     {
                         types[i] = types[i].Replace(":pk", "");
-                        pkName = names[i];
+                        var pkName = names[i];
+                        pkNameList.Add(pkName);
                     }
 
 
@@ -107,22 +142,42 @@ namespace Proto
 
         private void RegisterType()
         {
-            _typeMappingDict.Add("string", typeof(string));
-            _typeMappingDict.Add("int", typeof(int));
-            _typeMappingDict.Add("float", typeof(float));
-            _typeMappingDict.Add("double", typeof(double));
-            _typeMappingDict.Add("bool", typeof(bool));
+            foreach(var baseType in _baseTypeList)
+            {
+                _typeMappingDict.Add(baseType.Key, baseType.Value);
+/*
+                var genericListType = typeof(List<>).MakeGenericType(baseType.Value);
+                _typeMappingDict.Add($"list:{baseType}", genericListType);*/
+            }
 
             var enums = PrtEnum.GetEnums();
             foreach (var enumType in enums)
             {
                 var name = enumType.Name;
-                _typeMappingDict.Add($"enum:{name}", enumType);
+                _typeMappingDict.Add($"{name}", enumType);
             }
         }
 
         private Type GetTypeFromString(string typeString)
         {
+            var idx = typeString.IndexOf(":");
+            if (idx != -1)
+            {
+                var mainType = typeString.Substring(0, idx);
+                var subTypeName = typeString.Substring(idx + 1);
+                var subType = GetTypeFromString(subTypeName);
+
+                if (mainType == "enum")
+                {
+                    return subType;
+                }
+                else if (mainType == "list")
+                {
+                    var genericListType = typeof(List<>).MakeGenericType(subType);
+                    return genericListType;
+                }
+            }
+
             if (!_typeMappingDict.TryGetValue(typeString, out var type))
             {
                 throw new Exception($"Unsupported type: {typeString}");
@@ -141,6 +196,22 @@ namespace Proto
                 throw new Exception($"Unsupported type(ConvertToType): {type.Name} {field} {e}");
             }
         }
+
+        // List<> 타입인지 확인하는 헬퍼 함수
+        private bool IsListType(Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
+        }
+
         private Dictionary<string, Type> _typeMappingDict = new Dictionary<string, Type>();
+        private Dictionary<string, Type> _baseTypeList = new Dictionary<string, Type>
+        { 
+            {"int", typeof(int) }, 
+            { "float", typeof(float) }, 
+            { "double", typeof(double) }, 
+            { "bool", typeof(bool) },
+            {"DateTime", typeof(DateTime) },
+            { "string", typeof(string) } 
+        };
     }
 }

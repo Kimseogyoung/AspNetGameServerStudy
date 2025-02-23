@@ -1,0 +1,5 @@
+﻿Num,GradeWeightList,GradeWeightList,GradeWeightList,GradeWeightList,GradeWeightList,GradeWeightList,PickupWeightList,PickupWeightList,PickupWeightList,WeightSum,CookieWeight,StarExpWeight,DetailWeightSum
+int,list:int,list:int,list:int,list:int,list:int,list:int,list:int,list:int,list:int,int,int,int,int
+1001,600000,200000,100000,80000,10000,10000,0,0,0,1000000,300000,700000,1000000
+2001,500000,100000,100000,80000,10000,10000,200000,0,0,1000000,300000,700000,1000000
+

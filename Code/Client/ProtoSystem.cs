@@ -18,6 +18,10 @@ namespace Client
             _prt.Bind<PointProto>();
             _prt.Bind<TicketProto>();
             _prt.Bind<CookieProto>();
+            _prt.Bind<CookieStarEnhanceProto>();
+            _prt.Bind<ScheduleProto>();
+            _prt.Bind<GachaScheduleProto>();
+            _prt.Bind<GachaProbProto>();
         }
 
         public CookieProto GetCookiePrt(int cookieNum) => _prt.Get<CookieProto>(cookieNum);

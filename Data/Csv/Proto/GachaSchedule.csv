@@ -1,0 +1,5 @@
+﻿Num,Num,Tag,Order,DisplayOrder,Name,GachaProbNum,PickupCookieNum
+int:pk,int,string,int,int,string,int,int
+10250219,1001001,COOKIE_NORMAL,0,0,일반 뽑기,1001,0
+,1002001,COOKIE_PICKUP_1,0,1,픽업 뽑기,2001,6001
+

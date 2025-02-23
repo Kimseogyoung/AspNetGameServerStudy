@@ -4,8 +4,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Proto
 {
@@ -119,7 +121,7 @@ namespace Proto
 
             var filePath = Path.Join(_csvPath, $"{className}.csv");
             var text = File.ReadAllText(filePath);
-            var prtList = _reader.LoadCsv<TProto>(out Type pkType, out string pkName, text);
+            var prtList = _reader.LoadCsv<TProto>(out var pkType, out var pkNameList, text);
 
             _protoDict.Add(protoClassType, new ProtoList());
 
@@ -131,16 +133,42 @@ namespace Proto
             for (int i = 0; i < prtList.Count; i++)
             {
                 prtList[i].Idx = i;
+                _protoDict[protoClassType].List.Add(prtList[i]);
 
-                if (!string.IsNullOrEmpty(pkName))
+                if (pkNameList.Count <= 0)
                 {
-                    // PK가 있는 경우 
-                    var property = typeof(TProto).GetProperty(pkName);
-                    var value = property.GetValue(prtList[i]);
-                    _protoDict[protoClassType].IdxDict.Add(value, i); // TODO: Hash 찾기로 바꾸기
+                    continue;
                 }
 
-                _protoDict[protoClassType].List.Add(prtList[i]);
+                var valueList = new List<object>();
+                foreach (var pkName in pkNameList)
+                {
+                    var property = typeof(TProto).GetProperty(pkName);
+                    var value = property?.GetValue(prtList[i]);
+                    if(value != null)
+                    {
+                        valueList.Add(value);
+                    }
+                }
+
+                object hash = 0;
+                if (valueList.Count == 1)
+                {
+                    // PK가 1개 있는 경우 
+                    hash = valueList[0];
+                }
+                else if(valueList.Count >= 2)
+                {
+                    // PK가 n개 있는 경우
+                    hash = GenerateFastHashList(valueList);
+                }
+
+                if (_protoDict[protoClassType].IdxDict.ContainsKey(hash))
+                {
+                    throw new Exception($"DUPLICATED_PK_HASH ClassType({protoClassType.Name}) Hash({hash}) Pk({string.Join(",",pkNameList)})");
+                }
+
+                _protoDict[protoClassType].IdxDict.Add(hash, i);
             }
 
         }
@@ -157,9 +185,34 @@ namespace Proto
             return list;
         }
 
+        private int GenerateFastHashTuple(ITuple tuple)
+        {
+            int hash = c_pkGenInitPrime; // 소수 기반 초기값
+            for (int i = 0; i < tuple.Length; i++)
+            {
+                int valueHash = tuple[i]?.GetHashCode() ?? 0;
+                hash = (hash * c_pkGenPrime) ^ valueHash; // XOR + 곱셈 조합
+            }
+            return hash; 
+        }
+
+        private int GenerateFastHashList(IEnumerable list)
+        {
+            int hash = c_pkGenInitPrime; // 소수 기반 초기값
+            foreach (var value in list)
+            {
+                int valueHash = value?.GetHashCode() ?? 0;
+                hash = (hash * c_pkGenPrime) ^ valueHash; // XOR + 곱셈 조합
+            }
+            return hash;
+        }
+
         private Dictionary<Type, ProtoList> _protoDict = new Dictionary<Type, ProtoList>();
         private ProtoReader _reader;
         private string _csvPath;
+
+        private const int c_pkGenInitPrime = 17;
+        private const int c_pkGenPrime = 31;
 
     }
 }

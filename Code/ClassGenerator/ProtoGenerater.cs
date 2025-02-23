@@ -40,7 +40,16 @@ namespace ClassGenerator
                     int idx = fieldType.IndexOf(":");
                     if (idx != -1)
                     {
-                        fieldType = fieldType.Substring(idx + 1, fieldType.Length - (idx + 1));
+                        var realType = fieldType.Substring(idx + 1, fieldType.Length - (idx + 1));
+                        if (fieldType.StartsWith("enum"))
+                        {
+                           fieldType = realType;
+                        }
+                        else if (fieldType.StartsWith("list"))
+                        {
+                            fieldType = fieldType.Substring(idx + 1, fieldType.Length - (idx + 1));
+                            fieldType = $"List<{realType}>";
+                        }
                     }
 
                     var prtIdx = j + 2;
@@ -50,6 +59,12 @@ namespace ClassGenerator
                         {"Name",  fieldName},
                         {"Attribute", attribute },
                     };
+
+                    if (fieldList.Find(x=>x["Name"] == fieldName) != null)
+                    {
+                        continue;
+                    }
+
                     fieldList.Add(field);
                 }
 

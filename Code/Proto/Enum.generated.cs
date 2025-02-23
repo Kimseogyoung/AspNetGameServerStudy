@@ -57,6 +57,45 @@ namespace Proto
 		CRAFTING = 4, //
 	}
 
+	public enum EGradeType 
+	{ 
+		NONE = 0, //
+		COMMON = 1, //
+		RARE = 2, //
+		EPIC = 3, //
+		SUPER_EPIC = 4, //
+		ANCIENT = 5, //
+		LEGENDARY = 6, //
+	}
+
+	public enum ECookieRollType 
+	{ 
+		NONE = 0, //
+		DEFENDER = 1, //
+		FIGHTER = 2, //
+		ASSASSIN = 3, //
+		BOMBER = 4, //
+		MAGE = 5, //
+		SUPPORTER = 6, //
+		HEALER = 7, //
+		SNIPER = 8, //
+	}
+
+	public enum EFormationPositionType 
+	{ 
+		NONE = 0, //
+		FRONT = 1, //
+		MID = 2, //
+		REAR = 3, //
+	}
+
+	public enum EScheduleType 
+	{ 
+		NONE = 0, //
+		GACHA = 10, //
+		ATTENDANCE = 20, //
+	}
+
 	public enum EObjType 
 	{ 
 		NONE = 0, //
@@ -146,6 +185,10 @@ namespace Proto
 			list.Add(typeof(EPlacedKingdomItemState)); 
 			list.Add(typeof(EKingdomStructureFlagType)); 
 			list.Add(typeof(EItemType)); 
+			list.Add(typeof(EGradeType)); 
+			list.Add(typeof(ECookieRollType)); 
+			list.Add(typeof(EFormationPositionType)); 
+			list.Add(typeof(EScheduleType)); 
 			list.Add(typeof(EObjType)); 
 			list.Add(typeof(ESessionState)); 
 			list.Add(typeof(EAccountState)); 
