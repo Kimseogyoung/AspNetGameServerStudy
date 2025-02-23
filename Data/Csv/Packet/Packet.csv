@@ -101,9 +101,8 @@ req,GachaNormalReq,,,,,gacha/normal
 ,GachaNormalReq,Cnt,int,3,,
 ,GachaNormalReq,CostObj,CostObjPacket,4,,
 res,GachaNormalRes,,,,,
-,GachaNormalRes,Cookie,CookiePacket,2,,
-,GachaNormalRes,GachaResultChgObjList,List<ChgObjPacket>,3,,
-,GachaNormalRes,CostChgObj,ChgObjPacket,4,,
+,GachaNormalRes,GachaResultChgObjList,List<ChgObjPacket>,2,,
+,GachaNormalRes,CostChgObj,ChgObjPacket,3,,
 req,CheatRewardReq,,,,,cheat/reward
 ,CheatRewardReq,RewardList,List<ObjPacket>,2,,
 res,CheatRewardRes,,,,,

@@ -18,7 +18,7 @@ namespace Proto
     		public DateTime ContentStartTime { get; set; }
         
     		[ProtoMember(6)]
-    		public DateTime ConentEndTime { get; set; }
+    		public DateTime ContentEndTime { get; set; }
         
     		[ProtoMember(7)]
     		public DateTime ActiveEndTime { get; set; }

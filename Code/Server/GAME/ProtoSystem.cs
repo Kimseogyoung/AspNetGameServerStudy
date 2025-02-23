@@ -33,6 +33,7 @@ namespace WebStudyServer
             _prt.Bind<CookieSoulStoneProto>();
         }
 
+        // PK
         public CookieProto GetCookiePrt(int cookieNum) => _prt.Get<CookieProto>(cookieNum);
         public CookieStarEnhanceProto GetCookieStarEnhancePrt(EGradeType gradeType, int star) => _prt.Get<CookieStarEnhanceProto>((gradeType, star));
         public CookieSoulStoneProto GetCookieSoulStonePrt(int soulStoneNum) => _prt.Get<CookieSoulStoneProto>(soulStoneNum);
@@ -42,7 +43,13 @@ namespace WebStudyServer
         public PointProto GetPointPrt(int pointNum) => GetPointPrt((EObjType)pointNum);
         public TicketProto GetTicketPrt(EObjType objType) => _prt.Get<TicketProto>(objType);
         public TicketProto GetTicketPrt(int ticketNum) => GetTicketPrt((EObjType)ticketNum);
+        public ScheduleProto GetSchedulePrt(int scheduleNum) => _prt.Get<ScheduleProto>(scheduleNum);
+        public GachaScheduleProto GetGachaSchedulePrt(int scheduleNum) => _prt.Get<GachaScheduleProto>(scheduleNum);
+        public GachaProbProto GetGachaProbPrt(int gachaProbNum) => _prt.Get<GachaProbProto>(gachaProbNum);
 
+
+        // ALL
+        public IEnumerable<ScheduleProto> GetSchedulePrts() => _prt.GetAll<ScheduleProto>();
         private static ProtoHelper _prt = new ProtoHelper();
     }
 }

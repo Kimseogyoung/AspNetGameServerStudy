@@ -17,14 +17,17 @@ namespace WebStudyServer
             services.AddMemoryCache();
             AddRepo<UserRepo>(services);
             AddRepo<AuthRepo>(services);
+            AddRepo<CenterRepo>(services);
             services.AddScoped<AllUserRepo>();
 
+            // Auth
             DapperExtension.Init<AccountModel>("Id");
             DapperExtension.Init<ChannelModel>("Key");
             DapperExtension.Init<DeviceModel>("Key");
             DapperExtension.Init<SessionModel>("AccountId");
             DapperExtension.Init<PlayerMapModel>("AccountId");
 
+            // User
             DapperExtension.Init<PlayerModel>("Id");
             DapperExtension.Init<PlayerDetailModel>("PlayerId");
             DapperExtension.Init<CookieModel>("PlayerId", "Num");
@@ -35,6 +38,11 @@ namespace WebStudyServer
             DapperExtension.Init<ItemModel>("PlayerId", "Num");
             DapperExtension.Init<PointModel>("PlayerId", "Num");
             DapperExtension.Init<TicketModel>("PlayerId", "Num");
+            DapperExtension.Init<CashChangeLogModel>("SfId");
+            DapperExtension.Init<GachaLogModel>("SfId");
+
+            // Center
+            DapperExtension.Init<ScheduleModel>("Num");
         }
 
         private void AddRepo<TRepo>(IServiceCollection services) where TRepo : RepoBase
@@ -52,6 +60,12 @@ namespace WebStudyServer
             }
 
             foreach (var connectionStr in APP.Cfg.AuthDbConnectionStrList)
+            {
+                var excutor = DBSqlExecutor.Create(connectionStr, System.Data.IsolationLevel.ReadCommitted);
+                excutor.Commit();
+            }
+
+            foreach (var connectionStr in APP.Cfg.CenterDbConnectionStrList)
             {
                 var excutor = DBSqlExecutor.Create(connectionStr, System.Data.IsolationLevel.ReadCommitted);
                 excutor.Commit();

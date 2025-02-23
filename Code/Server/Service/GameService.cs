@@ -12,10 +12,11 @@ namespace Server.Service
 {
     public class GameService : ServiceBase
     {
-        public GameService(AllUserRepo allUserRepo, AuthRepo authRepo, UserRepo userRepo, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
+        public GameService(AllUserRepo allUserRepo, AuthRepo authRepo, UserRepo userRepo, CenterRepo centerRepo, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
         {
             _authRepo = authRepo;
             _userRepo = userRepo;
+            _centerRepo = centerRepo;
             _allUserRepo = allUserRepo;
             _mapper = mapper;
         }
@@ -287,28 +288,24 @@ namespace Server.Service
         #endregion
 
         #region GACHA
-        public GachaNormalResPacket EnhanceCookieStar(GachaNormalReqPacket req)
+        public GachaNormalResPacket GachaNormal(GachaNormalReqPacket req)
         {
+            var scheduleMgr = _centerRepo.Schedule.Get(req.ScheduleNum, EScheduleTimeType.TOTAL);
+            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
 
-            /* var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
+            // Cost일치하는지 체크
+            var valCnt = scheduleMgr.ValidGachaCnt(req.Cnt);
+            var valCost = scheduleMgr.ValidGachaCost(req.CostObj, valCnt);
 
-             // Item 최대 보유량 체크
-             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
-             var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
-             ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
-                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
+            // 재화 소모
+            var resultCostObj = mgrPlayerDetail.DecCost(valCost, scheduleMgr.MakeGachaReason(valCnt));
 
-             // Cost일치하는지 체크
-             var reason = $"BUY_KINGDOM_STRUCTURE:{req.KingdomItemNum}";
-             var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
-
-             var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
-
-             var mgrKingdomStructure = _userRepo.KingdomStructure.Create(prtKingdomItem);*/
+            // TODO: 가챠 로직
+            
             return new GachaNormalResPacket
             {
-                /*                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
-                                ChgObj = resultCostObj,*/
+               CostChgObj = resultCostObj,
+               GachaResultChgObjList = null
             };
         }
         #endregion
@@ -340,6 +337,7 @@ namespace Server.Service
 
         public CookieEnhanceLvResPacket EnhanceCookieLv(CookieEnhanceLvReqPacket req)
         {
+            var scheduleMgr = _
             /* var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
 
              // Item 최대 보유량 체크
@@ -365,6 +363,7 @@ namespace Server.Service
 
         private readonly AuthRepo _authRepo;
         private readonly UserRepo _userRepo;
+        private readonly CenterRepo _centerRepo;
         private readonly AllUserRepo _allUserRepo;
         private readonly IMapper _mapper;
     }

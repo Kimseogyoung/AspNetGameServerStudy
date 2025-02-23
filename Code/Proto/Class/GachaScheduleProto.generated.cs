@@ -26,5 +26,14 @@ namespace Proto
     		[ProtoMember(9)]
     		public int PickupCookieNum { get; set; }
         
+    		[ProtoMember(10)]
+    		public List<EObjType> CostTypeList { get; set; }
+        
+    		[ProtoMember(11)]
+    		public List<int> CostAmountList { get; set; }
+        
+    		[ProtoMember(14)]
+    		public List<int> CntList { get; set; }
+        
 	}
 }

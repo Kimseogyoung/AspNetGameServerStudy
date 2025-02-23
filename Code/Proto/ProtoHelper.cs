@@ -15,7 +15,7 @@ namespace Proto
     {
         private class ProtoList
         {
-            public List<object> List = new List<object>();
+            public List<ProtoBase> List = new List<ProtoBase>();
             public Dictionary<object, int> IdxDict = new Dictionary<object, int>();
         }
 
@@ -101,7 +101,7 @@ namespace Proto
             return (TProto)protoData.List[0];
         }
 
-        public List<TProto> GetAll<TProto>() where TProto : ProtoBase, new()
+        public IEnumerable<TProto> GetAll<TProto>() where TProto : ProtoBase, new()
         {
             var protoData = GetPrtDict<TProto>();
             return protoData.List.Cast<TProto>().ToList();

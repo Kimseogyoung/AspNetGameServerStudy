@@ -20,6 +20,7 @@ namespace WebStudyServer
         public bool UseUserLock { get; private set; }
         public TimeSpan UserLockTimeoutSpan { get; private set; } = new();
         public MySqlServerVersion? DbVersion { get; private set; }
+        public List<string> CenterDbConnectionStrList { get; private set; } = new();
         public List<string> UserDbConnectionStrList { get; private set; } = new();
         public List<string> AuthDbConnectionStrList { get; private set; } = new();
         public TimeSpan SessionExpireSpan { get; private set; } = new();
@@ -44,6 +45,7 @@ namespace WebStudyServer
             DbVersion = new MySqlServerVersion(config.GetValue("Db:Version", "0.0.0"));
             UserDbConnectionStrList = config.GetValueStringList("Db:UserDb:ConnectionStrList");
             AuthDbConnectionStrList = config.GetValueStringList("Db:AuthDb:ConnectionStrList");
+            CenterDbConnectionStrList = config.GetValueStringList("Db:CenterDb:ConnectionStrList");
 
             LogFolder = config.GetValue("Logging:Folder", "logs");
             LogLevel = config.GetValue("Logging:Level", LogLevel.Debug);

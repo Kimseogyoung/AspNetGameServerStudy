@@ -102,6 +102,14 @@ namespace Proto
 		ATTENDANCE = 20, //
 	}
 
+	public enum EScheduleTimeType 
+	{ 
+		NONE = 0, //
+		TOTAL = 1, //
+		CONTENT = 2, //
+		REWARD = 3, //
+	}
+
 	public enum EObjType 
 	{ 
 		NONE = 0, //
@@ -197,6 +205,7 @@ namespace Proto
 			list.Add(typeof(ECookieRollType)); 
 			list.Add(typeof(EFormationPositionType)); 
 			list.Add(typeof(EScheduleType)); 
+			list.Add(typeof(EScheduleTimeType)); 
 			list.Add(typeof(EObjType)); 
 			list.Add(typeof(ESessionState)); 
 			list.Add(typeof(EAccountState)); 

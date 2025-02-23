@@ -26,3 +26,6 @@ Db:
     AuthDb:
         ConnectionStrList:
             - Server=localhost;Port=3306;Database=AuthDb;Uid=root;Pwd=tjrudwlq!;
+    CenterDb:
+        ConnectionStrList:
+            - Server=localhost;Port=3306;Database=Center;Uid=root;Pwd=tjrudwlq!;

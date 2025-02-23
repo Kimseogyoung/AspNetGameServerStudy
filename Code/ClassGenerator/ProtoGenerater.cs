@@ -37,20 +37,7 @@ namespace ClassGenerator
                     var fieldName = names[j];
                     var fieldType = types[j];
 
-                    int idx = fieldType.IndexOf(":");
-                    if (idx != -1)
-                    {
-                        var realType = fieldType.Substring(idx + 1, fieldType.Length - (idx + 1));
-                        if (fieldType.StartsWith("enum"))
-                        {
-                           fieldType = realType;
-                        }
-                        else if (fieldType.StartsWith("list"))
-                        {
-                            fieldType = fieldType.Substring(idx + 1, fieldType.Length - (idx + 1));
-                            fieldType = $"List<{realType}>";
-                        }
-                    }
+                    fieldType = GetTypeFromString(fieldType);
 
                     var prtIdx = j + 2;
                     var attribute = $"[ProtoMember({prtIdx})]";
@@ -129,6 +116,28 @@ namespace ClassGenerator
                 Console.WriteLine(e.Message);
                 return false;
             }
+        }
+
+        private static string GetTypeFromString(string typeString)
+        {
+            var idx = typeString.IndexOf(":");
+            if (idx != -1)
+            {
+                var mainType = typeString.Substring(0, idx);
+                var subTypeName = typeString.Substring(idx + 1);
+                var subType = GetTypeFromString(subTypeName);
+
+                if (mainType == "enum")
+                {
+                    return subType;
+                }
+                else if (mainType == "list")
+                {
+                    return $"List<{subType}>";
+                }
+            }
+
+            return typeString;
         }
 
         private static string GetProjPath()
