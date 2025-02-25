@@ -110,6 +110,13 @@ namespace Proto
 		REWARD = 3, //
 	}
 
+	public enum EGachaItemType 
+	{ 
+		NONE = 0, //
+		ORIGINAL = 1, //
+		SPECIAL = 2, //
+	}
+
 	public enum EObjType 
 	{ 
 		NONE = 0, //
@@ -206,6 +213,7 @@ namespace Proto
 			list.Add(typeof(EFormationPositionType)); 
 			list.Add(typeof(EScheduleType)); 
 			list.Add(typeof(EScheduleTimeType)); 
+			list.Add(typeof(EGachaItemType)); 
 			list.Add(typeof(EObjType)); 
 			list.Add(typeof(ESessionState)); 
 			list.Add(typeof(EAccountState)); 

@@ -30,6 +30,7 @@ namespace WebStudyServer
             _prt.Bind<ScheduleProto>();
             _prt.Bind<GachaScheduleProto>();
             _prt.Bind<GachaProbProto>();
+            _prt.Bind<GachaItemProto>();
             _prt.Bind<CookieSoulStoneProto>();
         }
 
@@ -50,6 +51,11 @@ namespace WebStudyServer
 
         // ALL
         public IEnumerable<ScheduleProto> GetSchedulePrts() => _prt.GetAll<ScheduleProto>();
+        public IEnumerable<GachaScheduleProto> GetGachaSchedulePrts() => _prt.GetAll<GachaScheduleProto>();
+        public IEnumerable<GachaProbProto> GetGachaProbPrts() => _prt.GetAll<GachaProbProto>();
+        public IEnumerable<CookieSoulStoneProto> GetCookieSoulStonePrts() => _prt.GetAll<CookieSoulStoneProto>();
+        public IEnumerable<GachaItemProto> GetGachaItemPrts() => _prt.GetAll<GachaItemProto>();
+        public IEnumerable<CookieProto> GetCookiePrts() => _prt.GetAll<CookieProto>();
         private static ProtoHelper _prt = new ProtoHelper();
     }
 }

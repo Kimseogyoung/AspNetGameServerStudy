@@ -8,31 +8,31 @@ namespace Proto
     		[ProtoMember(2)]
     		public int Num { get; set; }
         
-    		[ProtoMember(4)]
+    		[ProtoMember(3)]
     		public string Tag { get; set; }
         
-    		[ProtoMember(5)]
-    		public int Order { get; set; }
-        
-    		[ProtoMember(6)]
+    		[ProtoMember(4)]
     		public int DisplayOrder { get; set; }
         
-    		[ProtoMember(7)]
+    		[ProtoMember(5)]
+    		public int Seq { get; set; }
+        
+    		[ProtoMember(6)]
     		public string Name { get; set; }
         
-    		[ProtoMember(8)]
+    		[ProtoMember(7)]
     		public int GachaProbNum { get; set; }
         
-    		[ProtoMember(9)]
-    		public int PickupCookieNum { get; set; }
+    		[ProtoMember(8)]
+    		public List<int> PickupCookieNumList { get; set; }
         
-    		[ProtoMember(10)]
+    		[ProtoMember(13)]
     		public List<EObjType> CostTypeList { get; set; }
         
-    		[ProtoMember(11)]
+    		[ProtoMember(14)]
     		public List<int> CostAmountList { get; set; }
         
-    		[ProtoMember(14)]
+    		[ProtoMember(17)]
     		public List<int> CntList { get; set; }
         
 	}

@@ -101,7 +101,7 @@ namespace WebStudyServer.Manager
 
         public string MakeGachaReason(int cnt)
         {
-            var reason = $"GACHA:{this.Num}:{_prtGacha.Tag}:{_prtGacha.Order}:{cnt}";
+            var reason = $"GACHA:{this.Num}:{_prtGacha.Tag}:{cnt}";
             return reason;
         }
         #endregion

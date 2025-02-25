@@ -337,7 +337,7 @@ namespace Server.Service
 
         public CookieEnhanceLvResPacket EnhanceCookieLv(CookieEnhanceLvReqPacket req)
         {
-            var scheduleMgr = _
+/*            var scheduleMgr = _*/
             /* var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
 
              // Item 최대 보유량 체크
