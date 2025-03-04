@@ -7,6 +7,9 @@ using Protocol;
 using WebStudyServer.Model;
 using WebStudyServer.GAME;
 using AutoMapper;
+using Server.Helper;
+using Protocol.Context;
+using Server.Extension;
 
 namespace Server.Service
 {
@@ -17,6 +20,7 @@ namespace Server.Service
             _authRepo = authRepo;
             _userRepo = userRepo;
             _centerRepo = centerRepo;
+            _centerRepo.Init(0);
             _allUserRepo = allUserRepo;
             _mapper = mapper;
         }
@@ -288,6 +292,15 @@ namespace Server.Service
         #endregion
 
         #region GACHA
+        public ScheduleLoadResPacket LoadSchedule(ScheduleLoadReqPacket req)
+        {
+            var mgrScheduleList = _centerRepo.Schedule.GetList();
+            return new ScheduleLoadResPacket
+            {
+                ScheduleList = _mapper.Map<List<SchedulePacket>>(mgrScheduleList),
+            };
+        }
+
         public GachaNormalResPacket GachaNormal(GachaNormalReqPacket req)
         {
             var scheduleMgr = _centerRepo.Schedule.Get(req.ScheduleNum, EScheduleTimeType.TOTAL);
@@ -300,12 +313,20 @@ namespace Server.Service
             // 재화 소모
             var resultCostObj = mgrPlayerDetail.DecCost(valCost, scheduleMgr.MakeGachaReason(valCnt));
 
-            // TODO: 가챠 로직
-            
+            var gachaRandom = new GachaRandom(scheduleMgr.GachaPrt, RpcContext.ServerTime);
+            var rewardObjValList = new List<ObjValue>();
+            for (var i = 0; i < valCnt; i++)
+            {
+                var resultObjValue = gachaRandom.Roll(isNormal: true);
+                rewardObjValList.AddOrInc(resultObjValue);
+            }
+
+            var chgObjList = mgrPlayerDetail.IncRewardList(rewardObjValList, scheduleMgr.MakeGachaReason(valCnt));
+
             return new GachaNormalResPacket
             {
                CostChgObj = resultCostObj,
-               GachaResultChgObjList = null
+               GachaResultChgObjList = chgObjList
             };
         }
         #endregion

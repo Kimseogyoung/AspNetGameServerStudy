@@ -4,6 +4,7 @@ using Proto;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
 using Protocol;
+using Protocol.Context;
 
 namespace WebStudyServer.Manager
 {
@@ -47,7 +48,7 @@ namespace WebStudyServer.Manager
             var objTypeCategory = objType.ToObjTyeCategory();
             switch (objTypeCategory)
             {
-                // TODO: 보유량 체크
+                // TODO: 보유량 체크!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 case EObjType.EXP:
                     var exp = DecExpInternal(valObjAmount, reason);
                     return exp;
@@ -73,6 +74,18 @@ namespace WebStudyServer.Manager
             }
         }
 
+        public List<ChgObjPacket> IncRewardList(List<ObjValue> valRewardObjValList, string reason)
+        {
+            var objList = new List<ChgObjPacket>();
+            foreach (var valReward in valRewardObjValList)
+            {
+                var obj = IncReward(valReward, reason);
+                objList.Add(obj);
+            }
+            return objList;
+        }
+
+
         public List<ChgObjPacket> IncRewardList(List<ObjPacket> valRewardListObj, string reason)
         {
             var objList = new List<ChgObjPacket>();
@@ -82,6 +95,19 @@ namespace WebStudyServer.Manager
                 objList.Add(obj);
             }
             return objList;
+        }
+
+        public ChgObjPacket IncReward(ObjValue valRewardObjVal, string reason)
+        {
+            var amount = IncReward(valRewardObjVal.Key.Type, valRewardObjVal.Key.Num, valRewardObjVal.Value, reason);
+            var obj = new ChgObjPacket
+            {
+                TotalAmount = amount,
+                Amount = valRewardObjVal.Value,
+                Type = valRewardObjVal.Key.Type,
+                Num = valRewardObjVal.Key.Num,
+            };
+            return obj;
         }
 
         public ChgObjPacket IncReward(ObjPacket valRewardObj, string reason)
@@ -133,10 +159,8 @@ namespace WebStudyServer.Manager
                     var cookieSoulStone1 = IncCookieInternal(objNum, (int)valObjAmount, reason);
                     return cookieSoulStone1;
                 case EObjType.SOUL_STONE:
-                    var cookieSoulStone2 = IncCookieInternal(objNum, (int)valObjAmount, reason);
+                    var cookieSoulStone2 = IncSoulStoneInternal(objNum, (int)valObjAmount, reason);
                     return cookieSoulStone2;
-                /*                case EObjType.KINGDOM_ITEM:
-                                    break;*/
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_REWARD_OBJ_TYPE", new { ObjType = objType });
             }
@@ -287,16 +311,16 @@ namespace WebStudyServer.Manager
         #region COOKIE
         private double IncCookieInternal(int cookieNum, int amount, string reason)
         {
-            var mgrPoint = _userRepo.Cookie.Touch(cookieNum);
-            var pointAmount = mgrPoint.IncCookie(amount, reason);
-            return pointAmount;
+            var mgrCookie = _userRepo.Cookie.Touch(cookieNum);
+            var soulStone = mgrCookie.IncCookie(amount, reason);
+            return soulStone;
         }
 
         private double IncSoulStoneInternal(int soulStoneNum, int amount, string reason)
         {
-            var mgrPoint = _userRepo.Cookie.TouchBySoulStone(soulStoneNum);
-            var pointAmount = mgrPoint.IncSoulStone(amount, reason);
-            return pointAmount;
+            var mgrCookie = _userRepo.Cookie.TouchBySoulStone(soulStoneNum);
+            var soulStone = mgrCookie.IncSoulStone(amount, reason);
+            return soulStone;
         }
         #endregion
 

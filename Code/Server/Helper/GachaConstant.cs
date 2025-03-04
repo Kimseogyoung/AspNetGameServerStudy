@@ -33,6 +33,7 @@ namespace Server.Helper
             Num = num;
         }
     }
+
     public class GachaConstant
     {
         public const int MaxWeight = 1000000;

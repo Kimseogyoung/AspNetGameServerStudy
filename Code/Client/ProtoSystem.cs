@@ -18,13 +18,17 @@ namespace Client
             _prt.Bind<PointProto>();
             _prt.Bind<TicketProto>();
             _prt.Bind<CookieProto>();
+            _prt.Bind<CookieSoulStoneProto>();
             _prt.Bind<CookieStarEnhanceProto>();
             _prt.Bind<ScheduleProto>();
             _prt.Bind<GachaScheduleProto>();
             _prt.Bind<GachaProbProto>();
         }
 
+        public ScheduleProto GetSchedulePrt(int scheduleNum) => _prt.Get<ScheduleProto>(scheduleNum);
+        public GachaScheduleProto GetGachaSchedulePrt(int scheduleNum) => _prt.Get<GachaScheduleProto>(scheduleNum);
         public CookieProto GetCookiePrt(int cookieNum) => _prt.Get<CookieProto>(cookieNum);
+        public CookieSoulStoneProto GetCookieSoulStonePrt(int soulStoneNum) => _prt.Get<CookieSoulStoneProto>(soulStoneNum);
         public KingdomItemProto GetKingdomItemPrt(int kingdomObjNum) => _prt.Get<KingdomItemProto>(kingdomObjNum);
         public ItemProto GetItemPrt(int itemNum) => _prt.Get<ItemProto>(itemNum);
         public PointProto GetPointPrt(EObjType objType) => _prt.Get<PointProto>(objType);

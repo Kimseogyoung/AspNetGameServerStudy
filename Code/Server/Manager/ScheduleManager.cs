@@ -14,6 +14,7 @@ namespace WebStudyServer.Manager
         public DateTime ActiveEndTime { get; private set; }
         public DateTime ContentStartTime { get; private set; }
         public DateTime ContentEndTime { get; private set; }
+        public int State { get; private set; }
         public GachaScheduleProto GachaPrt => _prtGacha;
 
         private ScheduleProto _prt;

@@ -1,4 +1,5 @@
 ﻿using Proto;
+using Protocol.Context;
 
 namespace Server.Helper
 {
@@ -10,7 +11,7 @@ namespace Server.Helper
             _currentSeq = GachaConstant.GetCurrentNormalGachaSeq(nowTime);
         }
 
-        public (int Num, int Cnt) Roll(bool isNormal)
+        public ObjValue Roll(bool isNormal)
         {
             var gradeRoll = _random.Next(GachaConstant.MaxWeight);
 
@@ -25,17 +26,17 @@ namespace Server.Helper
             var rolledDetailWeightIdx = RollGachaInternal(gradeWeightList.Select(x => x.Weight));
             if (rolledDetailWeightIdx == 0)
             {
-                return (cookieNum, 1);
+                return new ObjValue(EObjType.COOKIE, cookieNum, 1);
             }
             else
             {
                 var soulStoneNum = GachaConstant.GetSoulStoneNum(cookieNum);
                 var soulStoneCnt = rolledDetailWeightIdx;
-                return (soulStoneNum, soulStoneCnt);
+                return new ObjValue(EObjType.SOUL_STONE, soulStoneNum, soulStoneCnt);
             }
         }
 
-        public int RollGachaInternal(IEnumerable<int> weights)
+        private int RollGachaInternal(IEnumerable<int> weights)
         {
             var OriginRoll = _random.Next(GachaConstant.MaxWeight);
             var roll = OriginRoll;

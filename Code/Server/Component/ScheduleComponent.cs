@@ -70,7 +70,7 @@ namespace WebStudyServer.Component
             });
 
             outSchedule = new ScheduleManager(_centerRepo, prt, mdlSchedule);
-            return mdlSchedule != null;
+            return outSchedule != null;
         }
     }
 }

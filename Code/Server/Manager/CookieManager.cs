@@ -10,16 +10,27 @@ namespace WebStudyServer.Manager
     {
         public CookieManager(UserRepo userRepo, CookieModel model) : base(userRepo, model)
         {
+            _prt = APP.Prt.GetCookiePrt(model.Num);
         }
 
         public double IncCookie(int amount, string reason)
         {
-            // TODO: IncSoulStone과 다르게 처리
             var befStarExp = _model.SoulStone;
             var befAccStarExp = _model.AccSoulStone;
 
-            _model.SoulStone += amount * 20; // TODO: Cfg
-            _model.AccSoulStone += amount * 20;
+            var soulStoneCnt = amount * _prt.InitSoulStone;
+            if (_model.State != ECookieState.AVAILABLE)
+            {
+                _model.State = ECookieState.AVAILABLE;
+                soulStoneCnt -= _prt.InitSoulStone;
+            }
+
+            if(soulStoneCnt > 0)
+            {
+                _model.SoulStone += soulStoneCnt; 
+                _model.AccSoulStone += soulStoneCnt;
+            }
+
             _userRepo.Cookie.UpdateMdl(_model);
             return _model.AccSoulStone;
         }
@@ -34,5 +45,7 @@ namespace WebStudyServer.Manager
             _userRepo.Cookie.UpdateMdl(_model);
             return _model.AccSoulStone;
         }
+
+        private readonly CookieProto _prt = null;
     }
 }

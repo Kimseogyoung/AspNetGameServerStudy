@@ -1,6 +1,7 @@
 ﻿
 using AutoMapper;
 using Protocol;
+using WebStudyServer.Manager;
 using WebStudyServer.Model;
 namespace WebStudyServer
 {
@@ -18,6 +19,15 @@ namespace WebStudyServer
             CreateMap<KingdomStructureModel, KingdomStructurePacket>().ReverseMap();
             CreateMap<KingdomDecoModel, KingdomDecoPacket>().ReverseMap();
             CreateMap<KingdomMapModel, KingdomMapPacket>().ReverseMap();
+
+            CreateMap<ScheduleManager, SchedulePacket>()
+                .ForMember(dest =>dest.Num, src=> src.MapFrom(src => src.Num))
+                .ForMember(dest => dest.State, src => src.MapFrom(src => src.State))
+                .ForMember(dest => dest.ActiveStartTime, src => src.MapFrom(src => src.ActiveStartTime))
+                .ForMember(dest => dest.ActiveEndTime, src => src.MapFrom(src => src.ActiveEndTime))
+                .ForMember(dest => dest.ContentStartTime, src => src.MapFrom(src => src.ContentStartTime))
+                .ForMember(dest => dest.ContentEndTime, src => src.MapFrom(src => src.ContentEndTime))
+                ;
 
             /*            // UpdateRequest -> User
                         CreateMap<UpdateRequest, User>()

@@ -22,6 +22,12 @@ namespace Client
                 case EObjType.REAL_CASH:
                     _player.RealCash = pakChgObj.TotalAmount;
                     break;
+                case EObjType.TOTAL_CASH:
+                    var realCashCost = Math.Min(_player.RealCash, pakChgObj.TotalAmount);
+                    _player.RealCash -= realCashCost;
+                    var freeCashCost = Math.Min(_player.FreeCash, pakChgObj.TotalAmount - realCashCost);
+                    _player.FreeCash = freeCashCost;
+                    break;
                 case EObjType.POINT_START:
                     var pointType = pakChgObj.Type;
                     var pakPoint = GetPointForce(pointType);
@@ -34,7 +40,24 @@ namespace Client
                     break;
                 case EObjType.COOKIE:
                     var pakCookie = GetCookieForce(pakChgObj.Num);
-                    pakCookie.SoulStone += (int)pakChgObj.Amount;
+                    var prtCookie = APP.Prt.GetCookiePrt(pakChgObj.Num);
+
+                    var soulStoneCnt = (int)pakChgObj.Amount * prtCookie.InitSoulStone;
+                    if (pakCookie.State != ECookieState.AVAILABLE)
+                    {
+                        pakCookie.State = ECookieState.AVAILABLE;
+                        soulStoneCnt -= prtCookie.InitSoulStone;
+                    }
+                    
+                    if(soulStoneCnt > 0)
+                    {
+                        pakCookie.SoulStone += soulStoneCnt;
+                    }
+                    break;
+                case EObjType.SOUL_STONE:
+                    var prtCookieSoulStone = APP.Prt.GetCookieSoulStonePrt(pakChgObj.Num);
+                    var pakCookie2 = GetCookieForce(prtCookieSoulStone.CookieNum);
+                    pakCookie2.SoulStone += (int)pakChgObj.Amount;
                     break;
                 case EObjType.ITEM:
                     var pakItem = GetItemForce(pakChgObj.Num);
@@ -117,6 +140,38 @@ namespace Client
 
             RefreshKingdom();
         }
+
+        public void SyncCookie(CookiePacket pakCookie)
+        {
+            var cookie = _player.CookieList.Where(x => x.Num == pakCookie.Num).FirstOrDefault();
+            if (cookie == null)
+            {
+                _player.CookieList.Add(pakCookie);
+            }
+            else
+            {
+                cookie.Num = pakCookie.Num;
+                cookie.Star = pakCookie.Star;
+                cookie.SoulStone = pakCookie.SoulStone;
+                cookie.AccSoulStone = pakCookie.AccSoulStone;
+                cookie.Flag = pakCookie.Flag;
+                cookie.State = pakCookie.State;
+            }
+
+            RefreshKingdom();
+        }
+
+        public void SyncScheduleList(List<SchedulePacket> pakScheduleList)
+        {
+            _scheduleList.Clear();
+            foreach(var pakSchedule in pakScheduleList)
+            {
+                _scheduleList.Add(pakSchedule);
+                Console.WriteLine($"Schedule : {pakSchedule.Num}, {pakSchedule.ActiveStartTime} ~ {pakSchedule.ActiveEndTime}");
+            }
+        }
+
+        private List<SchedulePacket> _scheduleList = new List<SchedulePacket>();
 
         private PointPacket GetPointForce(EObjType objType)
         {
