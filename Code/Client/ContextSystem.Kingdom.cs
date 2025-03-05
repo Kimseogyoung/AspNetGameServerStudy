@@ -13,28 +13,17 @@ namespace Client
         public async Task RequestKingdomBuyStructure(int kingdomItemNum)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
-            var req = new KingdomBuyStructureReqPacket
-            {
-                KingdomItemNum = kingdomItemNum,
-                CostObj = new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount},
-                Info =  new ReqInfoPacket(),
-            };
-
+            var req = new KingdomBuyStructureReqPacket(kingdomItemNum, new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount });
             var res = await _rpcSystem.RequestAsync<KingdomBuyStructureReqPacket, KingdomBuyStructureResPacket>(req);
 
             SyncKingdomStructure(res.KingdomStructure);
             SyncChgObj(res.ChgObj);
         }
 
-        public async Task RequestKingdomFinishConstructStructure(int kingdomItemNum)
+        public async Task RequestKingdomFinishConstructStructure(ulong kingdomStructureId, int kingdomItemNum)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
-            var req = new KingdomFinishConstructStructureReqPacket
-            {
-                KingdomItemNum = kingdomItemNum,
-                Info = new ReqInfoPacket(),
-            };
-
+            var req = new KingdomFinishConstructStructureReqPacket(kingdomStructureId, kingdomItemNum);
             var res = await _rpcSystem.RequestAsync<KingdomFinishConstructStructureReqPacket, KingdomFinishConstructStructureResPacket>(req);
 
             SyncKingdomStructure(res.KingdomStructure);
@@ -50,14 +39,8 @@ namespace Client
             }
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomStructure.Num);
 
-            var req = new KingdomConstructStructureReqPacket
-            {
-                KingdomStructureId = kingdomStructure.SfId,
-                KingdomItemNum = kingdomStructure.Num,
-                StartTilePos = new TilePosPacket { X = x, Y = y },
-                CostObjList = new List<CostObjPacket>() { new CostObjPacket { Type = prtKingdomItem.ConstructObjType, Num = prtKingdomItem.ConstructObjNum, Amount = prtKingdomItem.ConstructObjAmount} }
-            };
-
+            var reqCostList = new List<CostObjPacket>() { new CostObjPacket { Type = prtKingdomItem.ConstructObjType, Num = prtKingdomItem.ConstructObjNum, Amount = prtKingdomItem.ConstructObjAmount } };
+            var req = new KingdomConstructStructureReqPacket(kingdomStructureId, kingdomStructure.Num, reqCostList, new TilePosPacket { X = x, Y = y });
             var res = await _rpcSystem.RequestAsync<KingdomConstructStructureReqPacket, KingdomConstructStructureResPacket>(req);
 
             SyncKingdomStructure(res.KingdomStructure);
@@ -68,13 +51,7 @@ namespace Client
         public async Task RequestKingdomBuyDeco(int kingdomItemNum)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
-            var req = new KingdomBuyDecoReqPacket
-            {
-                KingdomItemNum = kingdomItemNum,
-                CostObj = new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount },
-                Info = new ReqInfoPacket(),
-            };
-
+            var req = new KingdomBuyDecoReqPacket(kingdomItemNum,  new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount });
             var res = await _rpcSystem.RequestAsync<KingdomBuyDecoReqPacket, KingdomBuyDecoResPacket>(req);
 
             SyncKingdomDeco(res.KingdomDeco);
@@ -84,13 +61,7 @@ namespace Client
         public async Task RequestKingdomConstructDeco(int kingdomItemNum, int x, int y)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
-            var req = new KingdomConstructDecoReqPacket
-            {
-                KingdomItemNum = kingdomItemNum,
-                Info = new ReqInfoPacket(),
-                StartTilePos = new TilePosPacket { X = x, Y = y },
-            };
-
+            var req = new KingdomConstructDecoReqPacket(kingdomItemNum, new TilePosPacket { X = x, Y = y });
             var res = await _rpcSystem.RequestAsync<KingdomConstructDecoReqPacket, KingdomConstructDecoResPacket>(req);
 
             SyncPlacedKingdomItemList(res.PlacedKingdomItemList);

@@ -21,15 +21,9 @@ namespace Protocol
         [ProtoMember(5)]
         public int UsedSoulStone { get; set; } 
         
-        [ProtoMember(6)]
-        public int BefAccSoulStone { get; set; } 
-        
-        [ProtoMember(7)]
-        public int AftAccSoulStone { get; set; } 
-        
         public string GetProtocolName() => "cookie/enhance-star";
 
-        public CookieEnhanceStarReqPacket( int cookienum,  int befstar,  int aftstar,  int usedsoulstone,  int befaccsoulstone,  int aftaccsoulstone )
+        public CookieEnhanceStarReqPacket( int cookienum,  int befstar,  int aftstar,  int usedsoulstone )
 	    {   
          
                 CookieNum = cookienum; 
@@ -39,10 +33,6 @@ namespace Protocol
                 AftStar = aftstar; 
                  
                 UsedSoulStone = usedsoulstone; 
-                 
-                BefAccSoulStone = befaccsoulstone; 
-                 
-                AftAccSoulStone = aftaccsoulstone; 
                 
 	    }
 

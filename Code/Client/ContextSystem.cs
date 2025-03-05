@@ -50,11 +50,7 @@ namespace Client
         public async Task RequestChangeNameAsync(string name)
         {
             var befName = _player.ProfileName;
-            var req = new GameChangeNameReqPacket
-            {
-                PlayerName = name
-            };
-
+            var req = new GameChangeNameReqPacket(name);
             var res = await _rpcSystem.RequestAsync<GameChangeNameReqPacket, GameChangeNameResPacket>(req);
             Console.WriteLine($"Name  {befName} -> {res.PlayerName}");
             _player.ProfileName = res.PlayerName;

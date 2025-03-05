@@ -336,10 +336,11 @@ namespace Server.Service
         {
             var mgrCookie = _userRepo.Cookie.Touch(req.CookieNum);
             ReqHelper.ValidContext(req.BefStar == mgrCookie.Model.Star, "NOT_EQUAL_COOKIE_STAR", () => new { CookieNum = mgrCookie.Model.Num, BefStar = req.BefStar, CookieStar = mgrCookie.Model.Star });
+            var deltaLv = req.AftStar - req.BefStar;
+            ReqHelper.ValidUnderFlowParam(deltaLv, "REQ_COOKIE_ENHANCE_DELTA_STAR");
 
             var valUsedSoulStone = mgrCookie.GetSoulStoneByEnhanceStar(mgrCookie.Model.Star, req.AftStar);
             ReqHelper.ValidContext(req.UsedSoulStone == valUsedSoulStone, "NOT_EQUAL_USED_SOUL_STONE", () => new { CookieNum = mgrCookie.Model.Num, UsedSoulStone = req.UsedSoulStone, ValUsedSoulStone = valUsedSoulStone });
-            ReqHelper.ValidContext(req.BefAccSoulStone == mgrCookie.Model.AccSoulStone, "NOT_EQUAL_ACC_SOUL_STONE", () => new { CookieNum = mgrCookie.Model.Num, ReqAccSoulStone = req.BefAccSoulStone, AccSoulStone = mgrCookie.Model.Acc });
 
             mgrCookie.EnhanceStar(req.AftStar, valUsedSoulStone);
       

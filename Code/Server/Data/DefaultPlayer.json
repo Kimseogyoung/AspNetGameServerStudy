@@ -9,9 +9,9 @@
 	"AccGold": 1000,
 	"CookieList": [
 		{
-			"Num": 1001, 
-			"StarExp": 1,
-			"AccStarExp": 10,
+			"Num": 1010,
+			"StarExp": 0,
+			"AccStarExp": 0,
 			"Star": 0,
 			"State": 1
 		}

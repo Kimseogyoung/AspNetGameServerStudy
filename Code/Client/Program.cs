@@ -22,8 +22,8 @@ var funcDict = new Dictionary<int, ApiFunc>()
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomBuyStructure((int.Parse(valueArr[0]))) } },
     { 202, new ApiFunc(){ ApiPath = typeof(KingdomConstructStructureReqPacket).ToString(), Desc = "KingdomStructure 건설 (StructureId, X, Y)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomConstructureStructure(ulong.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) } },
-    { 203, new ApiFunc(){ ApiPath = typeof(KingdomFinishConstructStructureReqPacket).ToString(), Desc = "KingdomStructure 건설 종료 (Num)",
-        Action = async (valueArr) =>  await APP.Ctx.RequestKingdomFinishConstructStructure(int.Parse(valueArr[0]))} },
+    { 203, new ApiFunc(){ ApiPath = typeof(KingdomFinishConstructStructureReqPacket).ToString(), Desc = "KingdomStructure 건설 종료 (StructureId, Num)",
+        Action = async (valueArr) =>  await APP.Ctx.RequestKingdomFinishConstructStructure(ulong.Parse(valueArr[0]), int.Parse(valueArr[1]))} },
     { 204, new ApiFunc(){ ApiPath = typeof(KingdomBuyDecoReqPacket).ToString(), Desc = "KingdomDeco 구매 (Num)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomBuyDeco((int.Parse(valueArr[0]))) } },
     { 205, new ApiFunc(){ ApiPath = typeof(KingdomConstructDecoReqPacket).ToString(), Desc = "KingdomDeco 건설 (Num , X, Y)",
@@ -31,10 +31,10 @@ var funcDict = new Dictionary<int, ApiFunc>()
     { 206, new ApiFunc(){ ApiPath = typeof(KingdomFinishCraftStructureReqPacket).ToString(), Desc = "KingdomStructure 생산 물품 받기 (StructureId)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomFinishCraftStructure(ulong.Parse(valueArr[0]))} },
 
-    { 300, new ApiFunc(){ ApiPath = typeof(CookieEnhanceLvReqPacket).ToString(), Desc = "Cookie Enhance Lv (ScheduleNum, Cnt)",
-        Action = async (valueArr) =>  await APP.Ctx.RequestGachaNormal(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
-    { 301, new ApiFunc(){ ApiPath = typeof(CookieEnhanceStarReqPacket).ToString(), Desc = "Cookie Enhance Star (ScheduleNum, Cnt)",
-        Action = async (valueArr) =>  await APP.Ctx.RequestGachaNormal(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
+    { 300, new ApiFunc(){ ApiPath = typeof(CookieEnhanceStarReqPacket).ToString(), Desc = "Cookie Enhance Star (CookieNum, Star)",
+        Action = async (valueArr) =>  await APP.Ctx.RequestCookieEnhanceStar(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
+    { 301, new ApiFunc(){ ApiPath = typeof(CookieEnhanceLvReqPacket).ToString(), Desc = "Cookie Enhance Lv (CookieNum, Lv)",
+        Action = async (valueArr) =>  await APP.Ctx.RequestCookieEnhanceLv(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
 
 
     { 400, new ApiFunc(){ ApiPath = typeof(GachaNormalReqPacket).ToString(), Desc = "GachaNormal (ScheduleNum, Cnt)",

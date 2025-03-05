@@ -151,6 +151,7 @@ namespace Client
             else
             {
                 cookie.Num = pakCookie.Num;
+                cookie.Lv = pakCookie.Lv;
                 cookie.Star = pakCookie.Star;
                 cookie.SoulStone = pakCookie.SoulStone;
                 cookie.AccSoulStone = pakCookie.AccSoulStone;

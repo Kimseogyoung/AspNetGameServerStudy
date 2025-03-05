@@ -29,13 +29,7 @@ namespace Client
                 return;
             }
 
-            var req = new GachaNormalReqPacket
-            {
-                ScheduleNum = scheduleNum,
-                Cnt = cnt,
-                CostObj = new CostObjPacket { Type = prtGachaSchedule.CostTypeList[costIdx], Num = 0, Amount = prtGachaSchedule.CostAmountList[costIdx] * cnt },
-            };
-
+            var req = new GachaNormalReqPacket(scheduleNum, cnt, new CostObjPacket { Type = prtGachaSchedule.CostTypeList[costIdx], Num = 0, Amount = prtGachaSchedule.CostAmountList[costIdx] * cnt });
             var res = await _rpcSystem.RequestAsync<GachaNormalReqPacket, GachaNormalResPacket>(req);
 
             SyncChgObjList(res.GachaResultChgObjList);
@@ -45,23 +39,32 @@ namespace Client
         public async Task RequestCookieEnhanceStar(int cookieNum, int aftStar)
         {
             var prtCookie = APP.Prt.GetCookiePrt(cookieNum);
+            var cookie = GetCookieForce(cookieNum);
+            var useSoulStone = 0;
 
-            var req = new CookieEnhanceStarReqPacket
+            for (var star = cookie.Star; star < aftStar; star++)
             {
-                CookieNum = cookieNum,
-                AftStar = aftStar,
-            };
-            
+                var prtCookieStarEnhance = APP.Prt.GetCookieStarEnhancePrt(prtCookie.GradeType, star);
+                useSoulStone += prtCookieStarEnhance.SoulStone;
+            }
 
-            var res = await _rpcSystem.RequestAsync<GachaNormalReqPacket, GachaNormalResPacket>(req);
+            var req = new CookieEnhanceStarReqPacket(cookieNum, cookie.Star, aftStar, useSoulStone);
+            var res = await _rpcSystem.RequestAsync<CookieEnhanceStarReqPacket, CookieEnhanceStarResPacket>(req);
 
-            SyncChgObjList(res.GachaResultChgObjList);
-            SyncChgObj(res.CostChgObj);
+            SyncCookie(res.Cookie);
         }
 
         public async Task RequestCookieEnhanceLv(int cookieNum, int aftLv)
         {
-            
+            var prtCookie = APP.Prt.GetCookiePrt(cookieNum);
+            var cookie = GetCookieForce(cookieNum);
+            var cfgLvCost = 10;
+
+
+            var req = new CookieEnhanceLvReqPacket(cookieNum, cookie.Lv, aftLv, new CostObjPacket { Type = Proto.EObjType.POINT_COOKIE_LV, Num = 0, Amount = cfgLvCost * (aftLv - cookie.Lv) });
+            var res = await _rpcSystem.RequestAsync<CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(req);
+
+            SyncCookie(res.Cookie);
         }
     }
 }

@@ -28,6 +28,7 @@ namespace Client
         public ScheduleProto GetSchedulePrt(int scheduleNum) => _prt.Get<ScheduleProto>(scheduleNum);
         public GachaScheduleProto GetGachaSchedulePrt(int scheduleNum) => _prt.Get<GachaScheduleProto>(scheduleNum);
         public CookieProto GetCookiePrt(int cookieNum) => _prt.Get<CookieProto>(cookieNum);
+        public CookieStarEnhanceProto GetCookieStarEnhancePrt(EGradeType gradeType, int star) => _prt.Get<CookieStarEnhanceProto>((gradeType, star));
         public CookieSoulStoneProto GetCookieSoulStonePrt(int soulStoneNum) => _prt.Get<CookieSoulStoneProto>(soulStoneNum);
         public KingdomItemProto GetKingdomItemPrt(int kingdomObjNum) => _prt.Get<KingdomItemProto>(kingdomObjNum);
         public ItemProto GetItemPrt(int itemNum) => _prt.Get<ItemProto>(itemNum);

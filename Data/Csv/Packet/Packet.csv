@@ -85,8 +85,6 @@ req,CookieEnhanceStarReq,,,,,cookie/enhance-star
 ,CookieEnhanceStarReq,BefStar,int,3,,
 ,CookieEnhanceStarReq,AftStar,int,4,,
 ,CookieEnhanceStarReq,UsedSoulStone,int,5,,
-,CookieEnhanceStarReq,BefAccSoulStone,int,6,,
-,CookieEnhanceStarReq,AftAccSoulStone,int,7,,
 res,CookieEnhanceStarRes,,,,,
 ,CookieEnhanceStarRes,Cookie,CookiePacket,2,,
 req,CookieEnhanceLvReq,,,,,cookie/enhance-lv
