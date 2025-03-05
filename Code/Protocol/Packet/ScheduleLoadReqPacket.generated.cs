@@ -20,5 +20,10 @@ namespace Protocol
                 TypeList = typelist; 
                 
 	    }
+
+        public ScheduleLoadReqPacket()
+	{
+	}
+
 	}
 }

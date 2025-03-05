@@ -17,5 +17,10 @@ namespace Protocol
         {{field.Name}} = {{field.LowerName}}; 
         {{ end }}
 	    }
+
+        public {{ClassName}}()
+	{
+	}
+
 	}
 }

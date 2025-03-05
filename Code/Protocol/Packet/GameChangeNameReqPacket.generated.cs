@@ -20,5 +20,10 @@ namespace Protocol
                 PlayerName = playername; 
                 
 	    }
+
+        public GameChangeNameReqPacket()
+	{
+	}
+
 	}
 }

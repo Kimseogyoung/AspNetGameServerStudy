@@ -30,5 +30,10 @@ namespace Protocol
                 CostObj = costobj; 
                 
 	    }
+
+        public GachaNormalReqPacket()
+	{
+	}
+
 	}
 }

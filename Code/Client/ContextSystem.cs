@@ -24,10 +24,7 @@ namespace Client
 
         public async Task RequestSignUpAsync(string deviceKey)
         {
-            var req = new AuthSignUpReqPacket(devicekey: deviceKey);
-            {
-                DeviceKey = deviceKey
-            };
+            var req = new AuthSignUpReqPacket(deviceKey);
 
             var res = await _rpcSystem.RequestAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(req);
             _rpcSystem.SetSessionKey(res.Result.SessionKey);

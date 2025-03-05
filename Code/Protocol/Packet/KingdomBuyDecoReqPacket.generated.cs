@@ -25,5 +25,10 @@ namespace Protocol
                 CostObj = costobj; 
                 
 	    }
+
+        public KingdomBuyDecoReqPacket()
+	{
+	}
+
 	}
 }

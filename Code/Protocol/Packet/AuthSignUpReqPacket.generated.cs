@@ -20,5 +20,10 @@ namespace Protocol
                 DeviceKey = devicekey; 
                 
 	    }
+
+        public AuthSignUpReqPacket()
+	{
+	}
+
 	}
 }

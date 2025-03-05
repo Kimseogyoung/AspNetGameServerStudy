@@ -35,5 +35,10 @@ namespace Protocol
                 CostObj = costobj; 
                 
 	    }
+
+        public CookieEnhanceLvReqPacket()
+	{
+	}
+
 	}
 }

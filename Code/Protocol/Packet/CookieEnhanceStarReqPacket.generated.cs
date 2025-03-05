@@ -45,5 +45,10 @@ namespace Protocol
                 AftAccSoulStone = aftaccsoulstone; 
                 
 	    }
+
+        public CookieEnhanceStarReqPacket()
+	{
+	}
+
 	}
 }

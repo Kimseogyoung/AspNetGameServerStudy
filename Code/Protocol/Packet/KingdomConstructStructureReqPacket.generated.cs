@@ -35,5 +35,10 @@ namespace Protocol
                 StartTilePos = starttilepos; 
                 
 	    }
+
+        public KingdomConstructStructureReqPacket()
+	{
+	}
+
 	}
 }

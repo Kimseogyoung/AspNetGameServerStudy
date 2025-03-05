@@ -25,5 +25,10 @@ namespace Protocol
                 KingdomItemNum = kingdomitemnum; 
                 
 	    }
+
+        public KingdomFinishCraftStructureReqPacket()
+	{
+	}
+
 	}
 }

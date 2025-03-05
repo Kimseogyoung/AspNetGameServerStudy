@@ -35,5 +35,10 @@ namespace Protocol
                 CashCost = cashcost; 
                 
 	    }
+
+        public KingdomDecTimeStructureReqPacket()
+	{
+	}
+
 	}
 }

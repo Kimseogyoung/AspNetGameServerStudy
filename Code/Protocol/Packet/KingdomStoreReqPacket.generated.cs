@@ -20,5 +20,10 @@ namespace Protocol
                 KingdomPlacedItemIdList = kingdomplaceditemidlist; 
                 
 	    }
+
+        public KingdomStoreReqPacket()
+	{
+	}
+
 	}
 }

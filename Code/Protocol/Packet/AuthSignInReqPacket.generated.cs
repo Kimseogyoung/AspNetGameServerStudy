@@ -20,5 +20,10 @@ namespace Protocol
                 ChannelId = channelid; 
                 
 	    }
+
+        public AuthSignInReqPacket()
+	{
+	}
+
 	}
 }

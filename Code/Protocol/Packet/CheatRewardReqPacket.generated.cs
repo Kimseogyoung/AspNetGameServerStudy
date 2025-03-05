@@ -20,5 +20,10 @@ namespace Protocol
                 RewardList = rewardlist; 
                 
 	    }
+
+        public CheatRewardReqPacket()
+	{
+	}
+
 	}
 }

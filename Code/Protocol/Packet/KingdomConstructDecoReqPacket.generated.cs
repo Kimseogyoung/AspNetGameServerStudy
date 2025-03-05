@@ -25,5 +25,10 @@ namespace Protocol
                 StartTilePos = starttilepos; 
                 
 	    }
+
+        public KingdomConstructDecoReqPacket()
+	{
+	}
+
 	}
 }

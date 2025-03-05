@@ -30,5 +30,10 @@ namespace Protocol
                 PlaceKingdomItemList = placekingdomitemlist; 
                 
 	    }
+
+        public KingdomChangeItemReqPacket()
+	{
+	}
+
 	}
 }
