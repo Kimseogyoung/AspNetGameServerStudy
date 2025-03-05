@@ -16,9 +16,7 @@ namespace Protocol
         
 	    }
 
-        public GameEnterReqPacket()
-	{
-	}
+    
 
 	}
 }

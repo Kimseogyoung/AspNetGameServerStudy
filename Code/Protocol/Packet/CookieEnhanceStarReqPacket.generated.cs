@@ -46,9 +46,11 @@ namespace Protocol
                 
 	    }
 
+    
         public CookieEnhanceStarReqPacket()
-	{
-	}
+        {
+        }
+        
 
 	}
 }

@@ -26,9 +26,11 @@ namespace Protocol
                 
 	    }
 
+    
         public KingdomFinishCraftStructureReqPacket()
-	{
-	}
+        {
+        }
+        
 
 	}
 }

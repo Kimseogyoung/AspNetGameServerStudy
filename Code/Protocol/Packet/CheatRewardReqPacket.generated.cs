@@ -21,9 +21,11 @@ namespace Protocol
                 
 	    }
 
+    
         public CheatRewardReqPacket()
-	{
-	}
+        {
+        }
+        
 
 	}
 }

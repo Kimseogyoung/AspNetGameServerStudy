@@ -18,9 +18,11 @@ namespace Protocol
         {{ end }}
 	    }
 
-        public {{ClassName}}()
-	{
-	}
+    {{ if Fields.size > 1 }}
+    public {{ClassName}}()
+    {
+    }
+    {{ end }}
 
 	}
 }

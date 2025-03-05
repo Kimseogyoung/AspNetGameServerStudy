@@ -36,9 +36,11 @@ namespace Protocol
                 
 	    }
 
+    
         public KingdomConstructStructureReqPacket()
-	{
-	}
+        {
+        }
+        
 
 	}
 }

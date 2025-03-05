@@ -32,11 +32,7 @@ namespace Client
 
         public async Task RequestSignInAsync(string channelId)
         {
-            var req = new AuthSignInReqPacket
-            {
-                ChannelId = channelId
-            };
-
+            var req = new AuthSignInReqPacket(channelId);
             var res = await _rpcSystem.RequestAsync<AuthSignInReqPacket, AuthSignInResPacket>(req);
             _rpcSystem.SetSessionKey(res.Result.SessionKey);
         }

@@ -31,9 +31,11 @@ namespace Protocol
                 
 	    }
 
+    
         public GachaNormalReqPacket()
-	{
-	}
+        {
+        }
+        
 
 	}
 }
