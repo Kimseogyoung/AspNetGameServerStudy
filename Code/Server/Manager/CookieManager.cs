@@ -13,6 +13,18 @@ namespace WebStudyServer.Manager
             _prt = APP.Prt.GetCookiePrt(model.Num);
         }
 
+        public int GetSoulStoneByEnhanceStar(int befStar, int aftStar)
+        {
+            var needSoulStone = 0;
+            for (var star = befStar; star < aftStar; star++)
+            {
+                var prtCookieStarEnhance = APP.Prt.GetCookieStarEnhancePrt(_prt.GradeType, star);
+                needSoulStone += prtCookieStarEnhance.SoulStone;
+            }
+
+            return needSoulStone;
+        }
+
         public double IncCookie(int amount, string reason)
         {
             var befStarExp = _model.SoulStone;
@@ -44,6 +56,25 @@ namespace WebStudyServer.Manager
             _model.AccSoulStone += amount;
             _userRepo.Cookie.UpdateMdl(_model);
             return _model.AccSoulStone;
+        }
+
+        public void EnhanceStar(int aftStar, int usedSoulStone)
+        {
+            var befStar = _model.Star;
+            var befSoulStone = _model.SoulStone;
+            ReqHelper.ValidContext(befSoulStone >= usedSoulStone, "NOT_ENOUGH_COOKIE_SOUL_STONE", () => new { CookeNum = _prt.Num, SoulStone = befSoulStone, UsedSoulStone = usedSoulStone});
+
+            _model.Star = aftStar;
+            _model.SoulStone -= usedSoulStone;
+            _userRepo.Cookie.UpdateMdl(_model);
+        }
+
+        public void EnhanceLv(int aftLv)
+        {
+            var befLv = _model.Lv;
+
+            _model.Lv = aftLv;
+            _userRepo.Cookie.UpdateMdl(_model);
         }
 
         private readonly CookieProto _prt = null;

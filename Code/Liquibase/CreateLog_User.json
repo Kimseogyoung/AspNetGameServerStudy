@@ -499,6 +499,16 @@
                 },
                 {
                   "column": {
+                    "name": "Lv",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
                     "name": "Flag",
                     "type": "INT",
                     "constraints": {

@@ -4,6 +4,7 @@ Num,INT,,,,pk
 SoulStone,INT,,,,
 AccSoulStone,INT,,,,
 Star,INT,,,,
+Lv,INT,,,,
 Flag,INT,,,,
 State,ENUM:ECookieState,,,,
 

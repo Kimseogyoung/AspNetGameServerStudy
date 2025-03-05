@@ -12,8 +12,5 @@ namespace Protocol
         [ProtoMember(2)]
         public CookiePacket Cookie { get; set; } 
         
-        [ProtoMember(3)]
-        public ChgObjPacket ChgObj { get; set; } 
-        
 	}
 }

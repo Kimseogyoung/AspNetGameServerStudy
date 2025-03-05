@@ -19,7 +19,13 @@ namespace Protocol
         public int AftStar { get; set; } 
         
         [ProtoMember(5)]
-        public CostObjPacket CostObj { get; set; } 
+        public int UsedSoulStone { get; set; } 
+        
+        [ProtoMember(6)]
+        public int BefAccSoulStone { get; set; } 
+        
+        [ProtoMember(7)]
+        public int AftAccSoulStone { get; set; } 
         
         public string GetProtocolName() => "cookie/enhance-star";
 	}

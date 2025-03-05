@@ -1,4 +1,4 @@
-﻿Type,Star,StarExp
+﻿Type,Star,SoulStone
 enum:EGradeType:pk,int:pk,int
 COMMON,0,20
 COMMON,1,15

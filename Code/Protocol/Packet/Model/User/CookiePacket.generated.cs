@@ -19,9 +19,12 @@ namespace Protocol
     		public int Star { get; set; } = default; //
         
     		[ProtoMember(5)]
-    		public int Flag { get; set; } = default; //
+    		public int Lv { get; set; } = default; //
         
     		[ProtoMember(6)]
+    		public int Flag { get; set; } = default; //
+        
+    		[ProtoMember(7)]
     		public ECookieState State { get; set; } = default; //
         
 	}

@@ -334,50 +334,40 @@ namespace Server.Service
         #region COOKIE
         public CookieEnhanceStarResPacket EnhanceCookieStar(CookieEnhanceStarReqPacket req)
         {
-           /* var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
+            var mgrCookie = _userRepo.Cookie.Touch(req.CookieNum);
+            ReqHelper.ValidContext(req.BefStar == mgrCookie.Model.Star, "NOT_EQUAL_COOKIE_STAR", () => new { CookieNum = mgrCookie.Model.Num, BefStar = req.BefStar, CookieStar = mgrCookie.Model.Star });
 
-            // Item 최대 보유량 체크
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
-            var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
-            ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
-                () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
+            var valUsedSoulStone = mgrCookie.GetSoulStoneByEnhanceStar(mgrCookie.Model.Star, req.AftStar);
+            ReqHelper.ValidContext(req.UsedSoulStone == valUsedSoulStone, "NOT_EQUAL_USED_SOUL_STONE", () => new { CookieNum = mgrCookie.Model.Num, UsedSoulStone = req.UsedSoulStone, ValUsedSoulStone = valUsedSoulStone });
+            ReqHelper.ValidContext(req.BefAccSoulStone == mgrCookie.Model.AccSoulStone, "NOT_EQUAL_ACC_SOUL_STONE", () => new { CookieNum = mgrCookie.Model.Num, ReqAccSoulStone = req.BefAccSoulStone, AccSoulStone = mgrCookie.Model.Acc });
 
-            // Cost일치하는지 체크
-            var reason = $"BUY_KINGDOM_STRUCTURE:{req.KingdomItemNum}";
-            var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
-
-            var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
-
-            var mgrKingdomStructure = _userRepo.KingdomStructure.Create(prtKingdomItem);*/
+            mgrCookie.EnhanceStar(req.AftStar, valUsedSoulStone);
+      
             return new CookieEnhanceStarResPacket
             {
-/*                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
-                ChgObj = resultCostObj,*/
+                Cookie = _mapper.Map<CookiePacket>(mgrCookie.Model),
             };
         }
 
         public CookieEnhanceLvResPacket EnhanceCookieLv(CookieEnhanceLvReqPacket req)
         {
-/*            var scheduleMgr = _*/
-            /* var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
+            var mgrCookie = _userRepo.Cookie.Touch(req.CookieNum);
+            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var cfgLvCost = 10;
 
-             // Item 최대 보유량 체크
-             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
-             var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
-             ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
-                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
+            var reason = $"ENHANCE_COOKIE_LV:{req.BefLv}~{req.AftLv}";
+            var deltaLv = req.AftLv - req.BefLv;
+            ReqHelper.ValidUnderFlowParam(deltaLv, "REQ_COOKIE_ENHANCE_DELTA_LV");
+            ReqHelper.ValidContext(req.BefLv == mgrCookie.Model.Lv, "NOT_EQUAL_COOKIE_Lv", () => new { CookieNum = mgrCookie.Model.Num, BefLv = req.BefLv, CookieLv = mgrCookie.Model.Lv });
+            var valCostObj = ReqHelper.ValidCost(req.CostObj, EObjType.POINT_COOKIE_LV, 0, deltaLv * cfgLvCost, reason);
 
-             // Cost일치하는지 체크
-             var reason = $"BUY_KINGDOM_STRUCTURE:{req.KingdomItemNum}";
-             var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
+            var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
+            mgrCookie.EnhanceLv(req.AftLv);
 
-             var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
-
-             var mgrKingdomStructure = _userRepo.KingdomStructure.Create(prtKingdomItem);*/
             return new CookieEnhanceLvResPacket
             {
-                /*                KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
-                                ChgObj = resultCostObj,*/
+                Cookie = _mapper.Map<CookiePacket>(mgrCookie.Model),
+                ChgObj = resultCostObj,
             };
         }
         #endregion

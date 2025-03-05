@@ -84,10 +84,11 @@ req,CookieEnhanceStarReq,,,,,cookie/enhance-star
 ,CookieEnhanceStarReq,CookieNum,int,2,,
 ,CookieEnhanceStarReq,BefStar,int,3,,
 ,CookieEnhanceStarReq,AftStar,int,4,,
-,CookieEnhanceStarReq,CostObj,CostObjPacket,5,,
+,CookieEnhanceStarReq,UsedSoulStone,int,5,,
+,CookieEnhanceStarReq,BefAccSoulStone,int,6,,
+,CookieEnhanceStarReq,AftAccSoulStone,int,7,,
 res,CookieEnhanceStarRes,,,,,
 ,CookieEnhanceStarRes,Cookie,CookiePacket,2,,
-,CookieEnhanceStarRes,ChgObj,ChgObjPacket,3,,
 req,CookieEnhanceLvReq,,,,,cookie/enhance-lv
 ,CookieEnhanceLvReq,CookieNum,int,2,,
 ,CookieEnhanceLvReq,BefLv,int,3,,

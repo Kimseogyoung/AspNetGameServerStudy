@@ -41,5 +41,27 @@ namespace Client
             SyncChgObjList(res.GachaResultChgObjList);
             SyncChgObj(res.CostChgObj);
         }
+
+        public async Task RequestCookieEnhanceStar(int cookieNum, int aftStar)
+        {
+            var prtCookie = APP.Prt.GetCookiePrt(cookieNum);
+
+            var req = new CookieEnhanceStarReqPacket
+            {
+                CookieNum = cookieNum,
+                AftStar = aftStar,
+            };
+            
+
+            var res = await _rpcSystem.RequestAsync<GachaNormalReqPacket, GachaNormalResPacket>(req);
+
+            SyncChgObjList(res.GachaResultChgObjList);
+            SyncChgObj(res.CostChgObj);
+        }
+
+        public async Task RequestCookieEnhanceLv(int cookieNum, int aftLv)
+        {
+            
+        }
     }
 }

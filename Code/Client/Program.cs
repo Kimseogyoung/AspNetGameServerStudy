@@ -31,7 +31,13 @@ var funcDict = new Dictionary<int, ApiFunc>()
     { 206, new ApiFunc(){ ApiPath = typeof(KingdomFinishCraftStructureReqPacket).ToString(), Desc = "KingdomStructure 생산 물품 받기 (StructureId)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomFinishCraftStructure(ulong.Parse(valueArr[0]))} },
 
-    { 300, new ApiFunc(){ ApiPath = typeof(GachaNormalReqPacket).ToString(), Desc = "GachaNormal (ScheduleNum, Cnt)",
+    { 300, new ApiFunc(){ ApiPath = typeof(CookieEnhanceLvReqPacket).ToString(), Desc = "Cookie Enhance Lv (ScheduleNum, Cnt)",
+        Action = async (valueArr) =>  await APP.Ctx.RequestGachaNormal(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
+    { 301, new ApiFunc(){ ApiPath = typeof(CookieEnhanceStarReqPacket).ToString(), Desc = "Cookie Enhance Star (ScheduleNum, Cnt)",
+        Action = async (valueArr) =>  await APP.Ctx.RequestGachaNormal(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
+
+
+    { 400, new ApiFunc(){ ApiPath = typeof(GachaNormalReqPacket).ToString(), Desc = "GachaNormal (ScheduleNum, Cnt)",
         Action = async (valueArr) =>  await APP.Ctx.RequestGachaNormal(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
 
     { 500, new ApiFunc(){ ApiPath = typeof(ScheduleLoadReqPacket).ToString(), Desc = "ScheduleLoad ",

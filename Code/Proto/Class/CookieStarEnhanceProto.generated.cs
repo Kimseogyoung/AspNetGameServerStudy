@@ -12,7 +12,7 @@ namespace Proto
     		public int Star { get; set; }
         
     		[ProtoMember(4)]
-    		public int StarExp { get; set; }
+    		public int SoulStone { get; set; }
         
 	}
 }

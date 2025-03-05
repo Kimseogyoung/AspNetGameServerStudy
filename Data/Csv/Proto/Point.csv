@@ -1,4 +1,5 @@
 ﻿Type,Name
 enum:EObjType:pk,string
 POINT_MILEAGE,마일리지
+POINT_COOKIE_LV,쿠키 레벨업 재화
 
