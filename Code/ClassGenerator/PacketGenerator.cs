@@ -121,10 +121,13 @@ namespace ClassGenerator
                 var fields = new dynamic[defList.Count];
                 for (var i =0; i< defList.Count; i++)
                 {
+                    var isLast = i == defList.Count - 1;
                     var attribute = $"[ProtoMember({defList[i].Idx})]";
                     fields[i] = new Dictionary<string, object> {
                         {"Type",  defList[i].FieldType },
                         {"Name",  defList[i].FieldName },
+                        {"LowerName",  defList[i].FieldName.ToLower() },
+                        {"Comma",  isLast? "" : "," },
                         { "Attribute",  attribute },
                          {"Value",  defList[i].FieldValue},
                     };

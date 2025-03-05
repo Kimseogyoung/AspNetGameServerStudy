@@ -22,5 +22,20 @@ namespace Protocol
         public TilePosPacket StartTilePos { get; set; } 
         
         public string GetProtocolName() => "kingdom/construct-structure";
+
+        public KingdomConstructStructureReqPacket( ReqInfoPacket info,  ulong kingdomstructureid,  int kingdomitemnum,  List<CostObjPacket> costobjlist,  TilePosPacket starttilepos )
+	    {   
+         
+                Info = info; 
+                 
+                KingdomStructureId = kingdomstructureid; 
+                 
+                KingdomItemNum = kingdomitemnum; 
+                 
+                CostObjList = costobjlist; 
+                 
+                StartTilePos = starttilepos; 
+                
+	    }
 	}
 }

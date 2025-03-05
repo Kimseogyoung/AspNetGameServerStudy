@@ -13,5 +13,14 @@ namespace Protocol
         public string PlayerName { get; set; } 
         
         public string GetProtocolName() => "game/change-name";
+
+        public GameChangeNameReqPacket( ReqInfoPacket info,  string playername )
+	    {   
+         
+                Info = info; 
+                 
+                PlayerName = playername; 
+                
+	    }
 	}
 }

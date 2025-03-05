@@ -4,6 +4,6 @@
     <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup>
-    <ActiveDebugProfile>ProtoGenerater</ActiveDebugProfile>
+    <ActiveDebugProfile>PacketGenerater</ActiveDebugProfile>
   </PropertyGroup>
 </Project>

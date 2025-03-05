@@ -13,5 +13,14 @@ namespace Protocol
         public string ChannelId { get; set; } 
         
         public string GetProtocolName() => "auth/sign-in";
+
+        public AuthSignInReqPacket( ReqInfoPacket info,  string channelid )
+	    {   
+         
+                Info = info; 
+                 
+                ChannelId = channelid; 
+                
+	    }
 	}
 }

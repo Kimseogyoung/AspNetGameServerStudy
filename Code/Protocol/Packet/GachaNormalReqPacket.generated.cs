@@ -19,5 +19,18 @@ namespace Protocol
         public CostObjPacket CostObj { get; set; } 
         
         public string GetProtocolName() => "gacha/normal";
+
+        public GachaNormalReqPacket( ReqInfoPacket info,  int schedulenum,  int cnt,  CostObjPacket costobj )
+	    {   
+         
+                Info = info; 
+                 
+                ScheduleNum = schedulenum; 
+                 
+                Cnt = cnt; 
+                 
+                CostObj = costobj; 
+                
+	    }
 	}
 }

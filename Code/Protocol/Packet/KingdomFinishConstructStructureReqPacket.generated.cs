@@ -16,5 +16,16 @@ namespace Protocol
         public int KingdomItemNum { get; set; } 
         
         public string GetProtocolName() => "kingdom/finish-construct-structure";
+
+        public KingdomFinishConstructStructureReqPacket( ReqInfoPacket info,  ulong kingdomstructureid,  int kingdomitemnum )
+	    {   
+         
+                Info = info; 
+                 
+                KingdomStructureId = kingdomstructureid; 
+                 
+                KingdomItemNum = kingdomitemnum; 
+                
+	    }
 	}
 }

@@ -13,5 +13,14 @@ namespace Protocol
         public string DeviceKey { get; set; } 
         
         public string GetProtocolName() => "auth/sign-up";
+
+        public AuthSignUpReqPacket( ReqInfoPacket info,  string devicekey )
+	    {   
+         
+                Info = info; 
+                 
+                DeviceKey = devicekey; 
+                
+	    }
 	}
 }

@@ -13,5 +13,14 @@ namespace Protocol
         public List<EScheduleType> TypeList { get; set; } 
         
         public string GetProtocolName() => "schedule/load";
+
+        public ScheduleLoadReqPacket( ReqInfoPacket info,  List<EScheduleType> typelist )
+	    {   
+         
+                Info = info; 
+                 
+                TypeList = typelist; 
+                
+	    }
 	}
 }

@@ -16,5 +16,16 @@ namespace Protocol
         public CostObjPacket CostObj { get; set; } 
         
         public string GetProtocolName() => "kingdom/buy-deco";
+
+        public KingdomBuyDecoReqPacket( ReqInfoPacket info,  int kingdomitemnum,  CostObjPacket costobj )
+	    {   
+         
+                Info = info; 
+                 
+                KingdomItemNum = kingdomitemnum; 
+                 
+                CostObj = costobj; 
+                
+	    }
 	}
 }

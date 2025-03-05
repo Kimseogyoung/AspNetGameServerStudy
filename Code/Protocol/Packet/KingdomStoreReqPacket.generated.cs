@@ -13,5 +13,14 @@ namespace Protocol
         public List<ulong> KingdomPlacedItemIdList { get; set; } 
         
         public string GetProtocolName() => "kingdom/store";
+
+        public KingdomStoreReqPacket( ReqInfoPacket info,  List<ulong> kingdomplaceditemidlist )
+	    {   
+         
+                Info = info; 
+                 
+                KingdomPlacedItemIdList = kingdomplaceditemidlist; 
+                
+	    }
 	}
 }
