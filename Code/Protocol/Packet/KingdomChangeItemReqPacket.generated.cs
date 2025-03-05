@@ -20,11 +20,9 @@ namespace Protocol
         
         public string GetProtocolName() => "kingdom/change-item";
 
-        public KingdomChangeItemReqPacket( ReqInfoPacket info,  List<ulong> storekingdomitemidlist,  List<ChgKingdomItemPacket> chgkingdomitemlist,  List<ChgKingdomItemPacket> placekingdomitemlist )
+        public KingdomChangeItemReqPacket( List<ulong> storekingdomitemidlist,  List<ChgKingdomItemPacket> chgkingdomitemlist,  List<ChgKingdomItemPacket> placekingdomitemlist )
 	    {   
          
-                Info = info; 
-                 
                 StoreKingdomItemIdList = storekingdomitemidlist; 
                  
                 ChgKingdomItemList = chgkingdomitemlist; 

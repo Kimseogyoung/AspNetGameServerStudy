@@ -20,11 +20,9 @@ namespace Protocol
         
         public string GetProtocolName() => "gacha/normal";
 
-        public GachaNormalReqPacket( ReqInfoPacket info,  int schedulenum,  int cnt,  CostObjPacket costobj )
+        public GachaNormalReqPacket( int schedulenum,  int cnt,  CostObjPacket costobj )
 	    {   
          
-                Info = info; 
-                 
                 ScheduleNum = schedulenum; 
                  
                 Cnt = cnt; 

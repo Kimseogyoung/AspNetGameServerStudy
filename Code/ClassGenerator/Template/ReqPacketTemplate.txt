@@ -11,9 +11,9 @@ namespace Protocol
     {{ end }}
         public string GetProtocolName() => "{{ProtocolName}}";
 
-        public {{ClassName}}({{ for field in Fields }} {{field.Type}} {{field.LowerName}}{{field.Comma}} {{ end }})
+        public {{ClassName}}({{ for field in Fields offset:1 }} {{field.Type}} {{field.LowerName}}{{field.Comma}} {{ end }})
 	    {   
-        {{ for field in Fields }} 
+        {{ for field in Fields offset:1 }} 
         {{field.Name}} = {{field.LowerName}}; 
         {{ end }}
 	    }

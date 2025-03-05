@@ -29,11 +29,9 @@ namespace Protocol
         
         public string GetProtocolName() => "cookie/enhance-star";
 
-        public CookieEnhanceStarReqPacket( ReqInfoPacket info,  int cookienum,  int befstar,  int aftstar,  int usedsoulstone,  int befaccsoulstone,  int aftaccsoulstone )
+        public CookieEnhanceStarReqPacket( int cookienum,  int befstar,  int aftstar,  int usedsoulstone,  int befaccsoulstone,  int aftaccsoulstone )
 	    {   
          
-                Info = info; 
-                 
                 CookieNum = cookienum; 
                  
                 BefStar = befstar; 

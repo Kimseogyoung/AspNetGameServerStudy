@@ -23,11 +23,9 @@ namespace Protocol
         
         public string GetProtocolName() => "kingdom/dec-time-structure";
 
-        public KingdomDecTimeStructureReqPacket( ReqInfoPacket info,  ulong kingdomstructureid,  int kingdomitemnum,  int remainsec,  CostCashPacket cashcost )
+        public KingdomDecTimeStructureReqPacket( ulong kingdomstructureid,  int kingdomitemnum,  int remainsec,  CostCashPacket cashcost )
 	    {   
          
-                Info = info; 
-                 
                 KingdomStructureId = kingdomstructureid; 
                  
                 KingdomItemNum = kingdomitemnum; 

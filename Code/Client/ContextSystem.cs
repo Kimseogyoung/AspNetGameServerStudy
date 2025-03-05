@@ -24,7 +24,7 @@ namespace Client
 
         public async Task RequestSignUpAsync(string deviceKey)
         {
-            var req = new AuthSignUpReqPacket
+            var req = new AuthSignUpReqPacket(devicekey: deviceKey);
             {
                 DeviceKey = deviceKey
             };

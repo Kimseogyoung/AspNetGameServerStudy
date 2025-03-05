@@ -17,11 +17,9 @@ namespace Protocol
         
         public string GetProtocolName() => "kingdom/finish-craft-structure";
 
-        public KingdomFinishCraftStructureReqPacket( ReqInfoPacket info,  ulong kingdomstructureid,  int kingdomitemnum )
+        public KingdomFinishCraftStructureReqPacket( ulong kingdomstructureid,  int kingdomitemnum )
 	    {   
          
-                Info = info; 
-                 
                 KingdomStructureId = kingdomstructureid; 
                  
                 KingdomItemNum = kingdomitemnum; 

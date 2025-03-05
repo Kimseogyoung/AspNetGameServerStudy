@@ -11,11 +11,9 @@ namespace Protocol
         
         public string GetProtocolName() => "game/enter";
 
-        public GameEnterReqPacket( ReqInfoPacket info )
+        public GameEnterReqPacket()
 	    {   
-         
-                Info = info; 
-                
+        
 	    }
 	}
 }

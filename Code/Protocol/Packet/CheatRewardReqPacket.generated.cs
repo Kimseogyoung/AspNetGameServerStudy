@@ -14,11 +14,9 @@ namespace Protocol
         
         public string GetProtocolName() => "cheat/reward";
 
-        public CheatRewardReqPacket( ReqInfoPacket info,  List<ObjPacket> rewardlist )
+        public CheatRewardReqPacket( List<ObjPacket> rewardlist )
 	    {   
          
-                Info = info; 
-                 
                 RewardList = rewardlist; 
                 
 	    }

@@ -23,11 +23,9 @@ namespace Protocol
         
         public string GetProtocolName() => "cookie/enhance-lv";
 
-        public CookieEnhanceLvReqPacket( ReqInfoPacket info,  int cookienum,  int beflv,  int aftlv,  CostObjPacket costobj )
+        public CookieEnhanceLvReqPacket( int cookienum,  int beflv,  int aftlv,  CostObjPacket costobj )
 	    {   
          
-                Info = info; 
-                 
                 CookieNum = cookienum; 
                  
                 BefLv = beflv; 

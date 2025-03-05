@@ -17,11 +17,9 @@ namespace Protocol
         
         public string GetProtocolName() => "kingdom/construct-deco";
 
-        public KingdomConstructDecoReqPacket( ReqInfoPacket info,  int kingdomitemnum,  TilePosPacket starttilepos )
+        public KingdomConstructDecoReqPacket( int kingdomitemnum,  TilePosPacket starttilepos )
 	    {   
          
-                Info = info; 
-                 
                 KingdomItemNum = kingdomitemnum; 
                  
                 StartTilePos = starttilepos; 

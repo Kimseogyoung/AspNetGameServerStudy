@@ -23,11 +23,9 @@ namespace Protocol
         
         public string GetProtocolName() => "kingdom/construct-structure";
 
-        public KingdomConstructStructureReqPacket( ReqInfoPacket info,  ulong kingdomstructureid,  int kingdomitemnum,  List<CostObjPacket> costobjlist,  TilePosPacket starttilepos )
+        public KingdomConstructStructureReqPacket( ulong kingdomstructureid,  int kingdomitemnum,  List<CostObjPacket> costobjlist,  TilePosPacket starttilepos )
 	    {   
          
-                Info = info; 
-                 
                 KingdomStructureId = kingdomstructureid; 
                  
                 KingdomItemNum = kingdomitemnum; 
