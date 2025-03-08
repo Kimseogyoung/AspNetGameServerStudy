@@ -45,7 +45,7 @@ namespace WebStudyServer
             SupportedEncodings.Add(UTF16EncodingLittleEndian);
         }
 
-        private static string GetContentTypeByHeader(HttpContext httpContext)
+        public static string GetContentTypeByHeader(HttpContext httpContext)
         {
             var fullContentType = httpContext.Request.ContentType;
             return fullContentType.Split(";")[0];

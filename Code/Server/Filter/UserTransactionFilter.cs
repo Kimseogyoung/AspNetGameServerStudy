@@ -12,7 +12,7 @@ namespace WebStudyServer.Filter
         CENTER
     }
 
-    public class UserTransactionFilter : ActionFilterAttribute
+    public class UserTransactionFilter : ActionFilterAttribute, IEndpointFilter
     {
         public ETransactionType TransactionType { get; set; } = ETransactionType.NONE;
 
@@ -44,6 +44,29 @@ namespace WebStudyServer.Filter
 
             // 저장
             _dbRepo.Commit();
+        }
+
+        public async ValueTask<object> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+        {
+            _dbRepo.BeginOwnUserRepo();
+
+            ActionExecutedContext executedContext = null;
+            await _userLockService.RunAtomicAsync(_rpcContext.AccountId, _dbRepo.Auth, async () =>
+            {
+                executedContext = (ActionExecutedContext)await next(context); // 실제 API Action
+            });
+
+            // API 실행 이후 
+            if (executedContext == null || executedContext.Exception != null)
+            {
+                // 롤백
+                _dbRepo.Rollback();
+                return Results.Empty;
+            }
+
+            // 저장
+            _dbRepo.Commit();
+            return executedContext;
         }
 
         private readonly RpcContext _rpcContext;

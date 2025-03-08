@@ -12,6 +12,9 @@ using WebStudyServer.Filter;
 using WebStudyServer.Manager;
 using WebStudyServer.Service;
 using Server.Service;
+using Microsoft.Extensions.Options;
+using Server;
+using Protocol;
 
 namespace WebStudyServer
 {
@@ -52,6 +55,12 @@ namespace WebStudyServer
             services.AddScoped<CheatService>();
 
             services.AddScoped<RpcContext>();
+
+            var rpcMethodList = new List<IRpcMethod>()
+            {
+                new RpcMethod<GameService, GameEnterReqPacket, GameEnterResPacket>("game/enter", (gameSvc, req) => { return gameSvc.Enter(req); }),
+            };
+            services.AddSingleton(sp => new RpcService(rpcMethodList, sp.GetRequiredService<ILogger<RpcService>>()));
         }
 
         private void AddController(IServiceCollection services)

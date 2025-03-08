@@ -1,5 +1,10 @@
 ﻿using Microsoft.OpenApi.Models;
+using ProtoBuf.Meta;
+using Server;
+using Server.Service;
 using System.Net;
+using WebStudyServer.Filter;
+using WebStudyServer.Manager;
 using WebStudyServer.Middleware;
 
 namespace WebStudyServer
@@ -38,6 +43,8 @@ namespace WebStudyServer
                 }
             ));
 
+            app.MapAllPostRpc("rpc");
+            //app.MapGet("/game/enter", (GameService gameSvc, HttpContext httpCtx) => gameSvc.Enter(limit));
         }
     }
 }
