@@ -2,11 +2,14 @@
 using Microsoft.OpenApi.Models;
 using Protocol;
 using Server.Formatter;
+using Server.Helper;
 using Server.Repo;
 using WebStudyServer;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
-
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi.Any;
+using System.Text.Json;
 namespace Server
 {
     public class RpcMethod<SVC, REQ, RES> : IRpcMethod where SVC : class where RES : IResPacket where REQ : IReqPacket, new ()
@@ -36,7 +39,7 @@ namespace Server
             _res = typeof(RES);
         }
 
-    public async Task<object> RunAsync(HttpContext httpCtx, object rpcReq)
+        public async Task<object> RunAsync(HttpContext httpCtx, object rpcReq)
         {
             var rpcSvc = httpCtx.RequestServices.GetRequiredService<SVC>();
             if (_runAsync == null)
@@ -58,6 +61,21 @@ namespace Server
             }
         }
 
+        public List<OpenApiParameter> CreateOpenApiParameters()
+        {
+            return OpenApiHelper.CreateParameters(typeof(REQ));
+        }
+
+        public OpenApiRequestBody CreateOpenApiRequestBody()
+        {
+            return OpenApiHelper.CreateRequestBody(typeof(REQ));
+        }
+
+        public OpenApiResponses CreateOpenApiResponse()
+        {
+            return OpenApiHelper.CreateResponse(typeof(RES));
+        }
+
         private readonly string _name;
         private readonly Type _req;
         private readonly Type _res;
@@ -72,6 +90,9 @@ namespace Server
         public Type Res { get; }
         string Name { get; }
         Task<object> RunAsync(HttpContext httpCt, object rpcReq);
+        List<OpenApiParameter> CreateOpenApiParameters();
+        OpenApiRequestBody CreateOpenApiRequestBody();
+        OpenApiResponses CreateOpenApiResponse();
     }
 
     public interface IDataSerializer
@@ -153,7 +174,7 @@ namespace Server
         private string GetMethodNameFromPath(HttpContext httpCtx, string pattern)
         {
             var path = httpCtx.Request.Path;
-            var methodName = path.Value.Replace($"{pattern}/", "");
+            var methodName = path.Value.Replace($"/{pattern}/", "");
             return methodName;
         }
 
@@ -175,13 +196,19 @@ namespace Server
         {
             var rpcSvc = app.Services.GetRequiredService<RpcService>();
 
-            foreach (var eachPair in rpcSvc.NameToMethodDict)
+            foreach (var keyPair in rpcSvc.NameToMethodDict)
             {
-                var methodName = eachPair.Key;
+                var methodName = keyPair.Key;
                 app.MapPost($"{pattern}/{methodName}", async (RpcService rpcSvc, HttpContext httpCtx) =>
                 {
                     await rpcSvc.OnHttpBodyRequestAsync(httpCtx, pattern);
-                });
+                }).WithOpenApi((op) => new Microsoft.OpenApi.Models.OpenApiOperation
+                {
+                  
+                    RequestBody = keyPair.Value.CreateOpenApiRequestBody(),
+                    //Parameters = keyPair.Value.CreateOpenApiParameters(),
+                    Responses = keyPair.Value.CreateOpenApiResponse()
+                }); ;
             }
         }
     }

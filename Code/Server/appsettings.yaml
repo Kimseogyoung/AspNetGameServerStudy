@@ -8,7 +8,7 @@ DefaultPlayerPath: Data/DefaultPlayer.json
 Proto:
     CsvPath: ../../Data/Csv/Proto
 Protocol:
-    ForceContentType: application/protobuf
+    #ForceContentType: application/protobuf
 Logging:
     LogFolder: ../logs
     LogLevel:

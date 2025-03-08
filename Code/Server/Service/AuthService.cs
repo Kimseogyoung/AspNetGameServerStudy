@@ -15,7 +15,7 @@ namespace WebStudyServer.Service
             _dbRepo = dbRepo;
         }
 
-        public SignInResultPacket SignUp(string idfv)
+        public AuthSignUpResPacket SignUp(string idfv)
         {
             // idfv 찾기.           
             if (_authRepo.Device.TryGet(idfv, out var mgrDevice))
@@ -29,14 +29,18 @@ namespace WebStudyServer.Service
                     {
                         var originMgrSession = _authRepo.Session.Touch(originMgrAccount.Id);
                         originMgrSession.Start();
-                        return new SignInResultPacket
-                        {                           
-                            SessionKey = originMgrSession.Model.Key,
-                            ChannelKey = originMgrChannel.Model.Key,
-                            AccountState = originMgrAccount.Model.State,
-                            AccountEnv = APP.Cfg.EnvName,
-                            ClientSecret = ""                      
-                        };
+
+                        return new AuthSignUpResPacket
+                        {
+                            Result = new SignInResultPacket
+                            {
+                                SessionKey = originMgrSession.Model.Key,
+                                ChannelKey = originMgrChannel.Model.Key,
+                                AccountState = originMgrAccount.Model.State,
+                                AccountEnv = APP.Cfg.EnvName,
+                                ClientSecret = ""
+                            }
+                        }; 
                     }
                 }
             }
@@ -55,17 +59,20 @@ namespace WebStudyServer.Service
             // 세션 갱신 및 리턴
             mgrSession.Start();
 
-            return new SignInResultPacket
+            return new AuthSignUpResPacket
             {
-                SessionKey = mgrSession.Model.Key,
-                ChannelKey = mgrChannel.Model.Key,
-                AccountState = mgrAccount.Model.State,
-                AccountEnv = APP.Cfg.EnvName,
-                ClientSecret = ""
+                Result = new SignInResultPacket
+                {
+                    SessionKey = mgrSession.Model.Key,
+                    ChannelKey = mgrChannel.Model.Key,
+                    AccountState = mgrAccount.Model.State,
+                    AccountEnv = APP.Cfg.EnvName,
+                    ClientSecret = ""
+                }
             };
         }
 
-        public SignInResultPacket SignIn(string channelId)
+        public AuthSignInResPacket SignIn(string channelId)
         {
             // 채널 찾기
             var mgrChannel = _authRepo.Channel.Get(channelId);
@@ -76,13 +83,16 @@ namespace WebStudyServer.Service
             // 세션 갱신 및 리턴
             var mgrSession = _authRepo.Session.Touch(mgrAccount.Id);
             mgrSession.Start();
-            return new SignInResultPacket
+            return new AuthSignInResPacket
             {
-                SessionKey = mgrSession.Model.Key,
-                ChannelKey = mgrChannel.Model.Key,
-                AccountState = mgrAccount.Model.State,
-                AccountEnv = APP.Cfg.EnvName,
-                ClientSecret = ""
+                Result = new SignInResultPacket
+                {
+                    SessionKey = mgrSession.Model.Key,
+                    ChannelKey = mgrChannel.Model.Key,
+                    AccountState = mgrAccount.Model.State,
+                    AccountEnv = APP.Cfg.EnvName,
+                    ClientSecret = ""
+                }
             };
         }
 

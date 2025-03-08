@@ -20,22 +20,15 @@ namespace WebStudyServer.Controllers
         [HttpPost("sign-up")]
         public ActionResult<AuthSignUpResPacket> SignUp(AuthSignUpReqPacket req)
         {
-            var result = _authService.SignUp(req.DeviceKey);
-
-            return new AuthSignUpResPacket
-            {
-                Result = result,
-            };
+            var res = _authService.SignUp(req.DeviceKey);
+            return res;
         }
 
         [HttpPost("sign-in")]
         public ActionResult<AuthSignInResPacket> SignIn(AuthSignInReqPacket req)
         {
-            var result = _authService.SignIn(req.ChannelId);
-            return new AuthSignInResPacket
-            {
-                Result = result
-            };
+            var res = _authService.SignIn(req.ChannelId);
+            return res;
         }
 
         private readonly AuthService _authService;
