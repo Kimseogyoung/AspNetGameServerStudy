@@ -18,12 +18,8 @@ namespace WebStudyServer.Repo
         public PlayerMapComponent PlayerMap => _playerMapComponent;
 
         public RpcContext RpcContext {  get; private set; }
-        protected override List<string> _dbConnStrList => APP.Cfg.AuthDbConnectionStrList;
         public AuthRepo(RpcContext rpcContext)
         {
-            //Transation Filter에서 Init중
-            //Init(rpcContext.ShardId);
-
             RpcContext = rpcContext;
         }
 
@@ -35,13 +31,6 @@ namespace WebStudyServer.Repo
             _deviceComponent = new DeviceComponent(this, _executor);
             _channelComponent = new ChannelComponent(this, _executor);
             _playerMapComponent = new PlayerMapComponent(this, _executor);
-        }
-
-        public static AuthRepo CreateInstance(RpcContext rpcContext)
-        {
-            var authRepo = new AuthRepo(rpcContext);
-            authRepo.Init(0);
-            return authRepo;
         }
 
         #region PLAYER_MAP

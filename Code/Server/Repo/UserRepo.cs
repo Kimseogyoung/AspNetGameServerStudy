@@ -44,9 +44,6 @@ namespace WebStudyServer.Repo
             return userRepo;
         }
 
-        protected override List<string> _dbConnStrList => APP.Cfg.UserDbConnectionStrList;
-
-
         private PlayerComponent _playerComponent;
         private PlayerDetailComponent _playerDetailComponent;
         private PointComponent _pointComponent;

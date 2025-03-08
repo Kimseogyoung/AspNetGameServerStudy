@@ -7,6 +7,7 @@ using WebStudyServer.Repo.Database;
 using WebStudyServer.GAME;
 using WebStudyServer.Extension;
 using WebStudyServer.Model;
+using Server.Repo;
 
 namespace WebStudyServer
 {
@@ -15,10 +16,7 @@ namespace WebStudyServer
         public void Resource(IServiceCollection services)
         {
             services.AddMemoryCache();
-            AddRepo<UserRepo>(services);
-            AddRepo<AuthRepo>(services);
-            AddRepo<CenterRepo>(services);
-            services.AddScoped<AllUserRepo>();
+            services.AddScoped<DbRepo>();
 
             // Auth
             DapperExtension.Init<AccountModel>("Id");
@@ -45,29 +43,23 @@ namespace WebStudyServer
             DapperExtension.Init<ScheduleModel>("Num");
         }
 
-        private void AddRepo<TRepo>(IServiceCollection services) where TRepo : RepoBase
-        {
-            using var serviceProvider = services.BuildServiceProvider();
-            services.AddScoped<TRepo>();
-        }
-
         private void ConnectionTest()
         {
             foreach (var connectionStr in APP.Cfg.UserDbConnectionStrList)
             {
-                var excutor = DBSqlExecutor.Create(connectionStr, System.Data.IsolationLevel.ReadCommitted);
+                var excutor = DBSqlExecutor.StartTransaction(connectionStr, System.Data.IsolationLevel.ReadCommitted);
                 excutor.Commit();
             }
 
             foreach (var connectionStr in APP.Cfg.AuthDbConnectionStrList)
             {
-                var excutor = DBSqlExecutor.Create(connectionStr, System.Data.IsolationLevel.ReadCommitted);
+                var excutor = DBSqlExecutor.StartTransaction(connectionStr, System.Data.IsolationLevel.ReadCommitted);
                 excutor.Commit();
             }
 
             foreach (var connectionStr in APP.Cfg.CenterDbConnectionStrList)
             {
-                var excutor = DBSqlExecutor.Create(connectionStr, System.Data.IsolationLevel.ReadCommitted);
+                var excutor = DBSqlExecutor.StartTransaction(connectionStr, System.Data.IsolationLevel.ReadCommitted);
                 excutor.Commit();
             }
         }

@@ -11,13 +11,8 @@ namespace WebStudyServer.Repo
     {
         private List<DBSqlExecutor> _executorList = new();
         private List<string> _dbConnStrList => APP.Cfg.UserDbConnectionStrList;
-        public AllUserRepo()
+        public AllUserRepo(List<DBSqlExecutor> executorList)
         {
-            foreach(string connStr in _dbConnStrList)
-            {
-                var excutor = new DBSqlExecutor(connStr);
-                _executorList.Add(excutor);
-            }
         }
 
         public bool TryGetPlayerByName(string name, out PlayerModel outMdlPlayer)

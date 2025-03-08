@@ -4,14 +4,15 @@ using WebStudyServer.Repo;
 using Proto;
 using WebStudyServer.GAME;
 using Protocol;
+using Server.Repo;
 
 namespace WebStudyServer.Service
 {
     public class AuthService : ServiceBase
     {
-        public AuthService(AuthRepo authRepo, RpcContext rpcContext, ILogger<AuthService> logger) :base(rpcContext, logger) 
+        public AuthService(DbRepo dbRepo, RpcContext rpcContext, ILogger<AuthService> logger) :base(rpcContext, logger) 
         {
-            _authRepo = authRepo;
+            _dbRepo = dbRepo;
         }
 
         public SignInResultPacket SignUp(string idfv)
@@ -85,6 +86,7 @@ namespace WebStudyServer.Service
             };
         }
 
-        private readonly AuthRepo _authRepo;
+        private readonly DbRepo _dbRepo;
+        private AuthRepo _authRepo => _dbRepo.Auth;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MySqlConnector;
+using Server.Repo;
 using WebStudyServer.Extension;
 using WebStudyServer.GAME;
 using WebStudyServer.Repo;
@@ -14,9 +15,8 @@ namespace WebStudyServer
             _useDbLock = APP.Cfg.UseUserLock;
         }
 
-        public async Task RunAtomicAsync(ulong accountId, Func<Task> action)
+        public async Task RunAtomicAsync(ulong accountId, AuthRepo authRepo, Func<Task> action)
         {
-            var authRepo = AuthRepo.CreateInstance(_rpcContext);
             if (!_useDbLock 
                 || accountId == 0) // 익명 요청은 유저 락을 사용하지 않음
             {

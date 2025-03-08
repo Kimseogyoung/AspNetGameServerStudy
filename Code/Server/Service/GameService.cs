@@ -10,18 +10,15 @@ using AutoMapper;
 using Server.Helper;
 using Protocol.Context;
 using Server.Extension;
+using Server.Repo;
 
 namespace Server.Service
 {
     public class GameService : ServiceBase
     {
-        public GameService(AllUserRepo allUserRepo, AuthRepo authRepo, UserRepo userRepo, CenterRepo centerRepo, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
+        public GameService(DbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
         {
-            _authRepo = authRepo;
-            _userRepo = userRepo;
-            _centerRepo = centerRepo;
-            _centerRepo.Init(0);
-            _allUserRepo = allUserRepo;
+            _dbRepo = dbRepo;
             _mapper = mapper;
         }
 
@@ -44,20 +41,19 @@ namespace Server.Service
                 var pakPlayer = mgrPlayer.PreparePlayer(_mapper);
 
                 var accountId = mgrPlayer.Model.AccountId;
-                _authRepo.Init(0);
-                _authRepo.PlayerMap.Create(new PlayerMapModel
+                var authRepo = _dbRepo.Auth;
+                authRepo.PlayerMap.Create(new PlayerMapModel
                 {
                     AccountId = accountId,
                     PlayerId = mgrPlayer.Id,
                     ShardId = _userRepo.ShardId,
                 });
 
-                if (_authRepo.Session.TryGetByAccountId(accountId, out var mdlSession))
+                if (authRepo.Session.TryGetByAccountId(accountId, out var mdlSession))
                 {
                     mdlSession.SetPlayerId(mgrPlayer.Id);
                 }
 
-                _authRepo.Commit(); // TODO: 개선
 
                 return new GameEnterResPacket
                 {
@@ -74,7 +70,7 @@ namespace Server.Service
             mgrPlayer.ValidState(EPlayerState.CHANGED_NAME_FIRST);
 
             // 중복 체크 (클라에 팝업)
-            ReqHelper.Valid(!_allUserRepo.TryGetPlayerByName(reqName, out _), EErrorCode.GAME_CHANGE_NAME_EXIST_NAME);
+            ReqHelper.Valid(!_dbRepo.AllUser.TryGetPlayerByName(reqName, out _), EErrorCode.GAME_CHANGE_NAME_EXIST_NAME);
 
             // 변경
             mgrPlayer.ChangeName(reqName);
@@ -294,7 +290,8 @@ namespace Server.Service
         #region GACHA
         public ScheduleLoadResPacket LoadSchedule(ScheduleLoadReqPacket req)
         {
-            var mgrScheduleList = _centerRepo.Schedule.GetList();
+            var centerRepo = _dbRepo.Center;
+            var mgrScheduleList = centerRepo.Schedule.GetList();
             return new ScheduleLoadResPacket
             {
                 ScheduleList = _mapper.Map<List<SchedulePacket>>(mgrScheduleList),
@@ -303,7 +300,8 @@ namespace Server.Service
 
         public GachaNormalResPacket GachaNormal(GachaNormalReqPacket req)
         {
-            var scheduleMgr = _centerRepo.Schedule.Get(req.ScheduleNum, EScheduleTimeType.TOTAL);
+            var centerRepo = _dbRepo.Center;
+            var scheduleMgr = centerRepo.Schedule.Get(req.ScheduleNum, EScheduleTimeType.TOTAL);
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
 
             // Cost일치하는지 체크
@@ -372,11 +370,9 @@ namespace Server.Service
             };
         }
         #endregion
+        private UserRepo _userRepo => _dbRepo.OwnUser;
 
-        private readonly AuthRepo _authRepo;
-        private readonly UserRepo _userRepo;
-        private readonly CenterRepo _centerRepo;
-        private readonly AllUserRepo _allUserRepo;
+        private readonly DbRepo _dbRepo;
         private readonly IMapper _mapper;
     }
 }

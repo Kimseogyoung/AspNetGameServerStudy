@@ -1,24 +1,35 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
+using Server.Repo;
 using WebStudyServer.Repo;
 
 namespace WebStudyServer.Filter
 {
+    public enum ETransactionType
+    {
+        NONE,
+        AUTH,
+        USER,
+        CENTER
+    }
+
     public class UserTransactionFilter : ActionFilterAttribute
     {
-        public UserTransactionFilter(RpcContext rpcContext, UserRepo userRepo, UserLockService userLockService, ILogger<UserTransactionFilter> logger)
+        public ETransactionType TransactionType { get; set; } = ETransactionType.NONE;
+
+        public UserTransactionFilter(RpcContext rpcContext, DbRepo dbRepo, UserLockService userLockService, ILogger<UserTransactionFilter> logger)
         {
             _rpcContext = rpcContext;
-            _userRepo = userRepo;
             _userLockService = userLockService;
+            _dbRepo = dbRepo;
             _logger = logger;
         }
 
         public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            _userRepo.Init(_rpcContext.ShardId);
+            _dbRepo.BeginOwnUserRepo();
 
             ActionExecutedContext executedContext = null;
-            await _userLockService.RunAtomicAsync(_rpcContext.AccountId, async () =>
+            await _userLockService.RunAtomicAsync(_rpcContext.AccountId, _dbRepo.Auth, async () =>
             {
                 executedContext = await next(); // 실제 API Action
             });
@@ -27,16 +38,16 @@ namespace WebStudyServer.Filter
             if (executedContext == null || executedContext.Exception != null)
             {
                 // 롤백
-                _userRepo.Rollback();
+                _dbRepo.Rollback();
                 return;
             }
 
             // 저장
-            _userRepo.Commit();
+            _dbRepo.Commit();
         }
 
         private readonly RpcContext _rpcContext;
-        private readonly UserRepo _userRepo;
+        private readonly DbRepo _dbRepo;
         private readonly UserLockService _userLockService;
         private readonly ILogger _logger;
     }

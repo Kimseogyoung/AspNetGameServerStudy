@@ -7,20 +7,21 @@ using Protocol;
 using WebStudyServer.Model;
 using WebStudyServer.GAME;
 using AutoMapper;
+using Server.Repo;
 
 namespace Server.Service
 {
     public class CheatService : ServiceBase
     {
-        public CheatService(AllUserRepo allUserRepo, AuthRepo authRepo, UserRepo userRepo, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
+        public CheatService( DbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<CheatService> logger) : base(rpcContext, logger)
         {
-            _userRepo = userRepo;
+            _dbRepo = dbRepo;
             _mapper = mapper;
         }
 
         public CheatRewardResPacket Reward(CheatRewardReqPacket req)
         {
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mgrPlayerDetail = _dbRepo.OwnUser.PlayerDetail.Touch();
             var chgObjList = mgrPlayerDetail.IncRewardList(req.RewardList, "CHEAT");
             return new CheatRewardResPacket
             {
@@ -28,7 +29,7 @@ namespace Server.Service
             };
         }
 
-        private readonly UserRepo _userRepo;
+        private readonly DbRepo _dbRepo;
         private readonly IMapper _mapper;
     }
 }

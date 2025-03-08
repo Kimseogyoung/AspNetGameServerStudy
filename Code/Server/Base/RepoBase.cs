@@ -10,28 +10,16 @@ namespace WebStudyServer.Base
     public abstract class RepoBase
     {
         public int ShardId { get; private set; }
-        protected DBSqlExecutor _executor { get; private set; } = null!;
-        protected abstract List<string> _dbConnStrList { get; }
         protected abstract void PrepareComp();
 
-        public void Init(int shardId)
+        protected DBSqlExecutor _executor = null!;
+
+        public void Init(int shardId, DBSqlExecutor executor)
         {
-            var dbConnectionStr = GetDbConnectionStr();
             ShardId = shardId;
-            _executor = DBSqlExecutor.Create(dbConnectionStr, System.Data.IsolationLevel.ReadCommitted);
+            _executor = executor;
 
             PrepareComp();
-        }
-
-
-        public void Commit()
-        {
-            _executor.Commit();
-        }
-
-        public void Rollback()
-        {
-            _executor.Rollback();
         }
 
         public T RunCommand<T>(string commandText, params MySqlParameter[] parameters)
@@ -52,16 +40,5 @@ namespace WebStudyServer.Base
                 return (T)command.ExecuteScalar();
             });
         }
-
-        private string GetDbConnectionStr()
-        {
-            if(_shardCnt <= ShardId)
-            {
-                throw new Exception("dd");
-            }
-
-            return _dbConnStrList[ShardId];
-        }
-        private int _shardCnt => _dbConnStrList.Count;
     }
 }

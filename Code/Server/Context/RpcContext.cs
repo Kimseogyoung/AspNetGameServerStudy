@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Proto;
 using Protocol;
+using Server.Repo;
 using System.Diagnostics;
 using System.Net.Http;
 using WebStudyServer.Component;
@@ -95,8 +96,8 @@ namespace WebStudyServer
             // TODO: 점검 상태일때 세션 만료
             //
 
-            var authRepo = AuthRepo.CreateInstance(this);
-            authRepo.Init(0);
+            var dbRepo = httpContext.RequestServices.GetService<DbRepo>();
+            var authRepo = dbRepo.Auth;
             var sessionComp = authRepo.Session;
 
             if (!sessionComp.TryGetByKey(sessionKey, out var mgrSession))
@@ -118,8 +119,8 @@ namespace WebStudyServer
             SetPlayerId(mgrSession.Model.PlayerId);
             SetAccountId(mgrSession.Model.AccountId);
             SetShardId(mgrSession.Model.ShardId);
-
-            authRepo.Commit();
+/*
+            authRepo.Commit();*/
         }
 
         // 요청 정보

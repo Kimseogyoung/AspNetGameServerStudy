@@ -6,20 +6,26 @@ namespace WebStudyServer.Repo.Database
 {
     public class DBSqlExecutor 
     {
+        public static DBSqlExecutor StartTransaction(string connectionStr, IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
+        {
+            var excutor = new DBSqlExecutor(connectionStr);
+            excutor.Open(isolationLevel);
+            return excutor;
+        }
+
         private IDbConnection _connection;
         private IDbTransaction _transaction;
         
-        public DBSqlExecutor(string connectionStr, IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
+        public DBSqlExecutor(string connectionStr)
         {
             _connection = new MySqlConnection(connectionStr);
-            _connection.Open();
-            _transaction = _connection.BeginTransaction(isolationLevel);
+            _transaction = null;
         }
 
-        public static DBSqlExecutor Create(string connectionStr, IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
+        public void Open(IsolationLevel isolationLevel)
         {
-            var excutor = new DBSqlExecutor(connectionStr, isolationLevel);
-            return excutor;
+            _connection.Open();
+            _transaction = _connection.BeginTransaction(isolationLevel);
         }
 
         public void Excute(Action<IDbConnection, IDbTransaction> func)
@@ -37,10 +43,9 @@ namespace WebStudyServer.Repo.Database
             if (_transaction != null)
             {
                 _transaction.Commit();
-                _transaction.Dispose();
             }
 
-            Close();
+            CloseInternal();
         }
 
         public void Rollback()
@@ -48,15 +53,24 @@ namespace WebStudyServer.Repo.Database
             if (_transaction != null)
             {
                 _transaction.Rollback();
+            }
+
+            CloseInternal();
+        }
+
+        public void Close()
+        {
+            CloseInternal();
+        }
+
+        private void CloseInternal()
+        {
+            if (_transaction != null)
+            {
                 _transaction.Dispose();
             }
 
-            Close();
-        }
-
-        private void Close()
-        {
-            if (_connection.Database != null)
+            if (_connection != null)
             {
                 _connection.Close();
                 _connection.Dispose();

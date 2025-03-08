@@ -26,9 +26,6 @@ namespace WebStudyServer.Repo
             return centerRepo;
         }
 
-        protected override List<string> _dbConnStrList => APP.Cfg.CenterDbConnectionStrList;
-
-
         private ScheduleComponent _scheduleComponent;
     }
 }
