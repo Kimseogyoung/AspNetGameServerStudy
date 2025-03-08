@@ -159,7 +159,7 @@ namespace Client
                 cookie.State = pakCookie.State;
             }
 
-            RefreshKingdom();
+            PrintCookieList();
         }
 
         public void SyncScheduleList(List<SchedulePacket> pakScheduleList)

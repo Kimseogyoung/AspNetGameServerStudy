@@ -18,6 +18,8 @@ namespace WebStudyServer.Manager
             var befAmount = _model.Amount;
             var befAccAmount= _model.AccAmount;
 
+            ReqHelper.ValidEnough(amount, befAmount, $"POINT_{_model.Num}", reason);
+
             _model.Amount -= amount;
             _model.AccAmount -= amount;
             _userRepo.Point.UpdateMdl(_model);

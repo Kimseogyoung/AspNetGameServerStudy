@@ -16,6 +16,8 @@ namespace Client
 {
     public class RpcSystem
     {
+        public string SessionId => _sessionKey;
+
         public void Init(string host, string contentType)
         {
             _host = host.Trim('/');

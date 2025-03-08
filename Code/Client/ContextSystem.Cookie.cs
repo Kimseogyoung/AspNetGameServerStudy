@@ -36,6 +36,15 @@ namespace Client
             SyncChgObj(res.CostChgObj);
         }
 
+        public void PrintCookieList()
+        {
+            foreach (var cookie in _player.CookieList)
+            {
+                var prtCookie = APP.Prt.GetCookiePrt(cookie.Num);
+                Console.WriteLine($"CookieNum:{cookie.Num}, Name:{prtCookie.Name}, Star:{cookie.Star}, Lv:{cookie.Lv}, SoulStone:{cookie.SoulStone}, State:{cookie.State.ToString()}");
+            }
+        }
+
         public async Task RequestCookieEnhanceStar(int cookieNum, int aftStar)
         {
             var prtCookie = APP.Prt.GetCookiePrt(cookieNum);

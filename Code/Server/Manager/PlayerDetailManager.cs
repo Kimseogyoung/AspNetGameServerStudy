@@ -48,7 +48,6 @@ namespace WebStudyServer.Manager
             var objTypeCategory = objType.ToObjTyeCategory();
             switch (objTypeCategory)
             {
-                // TODO: 보유량 체크!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 case EObjType.EXP:
                     var exp = DecExpInternal(valObjAmount, reason);
                     return exp;
@@ -200,6 +199,8 @@ namespace WebStudyServer.Manager
             var befExp = _model.Exp;
             var befAccExp = _model.AccExp;
 
+            ReqHelper.ValidEnough(amount, befExp, "PLAYER_EXP", reason);
+
             _model.Exp -= amount;
             _model.AccExp -= amount;
             _userRepo.PlayerDetail.UpdateMdl(_model);
@@ -230,6 +231,8 @@ namespace WebStudyServer.Manager
             var befAccRealCash = _model.AccRealCash;
             var befTotalCash = befFreeCash + befRealCash;
             var befAccTotalCash = befAccFreeCash + befAccRealCash;
+
+            ReqHelper.ValidEnough(amount, befTotalCash, "PLAYER_TOTAL_CASH", reason);
 
             // RealCash 먼저 소모
             double realCashCost = Math.Min(befRealCash, amount);

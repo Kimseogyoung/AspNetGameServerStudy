@@ -62,7 +62,7 @@ namespace WebStudyServer.Manager
         {
             var befStar = _model.Star;
             var befSoulStone = _model.SoulStone;
-            ReqHelper.ValidContext(befSoulStone >= usedSoulStone, "NOT_ENOUGH_COOKIE_SOUL_STONE", () => new { CookeNum = _prt.Num, SoulStone = befSoulStone, UsedSoulStone = usedSoulStone});
+            ReqHelper.ValidEnough(usedSoulStone, befSoulStone, $"COOKIE_SOUL_STONE:{_prt.Num}", "ENHANCE_STAR");
 
             _model.Star = aftStar;
             _model.SoulStone -= usedSoulStone;

@@ -10,6 +10,8 @@ namespace Client
 {
     public partial class ContextSystem
     {
+        public string SessionId => _rpcSystem.SessionId;
+
         public void Init()
         {
             _rpcSystem = new RpcSystem();

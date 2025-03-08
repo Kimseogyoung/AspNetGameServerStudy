@@ -119,10 +119,7 @@ namespace WebStudyServer
             SetAccountId(mgrSession.Model.AccountId);
             SetShardId(mgrSession.Model.ShardId);
 
-            if (isUpdate)
-            {
-                authRepo.Commit();
-            }
+            authRepo.Commit();
         }
 
         // 요청 정보

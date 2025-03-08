@@ -1,5 +1,6 @@
 ﻿using WebStudyServer.Repo;
 using WebStudyServer.Model;
+using WebStudyServer.Helper;
 
 namespace WebStudyServer.Manager
 {
@@ -13,6 +14,7 @@ namespace WebStudyServer.Manager
         {
             var befAmount = _model.Amount;
             var befAccAmount = _model.AccAmount;
+            ReqHelper.ValidEnough(amount, befAmount, $"ITEM_{_model.Num}", reason);
 
             _model.Amount -= amount;
             _model.AccAmount -= amount;

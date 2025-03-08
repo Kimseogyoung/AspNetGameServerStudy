@@ -71,6 +71,11 @@ namespace WebStudyServer.Helper
             return valObj;
         }
 
+        public static void ValidEnough(double reqAmount, double repoAmount, string param, string reason)
+        {
+            ReqHelper.ValidProto(reqAmount <= repoAmount, "NOT_ENOUGH", () => new { Param = param, Reason = reason, ReqAmount = reqAmount, ValAmount = repoAmount });
+        }
+
         public static ObjPacket ValidReward(ObjPacket reqReward, EObjType valObjType, int valObjNum, double valObjAmount, string reason)
         {
             ReqHelper.ValidProto(reqReward.Type == valObjType, "NOT_EQUAL_REWARD_TYPE", () => new { Reason = reason, ReqReward = reqReward, ValType = valObjType });

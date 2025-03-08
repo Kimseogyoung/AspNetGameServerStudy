@@ -18,6 +18,8 @@ var funcDict = new Dictionary<int, ApiFunc>()
     { 101, new ApiFunc(){ ApiPath = typeof(GameChangeNameReqPacket).ToString(), Desc = "닉네임 초기 설정 (Name)",
         Action = async (valueArr) =>  await APP.Ctx.RequestChangeNameAsync(valueArr[0])} },
 
+    { 200, new ApiFunc(){ ApiPath = "Kingdom Print", Desc = "",
+        Action = (valueArr) => { APP.Ctx.PrintKingdom(); return Task.CompletedTask; } } },
     { 201, new ApiFunc(){ ApiPath = typeof(KingdomBuyStructureReqPacket).ToString(), Desc = "KingdomStructure 구매 (Num)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomBuyStructure((int.Parse(valueArr[0]))) } },
     { 202, new ApiFunc(){ ApiPath = typeof(KingdomConstructStructureReqPacket).ToString(), Desc = "KingdomStructure 건설 (StructureId, X, Y)",
@@ -31,9 +33,10 @@ var funcDict = new Dictionary<int, ApiFunc>()
     { 206, new ApiFunc(){ ApiPath = typeof(KingdomFinishCraftStructureReqPacket).ToString(), Desc = "KingdomStructure 생산 물품 받기 (StructureId)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomFinishCraftStructure(ulong.Parse(valueArr[0]))} },
 
-    { 300, new ApiFunc(){ ApiPath = typeof(CookieEnhanceStarReqPacket).ToString(), Desc = "Cookie Enhance Star (CookieNum, Star)",
+    { 300, new ApiFunc(){ ApiPath = "CookieList Print", Desc = "", Action = (valueArr) => { APP.Ctx.PrintCookieList(); return Task.CompletedTask; } } },
+    { 301, new ApiFunc(){ ApiPath = typeof(CookieEnhanceStarReqPacket).ToString(), Desc = "Cookie Enhance Star (CookieNum, Star)",
         Action = async (valueArr) =>  await APP.Ctx.RequestCookieEnhanceStar(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
-    { 301, new ApiFunc(){ ApiPath = typeof(CookieEnhanceLvReqPacket).ToString(), Desc = "Cookie Enhance Lv (CookieNum, Lv)",
+    { 302, new ApiFunc(){ ApiPath = typeof(CookieEnhanceLvReqPacket).ToString(), Desc = "Cookie Enhance Lv (CookieNum, Lv)",
         Action = async (valueArr) =>  await APP.Ctx.RequestCookieEnhanceLv(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
 
 
@@ -59,7 +62,7 @@ var funcDict = new Dictionary<int, ApiFunc>()
 var isRunning = true;
 while (isRunning)
 {
-    Console.WriteLine("\n--- 명령 선택 ---");
+    Console.WriteLine($"\n--- 명령 선택 --- (현재 세션: {APP.Ctx.SessionId})");
     foreach (var num in funcDict.Keys.OrderBy(x => x))
     {
         var apiPath = funcDict[num].ApiPath;

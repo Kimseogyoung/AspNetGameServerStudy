@@ -90,6 +90,36 @@ namespace Client
             SyncChgObjList(res.ChgObjList);
         }
 
+        public void PrintKingdom()
+        {
+            // Print TileMap & Structure 상태 표시
+            var tileMapStr = new StringBuilder();
+            tileMapStr.AppendLine("[KingdomTileMap]");
+            for (var y = 0; y < _player.KingdomMap.SizeY; y++)
+            {
+                for (var x = 0; x < _player.KingdomMap.SizeX; x++)
+                {
+                    tileMapStr.Append(_tileMap[y][x].ToString().PadLeft(4));
+                }
+                tileMapStr.AppendLine();
+            }
+
+            tileMapStr.AppendLine("[KingdomStructure]");
+            foreach (var placedItem in _player.KingdomMap.PlacedKingdomItemList.Where(x => x.Type == Proto.EKingdomItemType.STRUCTURE))
+            {
+                var pakStructure = _player.KingdomStructureList.FirstOrDefault(x => x.SfId == placedItem.StructureItemId);
+                if (pakStructure == null)
+                {
+                    tileMapStr.AppendLine($"NOT_FOUND_STRUCTURE_ITEM({placedItem.StructureItemId})");
+                    continue;
+                }
+
+                var prtKingdomStructure = APP.Prt.GetKingdomItemPrt(placedItem.Num);
+                tileMapStr.AppendLine($"Id({placedItem.Id}:{placedItem.StructureItemId}) Num({prtKingdomStructure.Num}) Name({prtKingdomStructure.Name}) State({placedItem.State}) Pos({placedItem.StartTileX},{placedItem.StartTileY})");
+            }
+            Console.WriteLine(tileMapStr.ToString());
+        }
+
         private void RefreshKingdom()
         {
             // 초기화
@@ -120,32 +150,9 @@ namespace Client
             }
 
             // Print TileMap & Structure 상태 표시
-            var tileMapStr = new StringBuilder();
-            tileMapStr.AppendLine("[KingdomTileMap]");
-            for (var y = 0; y < _player.KingdomMap.SizeY; y++)
-            {
-                for (var x = 0; x < _player.KingdomMap.SizeX; x++)
-                {
-                    tileMapStr.Append(_tileMap[y][x].ToString().PadLeft(4));
-                }
-                tileMapStr.AppendLine();
-            }
-
-            tileMapStr.AppendLine("[KingdomStructure]");
-            foreach (var placedItem in _player.KingdomMap.PlacedKingdomItemList.Where(x=>x.Type == Proto.EKingdomItemType.STRUCTURE))
-            {
-                var pakStructure = _player.KingdomStructureList.FirstOrDefault(x => x.SfId == placedItem.StructureItemId);
-                if (pakStructure == null)
-                {
-                    tileMapStr.AppendLine($"NOT_FOUND_STRUCTURE_ITEM({placedItem.StructureItemId})");
-                    continue;
-                }
-
-                var prtKingdomStructure = APP.Prt.GetKingdomItemPrt(placedItem.Num);
-                tileMapStr.AppendLine($"Id({placedItem.Id}:{placedItem.StructureItemId}) Num({prtKingdomStructure.Num}) Name({prtKingdomStructure.Name}) State({placedItem.State}) Pos({placedItem.StartTileX},{placedItem.StartTileY})");
-            }
-            Console.WriteLine(tileMapStr.ToString());
+            PrintKingdom();
         }
+
 
         private List<List<ulong>> _tileMap = new List<List<ulong>>();
     }

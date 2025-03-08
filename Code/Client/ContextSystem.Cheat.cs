@@ -7,16 +7,38 @@ namespace Client
         public async Task RequestCheatReward(string objTypeStr, int objNum, int objAmount)
         {
             var upperCashObjTypeStr = objTypeStr.ToUpper();
-            var objTypeArr = Enum.GetValues<EObjType>();
+            var objTypeList = new List<EObjType>();
             var canParse = Enum.TryParse(typeof(EObjType), upperCashObjTypeStr, out var parseObjType);
-
+            
             if (canParse)
             {
-                objTypeArr = new EObjType[] { (EObjType)parseObjType };
+                objTypeList.Add((EObjType)parseObjType);
+            }
+            else if (string.IsNullOrEmpty(objTypeStr))
+            {
+                objTypeList.AddRange(Enum.GetValues<EObjType>());
+            }
+            else
+            {
+                switch (upperCashObjTypeStr)
+                {
+                    case "POINT":
+                        for (var i = EObjType.POINT_START + 1; i < EObjType.POINT_END; i++)
+                        {
+                            objTypeList.Add(i);
+                        }
+                        break;
+                    case "TICKET":
+                        for (var i = EObjType.TICKET_START + 1; i < EObjType.TICKET_END; i++)
+                        {
+                            objTypeList.Add(i);
+                        }
+                        break;
+                }
             }
         
             var reqRewardList = new List<ObjPacket>();
-            foreach (var objType in objTypeArr)
+            foreach (var objType in objTypeList)
             {
                 switch (objType)
                 {
@@ -24,6 +46,7 @@ namespace Client
                     case EObjType.GOLD:
                     case EObjType.FREE_CASH:
                     case EObjType.POINT_MILEAGE:
+                    case EObjType.POINT_COOKIE_LV:
                     case EObjType.POINT_C_GACHA_NORMAL:
                     case EObjType.POINT_C_GACHA_SPECIAL:
                     case EObjType.POINT_C_GACHA_DESTINY:
