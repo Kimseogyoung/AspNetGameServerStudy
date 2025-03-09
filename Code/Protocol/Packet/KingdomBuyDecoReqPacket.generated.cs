@@ -15,7 +15,9 @@ namespace Protocol
         [ProtoMember(3)]
         public CostObjPacket CostObj { get; set; } 
         
-        public string GetProtocolName() => "kingdom/buy-deco";
+
+        public const string NAME = "kingdom/buy-deco";
+        public string GetProtocolName() => NAME;
 
         public KingdomBuyDecoReqPacket( int kingdomitemnum,  CostObjPacket costobj )
 	    {   

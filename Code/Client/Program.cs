@@ -7,46 +7,46 @@ APP.Prt.Bind();
 
 var funcDict = new Dictionary<int, ApiFunc>()
 {
-    { 1, new ApiFunc(){ ApiPath = typeof(AuthSignUpReqPacket).ToString(), Desc = "회원 가입",
+    { 1, new ApiFunc(){ ApiPath = AuthSignUpReqPacket.NAME, Desc = "회원 가입",
         Action = async (valueArr) =>  await APP.Ctx.RequestSignUpAsync(Guid.NewGuid().ToString())} },
-    { 2, new ApiFunc(){ ApiPath = typeof(AuthSignInReqPacket).ToString(), Desc = "기존 계정 로그인 (ChannelKey)",
+    { 2, new ApiFunc(){ ApiPath = AuthSignInReqPacket.NAME, Desc = "기존 계정 로그인 (ChannelKey)",
         Action = async (valueArr) =>  await APP.Ctx.RequestSignInAsync(valueArr[0])} },
 
 
-    { 100, new ApiFunc(){ ApiPath = typeof(GameEnterReqPacket).ToString(), Desc = "플레이어 로드",
+    { 100, new ApiFunc(){ ApiPath = GameEnterReqPacket.NAME, Desc = "플레이어 로드",
         Action = async (valueArr) =>  await APP.Ctx.RequestEnterAsync()} },
-    { 101, new ApiFunc(){ ApiPath = typeof(GameChangeNameReqPacket).ToString(), Desc = "닉네임 초기 설정 (Name)",
+    { 101, new ApiFunc(){ ApiPath = GameChangeNameReqPacket.NAME, Desc = "닉네임 초기 설정 (Name)",
         Action = async (valueArr) =>  await APP.Ctx.RequestChangeNameAsync(valueArr[0])} },
 
     { 200, new ApiFunc(){ ApiPath = "Kingdom Print", Desc = "",
         Action = (valueArr) => { APP.Ctx.PrintKingdom(); return Task.CompletedTask; } } },
-    { 201, new ApiFunc(){ ApiPath = typeof(KingdomBuyStructureReqPacket).ToString(), Desc = "KingdomStructure 구매 (Num)",
+    { 201, new ApiFunc(){ ApiPath = KingdomBuyStructureReqPacket.NAME, Desc = "KingdomStructure 구매 (Num)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomBuyStructure((int.Parse(valueArr[0]))) } },
-    { 202, new ApiFunc(){ ApiPath = typeof(KingdomConstructStructureReqPacket).ToString(), Desc = "KingdomStructure 건설 (StructureId, X, Y)",
+    { 202, new ApiFunc(){ ApiPath = KingdomConstructStructureReqPacket.NAME, Desc = "KingdomStructure 건설 (StructureId, X, Y)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomConstructureStructure(ulong.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) } },
-    { 203, new ApiFunc(){ ApiPath = typeof(KingdomFinishConstructStructureReqPacket).ToString(), Desc = "KingdomStructure 건설 종료 (StructureId, Num)",
+    { 203, new ApiFunc(){ ApiPath = KingdomFinishConstructStructureReqPacket.NAME, Desc = "KingdomStructure 건설 종료 (StructureId, Num)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomFinishConstructStructure(ulong.Parse(valueArr[0]), int.Parse(valueArr[1]))} },
-    { 204, new ApiFunc(){ ApiPath = typeof(KingdomBuyDecoReqPacket).ToString(), Desc = "KingdomDeco 구매 (Num)",
+    { 204, new ApiFunc(){ ApiPath = KingdomBuyDecoReqPacket.NAME, Desc = "KingdomDeco 구매 (Num)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomBuyDeco((int.Parse(valueArr[0]))) } },
-    { 205, new ApiFunc(){ ApiPath = typeof(KingdomConstructDecoReqPacket).ToString(), Desc = "KingdomDeco 건설 (Num , X, Y)",
+    { 205, new ApiFunc(){ ApiPath = KingdomConstructDecoReqPacket.NAME, Desc = "KingdomDeco 건설 (Num , X, Y)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomConstructDeco(int.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) } },
-    { 206, new ApiFunc(){ ApiPath = typeof(KingdomFinishCraftStructureReqPacket).ToString(), Desc = "KingdomStructure 생산 물품 받기 (StructureId)",
+    { 206, new ApiFunc(){ ApiPath = KingdomFinishCraftStructureReqPacket.NAME, Desc = "KingdomStructure 생산 물품 받기 (StructureId)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomFinishCraftStructure(ulong.Parse(valueArr[0]))} },
 
     { 300, new ApiFunc(){ ApiPath = "CookieList Print", Desc = "", Action = (valueArr) => { APP.Ctx.PrintCookieList(); return Task.CompletedTask; } } },
-    { 301, new ApiFunc(){ ApiPath = typeof(CookieEnhanceStarReqPacket).ToString(), Desc = "Cookie Enhance Star (CookieNum, Star)",
+    { 301, new ApiFunc(){ ApiPath = CookieEnhanceStarReqPacket.NAME, Desc = "Cookie Enhance Star (CookieNum, Star)",
         Action = async (valueArr) =>  await APP.Ctx.RequestCookieEnhanceStar(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
-    { 302, new ApiFunc(){ ApiPath = typeof(CookieEnhanceLvReqPacket).ToString(), Desc = "Cookie Enhance Lv (CookieNum, Lv)",
+    { 302, new ApiFunc(){ ApiPath = CookieEnhanceLvReqPacket.NAME, Desc = "Cookie Enhance Lv (CookieNum, Lv)",
         Action = async (valueArr) =>  await APP.Ctx.RequestCookieEnhanceLv(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
 
 
-    { 400, new ApiFunc(){ ApiPath = typeof(GachaNormalReqPacket).ToString(), Desc = "GachaNormal (ScheduleNum, Cnt)",
+    { 400, new ApiFunc(){ ApiPath = GachaNormalReqPacket.NAME, Desc = "GachaNormal (ScheduleNum, Cnt)",
         Action = async (valueArr) =>  await APP.Ctx.RequestGachaNormal(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
 
-    { 500, new ApiFunc(){ ApiPath = typeof(ScheduleLoadReqPacket).ToString(), Desc = "ScheduleLoad ",
+    { 500, new ApiFunc(){ ApiPath = ScheduleLoadReqPacket.NAME, Desc = "ScheduleLoad ",
         Action = async (valueArr) =>  await APP.Ctx.RequestLoadSchedule() }},
 
-    { 9001, new ApiFunc(){ ApiPath = typeof(CheatRewardReqPacket).ToString(), Desc = "Chaet 보상 획득 (ObjType, ObjNum, ObjAmount)",
+    { 9001, new ApiFunc(){ ApiPath = CheatRewardReqPacket.NAME, Desc = "Chaet 보상 획득 (ObjType, ObjNum, ObjAmount)",
         Action = async (valueArr) =>  {
             var objType = valueArr.Length > 0 ? valueArr[0] : "";
             var objNum = valueArr.Length > 1 ? int.Parse(valueArr[1]) : 0;

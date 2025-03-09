@@ -21,7 +21,9 @@ namespace Protocol
         [ProtoMember(5)]
         public CostObjPacket CostObj { get; set; } 
         
-        public string GetProtocolName() => "cookie/enhance-lv";
+
+        public const string NAME = "cookie/enhance-lv";
+        public string GetProtocolName() => NAME;
 
         public CookieEnhanceLvReqPacket( int cookienum,  int beflv,  int aftlv,  CostObjPacket costobj )
 	    {   

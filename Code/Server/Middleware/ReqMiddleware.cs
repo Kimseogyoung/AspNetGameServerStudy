@@ -1,5 +1,6 @@
 ﻿namespace WebStudyServer.Middleware
 {
+    // Map.Post방식으로 바꿨기 때문에 필요한지 검토 
     public class ReqMiddleware
     {
         public ReqMiddleware(RequestDelegate next)
@@ -12,7 +13,7 @@
             try
             {
                 CancelReqException.ThrowCancelRequestException(httpCtx);
-                var rpcContext = httpCtx.RequestServices.GetRequiredService<RpcContext>();
+                var rpcContext = httpCtx.RequestServices.GetRequiredService<RpcContext>(); 
                 rpcContext.Init(httpCtx);
 
                 await _next(httpCtx);

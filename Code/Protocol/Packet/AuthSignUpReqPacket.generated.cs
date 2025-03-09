@@ -12,7 +12,9 @@ namespace Protocol
         [ProtoMember(2)]
         public string DeviceKey { get; set; } 
         
-        public string GetProtocolName() => "auth/sign-up";
+
+        public const string NAME = "auth/sign-up";
+        public string GetProtocolName() => NAME;
 
         public AuthSignUpReqPacket( string devicekey )
 	    {   

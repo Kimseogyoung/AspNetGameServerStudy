@@ -1,8 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using WebStudyServer.Base;
-using WebStudyServer.Repo;
 using WebStudyServer.Repo.Database;
 using WebStudyServer.GAME;
 using WebStudyServer.Extension;
@@ -41,6 +37,8 @@ namespace WebStudyServer
 
             // Center
             DapperExtension.Init<ScheduleModel>("Num");
+
+            ConnectionTest();
         }
 
         private void ConnectionTest()

@@ -21,7 +21,9 @@ namespace Protocol
         [ProtoMember(5)]
         public CostCashPacket CashCost { get; set; } 
         
-        public string GetProtocolName() => "kingdom/dec-time-structure";
+
+        public const string NAME = "kingdom/dec-time-structure";
+        public string GetProtocolName() => NAME;
 
         public KingdomDecTimeStructureReqPacket( ulong kingdomstructureid,  int kingdomitemnum,  int remainsec,  CostCashPacket cashcost )
 	    {   

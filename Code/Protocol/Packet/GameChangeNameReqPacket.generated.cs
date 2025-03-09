@@ -12,7 +12,9 @@ namespace Protocol
         [ProtoMember(2)]
         public string PlayerName { get; set; } 
         
-        public string GetProtocolName() => "game/change-name";
+
+        public const string NAME = "game/change-name";
+        public string GetProtocolName() => NAME;
 
         public GameChangeNameReqPacket( string playername )
 	    {   

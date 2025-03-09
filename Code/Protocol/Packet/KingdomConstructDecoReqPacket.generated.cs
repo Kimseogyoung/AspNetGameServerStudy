@@ -15,7 +15,9 @@ namespace Protocol
         [ProtoMember(3)]
         public TilePosPacket StartTilePos { get; set; } 
         
-        public string GetProtocolName() => "kingdom/construct-deco";
+
+        public const string NAME = "kingdom/construct-deco";
+        public string GetProtocolName() => NAME;
 
         public KingdomConstructDecoReqPacket( int kingdomitemnum,  TilePosPacket starttilepos )
 	    {   

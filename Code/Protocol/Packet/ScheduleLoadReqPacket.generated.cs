@@ -12,7 +12,9 @@ namespace Protocol
         [ProtoMember(2)]
         public List<EScheduleType> TypeList { get; set; } 
         
-        public string GetProtocolName() => "schedule/load";
+
+        public const string NAME = "schedule/load";
+        public string GetProtocolName() => NAME;
 
         public ScheduleLoadReqPacket( List<EScheduleType> typelist )
 	    {   

@@ -12,7 +12,9 @@ namespace Protocol
         [ProtoMember(2)]
         public List<ObjPacket> RewardList { get; set; } 
         
-        public string GetProtocolName() => "cheat/reward";
+
+        public const string NAME = "cheat/reward";
+        public string GetProtocolName() => NAME;
 
         public CheatRewardReqPacket( List<ObjPacket> rewardlist )
 	    {   

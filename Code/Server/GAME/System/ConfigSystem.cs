@@ -6,10 +6,10 @@ using Microsoft.VisualBasic;
 using System.Diagnostics;
 using Protocol;
 using WebStudyServer.Helper;
-using Server.Formatter;
+using Server.Serializer;
 
 namespace WebStudyServer
-{ 
+{
     public class ConfigSystem
     {
         public string LogFolder { get; private set; } = string.Empty;

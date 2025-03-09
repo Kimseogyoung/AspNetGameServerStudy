@@ -9,7 +9,9 @@ namespace Protocol
         [ProtoMember(1)]
         public ReqInfoPacket Info { get; set; } 
         
-        public string GetProtocolName() => "game/enter";
+
+        public const string NAME = "game/enter";
+        public string GetProtocolName() => NAME;
 
         public GameEnterReqPacket()
 	    {   

@@ -18,7 +18,9 @@ namespace Protocol
         [ProtoMember(4)]
         public CostObjPacket CostObj { get; set; } 
         
-        public string GetProtocolName() => "gacha/normal";
+
+        public const string NAME = "gacha/normal";
+        public string GetProtocolName() => NAME;
 
         public GachaNormalReqPacket( int schedulenum,  int cnt,  CostObjPacket costobj )
 	    {   

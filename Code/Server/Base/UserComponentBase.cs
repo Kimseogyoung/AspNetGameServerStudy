@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using WebStudyServer.Extension;
+﻿using WebStudyServer.Extension;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
 using WebStudyServer.Repo.Database;

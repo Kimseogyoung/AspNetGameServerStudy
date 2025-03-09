@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text;
 using System.Text.Json.Serialization.Metadata;
 
-namespace Server.Formatter
+namespace Server.Serializer
 {
     public class JsonDataSerializer : IDataSerializer
     {

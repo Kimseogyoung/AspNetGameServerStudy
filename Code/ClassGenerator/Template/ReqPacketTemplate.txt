@@ -9,7 +9,9 @@ namespace Protocol
     {{field.Attribute}}
     public {{field.Type}} {{field.Name}} { get; set; } {{field.Value}}
     {{ end }}
-        public string GetProtocolName() => "{{ProtocolName}}";
+
+        public const string NAME = "{{ProtocolName}}";
+        public string GetProtocolName() => NAME;
 
         public {{ClassName}}({{ for field in Fields offset:1 }} {{field.Type}} {{field.LowerName}}{{field.Comma}} {{ end }})
 	    {   

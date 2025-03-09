@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Protocol;
 using System;
 
-namespace Server.Formatter
+namespace Server.Serializer
 {
     public class ProtoBufDataSerializer : IDataSerializer
     {

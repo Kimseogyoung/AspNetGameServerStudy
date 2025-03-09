@@ -12,7 +12,9 @@ namespace Protocol
         [ProtoMember(2)]
         public List<ulong> KingdomPlacedItemIdList { get; set; } 
         
-        public string GetProtocolName() => "kingdom/store";
+
+        public const string NAME = "kingdom/store";
+        public string GetProtocolName() => NAME;
 
         public KingdomStoreReqPacket( List<ulong> kingdomplaceditemidlist )
 	    {   

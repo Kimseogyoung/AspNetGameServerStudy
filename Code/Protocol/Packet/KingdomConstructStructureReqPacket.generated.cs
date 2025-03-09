@@ -21,7 +21,9 @@ namespace Protocol
         [ProtoMember(5)]
         public TilePosPacket StartTilePos { get; set; } 
         
-        public string GetProtocolName() => "kingdom/construct-structure";
+
+        public const string NAME = "kingdom/construct-structure";
+        public string GetProtocolName() => NAME;
 
         public KingdomConstructStructureReqPacket( ulong kingdomstructureid,  int kingdomitemnum,  List<CostObjPacket> costobjlist,  TilePosPacket starttilepos )
 	    {   

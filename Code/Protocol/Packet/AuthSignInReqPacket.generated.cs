@@ -12,7 +12,9 @@ namespace Protocol
         [ProtoMember(2)]
         public string ChannelId { get; set; } 
         
-        public string GetProtocolName() => "auth/sign-in";
+
+        public const string NAME = "auth/sign-in";
+        public string GetProtocolName() => NAME;
 
         public AuthSignInReqPacket( string channelid )
 	    {   

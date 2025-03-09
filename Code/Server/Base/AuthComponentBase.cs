@@ -1,5 +1,4 @@
-﻿using WebStudyServer.Model;
-using WebStudyServer.Repo;
+﻿using WebStudyServer.Repo;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Base

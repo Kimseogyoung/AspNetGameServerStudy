@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace WebStudyServer.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("")]
     public class CommonController : ControllerBase
     {
 

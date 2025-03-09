@@ -18,7 +18,9 @@ namespace Protocol
         [ProtoMember(3)]
         public List<ChgKingdomItemPacket> PlaceKingdomItemList { get; set; } 
         
-        public string GetProtocolName() => "kingdom/change-item";
+
+        public const string NAME = "kingdom/change-item";
+        public string GetProtocolName() => NAME;
 
         public KingdomChangeItemReqPacket( List<ulong> storekingdomitemidlist,  List<ChgKingdomItemPacket> chgkingdomitemlist,  List<ChgKingdomItemPacket> placekingdomitemlist )
 	    {   

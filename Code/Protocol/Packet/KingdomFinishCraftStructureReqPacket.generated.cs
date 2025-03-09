@@ -15,7 +15,9 @@ namespace Protocol
         [ProtoMember(3)]
         public int KingdomItemNum { get; set; } 
         
-        public string GetProtocolName() => "kingdom/finish-craft-structure";
+
+        public const string NAME = "kingdom/finish-craft-structure";
+        public string GetProtocolName() => NAME;
 
         public KingdomFinishCraftStructureReqPacket( ulong kingdomstructureid,  int kingdomitemnum )
 	    {   

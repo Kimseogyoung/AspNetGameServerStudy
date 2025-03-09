@@ -4,7 +4,7 @@ using Protocol;
 namespace WebStudyServer.Controllers
 {
     [ApiController]
-    [Route("debug")]
+    [Route("")]
     public class DebugController : ControllerBase
     {
 
@@ -15,16 +15,16 @@ namespace WebStudyServer.Controllers
             _logger = logger;
         }
 
-        [HttpGet(DebugTestRequestPacket.NAME)]
-        public DebugTestResponsePacket Get()
-        {
-            return new DebugTestResponsePacket();
-        }
+        //[HttpGet(DebugTestRequestPacket.NAME)]
+        //public DebugTestResponsePacket Get()
+        //{
+        //    return new DebugTestResponsePacket();
+        //}
 
-        [HttpPost(DebugTestRequestPacket.NAME)]
-        public DebugTestResponsePacket Get(DebugTestRequestPacket req)
-        {
-            return new DebugTestResponsePacket();
-        }
+        //[HttpPost(DebugTestRequestPacket.NAME)]
+        //public DebugTestResponsePacket Get(DebugTestRequestPacket req)
+        //{
+        //    return new DebugTestResponsePacket();
+        //}
     }
 }
