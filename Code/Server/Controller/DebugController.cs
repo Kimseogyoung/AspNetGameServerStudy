@@ -4,7 +4,7 @@ using Protocol;
 namespace WebStudyServer.Controllers
 {
     [ApiController]
-    [Route("api")]
+    [Route("debug")]
     public class DebugController : ControllerBase
     {
 
