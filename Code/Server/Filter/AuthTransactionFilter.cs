@@ -16,10 +16,8 @@ namespace WebStudyServer.Filter
 
         public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            var authRepo = _dbRepo.Auth;
-
             ActionExecutedContext executedContext = null;
-            await _userLockService.RunAtomicAsync(_rpcContext.AccountId, authRepo, async () =>
+            await _userLockService.RunAtomicAsync(_rpcContext.AccountId, _dbRepo, async () =>
             {
                 executedContext = await next(); // 실제 API Action
             });

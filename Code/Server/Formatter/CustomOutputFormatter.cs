@@ -2,6 +2,7 @@
 using NLog;
 using NLog.Targets;
 using Protocol;
+using Server.Formatter;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -20,14 +21,7 @@ namespace WebStudyServer
                 switch (contentType)
                 {
                     case MsgProtocol.JsonContentType:
-                        var jsonOptions = new JsonSerializerOptions
-                        {
-                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                            TypeInfoResolver = new DefaultJsonTypeInfoResolver() // .net 8.0 이상부터 설정 필요.
-                            // NOTE:  Ops에서 필드 전부 표시
-                            //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                        };
-                        outputFormatter = new SystemTextJsonOutputFormatter(jsonOptions);
+                        outputFormatter = new SystemTextJsonOutputFormatter(JsonDataSerializer.Opts);
                         break;
                     case MsgProtocol.ProtoBufContentType:
                         outputFormatter = new ProtoBufOutputFormatter();

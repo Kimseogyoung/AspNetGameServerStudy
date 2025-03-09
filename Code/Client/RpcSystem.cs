@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Client
 {
@@ -106,7 +107,7 @@ namespace Client
             switch (_contentType)
             {
                 case MsgProtocol.JsonContentType:
-                    var json = JsonSerializer.Serialize<REQ>(obj);
+                    var json = JsonSerializer.Serialize<REQ>(obj, Opts);
                     return json;
                 case MsgProtocol.ProtoBufContentType:
                     byte[] serializedData;
@@ -154,7 +155,7 @@ namespace Client
             {
                 case MsgProtocol.JsonContentType:
                     var stringData = Encoding.UTF8.GetString(byteArr);
-                    res = JsonSerializer.Deserialize<RES>(stringData);
+                    res = JsonSerializer.Deserialize<RES>(stringData, Opts);
                     break;
                 case MsgProtocol.ProtoBufContentType:
                     {
@@ -203,5 +204,13 @@ namespace Client
         private HttpClient _httpClient;
 
         private static readonly DateTime s_timestampBaseTime = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+
+        public readonly static JsonSerializerOptions Opts = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver() // .net 8.0 이상부터 설정 필요.
+            // NOTE:  Ops에서 필드 전부 표시
+            //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
     }
 }

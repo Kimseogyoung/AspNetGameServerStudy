@@ -10,91 +10,9 @@ using WebStudyServer.Helper;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi.Any;
 using System.Text.Json;
+using Microsoft.Extensions.FileSystemGlobbing.Internal;
 namespace Server
 {
-    public class RpcMethod<SVC, REQ, RES> : IRpcMethod where SVC : class where RES : IResPacket where REQ : IReqPacket, new ()
-    {
-        public delegate Task<RES> RunAsyncDelegate(SVC svc, REQ req);
-        public delegate RES RunDelegate(SVC svc, REQ req);
-
-        public string Name => _name;
-        public Type Req => _req;
-        public Type Res => _res;
-
-        public RpcMethod(string name, RunAsyncDelegate runAsync)
-        {
-            _name = name;
-            _runAsync = runAsync;
-
-            _req = typeof(REQ);
-            _res = typeof(RES);
-        }
-
-        public RpcMethod(string name, RunDelegate run)
-        {
-            _name = name;
-            _run = run;
-        
-            _req = typeof(REQ);
-            _res = typeof(RES);
-        }
-
-        public async Task<object> RunAsync(HttpContext httpCtx, object rpcReq)
-        {
-            var rpcSvc = httpCtx.RequestServices.GetRequiredService<SVC>();
-            if (_runAsync == null)
-            {
-                if (_run == null)
-                {
-                    throw new NullReferenceException("NOT_INITIALIZED_RPC_METHOD_DELEGATE");
-                }
-                else
-                {
-                    var res = await Task.Run(() => _run!(rpcSvc, (REQ)rpcReq));
-                    return res;
-                }
-            }
-            else
-            {
-                var res = await _runAsync(rpcSvc, (REQ)rpcReq);
-                return res;
-            }
-        }
-
-        public List<OpenApiParameter> CreateOpenApiParameters()
-        {
-            return OpenApiHelper.CreateParameters(typeof(REQ));
-        }
-
-        public OpenApiRequestBody CreateOpenApiRequestBody()
-        {
-            return OpenApiHelper.CreateRequestBody(typeof(REQ));
-        }
-
-        public OpenApiResponses CreateOpenApiResponse()
-        {
-            return OpenApiHelper.CreateResponse(typeof(RES));
-        }
-
-        private readonly string _name;
-        private readonly Type _req;
-        private readonly Type _res;
-        private readonly RunAsyncDelegate _runAsync;
-        private readonly RunDelegate _run;
-
-    }
-
-    public interface IRpcMethod
-    {
-        public Type Req { get; }
-        public Type Res { get; }
-        string Name { get; }
-        Task<object> RunAsync(HttpContext httpCt, object rpcReq);
-        List<OpenApiParameter> CreateOpenApiParameters();
-        OpenApiRequestBody CreateOpenApiRequestBody();
-        OpenApiResponses CreateOpenApiResponse();
-    }
-
     public interface IDataSerializer
     {
         byte[] Serialize<T>(T inObj);
@@ -124,51 +42,80 @@ namespace Server
         {
             var rpcCtx = httpCtx.RequestServices.GetRequiredService<RpcContext>();
 
-            // TODO: Response Cache
-            //
-
-            var httpReqContentType = CustomInputFormatter.GetContentTypeByHeader(httpCtx);
-            if (!_contentTypeToSerializerDict.TryGetValue(httpReqContentType, out var rpcReqSerializer))
+            // 로그 
+            var httpMethod = httpCtx.Request.Method;
+            var httpPath = httpCtx.Request.Path.ToString();
+            object rpcResObj = null;
+            try
             {
-                httpCtx.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
-                return;
-            }
+                var httpReqContentType = CustomInputFormatter.GetContentTypeByHeader(httpCtx);
+                if (!_contentTypeToSerializerDict.TryGetValue(httpReqContentType, out var rpcReqSerializer))
+                {
+                    httpCtx.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
+                    return;
+                }
 
-            var methodName = GetMethodNameFromPath(httpCtx, pattern);
-            if (!_nameToMethodDict.TryGetValue(methodName, out var rpcMethod))
+                var methodName = GetMethodNameFromPath(httpCtx, pattern);
+                if (!_nameToMethodDict.TryGetValue(methodName, out var rpcMethod))
+                {
+                    throw new GameException("NOT_FOUND_METHOD", new { MethodName = methodName });
+                }
+
+                var httpReqStream = httpCtx.Request.Body;
+                var rpcReqObj = await rpcReqSerializer.DeserializeAsync(rpcMethod.Req, httpReqStream);
+                if (rpcReqObj == null)
+                {
+                    httpCtx.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    return;
+                }
+
+                // TODO: Response Cache
+                //
+
+                // TODO: Logger 수정하고 적용 (Body가 메시지로 나오면 안되고 arg에만 들어가게)
+                //var args = new Dictionary<string, object>()
+                //{
+                //    { "Method", httpMethod },
+                //    { "Path", httpPath },
+                //    { "Body", rpcReqObj},
+                //};
+
+                _logger.Info("Req Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcReqObj);
+                rpcResObj = await HandleMethod(rpcCtx, httpCtx, rpcMethod, rpcReqObj);
+            }
+            catch (Exception exc)
             {
-                throw new GameException("NOT_FOUND_METHOD", new { MethodName = methodName });
+                var errorSvc = httpCtx.RequestServices.GetRequiredService<ErrorHandler>();
+                rpcResObj = await errorSvc.HandleWithExceptionAsnyc(httpCtx, exc);
             }
-
-            var httpReqStream = httpCtx.Request.Body;
-            var rpcReqObj = await rpcReqSerializer.DeserializeAsync(rpcMethod.Req, httpReqStream);
-            if (rpcReqObj == null)
+            finally
             {
-                httpCtx.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
+                _logger.Info("Res Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcResObj);
             }
+        }
 
+        private async Task<object> HandleMethod(RpcContext rpcCtx, HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj)
+        {
             var userLockSvc = httpCtx.RequestServices.GetRequiredService<UserLockService>();
             var dbRepo = httpCtx.RequestServices.GetRequiredService<DbRepo>();
-            await userLockSvc.RunAtomicAsync(rpcCtx.AccountId, dbRepo.Auth, async () =>
+            object rpcResObj = null;
+            try
             {
-                
-                try
+                await userLockSvc.RunAtomicAsync(rpcCtx.AccountId, dbRepo, async () =>
                 {
-                    var rpcResObj = await rpcMethod.RunAsync(httpCtx, rpcReqObj);
+                    rpcResObj = await rpcMethod.RunAsync(rpcCtx, httpCtx, rpcReqObj);
                     await ResWriteHelper.WriteResponseBodyAsync(httpCtx, rpcResObj, rpcMethod.Res);
-                }
-                catch (GameException)
-                {
-                    // TODO: 동작 보고 처리
-                    throw;
-                }
-                catch (Exception)
-                {
-                    // TODO: 동작 보고 처리
-                    throw;
-                }
-            });
+                });
+
+                dbRepo.Commit();
+            }
+            catch (Exception)
+            {
+                dbRepo.Rollback();
+                throw; // 오류 발생 시 ErrorHandler에서 처리
+            }
+
+            return rpcResObj;
         }
 
         private string GetMethodNameFromPath(HttpContext httpCtx, string pattern)
@@ -192,6 +139,7 @@ namespace Server
 
     public static class RpcServiceExtension
     {
+        // RpcService에 등록된 모든 메소드를 pattern에 매핑
         public static void MapAllPostRpc(this WebApplication app, string pattern)
         {
             var rpcSvc = app.Services.GetRequiredService<RpcService>();
@@ -202,7 +150,7 @@ namespace Server
                 app.MapPost($"{pattern}/{methodName}", async (RpcService rpcSvc, HttpContext httpCtx) =>
                 {
                     await rpcSvc.OnHttpBodyRequestAsync(httpCtx, pattern);
-                }).WithOpenApi((op) => new Microsoft.OpenApi.Models.OpenApiOperation
+                }).WithOpenApi((op) => new OpenApiOperation
                 {
                   
                     RequestBody = keyPair.Value.CreateOpenApiRequestBody(),

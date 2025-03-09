@@ -29,7 +29,7 @@ namespace WebStudyServer.Filter
             _dbRepo.BeginOwnUserRepo();
 
             ActionExecutedContext executedContext = null;
-            await _userLockService.RunAtomicAsync(_rpcContext.AccountId, _dbRepo.Auth, async () =>
+            await _userLockService.RunAtomicAsync(_rpcContext.AccountId, _dbRepo, async () =>
             {
                 executedContext = await next(); // 실제 API Action
             });
@@ -51,7 +51,7 @@ namespace WebStudyServer.Filter
             _dbRepo.BeginOwnUserRepo();
 
             ActionExecutedContext executedContext = null;
-            await _userLockService.RunAtomicAsync(_rpcContext.AccountId, _dbRepo.Auth, async () =>
+            await _userLockService.RunAtomicAsync(_rpcContext.AccountId, _dbRepo, async () =>
             {
                 executedContext = (ActionExecutedContext)await next(context); // 실제 API Action
             });

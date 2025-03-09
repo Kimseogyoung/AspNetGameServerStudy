@@ -5,6 +5,7 @@ using System;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Text;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Server.Formatter
 {
@@ -14,14 +15,14 @@ namespace Server.Formatter
 
         public byte[] Serialize<T>(T inObj)
         {
-            var str = JsonSerializer.Serialize(inObj, options: _opts);
+            var str = JsonSerializer.Serialize(inObj, options: Opts);
             var byteArr = Encoding.UTF8.GetBytes(str);
             return byteArr;
         }
 
         public async Task SerializeAsync<T>(Stream inStream, T inObj)
         {
-            await JsonSerializer.SerializeAsync(inStream, inObj, options: _opts);
+            await JsonSerializer.SerializeAsync(inStream, inObj, options: Opts);
         }
 
         public async Task<T> DeserializeAsync<T>(Stream inStream)
@@ -38,10 +39,12 @@ namespace Server.Formatter
             return await JsonSerializer.DeserializeAsync(inStream, type);
         }
        
-        private readonly static JsonSerializerOptions _opts = new JsonSerializerOptions
+        public readonly static JsonSerializerOptions Opts = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = null,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, 
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver() // .net 8.0 이상부터 설정 필요.
+            // NOTE:  Ops에서 필드 전부 표시
+            //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
     }
 }

@@ -21,15 +21,20 @@ namespace WebStudyServer
                 return Task.FromResult(false);
             }
 
-            return HandleInternal(httpContext, exc);
+            return HandleInternalAsync(httpContext, exc);
         }
 
         public Task HandleWithException(HttpContext httpContext, Exception exception)
         {
-            return HandleInternal(httpContext, exception);
+            return HandleInternalAsync(httpContext, exception);
         }
 
-        private Task HandleInternal(HttpContext httpContext, Exception exception)
+        public async Task<object> HandleWithExceptionAsnyc(HttpContext httpContext, Exception exception)
+        {
+            return await HandleInternalAsync(httpContext, exception);
+        }
+
+        private async Task<object> HandleInternalAsync(HttpContext httpContext, Exception exception)
         {
             dynamic dynArgs = "";
             var errorCode = (int)EErrorCode.NO_HANDLING_ERROR;
@@ -59,7 +64,9 @@ namespace WebStudyServer
                     ResultMsg = errorMsg,
                 }
             };
-            return ResWriteHelper.WriteResponseBodyAsync(httpContext, res, typeof(ErrorResponsePacket), StatusCodes.Status500InternalServerError);
+
+            await ResWriteHelper.WriteResponseBodyAsync(httpContext, res, typeof(ErrorResponsePacket), StatusCodes.Status500InternalServerError);
+            return res;
         }
 
         private readonly NLog.ILogger _logger = NLog.LogManager.GetCurrentClassLogger();

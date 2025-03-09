@@ -15,16 +15,11 @@ namespace Server.Repo
         public AuthRepo Auth => _lazyAuthRepo.Value;
         public CenterRepo Center => _lazyCenterRepo.Value;
         public AllUserRepo AllUser => _lazyAllUserRepo.Value;
-        private Lazy<AuthRepo> _lazyAuthRepo = null;
-        private Lazy<CenterRepo> _lazyCenterRepo = null;
-        private Lazy<AllUserRepo> _lazyAllUserRepo = null;
 
-        private Dictionary<string, DBSqlExecutor> _dbExecutorDict = new();
-        private readonly RpcContext _rpcContext;
-        
-        public DbRepo(RpcContext rpcContext)
+        public DbRepo(RpcContext rpcContext, ILogger<DbRepo> logger)
         {
             _rpcContext = rpcContext;
+            _logger = logger;
 
             _lazyAuthRepo = new Lazy<AuthRepo>(BeginAuthRepo);
             _lazyCenterRepo = new Lazy<CenterRepo>(BeginCenterRepo);
@@ -109,12 +104,12 @@ namespace Server.Repo
             {
                 // TODO: 오류 종류 파악 후 세분화하기
                 Console.WriteLine(e);
-                Dispose();
+                Close();
                 throw;
             }
         }
 
-        public void Dispose()
+        public void Close()
         {
             try
             {
@@ -180,5 +175,13 @@ namespace Server.Repo
             0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
             0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
             0, 1, 2, 4 };
+
+        private Lazy<AuthRepo> _lazyAuthRepo = null;
+        private Lazy<CenterRepo> _lazyCenterRepo = null;
+        private Lazy<AllUserRepo> _lazyAllUserRepo = null;
+
+        private Dictionary<string, DBSqlExecutor> _dbExecutorDict = new();
+        private readonly RpcContext _rpcContext;
+        private readonly ILogger _logger;
     }
 }

@@ -15,7 +15,7 @@ namespace WebStudyServer
             _useDbLock = APP.Cfg.UseUserLock;
         }
 
-        public async Task RunAtomicAsync(ulong accountId, AuthRepo authRepo, Func<Task> action)
+        public async Task RunAtomicAsync(ulong accountId, DbRepo dbRepo, Func<Task> action)
         {
             if (!_useDbLock 
                 || accountId == 0) // 익명 요청은 유저 락을 사용하지 않음
@@ -29,7 +29,7 @@ namespace WebStudyServer
 
             var idParam = new MySqlParameter("@id", $"acnt:{accountId}");
             var timeOutParam = new MySqlParameter("@timeout", APP.Cfg.UserLockTimeoutSpan);
-            var getLockResult = authRepo.RunCommand<long>("SELECT GET_LOCK(@id, @timeout)", [idParam, timeOutParam]);
+            var getLockResult = dbRepo.Auth.RunCommand<long>("SELECT GET_LOCK(@id, @timeout)", [idParam, timeOutParam]);
 
             if (getLockResult <= 0) // NOTE: result가 0이면 GetLock에 실패
             {
@@ -49,7 +49,7 @@ namespace WebStudyServer
             finally
             {
                 _logger.Debug("ExitUserLock AccountId({AccountId})", accountId);
-                var releaseLockResult = authRepo.RunCommand<long>("SELECT RELEASE_LOCK(@id)", new MySqlParameter[] { idParam });
+                var releaseLockResult = dbRepo.Auth.RunCommand<long>("SELECT RELEASE_LOCK(@id)", new MySqlParameter[] { idParam });
                 if (releaseLockResult <= 0) // NOTE: result가 0이면 ReleaseLock에 실패
                 {
                     _logger.Error("FAILED_RELEASE_USER_LOCK AccountId({AccountId}) Result({Result})", accountId, releaseLockResult);
