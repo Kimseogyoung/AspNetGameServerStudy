@@ -52,7 +52,7 @@ namespace Client
 
             // 요청 URL
             var protocolName = req.GetProtocolName();
-            var url = $"{_host}/{protocolName}";
+            var url = $"{_host}/rpc/{protocolName}";
             var fullUrl = MakeQueryString(url);
 
             // 요청 데이터 (JSON 형식)
@@ -207,7 +207,7 @@ namespace Client
 
         public readonly static JsonSerializerOptions Opts = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            //PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             TypeInfoResolver = new DefaultJsonTypeInfoResolver() // .net 8.0 이상부터 설정 필요.
             // NOTE:  Ops에서 필드 전부 표시
             //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull

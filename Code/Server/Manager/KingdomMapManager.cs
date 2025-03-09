@@ -8,6 +8,7 @@ using Protocol;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Proto.Helper;
+using Server.Formatter;
 
 namespace WebStudyServer.Manager
 {
@@ -26,7 +27,7 @@ namespace WebStudyServer.Manager
             }
             else
             {
-                this.Snapshot = SerializeHelper.JsonDeserialize<KingdomMapSnapshotPacket>(model.Snapshot);
+                this.Snapshot = JsonDataSerializer.DeserializeStr<KingdomMapSnapshotPacket>(model.Snapshot);
 
                 if (this.Snapshot.Ver != KingdomMapSnapshotPacket.c_curVer)
                 {
@@ -85,7 +86,7 @@ namespace WebStudyServer.Manager
 
             var mdlKingdomMap = new KingdomMapModel
             {
-                Snapshot = SerializeHelper.JsonSerialize(snapshot),
+                Snapshot = JsonDataSerializer.SerializeStr(snapshot),
                 State = pak.State,
                 SizeX = pak.SizeX,
                 SizeY = pak.SizeY,
@@ -268,7 +269,7 @@ namespace WebStudyServer.Manager
                 this.Snapshot = newSnapshot;
             }
 
-            _model.Snapshot = SerializeHelper.JsonSerialize(this.Snapshot);
+            _model.Snapshot = JsonDataSerializer.SerializeStr(this.Snapshot);
             _userRepo.KingdomMap.UpdateMdl(_model);
         }
 

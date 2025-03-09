@@ -6,6 +6,7 @@ using Microsoft.VisualBasic;
 using System.Diagnostics;
 using Protocol;
 using WebStudyServer.Helper;
+using Server.Formatter;
 
 namespace WebStudyServer
 { 
@@ -56,7 +57,7 @@ namespace WebStudyServer
 
             DefaultPlayerPath = config.GetValue("DefaultPlayerPath", "Data/DefaultPlayer.json");
             var defaultPlayerJson = File.ReadAllText(DefaultPlayerPath);
-            PakDefaultPlayer = SerializeHelper.JsonDeserialize<PlayerPacket>(defaultPlayerJson);
+            PakDefaultPlayer = JsonDataSerializer.DeserializeStr<PlayerPacket>(defaultPlayerJson);
         }
 
         private string GetServerIp()

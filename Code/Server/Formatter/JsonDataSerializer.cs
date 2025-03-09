@@ -38,10 +38,22 @@ namespace Server.Formatter
 
             return await JsonSerializer.DeserializeAsync(inStream, type);
         }
-       
+
+        public static string SerializeStr<T>(T inObj)
+        {
+            var str = JsonSerializer.Serialize(inObj, options: Opts);
+            return str;
+        }
+
+        public static T DeserializeStr<T>(string json)
+        {
+            var ret = JsonSerializer.Deserialize<T>(json, options: Opts);
+            return ret;
+        }
+
         public readonly static JsonSerializerOptions Opts = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            //PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             TypeInfoResolver = new DefaultJsonTypeInfoResolver() // .net 8.0 이상부터 설정 필요.
             // NOTE:  Ops에서 필드 전부 표시
             //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull

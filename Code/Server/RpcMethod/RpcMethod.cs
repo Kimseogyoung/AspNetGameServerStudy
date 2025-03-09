@@ -3,6 +3,7 @@ using Protocol;
 using Server.Helper;
 using WebStudyServer.Helper;
 using WebStudyServer;
+using Server.Repo;
 
 namespace Server
 {
@@ -26,7 +27,7 @@ namespace Server
         {
             _name = name;
             _runAsync = runAsync;
-
+            _type = type;
             _req = typeof(REQ);
             _res = typeof(RES);
         }
@@ -35,26 +36,35 @@ namespace Server
         {
             _name = name;
             _run = run;
-
+            _type = type;
             _req = typeof(REQ);
             _res = typeof(RES);
         }
 
         public async Task<object> RunAsync(RpcContext rpcCtx, HttpContext httpCtx, object rpcReq)
         {
+            // 여기서 처리해야하는지는 의문임.
             switch (_type)
             {
                 case ERpcMethodType.NONE:
                     break;
                 case ERpcMethodType.AUTHORIZED:
-                    ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { SessionKey = rpcCtx.SessionKey, SessionLoadState = rpcCtx.SessionLoadState });
-                    ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { SessionKey = rpcCtx.SessionKey });
-                    break;
+                    {
+                        ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { SessionKey = rpcCtx.SessionKey, SessionLoadState = rpcCtx.SessionLoadState });
+                        ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { SessionKey = rpcCtx.SessionKey });
+                        var dbRepo = httpCtx.RequestServices.GetRequiredService<DbRepo>();
+                        dbRepo.BeginOwnUserRepo();
+                        break;
+                    }
                 case ERpcMethodType.AUTHORIZED_PLAYER:
-                    ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { SessionKey = rpcCtx.SessionKey, SessionLoadState = rpcCtx.SessionLoadState });
-                    ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { SessionKey = rpcCtx.SessionKey });
-                    ReqHelper.ValidContext(rpcCtx.PlayerId != 0, "NOT_FOUND_PLAYER_IN_RPC_METHOD_RUN", () => new { SessionKey = rpcCtx.SessionKey, AccountId = rpcCtx.AccountId });
-                    break;
+                    {
+                        ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { SessionKey = rpcCtx.SessionKey, SessionLoadState = rpcCtx.SessionLoadState });
+                        ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { SessionKey = rpcCtx.SessionKey });
+                        ReqHelper.ValidContext(rpcCtx.PlayerId != 0, "NOT_FOUND_PLAYER_IN_RPC_METHOD_RUN", () => new { SessionKey = rpcCtx.SessionKey, AccountId = rpcCtx.AccountId });
+                        var dbRepo = httpCtx.RequestServices.GetRequiredService<DbRepo>();
+                        dbRepo.BeginOwnUserRepo();
+                        break;
+                    }
                 case ERpcMethodType.OPS:
                     break;
                 default:
