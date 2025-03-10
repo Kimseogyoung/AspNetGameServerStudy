@@ -13,21 +13,26 @@ namespace Protocol
         public int WorldNum { get; set; } 
         
         [ProtoMember(3)]
-        public int Star { get; set; } 
+        public int BefRewardStar { get; set; } 
         
         [ProtoMember(4)]
+        public int AftRewardStar { get; set; } 
+        
+        [ProtoMember(5)]
         public ObjValue RewardValue { get; set; } 
         
 
         public const string NAME = "world/reward-star";
         public string GetProtocolName() => NAME;
 
-        public WorldRewardStarReqPacket( int worldnum,  int star,  ObjValue rewardvalue )
+        public WorldRewardStarReqPacket( int worldnum,  int befrewardstar,  int aftrewardstar,  ObjValue rewardvalue )
 	    {   
          
                 WorldNum = worldnum; 
                  
-                Star = star; 
+                BefRewardStar = befrewardstar; 
+                 
+                AftRewardStar = aftrewardstar; 
                  
                 RewardValue = rewardvalue; 
                 

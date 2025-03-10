@@ -19,13 +19,16 @@ namespace Protocol
         public int Star { get; set; } 
         
         [ProtoMember(5)]
+        public bool IsFirst { get; set; } 
+        
+        [ProtoMember(6)]
         public List<ObjValue> RewardValueList { get; set; } 
         
 
         public const string NAME = "world/finish-stage";
         public string GetProtocolName() => NAME;
 
-        public WorldFinishStageReqPacket( int worldnum,  int stagenum,  int star,  List<ObjValue> rewardvaluelist )
+        public WorldFinishStageReqPacket( int worldnum,  int stagenum,  int star,  bool isfirst,  List<ObjValue> rewardvaluelist )
 	    {   
          
                 WorldNum = worldnum; 
@@ -33,6 +36,8 @@ namespace Protocol
                 StageNum = stagenum; 
                  
                 Star = star; 
+                 
+                IsFirst = isfirst; 
                  
                 RewardValueList = rewardvaluelist; 
                 

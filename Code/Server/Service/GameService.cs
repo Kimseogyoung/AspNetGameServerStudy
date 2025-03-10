@@ -374,16 +374,63 @@ namespace Server.Service
         public WorldFinishStageResPacket WorldFinishStage(WorldFinishStageReqPacket req)
         {
             var mgrWorld = _userRepo.World.Touch(req.WorldNum);
+            var mgrWorldStage = _userRepo.WorldStage.Touch(req.StageNum);
+
+            ReqHelper.ValidContext(mgrWorld.Model.TopFinishStageNum == 0 || mgrWorld.Model.TopFinishStageNum < mgrWorldStage.Num,
+                    "ALREADY_FINISH_STAGE", () => new { IsFirst = req.IsFirst, StageNum = req.StageNum });
+
+            var prtRewardList = new List<ObjValue>();
+            // 최초 보상
+            if (req.IsFirst)
+            {
+                ReqHelper.ValidContext(mgrWorld.Model.TopFinishStageNum == 0 || mgrWorld.Model.TopFinishStageNum < mgrWorldStage.Num, 
+                    "ALREADY_FINISH_STAGE", () =>  new { IsFirst = req.IsFirst, StageNum = req.StageNum });
+
+                var firstReward = new ObjValue(mgrWorldStage.Prt.FirstRewardTypeList[0], mgrWorldStage.Prt.FirstRewardNumList[0], mgrWorldStage.Prt.FirstRewardAmountList[0]);
+                prtRewardList.AddOrInc(firstReward);
+            }
+           
+            // Star 보상
+            ReqHelper.ValidProto(req.Star <= mgrWorldStage.Prt.FirstRewardTypeList.Count, "TOO_MANY_STAGE_STAR", () => new { StageNum = req.StageNum, ReqStar = req.Star });
+            for (var star = mgrWorldStage.Model.Star; star <= req.Star; star++)
+            {
+                if (star == 0)
+                {
+                    continue;
+                }
+                    
+                var starReward = new ObjValue(mgrWorldStage.Prt.FirstRewardTypeList[star], mgrWorldStage.Prt.FirstRewardNumList[star], mgrWorldStage.Prt.FirstRewardAmountList[star]);
+                prtRewardList.AddOrInc(starReward);
+            }
+            
+
+            var reason = $"WORLD_FINISH_STAGE:{mgrWorldStage.Num}";
+            var valRewardList = ReqHelper.ValidRewardList(req.RewardValueList, prtRewardList, reason);
+
+            // 처리
+            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var chgObjList = mgrPlayerDetail.IncRewardList(valRewardList, reason);
+            
 
             return new WorldFinishStageResPacket
             {
                 World = _mapper.Map<WorldPacket>(mgrWorld.Model),
+                WorldStage = _mapper.Map<WorldStagePacket>(mgrWorldStage.Model),
+                ChgObjList = chgObjList,
             };
         }
 
         public WorldRewardStarResPacket WorldRewardStar(WorldRewardStarReqPacket req)
         {
             var mgrWorld = _userRepo.World.Touch(req.WorldNum);
+            var totalStar = _userRepo.WorldStage.GetTotalStar(mgrWorld.Model.Num);
+
+            // TODO: StarList에 중복 없는지 체크
+            //ReqHelper.ValidContext(totalStar >= req.Star, "NOT_ENOUGH_STAR", () => new { WorldNum = mgrWorld.Model.Num, ReqStar = req.Star, TotalStar = totalStar });
+
+            // TODO: FlagHelper
+            //mgrWorld.Prt.Re
+            mgrWorld.RewardStar(req.AftRewardStar);
             return new WorldRewardStarResPacket
             {
                 World = _mapper.Map<WorldPacket>(mgrWorld.Model),

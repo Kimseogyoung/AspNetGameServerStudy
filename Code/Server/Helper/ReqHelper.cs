@@ -84,5 +84,17 @@ namespace WebStudyServer.Helper
             var valObj = new ObjPacket { Type = reqReward.Type, Num = reqReward.Num, Amount = reqReward.Amount };
             return valObj;
         }
+
+        public static List<ObjValue> ValidRewardList(List<ObjValue> reqRewardList, List<ObjValue> valRewardList, string reason)
+        {
+            foreach(var reqReward in reqRewardList)
+            {
+                var valReward = valRewardList.Find(x => x.Key == reqReward.Key);
+                ReqHelper.ValidProto(valReward != null, "NOT_EXIST_REWARD", () => new { Reason = reason, ReqReward = reqReward, ValRewardList = valRewardList });
+                ReqHelper.ValidProto(reqReward.Value == valReward.Value, "NOT_EQUAL_REWARD_VALUE", () => new { Reason = reason, ReqReward = reqReward, ValReward = valReward });
+            }
+     
+            return reqRewardList;
+        }
     }
 }
