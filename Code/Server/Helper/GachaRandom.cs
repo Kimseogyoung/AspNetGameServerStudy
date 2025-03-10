@@ -1,5 +1,5 @@
 ﻿using Proto;
-using Protocol.Context;
+using Protocol;
 
 namespace Server.Helper
 {

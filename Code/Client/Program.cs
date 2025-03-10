@@ -46,6 +46,12 @@ var funcDict = new Dictionary<int, ApiFunc>()
     { 500, new ApiFunc(){ ApiPath = ScheduleLoadReqPacket.NAME, Desc = "ScheduleLoad ",
         Action = async (valueArr) =>  await APP.Ctx.RequestLoadSchedule() }},
 
+    { 600, new ApiFunc(){ ApiPath = "World Print", Desc = "", Action = (valueArr) => { APP.Ctx.PrintWorldList(); return Task.CompletedTask; } } },
+    { 601, new ApiFunc(){ ApiPath = WorldFinishStageReqPacket.NAME, Desc = "(StageNum, Star)",
+        Action = async (valueArr) =>  await APP.Ctx.RequestWorldFinishStage() }},
+    { 602, new ApiFunc(){ ApiPath = WorldRewardStarReqPacket.NAME, Desc = "(WorldNum, Star)",
+        Action = async (valueArr) =>  await APP.Ctx.RequestWorldRewardStar() }},
+
     { 9001, new ApiFunc(){ ApiPath = CheatRewardReqPacket.NAME, Desc = "Chaet 보상 획득 (ObjType, ObjNum, ObjAmount)",
         Action = async (valueArr) =>  {
             var objType = valueArr.Length > 0 ? valueArr[0] : "";

@@ -4,7 +4,6 @@ using Proto;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
 using Protocol;
-using Protocol.Context;
 
 namespace WebStudyServer.Manager
 {

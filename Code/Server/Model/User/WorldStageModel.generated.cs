@@ -14,7 +14,10 @@ namespace WebStudyServer.Model
     		public int Num { get; set; } = default; //
         
     		
-    		public int StarCnt { get; set; } = default; //
+    		public int WorldId { get; set; } = default; //
+        
+    		
+    		public int Star { get; set; } = default; //
         
 	}
 }

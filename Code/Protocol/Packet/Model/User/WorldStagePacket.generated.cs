@@ -10,7 +10,10 @@ namespace Protocol
     		public int Num { get; set; } = default; //
         
     		[ProtoMember(2)]
-    		public int StarCnt { get; set; } = default; //
+    		public int WorldId { get; set; } = default; //
+        
+    		[ProtoMember(3)]
+    		public int Star { get; set; } = default; //
         
 	}
 }

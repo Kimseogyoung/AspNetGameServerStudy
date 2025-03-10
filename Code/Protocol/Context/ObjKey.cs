@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Protocol.Context
+namespace Protocol
 {
     public struct ObjKey : IEquatable<ObjKey>
     {

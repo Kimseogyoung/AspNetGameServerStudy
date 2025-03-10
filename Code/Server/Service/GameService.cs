@@ -8,7 +8,6 @@ using WebStudyServer.Model;
 using WebStudyServer.GAME;
 using AutoMapper;
 using Server.Helper;
-using Protocol.Context;
 using Server.Extension;
 using Server.Repo;
 
@@ -370,6 +369,28 @@ namespace Server.Service
             };
         }
         #endregion
+
+        #region WORLD
+        public WorldFinishStageResPacket WorldFinishStage(WorldFinishStageReqPacket req)
+        {
+            var mgrWorld = _userRepo.World.Touch(req.WorldNum);
+
+            return new WorldFinishStageResPacket
+            {
+                World = _mapper.Map<WorldPacket>(mgrWorld.Model),
+            };
+        }
+
+        public WorldRewardStarResPacket WorldRewardStar(WorldRewardStarReqPacket req)
+        {
+            var mgrWorld = _userRepo.World.Touch(req.WorldNum);
+            return new WorldRewardStarResPacket
+            {
+                World = _mapper.Map<WorldPacket>(mgrWorld.Model),
+            };
+        }
+        #endregion
+
         private UserRepo _userRepo => _dbRepo.OwnUser;
 
         private readonly DbRepo _dbRepo;

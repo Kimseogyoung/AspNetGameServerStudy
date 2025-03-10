@@ -162,6 +162,38 @@ namespace Client
             PrintCookieList();
         }
 
+        public void SyncWorld(WorldPacket pakWorld)
+        {
+            var world = _player.WorldList.Where(x => x.Num == pakWorld.Num).FirstOrDefault();
+            if (world == null)
+            {
+                _player.WorldList.Add(pakWorld);
+            }
+            else
+            {
+                world.Num = pakWorld.Num;
+                world.Order = pakWorld.Order;
+                world.LastPlayStageNum = pakWorld.LastPlayStageNum;
+                world.TopFinishStageNum = pakWorld.TopFinishStageNum;
+                world.Flag = pakWorld.Flag;
+                world.State = pakWorld.State;
+            }
+        }
+
+        public void SyncWorldStage(WorldStagePacket pakWorldStage)
+        {
+            var world = _player.WorldStageList.Where(x => x.Num == pakWorldStage.Num).FirstOrDefault();
+            if (world == null)
+            {
+                _player.WorldStageList.Add(pakWorldStage);
+            }
+            else
+            {
+                world.Num = pakWorldStage.Num;
+                world.Star= pakWorldStage.Star;
+            }
+        }
+
         public void SyncScheduleList(List<SchedulePacket> pakScheduleList)
         {
             _scheduleList.Clear();

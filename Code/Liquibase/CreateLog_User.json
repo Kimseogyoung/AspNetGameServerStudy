@@ -1645,7 +1645,17 @@
                 },
                 {
                   "column": {
-                    "name": "StarCnt",
+                    "name": "WorldId",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Star",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -1680,6 +1690,24 @@
             "addPrimaryKey": {
               "columnNames": "PlayerId, Num",
               "tableName": "WorldStage"
+            }
+          },
+          {
+            "createIndex": {
+              "indexName": "WorldStage_Key_Index",
+              "tableName": "WorldStage",
+              "columns": [
+                {
+                  "column": {
+                    "name": "PlayerId"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "WorldId"
+                  }
+                }
+              ]
             }
           },
           {

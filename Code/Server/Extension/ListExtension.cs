@@ -1,4 +1,4 @@
-﻿using Protocol.Context;
+﻿using Protocol;
 
 namespace Server.Extension
 {
