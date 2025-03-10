@@ -32,6 +32,8 @@ namespace WebStudyServer
             _prt.Bind<GachaProbProto>();
             _prt.Bind<GachaItemProto>();
             _prt.Bind<CookieSoulStoneProto>();
+            _prt.Bind<WorldProto>();
+            _prt.Bind<WorldStageProto>();
         }
 
         // PK
@@ -47,6 +49,8 @@ namespace WebStudyServer
         public ScheduleProto GetSchedulePrt(int scheduleNum) => _prt.Get<ScheduleProto>(scheduleNum);
         public GachaScheduleProto GetGachaSchedulePrt(int scheduleNum) => _prt.Get<GachaScheduleProto>(scheduleNum);
         public GachaProbProto GetGachaProbPrt(int gachaProbNum) => _prt.Get<GachaProbProto>(gachaProbNum);
+        public WorldProto GetWorldPrt(int worldNum) => _prt.Get<WorldProto>(worldNum);
+        public WorldStageProto GetWorldStagePrt(int worldStageNum) => _prt.Get<WorldStageProto>(worldStageNum);
 
 
         // ALL
