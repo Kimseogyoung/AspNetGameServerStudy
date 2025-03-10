@@ -117,6 +117,20 @@ namespace Proto
 		SPECIAL = 2, //
 	}
 
+	public enum EWorldType 
+	{ 
+		NORMAL = 0, //
+		DARK = 1, //
+		MASTER = 2, //
+	}
+
+	public enum EWorldStageType 
+	{ 
+		STAGE = 0, //
+		REWARD = 1, //
+		VILLAGE = 2, //
+	}
+
 	public enum EObjType 
 	{ 
 		NONE = 0, //
@@ -215,6 +229,8 @@ namespace Proto
 			list.Add(typeof(EScheduleType)); 
 			list.Add(typeof(EScheduleTimeType)); 
 			list.Add(typeof(EGachaItemType)); 
+			list.Add(typeof(EWorldType)); 
+			list.Add(typeof(EWorldStageType)); 
 			list.Add(typeof(EObjType)); 
 			list.Add(typeof(ESessionState)); 
 			list.Add(typeof(EAccountState)); 

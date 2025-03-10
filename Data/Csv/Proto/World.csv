@@ -1,0 +1,14 @@
+﻿Num,Type,Order,Name,RewardStarList,RewardStarCashList,RewardStarList,RewardStarCashList,RewardStarList,RewardStarCashList
+int:pk,enum:EWorldType,int,string,list:int,list:int,list:int,list:int,list:int,list:int
+110100,NORMAL,1,작은 거인의 땅(1),10,300,20,500,30,700
+110200,NORMAL,2,용의 언덕(2),10,300,20,500,30,700
+110300,NORMAL,3,순례자의 길(3),10,300,20,500,30,700
+120100,DARK,1,작은 거인의 땅(1),10,300,20,500,30,700
+120200,DARK,2,용의 언덕(2),10,300,20,500,30,700
+120300,DARK,3,순례자의 길(3),10,300,20,500,30,700
+130100,MASTER,1,작은 거인의 땅(1),10,300,20,500,30,700
+130200,MASTER,2,용의 언덕(2),10,300,20,500,30,700
+130300,MASTER,3,순례자의 길(3),10,300,20,500,30,700
+130400,MASTER,4,영웅의 관문(3),10,300,20,500,30,700
+130500,MASTER,5,오염된 석류의 숲(3),10,300,20,500,30,700
+

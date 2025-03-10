@@ -22,9 +22,12 @@ namespace Protocol
     		public int Lv { get; set; } = default; //
         
     		[ProtoMember(6)]
-    		public int Flag { get; set; } = default; //
+    		public int SkillLv { get; set; } = default; //
         
     		[ProtoMember(7)]
+    		public int Flag { get; set; } = default; //
+        
+    		[ProtoMember(8)]
     		public ECookieState State { get; set; } = default; //
         
 	}

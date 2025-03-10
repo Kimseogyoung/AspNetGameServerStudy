@@ -28,4 +28,6 @@ ItemList,LIST:ItemPacket,new(),,Packet,
 KingdomStructureList,LIST:KingdomStructurePacket,new(),,Packet,
 KingdomDecoList,LIST:KingdomDecoPacket,new(),,Packet,
 KingdomMap,KingdomMapPacket,new(),,Packet,
+WorldList,LIST:WorldPacket,new(),,Packet,
+WorldStageList,LIST:WorldStagePacket,new(),,Packet,
 

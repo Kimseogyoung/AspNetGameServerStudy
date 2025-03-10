@@ -26,6 +26,9 @@ namespace WebStudyServer.Model
     		public int Lv { get; set; } = default; //
         
     		
+    		public int SkillLv { get; set; } = default; //
+        
+    		
     		public int Flag { get; set; } = default; //
         
     		

@@ -87,5 +87,11 @@ namespace Protocol
     		[ProtoMember(27)]
     		public KingdomMapPacket KingdomMap { get; set; } = new(); //
         
+    		[ProtoMember(28)]
+    		public List<WorldPacket> WorldList { get; set; } = new(); //
+        
+    		[ProtoMember(29)]
+    		public List<WorldStagePacket> WorldStageList { get; set; } = new(); //
+        
 	}
 }

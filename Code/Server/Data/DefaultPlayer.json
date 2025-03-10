@@ -13,7 +13,9 @@
 			"StarExp": 0,
 			"AccStarExp": 0,
 			"Star": 0,
-			"State": 1
+			"State": 1,
+			"Lv": 1,
+			"SkillLv":  1
 		}
 	],
 	"KingdomDecoList": [

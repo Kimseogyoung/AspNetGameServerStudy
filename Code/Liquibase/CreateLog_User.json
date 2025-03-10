@@ -509,6 +509,16 @@
                 },
                 {
                   "column": {
+                    "name": "SkillLv",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
                     "name": "Flag",
                     "type": "INT",
                     "constraints": {
@@ -1479,6 +1489,206 @@
               "referencedTableName": "Player",
               "referencedColumnNames": "Id",
               "constraintName": "FK_Ticket_Player"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "World",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "World",
+              "columns": [
+                {
+                  "column": {
+                    "name": "PlayerId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Num",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Order",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "LastPlayStageNum",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "TopFinishStageNum",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Flag",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "State",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "PlayerId, Num",
+              "tableName": "World"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "World",
+              "baseColumnNames": "PlayerId",
+              "referencedTableName": "Player",
+              "referencedColumnNames": "Id",
+              "constraintName": "FK_World_Player"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "WorldStage",
+        "author": "seogyoung",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "WorldStage",
+              "columns": [
+                {
+                  "column": {
+                    "name": "PlayerId",
+                    "type": "BIGINT UNSIGNED",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "Num",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "StarCnt",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "UpdateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "CreateTime",
+                    "type": "DATETIME",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addPrimaryKey": {
+              "columnNames": "PlayerId, Num",
+              "tableName": "WorldStage"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "WorldStage",
+              "baseColumnNames": "PlayerId",
+              "referencedTableName": "Player",
+              "referencedColumnNames": "Id",
+              "constraintName": "FK_WorldStage_Player"
             }
           }
         ]

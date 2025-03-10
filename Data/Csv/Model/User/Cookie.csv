@@ -5,6 +5,7 @@ SoulStone,INT,,,,
 AccSoulStone,INT,,,,
 Star,INT,,,,
 Lv,INT,,,,
+SkillLv,INT,,,,
 Flag,INT,,,,
 State,ENUM:ECookieState,,,,
 

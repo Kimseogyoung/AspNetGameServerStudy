@@ -22,6 +22,8 @@ namespace WebStudyServer.Component
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = cookieNum,
+                    Lv = DEF.DEFAULT_LV,
+                    SkillLv = DEF.DEFAULT_LV,
                 });
             }
 
@@ -32,17 +34,8 @@ namespace WebStudyServer.Component
         public CookieManager TouchBySoulStone(int soulStoneNum)
         {
             var prt = APP.Prt.GetCookieSoulStonePrt(soulStoneNum);
-            if (!TryGetInternal(prt.CookieNum, out var mdlCookie))
-            {
-                mdlCookie = CreateMdl(new CookieModel
-                {
-                    PlayerId = _userRepo.RpcContext.PlayerId,
-                    Num = prt.CookieNum,
-                });
-            }
-
-            var mgrPoint = new CookieManager(_userRepo, mdlCookie);
-            return mgrPoint;
+            var mgrCookie = Touch(prt.CookieNum);
+            return mgrCookie;
         }
 
         public bool TryGetInternal(int num, out CookieModel outCookie)

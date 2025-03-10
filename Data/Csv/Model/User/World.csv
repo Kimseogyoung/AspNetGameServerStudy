@@ -1,0 +1,9 @@
+﻿Name,Type,Value,Desc,ProtocolType,Key
+PlayerId,BIGINT UNSIGNED,,,Model,"pk, fk"
+Num,INT,,,,pk
+Order,INT,,,,
+LastPlayStageNum,INT,,,,
+TopFinishStageNum,INT,,,,
+Flag,BIGINT UNSIGNED,,,,
+State,INT,,,,
+
