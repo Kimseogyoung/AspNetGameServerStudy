@@ -52,6 +52,8 @@ namespace WebStudyServer
         public WorldProto GetWorldPrt(int worldNum) => _prt.Get<WorldProto>(worldNum);
         public WorldStageProto GetWorldStagePrt(int worldStageNum) => _prt.Get<WorldStageProto>(worldStageNum);
    
+        // MK
+        public List<WorldStageProto> GetWorldStagePrtListByMk(int worldNum) => _prt.GetByMk<WorldStageProto>(worldNum);
 
         // ALL
         public IEnumerable<ScheduleProto> GetSchedulePrts() => _prt.GetAll<ScheduleProto>();

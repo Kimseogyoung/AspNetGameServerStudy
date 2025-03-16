@@ -16,7 +16,8 @@ namespace Proto
         private class ProtoList
         {
             public List<ProtoBase> List = new List<ProtoBase>();
-            public Dictionary<object, int> IdxDict = new Dictionary<object, int>();
+            public Dictionary<object, int> PkIdxDict = new Dictionary<object, int>();
+            public Dictionary<object, List<int>> MkIdxDict = new Dictionary<object, List<int>>();
         }
 
         public void Init(string csvPath)
@@ -37,11 +38,11 @@ namespace Proto
             return protoData.List.Count();
         }
 
-        public bool TryGet<TProto>(object key, out TProto? prt) where TProto : ProtoBase, new()
+        public bool TryGet<TProto>(object pk, out TProto? prt) where TProto : ProtoBase, new()
         {
             var protoData = GetPrtDict<TProto>();
-            var hash = GeneratePkHash(key);
-            if (!protoData.IdxDict.TryGetValue(hash, out int idx))
+            var hash = GenerateKeyHash(pk);
+            if (!protoData.PkIdxDict.TryGetValue(hash, out int idx))
             {
                 prt = null;
                 //var prtName = typeof(TProto).Name;
@@ -54,19 +55,40 @@ namespace Proto
             return prt != null;
         }
 
-        public TProto Get<TProto>(object key) where TProto : ProtoBase, new()
+        public TProto Get<TProto>(object pk) where TProto : ProtoBase, new()
         {
             var protoData = GetPrtDict<TProto>();
 
-            var hash = GeneratePkHash(key);
+            var hash = GenerateKeyHash(pk);
 
-            if (!protoData.IdxDict.TryGetValue(hash, out int idx))
+            if (!protoData.PkIdxDict.TryGetValue(hash, out int idx))
             {
                 var prtName = typeof(TProto).Name;
-                throw new Exception($"NOT_FOUND_PK:{prtName}:{key}");
+                throw new Exception($"NOT_FOUND_PK:{prtName}:{pk}");
             }
 
             return (TProto)protoData.List[idx];
+        }
+
+        public List<TProto> GetByMk<TProto>(object mk) where TProto : ProtoBase, new()
+        {
+            var protoData = GetPrtDict<TProto>();
+            var hash = GenerateKeyHash(mk);
+
+            var prtList = new List<TProto>();
+            if (!protoData.MkIdxDict.TryGetValue(hash, out var idxList))
+            {
+                return prtList;
+            }
+
+
+            foreach (var idx in idxList)
+            {
+                var prt = (TProto)protoData.List[idx];
+                prtList.Add(prt);
+            }
+
+            return prtList;
         }
 
         public TProto GetNext<TProto>(TProto prt) where TProto : ProtoBase, new()
@@ -124,7 +146,7 @@ namespace Proto
 
             var filePath = Path.Join(_csvPath, $"{className}.csv");
             var text = File.ReadAllText(filePath);
-            var prtList = _reader.LoadCsv<TProto>(out var pkType, out var pkNameList, text);
+            var prtList = _reader.LoadCsv<TProto>(out var pkNameList, out var mkNameList, text);
 
             _protoDict.Add(protoClassType, new ProtoList());
 
@@ -138,40 +160,73 @@ namespace Proto
                 prtList[i].Idx = i;
                 _protoDict[protoClassType].List.Add(prtList[i]);
 
-                if (pkNameList.Count <= 0)
+                // pk 인덱스 딕셔너리 추가
+                if (pkNameList.Count > 0)
                 {
-                    continue;
-                }
-
-                var valueList = new List<object>();
-                foreach (var pkName in pkNameList)
-                {
-                    var property = typeof(TProto).GetProperty(pkName);
-                    var value = property?.GetValue(prtList[i]);
-                    if(value != null)
+                    var pkValueList = new List<object>();
+                    foreach (var pkName in pkNameList)
                     {
-                        valueList.Add(value);
+                        var property = typeof(TProto).GetProperty(pkName);
+                        var value = property?.GetValue(prtList[i]);
+                        if (value != null)
+                        {
+                            pkValueList.Add(value);
+                        }
                     }
+
+                    object hash = 0;
+                    if (pkValueList.Count == 1)
+                    {
+                        // PK가 1개 있는 경우 
+                        hash = pkValueList[0];
+                    }
+                    else if (pkValueList.Count >= 2)
+                    {
+                        // PK가 n개 있는 경우
+                        hash = GenerateFastHashList(pkValueList);
+                    }
+
+                    if (_protoDict[protoClassType].PkIdxDict.ContainsKey(hash))
+                    {
+                        throw new Exception($"DUPLICATED_PK_HASH ClassType({protoClassType.Name}) Hash({hash}) Pk({string.Join(",", pkNameList)})");
+                    }
+
+                    _protoDict[protoClassType].PkIdxDict.Add(hash, i);
                 }
 
-                object hash = 0;
-                if (valueList.Count == 1)
+                // mk 인덱스 딕셔너리 추가
+                if (mkNameList.Count > 0)
                 {
-                    // PK가 1개 있는 경우 
-                    hash = valueList[0];
-                }
-                else if(valueList.Count >= 2)
-                {
-                    // PK가 n개 있는 경우
-                    hash = GenerateFastHashList(valueList);
-                }
+                    var mkValueList = new List<object>();
+                    foreach (var mkName in mkNameList)
+                    {
+                        var property = typeof(TProto).GetProperty(mkName);
+                        var value = property?.GetValue(prtList[i]);
+                        if (value != null)
+                        {
+                            mkValueList.Add(value);
+                        }
+                    }
 
-                if (_protoDict[protoClassType].IdxDict.ContainsKey(hash))
-                {
-                    throw new Exception($"DUPLICATED_PK_HASH ClassType({protoClassType.Name}) Hash({hash}) Pk({string.Join(",",pkNameList)})");
-                }
+                    object hash = 0;
+                    if (mkValueList.Count == 1)
+                    {
+                        // MK가 1개 있는 경우 
+                        hash = mkValueList[0];
+                    }
+                    else if (mkValueList.Count >= 2)
+                    {
+                        // MK가 n개 있는 경우
+                        hash = GenerateFastHashList(mkValueList);
+                    }
 
-                _protoDict[protoClassType].IdxDict.Add(hash, i);
+                    if (!_protoDict[protoClassType].MkIdxDict.ContainsKey(hash))
+                    {
+                        _protoDict[protoClassType].MkIdxDict[hash] = new List<int>();
+                    }
+
+                    _protoDict[protoClassType].MkIdxDict[hash].Add(i);
+                }
             }
 
         }
@@ -188,7 +243,7 @@ namespace Proto
             return list;
         }
 
-        private object GeneratePkHash(object pkObj)
+        private object GenerateKeyHash(object pkObj)
         {
             if(pkObj is ITuple tuple)
             {

@@ -1,5 +1,5 @@
 ﻿Num,WorldNum,Order,Lv,Type,Name,BossNum,SteminaCnt,FirstRewardTypeList,FirstRewardNumList,FirstRewardAmountList,FirstRewardTypeList,FirstRewardNumList,FirstRewardAmountList,FirstRewardTypeList,FirstRewardNumList,FirstRewardAmountList,FirstRewardTypeList,FirstRewardNumList,FirstRewardAmountList
-int:pk,int,int,int,enum:EWorldStageType,string,int,int,list:enum:EObjType,list:int,list:int,list:enum:EObjType,list:int,list:int,list:enum:EObjType,list:int,list:int,list:enum:EObjType,list:int,list:int
+int:pk,int:mk,int,int,enum:EWorldStageType,string,int,int,list:enum:EObjType,list:int,list:int,list:enum:EObjType,list:int,list:int,list:enum:EObjType,list:int,list:int,list:enum:EObjType,list:int,list:int
 11010010,110100,10,1,STAGE,,0,5,FREE_CASH,0,20,NONE,0,0,FREE_CASH,0,50,FREE_CASH,0,100
 11010020,110100,20,2,STAGE,,0,5,FREE_CASH,0,20,NONE,0,0,FREE_CASH,0,50,FREE_CASH,0,100
 11010030,110100,30,3,STAGE,,0,5,FREE_CASH,0,20,NONE,0,0,FREE_CASH,0,50,FREE_CASH,0,100

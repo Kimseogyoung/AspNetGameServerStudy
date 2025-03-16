@@ -24,7 +24,7 @@ namespace ClassGenerator
                 var csvFile = csvFilePaths[i];
                 var fileTxt = File.ReadAllText(csvFile);
                 var className = Path.GetFileName(csvFile).Replace(".csv", "");
-                if (!LoadProtoCsvField(out string pkName, out List<string> names, out List<string> types, fileTxt))
+                if (!LoadProtoCsvField(out List<string> names, out List<string> types, fileTxt))
                 {
                     continue;
                 }
@@ -82,10 +82,9 @@ namespace ClassGenerator
             }
         }
 
-        private static bool LoadProtoCsvField(out string pkName, out List<string> fieldNames, out List<string> fieldTypes, string text)
+        private static bool LoadProtoCsvField(out List<string> fieldNames, out List<string> fieldTypes, string text)
         {
             string[] lines = text.Split("\r\n");
-            pkName = string.Empty;
             fieldNames = new List<string>();
             fieldTypes = new List<string>();
 
@@ -103,7 +102,11 @@ namespace ClassGenerator
                     if (types[i].EndsWith(":pk"))
                     {
                         types[i] = types[i].Replace(":pk", "");
-                        pkName = names[i];
+                    }
+
+                    if (types[i].EndsWith(":mk"))
+                    {
+                        types[i] = types[i].Replace(":mk", "");
                     }
 
 

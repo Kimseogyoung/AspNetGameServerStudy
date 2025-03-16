@@ -16,13 +16,13 @@ namespace Proto
             RegisterType();
         }
 
-        public List<T> LoadCsv<T>(out Type pkType, out List<string> pkNameList, string text) where T : class, new()
+        public List<T> LoadCsv<T>(out List<string> pkNameList, out List<string> mkNameList, string text) where T : class, new()
         {
             string[] lines = text.Split("\r\n");
-            pkType = null;
             pkNameList = new List<string>();
+            mkNameList = new List<string>();
 
-            if (!LoadCsvField(out pkNameList, out List<string> names, out List<string> types, text))
+            if (!LoadCsvField(out pkNameList, out mkNameList, out List<string> names, out List<string> types, text))
             {
                 Console.WriteLine("Load Csv Error");
                 return null;
@@ -34,13 +34,12 @@ namespace Proto
             {
                 if (lines[i].StartsWith("#"))
                     continue;
+
                 List<string> value = lines[i].Split(",").ToList<string>();
                 if (value.Count < names.Count) continue;
                 columns.Add(value);
 
             }
-
-            pkType = GetTypeFromString(types[0]);
 
             List<T> results = new List<T>();
             for (int i = 0; i < columns.Count; i++)
@@ -103,10 +102,11 @@ namespace Proto
             return results;
         }
 
-        public bool LoadCsvField(out List<string> pkNameList, out List<string> fieldNames, out List<string> fieldTypes, string text)
+        public bool LoadCsvField(out List<string> pkNameList, out List<string> mkNameList, out List<string> fieldNames, out List<string> fieldTypes, string text)
         {
             string[] lines = text.Split("\r\n");
             pkNameList = new List<string>();
+            mkNameList = new List<string>();
             fieldNames = new List<string>();
             fieldTypes = new List<string>();
 
@@ -117,19 +117,28 @@ namespace Proto
             {
                 for (int i = 0; i < names.Count; i++)
                 {
-
-                    if (names[i].StartsWith("#")) continue;
-                    fieldNames.Add(names[i]);
-
-                    if (types[i].EndsWith(":pk"))
+                    var typeTxt = types[i];
+                    var nameTxt = names[i];
+                    if (nameTxt.StartsWith("#"))
                     {
-                        types[i] = types[i].Replace(":pk", "");
-                        var pkName = names[i];
-                        pkNameList.Add(pkName);
+                        continue;
                     }
 
+                    fieldNames.Add(nameTxt);
 
-                    fieldTypes.Add(types[i]);
+                    if (typeTxt.EndsWith(":pk"))
+                    {
+                        types[i] = types[i].Replace(":pk", "");
+                        pkNameList.Add(nameTxt);
+                    }
+
+                    if (typeTxt.EndsWith(":mk"))
+                    {
+                        types[i] = types[i].Replace(":mk", "");
+                        mkNameList.Add(nameTxt);
+                    }
+
+                    fieldTypes.Add(typeTxt);
                 }
                 return true;
             }
@@ -160,6 +169,9 @@ namespace Proto
 
         private Type GetTypeFromString(string typeString)
         {
+            typeString = typeString.Replace(":pk", "");
+            typeString = typeString.Replace(":mk", "");
+
             var idx = typeString.IndexOf(":");
             if (idx != -1)
             {
