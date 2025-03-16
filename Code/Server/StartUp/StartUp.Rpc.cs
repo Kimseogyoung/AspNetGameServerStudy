@@ -31,7 +31,8 @@ namespace WebStudyServer
                 new RpcGameMethod<GameService, CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(CookieEnhanceLvReqPacket.NAME, (gameSvc, req) => { return gameSvc.EnhanceCookieLv(req); }),
                 new RpcGameMethod<GameService, GachaNormalReqPacket, GachaNormalResPacket>(GachaNormalReqPacket.NAME, (gameSvc, req) => { return gameSvc.GachaNormal(req); }),
                 new RpcGameMethod<GameService, ScheduleLoadReqPacket, ScheduleLoadResPacket>(ScheduleLoadReqPacket.NAME, (gameSvc, req) => { return gameSvc.LoadSchedule(req); }),
-                new RpcGameMethod<GameService, WorldFinishStageReqPacket, WorldFinishStageResPacket>(WorldFinishStageReqPacket.NAME, (gameSvc, req) => { return gameSvc.WorldFinishStage(req); }),
+                new RpcGameMethod<GameService, WorldFinishStageFirstReqPacket, WorldFinishStageFirstResPacket>(WorldFinishStageFirstReqPacket.NAME, (gameSvc, req) => { return gameSvc.WorldFinishStageFirst(req); }),
+                new RpcGameMethod<GameService, WorldFinishStageRepeatReqPacket, WorldFinishStageRepeatResPacket>(WorldFinishStageRepeatReqPacket.NAME, (gameSvc, req) => { return gameSvc.WorldFinishStageRepeat(req); }),
                 new RpcGameMethod<GameService, WorldRewardStarReqPacket, WorldRewardStarResPacket>(WorldRewardStarReqPacket.NAME, (gameSvc, req) => { return gameSvc.WorldRewardStar(req); }),
 
                 new RpcGameMethod<CheatService, CheatRewardReqPacket, CheatRewardResPacket>(CheatRewardReqPacket.NAME, (cheatSvc, req) => { return cheatSvc.Reward(req); }),

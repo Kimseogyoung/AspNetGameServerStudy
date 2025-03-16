@@ -23,8 +23,11 @@ namespace Client
             _prt.Bind<ScheduleProto>();
             _prt.Bind<GachaScheduleProto>();
             _prt.Bind<GachaProbProto>();
+            _prt.Bind<WorldProto>();
+            _prt.Bind<WorldStageProto>();
         }
 
+        // PK
         public ScheduleProto GetSchedulePrt(int scheduleNum) => _prt.Get<ScheduleProto>(scheduleNum);
         public GachaScheduleProto GetGachaSchedulePrt(int scheduleNum) => _prt.Get<GachaScheduleProto>(scheduleNum);
         public CookieProto GetCookiePrt(int cookieNum) => _prt.Get<CookieProto>(cookieNum);
@@ -36,6 +39,12 @@ namespace Client
         public PointProto GetPointPrt(int pointNum) => GetPointPrt((EObjType)pointNum);
         public TicketProto GetTicketPrt(EObjType objType) => _prt.Get<TicketProto>(objType);
         public TicketProto GetTicketPrt(int ticketNum) => GetTicketPrt((EObjType)ticketNum);
+        public WorldProto GetWorldPrt(int worldNum) => _prt.Get<WorldProto>(worldNum);
+        public WorldStageProto GetWorldStagePrt(int worldStageNum) => _prt.Get<WorldStageProto>(worldStageNum);
+
+        // MK
+        public List<WorldStageProto> GetWorldStagePrtListByMk(int worldNum) => _prt.GetByMk<WorldStageProto>(worldNum);
+
 
         public IEnumerable<CookieProto> GetCookiePrts() => _prt.GetAll<CookieProto>();
         public IEnumerable<KingdomItemProto> GetKingdomItemPrts() => _prt.GetAll<KingdomItemProto>();

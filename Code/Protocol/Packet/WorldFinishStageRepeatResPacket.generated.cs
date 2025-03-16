@@ -3,7 +3,7 @@ using Proto;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class WorldFinishStageResPacket : IResPacket
+	public partial class WorldFinishStageRepeatResPacket : IResPacket
 	{
     
         [ProtoMember(1)]

@@ -76,13 +76,16 @@ namespace WebStudyServer.Helper
             ReqHelper.ValidProto(reqAmount <= repoAmount, "NOT_ENOUGH", () => new { Param = param, Reason = reason, ReqAmount = reqAmount, ValAmount = repoAmount });
         }
 
-        public static ObjPacket ValidReward(ObjPacket reqReward, EObjType valObjType, int valObjNum, double valObjAmount, string reason)
+        public static ObjValue ValidReward(ObjValue reqReward, EObjType valObjType, int valObjNum, double valObjAmount, string reason)
         {
-            ReqHelper.ValidProto(reqReward.Type == valObjType, "NOT_EQUAL_REWARD_TYPE", () => new { Reason = reason, ReqReward = reqReward, ValType = valObjType });
-            ReqHelper.ValidProto(reqReward.Num == valObjNum, "NOT_EQUAL_REWARD_NUM", () => new { Reason = reason, ReqReward = reqReward, ValNum = valObjNum });
-            ReqHelper.ValidProto(reqReward.Amount == valObjAmount, "NOT_EQUAL_REWARD_AMOUNT", () => new { Reason = reason, ReqReward = reqReward, ValAmount = valObjAmount });
-            var valObj = new ObjPacket { Type = reqReward.Type, Num = reqReward.Num, Amount = reqReward.Amount };
-            return valObj;
+            return ValidReward(reqReward, new ObjValue(valObjType, valObjNum, valObjAmount), reason);
+        }
+
+        public static ObjValue ValidReward(ObjValue reqReward, ObjValue valReward, string reason)
+        {
+            ReqHelper.ValidProto(reqReward.Key == valReward.Key, "NOT_EQUAL_REWARD_OBJ_KEY", () => new { Reason = reason, ReqRewardKey = reqReward.Key, ValRewardKey = valReward.Key });
+            ReqHelper.ValidProto(reqReward.Value == valReward.Value, "NOT_EQUAL_REWARD_VALUE", () => new { Reason = reason, ReqReward = reqReward, ValReward = valReward });
+            return reqReward;
         }
 
         public static List<ObjValue> ValidRewardList(List<ObjValue> reqRewardList, List<ObjValue> valRewardList, string reason)

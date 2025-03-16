@@ -34,6 +34,8 @@ namespace WebStudyServer
             DapperExtension.Init<TicketModel>("PlayerId", "Num");
             DapperExtension.Init<CashChangeLogModel>("SfId");
             DapperExtension.Init<GachaLogModel>("SfId");
+            DapperExtension.Init<WorldModel>("PlayerId", "Num");
+            DapperExtension.Init<WorldStageModel>("PlayerId", "Num");
 
             // Center
             DapperExtension.Init<ScheduleModel>("Num");

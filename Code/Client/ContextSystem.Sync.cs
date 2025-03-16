@@ -164,34 +164,21 @@ namespace Client
 
         public void SyncWorld(WorldPacket pakWorld)
         {
-            var world = _player.WorldList.Where(x => x.Num == pakWorld.Num).FirstOrDefault();
-            if (world == null)
-            {
-                _player.WorldList.Add(pakWorld);
-            }
-            else
-            {
-                world.Num = pakWorld.Num;
-                world.Order = pakWorld.Order;
-                world.LastPlayStageNum = pakWorld.LastPlayStageNum;
-                world.TopFinishStageNum = pakWorld.TopFinishStageNum;
-                world.Flag = pakWorld.Flag;
-                world.State = pakWorld.State;
-            }
+            var world = GetWorldForce(pakWorld.Num);
+         
+            world.Num = pakWorld.Num;
+            world.TopFinishStageOrder = pakWorld.TopFinishStageOrder;
+            world.LastPlayStageNum = pakWorld.LastPlayStageNum;
+            world.TopFinishStageNum = pakWorld.TopFinishStageNum;
+            world.Flag = pakWorld.Flag;
+            world.State = pakWorld.State;
         }
 
         public void SyncWorldStage(WorldStagePacket pakWorldStage)
         {
-            var world = _player.WorldStageList.Where(x => x.Num == pakWorldStage.Num).FirstOrDefault();
-            if (world == null)
-            {
-                _player.WorldStageList.Add(pakWorldStage);
-            }
-            else
-            {
-                world.Num = pakWorldStage.Num;
-                world.Star= pakWorldStage.Star;
-            }
+            var world = GetWorldStageForce(pakWorldStage.Num);
+            world.Num = pakWorldStage.Num;
+            world.Star= pakWorldStage.Star;   
         }
 
         public void SyncScheduleList(List<SchedulePacket> pakScheduleList)
@@ -250,6 +237,32 @@ namespace Client
                 _player.CookieList.Add(pakCookie);
             }
             return pakCookie;
+        }
+
+        private WorldPacket GetWorldForce(int num)
+        {
+            var pakWorld = _player.WorldList.Where(x => x.Num == num).FirstOrDefault();
+            if (pakWorld == null)
+            {
+                var prtWorld = APP.Prt.GetWorldPrt(num);
+                pakWorld = new WorldPacket { Num = num };
+                _player.WorldList.Add(pakWorld);
+            }
+
+            return pakWorld;
+        }
+
+        private WorldStagePacket GetWorldStageForce(int num)
+        {
+            var pakWorldStage = _player.WorldStageList.Where(x => x.Num == num).FirstOrDefault();
+            if (pakWorldStage == null)
+            {
+                var prtStage = APP.Prt.GetWorldStagePrt(num);
+                pakWorldStage = new WorldStagePacket { Num = num, WorldNum = prtStage.WorldNum };
+                _player.WorldStageList.Add(pakWorldStage);
+            }
+
+            return pakWorldStage;
         }
     }
 }

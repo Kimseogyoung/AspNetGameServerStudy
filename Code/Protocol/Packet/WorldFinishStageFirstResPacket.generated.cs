@@ -3,7 +3,7 @@ using Proto;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class WorldRewardStarResPacket : IResPacket
+	public partial class WorldFinishStageFirstResPacket : IResPacket
 	{
     
         [ProtoMember(1)]
@@ -13,7 +13,10 @@ namespace Protocol
         public WorldPacket World { get; set; } 
         
         [ProtoMember(3)]
-        public ChgObjPacket ChgObj { get; set; } 
+        public WorldStagePacket WorldStage { get; set; } 
+        
+        [ProtoMember(4)]
+        public List<ChgObjPacket> ChgObjList { get; set; } 
         
 	}
 }

@@ -1525,7 +1525,17 @@
                 },
                 {
                   "column": {
-                    "name": "Order",
+                    "name": "TopFinishStageOrder",
+                    "type": "INT",
+                    "constraints": {
+                      "primaryKey": false,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "TopFinishStageNum",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -1545,7 +1555,7 @@
                 },
                 {
                   "column": {
-                    "name": "TopFinishStageNum",
+                    "name": "RecvStarReward",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -1645,7 +1655,7 @@
                 },
                 {
                   "column": {
-                    "name": "WorldId",
+                    "name": "WorldNum",
                     "type": "INT",
                     "constraints": {
                       "primaryKey": false,
@@ -1704,7 +1714,7 @@
                 },
                 {
                   "column": {
-                    "name": "WorldId"
+                    "name": "WorldNum"
                   }
                 }
               ]

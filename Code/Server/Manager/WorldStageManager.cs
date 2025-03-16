@@ -16,6 +16,11 @@ namespace WebStudyServer.Manager
             _prt = APP.Prt.GetWorldStagePrt(model.Num);
         }
 
+        public void SetStar(int star)
+        {
+            _model.Star = star;
+            _userRepo.WorldStage.UpdateMdl(_model);
+        }
 
         private readonly WorldStageProto _prt = null;
     }

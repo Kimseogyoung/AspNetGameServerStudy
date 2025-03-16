@@ -1,6 +1,6 @@
 ﻿Name,Type,Value,Desc,ProtocolType,Key
 PlayerId,BIGINT UNSIGNED,,,Model,"pk, fk, c_index"
 Num,INT,,,,pk
-WorldId,INT,,,,c_index
+WorldNum,INT,,,,c_index
 Star,INT,,,,
 

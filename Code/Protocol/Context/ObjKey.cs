@@ -1,16 +1,18 @@
 ﻿using Proto;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using ProtoBuf;
 
 namespace Protocol
 {
+    [ProtoContract]
     public struct ObjKey : IEquatable<ObjKey>
     {
+        [ProtoMember(1)]
         public EObjType Type { get; set; }
+        [ProtoMember(2)]
         public int Num { get; set; }
+
+        public ObjKey() { }
+
         public ObjKey(EObjType type, int num)
         {
             Type = type;
@@ -43,10 +45,16 @@ namespace Protocol
         }
     }
 
+    [ProtoContract]
     public class ObjValue
     {
+        [ProtoMember(1)]
         public ObjKey Key { get; set; }
+        [ProtoMember(2)]
         public double Value { get; set; }
+
+        public ObjValue() { }
+
         public ObjValue(ObjKey key, double value)
         {
             Key = key;

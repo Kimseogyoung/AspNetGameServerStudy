@@ -1,9 +1,10 @@
 ﻿Name,Type,Value,Desc,ProtocolType,Key
 PlayerId,BIGINT UNSIGNED,,,Model,"pk, fk"
 Num,INT,,,,pk
-Order,INT,,,,
-LastPlayStageNum,INT,,,,
+TopFinishStageOrder,INT,,,,
 TopFinishStageNum,INT,,,,
+LastPlayStageNum,INT,,,,
+RecvStarReward,INT,,,,
 Flag,BIGINT UNSIGNED,,,,
 State,INT,,,,
 

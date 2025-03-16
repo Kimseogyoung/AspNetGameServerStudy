@@ -3,6 +3,8 @@ using WebStudyServer.Model;
 using Proto;
 using WebStudyServer.Helper;
 using WebStudyServer.GAME;
+using Protocol;
+using Server.Extension;
 
 namespace WebStudyServer.Manager
 {
@@ -15,18 +17,41 @@ namespace WebStudyServer.Manager
             _prt = APP.Prt.GetWorldPrt(model.Num);
         }
 
-        public WorldStageProto GetTopOpenStagePrt()
+        public bool TryGetTopOpenStagePrt(out WorldStageProto prtNextWorldStage)
         {
-            var prt = APP.Prt.GetWorldStagePrt(1);
-            return prt;
+            var worldNum = _model.Num;
+
+            var prtStageList = APP.Prt.GetWorldStagePrtListByMk(worldNum);
+            if (_model.Num == 0)
+            {
+                prtNextWorldStage = prtStageList.First();
+                return true;
+            }
+
+            prtNextWorldStage = prtStageList.FirstOrDefault(x => x.Order > _model.TopFinishStageOrder);
+            return prtNextWorldStage != null;
         }
 
-        public void RewardStar(int star)
+        public void RewardStar(int valAftStar, int valTotalStar)
         {
-            // TODO: FLAG Helper 구현
-            _model.Flag = 1;
+            var befRecvStarReward = _model.RecvStarReward;
+            _model.RecvStarReward = valAftStar;
             _userRepo.World.UpdateMdl(_model);
         }
+
+        public void FinishStage(WorldStageProto prtStage)
+        {
+            _model.LastPlayStageNum = prtStage.Num;
+            
+            if(_model.TopFinishStageOrder < prtStage.Order)
+            {
+                _model.TopFinishStageOrder = prtStage.Order;
+                _model.TopFinishStageNum = prtStage.Num;
+            }
+
+            _userRepo.World.UpdateMdl(_model);
+        }
+
 
         private readonly WorldProto _prt = null;
     }
