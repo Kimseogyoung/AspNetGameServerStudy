@@ -51,8 +51,9 @@ namespace WebStudyServer
         public GachaProbProto GetGachaProbPrt(int gachaProbNum) => _prt.Get<GachaProbProto>(gachaProbNum);
         public WorldProto GetWorldPrt(int worldNum) => _prt.Get<WorldProto>(worldNum);
         public WorldStageProto GetWorldStagePrt(int worldStageNum) => _prt.Get<WorldStageProto>(worldStageNum);
-   
+
         // MK
+        public List<WorldProto> GetWorldPrtListByMk(EWorldType type) => _prt.GetByMk<WorldProto>(type);
         public List<WorldStageProto> GetWorldStagePrtListByMk(int worldNum) => _prt.GetByMk<WorldStageProto>(worldNum);
 
         // ALL

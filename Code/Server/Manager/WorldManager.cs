@@ -22,14 +22,29 @@ namespace WebStudyServer.Manager
             var worldNum = _model.Num;
 
             var prtStageList = APP.Prt.GetWorldStagePrtListByMk(worldNum);
-            if (_model.Num == 0)
+            prtNextWorldStage = prtStageList.FirstOrDefault(x => x.Order > _model.TopFinishStageOrder);
+            return prtNextWorldStage != null;
+        }
+
+        public bool IsFinishPrevWorld()
+        {
+            var worldNum = _model.Num;
+
+            var prtWorldList = APP.Prt.GetWorldPrtListByMk(_prt.Type);
+            var prtPrevWorld = prtWorldList.LastOrDefault(x => x.Order < _prt.Order);
+
+            if (prtPrevWorld == null)
             {
-                prtNextWorldStage = prtStageList.First();
+                // 첫번째 월드인 경우
                 return true;
             }
 
-            prtNextWorldStage = prtStageList.FirstOrDefault(x => x.Order > _model.TopFinishStageOrder);
-            return prtNextWorldStage != null;
+            if (!_userRepo.World.TryGetInternal(prtPrevWorld.Num, out var outWorldMdl))
+            {
+                return false;
+            }
+
+            return outWorldMdl.State == c_finishState; // FINISH STATE
         }
 
         public void RewardStar(int valAftStar, int valTotalStar)
@@ -47,12 +62,19 @@ namespace WebStudyServer.Manager
             {
                 _model.TopFinishStageOrder = prtStage.Order;
                 _model.TopFinishStageNum = prtStage.Num;
+
+                // 끝난경우 상태 변경
+                var prtLastStage = APP.Prt.GetWorldStagePrtListByMk(_prt.Num).Last();
+                if (prtLastStage.Num == prtStage.Num)
+                {
+                    _model.State = c_finishState;
+                }
             }
 
             _userRepo.World.UpdateMdl(_model);
         }
 
-
+        private const int c_finishState = 10;
         private readonly WorldProto _prt = null;
     }
 }

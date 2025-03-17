@@ -377,7 +377,8 @@ namespace Server.Service
             var mgrWorldStage = _userRepo.WorldStage.Touch(req.StageNum);
             ReqHelper.ValidContext(mgrWorld.TryGetTopOpenStagePrt(out var prtNextWorldStage), "NOT_FOUND_TOP_OPEN_STAGE", () => new { WorldNum = mgrWorld.Prt.Num, TopFinishStageNum = mgrWorld.Model.TopFinishStageNum });
             ReqHelper.ValidContext(prtNextWorldStage.Num == req.StageNum, "NOT_EQUAL_FIRST_FINISH_STAGE", () => new { WorldNum = mgrWorld.Prt.Num, ReqStageNum = req.StageNum, ValStageNum = prtNextWorldStage.Num });
-
+            ReqHelper.ValidContext(mgrWorld.IsFinishPrevWorld(), "NOT_FINISH_PREV_WORLD", () => new { WorldNum = mgrWorld.Prt.Num });
+            
             // 최초 보상
             var prtRewardList = new List<ObjValue>();
             var firstReward = new ObjValue(mgrWorldStage.Prt.FirstRewardTypeList[0], mgrWorldStage.Prt.FirstRewardNumList[0], mgrWorldStage.Prt.FirstRewardAmountList[0]);

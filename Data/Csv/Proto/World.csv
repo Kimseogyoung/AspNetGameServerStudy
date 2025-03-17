@@ -1,5 +1,5 @@
 ﻿Num,Type,Order,Name,RewardStarList,RewardStarCashList,RewardStarList,RewardStarCashList,RewardStarList,RewardStarCashList
-int:pk,enum:EWorldType,int,string,list:int,list:int,list:int,list:int,list:int,list:int
+int:pk,enum:EWorldType:mk,int,string,list:int,list:int,list:int,list:int,list:int,list:int
 110100,NORMAL,1,작은 거인의 땅(1),10,300,20,500,30,700
 110200,NORMAL,2,용의 언덕(2),10,300,20,500,30,700
 110300,NORMAL,3,순례자의 길(3),10,300,20,500,30,700
