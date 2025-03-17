@@ -10,13 +10,13 @@ namespace Protocol
         public ResInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public WorldPacket World { get; set; } 
+        public WorldPacket World { get; set; } = new();
         
         [ProtoMember(3)]
-        public WorldStagePacket WorldStage { get; set; } 
+        public WorldStagePacket WorldStage { get; set; } = new();
         
         [ProtoMember(4)]
-        public List<ChgObjPacket> ChgObjList { get; set; } 
+        public List<ChgObjPacket> ChgObjList { get; set; } = new();
         
 	}
 }

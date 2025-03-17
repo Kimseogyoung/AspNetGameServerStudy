@@ -7,16 +7,16 @@ namespace Protocol
         {
         
                 [ProtoMember(1)]
-                public ulong PlacedItemId { get; set; } 
+                public ulong PlacedItemId { get; set; } = default;
                 
                 [ProtoMember(2)]
-                public ulong StructureId { get; set; } 
+                public ulong StructureId { get; set; } = default;
                 
                 [ProtoMember(3)]
-                public int Num { get; set; } 
+                public int Num { get; set; } = default;
                 
                 [ProtoMember(4)]
-                public TilePosPacket TilePos { get; set; } 
+                public TilePosPacket TilePos { get; set; } = new();
                 
 	}
 }

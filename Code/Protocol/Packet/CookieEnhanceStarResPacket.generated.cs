@@ -10,7 +10,7 @@ namespace Protocol
         public ResInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public CookiePacket Cookie { get; set; } 
+        public CookiePacket Cookie { get; set; } = new();
         
 	}
 }

@@ -7,16 +7,16 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public int ScheduleNum { get; set; } 
+        public int ScheduleNum { get; set; } = default;
         
         [ProtoMember(3)]
-        public int Cnt { get; set; } 
+        public int Cnt { get; set; } = default;
         
         [ProtoMember(4)]
-        public CostObjPacket CostObj { get; set; } 
+        public CostObjPacket CostObj { get; set; } = new();
         
 
         public const string NAME = "gacha/normal";

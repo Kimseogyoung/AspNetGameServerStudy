@@ -7,19 +7,19 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public int CookieNum { get; set; } 
+        public int CookieNum { get; set; } = default;
         
         [ProtoMember(3)]
-        public int BefStar { get; set; } 
+        public int BefStar { get; set; } = default;
         
         [ProtoMember(4)]
-        public int AftStar { get; set; } 
+        public int AftStar { get; set; } = default;
         
         [ProtoMember(5)]
-        public int UsedSoulStone { get; set; } 
+        public int UsedSoulStone { get; set; } = default;
         
 
         public const string NAME = "cookie/enhance-star";

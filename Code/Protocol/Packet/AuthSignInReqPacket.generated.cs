@@ -7,10 +7,10 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public string ChannelId { get; set; } 
+        public string ChannelId { get; set; } = default;
         
 
         public const string NAME = "auth/sign-in";

@@ -7,19 +7,19 @@ namespace Protocol
         {
         
                 [ProtoMember(1)]
-                public string SessionKey { get; set; } 
+                public string SessionKey { get; set; } = default;
                 
                 [ProtoMember(2)]
-                public string ChannelKey { get; set; } 
+                public string ChannelKey { get; set; } = default;
                 
                 [ProtoMember(3)]
-                public string ClientSecret { get; set; } 
+                public string ClientSecret { get; set; } = default;
                 
                 [ProtoMember(4)]
-                public string AccountEnv { get; set; } 
+                public string AccountEnv { get; set; } = default;
                 
                 [ProtoMember(5)]
-                public EAccountState AccountState { get; set; } 
+                public EAccountState AccountState { get; set; } = new();
                 
 	}
 }

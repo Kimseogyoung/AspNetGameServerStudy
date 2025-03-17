@@ -10,13 +10,13 @@ namespace Protocol
         public ResInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public KingdomStructurePacket KingdomStructure { get; set; } 
+        public KingdomStructurePacket KingdomStructure { get; set; } = new();
         
         [ProtoMember(3)]
-        public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } 
+        public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } = new();
         
         [ProtoMember(4)]
-        public List<ChgObjPacket> ChgObjList { get; set; } 
+        public List<ChgObjPacket> ChgObjList { get; set; } = new();
         
 	}
 }

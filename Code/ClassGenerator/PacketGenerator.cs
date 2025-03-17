@@ -123,13 +123,20 @@ namespace ClassGenerator
                 {
                     var isLast = i == defList.Count - 1;
                     var attribute = $"[ProtoMember({defList[i].Idx})]";
+                    var typeName = defList[i].FieldType;
+                    var defValue = "= default;";
+                    if (!_typeMap.ContainsKey(typeName))
+                    {
+                        defValue = "= new();";
+                    }
+
                     fields[i] = new Dictionary<string, object> {
-                        {"Type",  defList[i].FieldType },
+                        {"Type",  typeName },
                         {"Name",  defList[i].FieldName },
                         {"LowerName",  defList[i].FieldName.ToLower() },
                         {"Comma",  isLast? "" : "," },
                         { "Attribute",  attribute },
-                         {"Value",  defList[i].FieldValue},
+                         {"Value", defValue/* defList[i].FieldValue*/},
                     };
 
                 }
@@ -173,6 +180,24 @@ namespace ClassGenerator
         private static string _reqPakTemplate = string.Empty;
         private static string _resPakTemplate = string.Empty;
         private static string _commonPakTemplate = string.Empty;
+
+        private static Dictionary<string, Type>  _typeMap = new Dictionary<string, Type>
+        {
+            { "bool", typeof(bool) },
+            { "byte", typeof(byte) },
+            { "sbyte", typeof(sbyte) },
+            { "char", typeof(char) },
+            { "decimal", typeof(decimal) },
+            { "double", typeof(double) },
+            { "float", typeof(float) },
+            { "int", typeof(int) },
+            { "uint", typeof(uint) },
+            { "long", typeof(long) },
+            { "ulong", typeof(ulong) },
+            { "short", typeof(short) },
+            { "ushort", typeof(ushort) },
+            { "string", typeof(string) }
+        };
     }
 
     public class ClassDefinition

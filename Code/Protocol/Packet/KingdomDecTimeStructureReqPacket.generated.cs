@@ -7,19 +7,19 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public ulong KingdomStructureId { get; set; } 
+        public ulong KingdomStructureId { get; set; } = default;
         
         [ProtoMember(3)]
-        public int KingdomItemNum { get; set; } 
+        public int KingdomItemNum { get; set; } = default;
         
         [ProtoMember(4)]
-        public int RemainSec { get; set; } 
+        public int RemainSec { get; set; } = default;
         
         [ProtoMember(5)]
-        public CostCashPacket CashCost { get; set; } 
+        public CostCashPacket CashCost { get; set; } = new();
         
 
         public const string NAME = "kingdom/dec-time-structure";

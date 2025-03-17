@@ -7,10 +7,10 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public string PlayerName { get; set; } 
+        public string PlayerName { get; set; } = default;
         
 
         public const string NAME = "game/change-name";

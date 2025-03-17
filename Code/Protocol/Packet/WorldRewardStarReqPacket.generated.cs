@@ -7,22 +7,22 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public int WorldNum { get; set; } 
+        public int WorldNum { get; set; } = default;
         
         [ProtoMember(3)]
-        public int BefRewardStar { get; set; } 
+        public int BefRewardStar { get; set; } = default;
         
         [ProtoMember(4)]
-        public int AftRewardStar { get; set; } 
+        public int AftRewardStar { get; set; } = default;
         
         [ProtoMember(5)]
-        public int TotalStar { get; set; } 
+        public int TotalStar { get; set; } = default;
         
         [ProtoMember(6)]
-        public ObjValue RewardValue { get; set; } 
+        public ObjValue RewardValue { get; set; } = new();
         
 
         public const string NAME = "world/reward-star";

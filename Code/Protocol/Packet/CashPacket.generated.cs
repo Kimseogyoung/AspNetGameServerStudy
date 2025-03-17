@@ -7,10 +7,10 @@ namespace Protocol
         {
         
                 [ProtoMember(1)]
-                public double FreeCash { get; set; } 
+                public double FreeCash { get; set; } = default;
                 
                 [ProtoMember(2)]
-                public double RealCash { get; set; } 
+                public double RealCash { get; set; } = default;
                 
 	}
 }

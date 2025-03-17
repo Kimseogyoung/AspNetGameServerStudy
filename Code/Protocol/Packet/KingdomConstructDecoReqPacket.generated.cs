@@ -7,13 +7,13 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public int KingdomItemNum { get; set; } 
+        public int KingdomItemNum { get; set; } = default;
         
         [ProtoMember(3)]
-        public TilePosPacket StartTilePos { get; set; } 
+        public TilePosPacket StartTilePos { get; set; } = new();
         
 
         public const string NAME = "kingdom/construct-deco";

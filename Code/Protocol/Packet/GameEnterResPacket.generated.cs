@@ -10,7 +10,7 @@ namespace Protocol
         public ResInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public PlayerPacket Player { get; set; } 
+        public PlayerPacket Player { get; set; } = new();
         
 	}
 }

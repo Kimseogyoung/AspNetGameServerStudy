@@ -7,19 +7,19 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public int CookieNum { get; set; } 
+        public int CookieNum { get; set; } = default;
         
         [ProtoMember(3)]
-        public int BefLv { get; set; } 
+        public int BefLv { get; set; } = default;
         
         [ProtoMember(4)]
-        public int AftLv { get; set; } 
+        public int AftLv { get; set; } = default;
         
         [ProtoMember(5)]
-        public CostObjPacket CostObj { get; set; } 
+        public CostObjPacket CostObj { get; set; } = new();
         
 
         public const string NAME = "cookie/enhance-lv";

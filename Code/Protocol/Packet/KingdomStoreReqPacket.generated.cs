@@ -7,10 +7,10 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public List<ulong> KingdomPlacedItemIdList { get; set; } 
+        public List<ulong> KingdomPlacedItemIdList { get; set; } = new();
         
 
         public const string NAME = "kingdom/store";

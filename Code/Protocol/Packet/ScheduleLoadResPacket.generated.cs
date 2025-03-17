@@ -10,7 +10,7 @@ namespace Protocol
         public ResInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public List<SchedulePacket> ScheduleList { get; set; } 
+        public List<SchedulePacket> ScheduleList { get; set; } = new();
         
 	}
 }

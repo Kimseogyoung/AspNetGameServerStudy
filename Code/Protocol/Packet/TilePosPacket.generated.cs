@@ -7,10 +7,10 @@ namespace Protocol
         {
         
                 [ProtoMember(1)]
-                public int X { get; set; } 
+                public int X { get; set; } = default;
                 
                 [ProtoMember(2)]
-                public int Y { get; set; } 
+                public int Y { get; set; } = default;
                 
 	}
 }

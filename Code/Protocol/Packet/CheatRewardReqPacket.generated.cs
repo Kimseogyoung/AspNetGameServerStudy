@@ -7,10 +7,10 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public List<ObjPacket> RewardList { get; set; } 
+        public List<ObjPacket> RewardList { get; set; } = new();
         
 
         public const string NAME = "cheat/reward";

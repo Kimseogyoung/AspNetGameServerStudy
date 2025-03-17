@@ -7,13 +7,13 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } 
+        public ReqInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public ulong KingdomStructureId { get; set; } 
+        public ulong KingdomStructureId { get; set; } = default;
         
         [ProtoMember(3)]
-        public int KingdomItemNum { get; set; } 
+        public int KingdomItemNum { get; set; } = default;
         
 
         public const string NAME = "kingdom/finish-construct-structure";

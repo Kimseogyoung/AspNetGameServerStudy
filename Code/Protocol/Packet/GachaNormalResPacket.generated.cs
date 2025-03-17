@@ -10,10 +10,10 @@ namespace Protocol
         public ResInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public List<ChgObjPacket> GachaResultChgObjList { get; set; } 
+        public List<ChgObjPacket> GachaResultChgObjList { get; set; } = new();
         
         [ProtoMember(3)]
-        public ChgObjPacket CostChgObj { get; set; } 
+        public ChgObjPacket CostChgObj { get; set; } = new();
         
 	}
 }

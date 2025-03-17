@@ -7,13 +7,13 @@ namespace Protocol
         {
         
                 [ProtoMember(1)]
-                public double BefAmount { get; set; } 
+                public double BefAmount { get; set; } = default;
                 
                 [ProtoMember(2)]
-                public double AftAmount { get; set; } 
+                public double AftAmount { get; set; } = default;
                 
                 [ProtoMember(3)]
-                public double Amount { get; set; } 
+                public double Amount { get; set; } = default;
                 
 	}
 }

@@ -10,7 +10,7 @@ namespace Protocol
         public ResInfoPacket Info { get; set; } = new();
         
         [ProtoMember(2)]
-        public List<ChgObjPacket> ChgObjList { get; set; } 
+        public List<ChgObjPacket> ChgObjList { get; set; } = new();
         
 	}
 }
