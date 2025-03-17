@@ -421,7 +421,7 @@ namespace Server.Service
             var prtRewardList = new List<ObjValue>();
             ReqHelper.ValidProto(req.Star <= mgrWorldStage.Prt.FirstRewardTypeList.Count, "TOO_MANY_STAGE_STAR", () => new { StageNum = req.StageNum, ReqStar = req.Star });
             var valStar = req.Star;
-            for (var star = mgrWorldStage.Model.Star; star <= valStar; star++)
+            for (var star = mgrWorldStage.Model.Star + 1; star <= valStar; star++)
             {
                 if (star == 0)
                 {

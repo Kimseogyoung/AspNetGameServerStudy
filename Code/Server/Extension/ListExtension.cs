@@ -6,6 +6,11 @@ namespace Server.Extension
     {
         public static void AddOrInc(this List<ObjValue> objValList, ObjValue objValue)
         {
+            if(objValue.Key.IsNone())
+            {
+                return;
+            }    
+
             var findObjValue = objValList.Find(x => x.Key == objValue.Key);
             if (findObjValue == null)
             {

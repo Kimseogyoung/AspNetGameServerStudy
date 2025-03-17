@@ -1,5 +1,6 @@
 ﻿using NLog.LayoutRenderers.Wrappers;
 using Protocol;
+using Server.Extension;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace Client
             var prtRewardList = new List<ObjValue>();
             for (var i = 0; i <= star; i++)
             {
-                prtRewardList.Add(new ObjValue(prtStage.FirstRewardTypeList[i], prtStage.FirstRewardNumList[i], prtStage.FirstRewardAmountList[i]));
+                prtRewardList.AddOrInc(new ObjValue(prtStage.FirstRewardTypeList[i], prtStage.FirstRewardNumList[i], prtStage.FirstRewardAmountList[i]));
             }
 
             var req = new WorldFinishStageFirstReqPacket(prtStage.WorldNum, prtStage.Num, star, prtRewardList);
@@ -34,7 +35,7 @@ namespace Client
             var prtRewardList = new List<ObjValue>();
             for (var i = pakStage.Star + 1; i <= star; i++)
             {
-                prtRewardList.Add(new ObjValue(prtStage.FirstRewardTypeList[i], prtStage.FirstRewardNumList[i], prtStage.FirstRewardAmountList[i]));
+                prtRewardList.AddOrInc(new ObjValue(prtStage.FirstRewardTypeList[i], prtStage.FirstRewardNumList[i], prtStage.FirstRewardAmountList[i]));
             }
 
             var req = new WorldFinishStageRepeatReqPacket(prtStage.WorldNum, prtStage.Num, star, prtRewardList);

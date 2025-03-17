@@ -90,7 +90,9 @@ namespace WebStudyServer.Helper
 
         public static List<ObjValue> ValidRewardList(List<ObjValue> reqRewardList, List<ObjValue> valRewardList, string reason)
         {
-            foreach(var reqReward in reqRewardList)
+            ReqHelper.ValidParam(reqRewardList != null, "NULL_REWARD_LIST", () => new { Reason = reason });
+
+            foreach (var reqReward in reqRewardList)
             {
                 var valReward = valRewardList.Find(x => x.Key == reqReward.Key);
                 ReqHelper.ValidProto(valReward != null, "NOT_EXIST_REWARD", () => new { Reason = reason, ReqReward = reqReward, ValRewardList = valRewardList });

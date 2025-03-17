@@ -13,8 +13,8 @@ namespace Protocol
         public int WorldNum { get; set; } 
         
         [ProtoMember(3)]
-        public int StageNum { get; set; } 
-        
+        public int StageNum { get; set; }
+
         [ProtoMember(4)]
         public int Star { get; set; } 
         

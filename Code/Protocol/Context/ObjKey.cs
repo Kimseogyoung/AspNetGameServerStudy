@@ -19,6 +19,10 @@ namespace Protocol
             Num = num;
         }
 
+        public bool IsNone()
+        {
+            return Type == EObjType.NONE;
+        }
         public override bool Equals(object? obj)
         {
             return obj is ObjKey other && Equals(other);
