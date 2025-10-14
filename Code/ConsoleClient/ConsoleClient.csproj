@@ -8,9 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Protocol\Protocol.csproj" />
-    <ProjectReference Include="..\Proto\Proto.csproj" />
-    <ProjectReference Include="..\Server\Server.csproj" />
+    <ProjectReference Include="..\ClientCore\ClientCore.csproj" />
   </ItemGroup>
 
 </Project>

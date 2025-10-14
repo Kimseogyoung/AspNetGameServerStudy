@@ -1,12 +1,8 @@
-﻿using NLog.LayoutRenderers.Wrappers;
-using Proto.Helper;
+﻿using Proto.Helper;
 using Protocol;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
-namespace Client
+namespace ClientCore
 {
     public partial class ContextSystem
     {

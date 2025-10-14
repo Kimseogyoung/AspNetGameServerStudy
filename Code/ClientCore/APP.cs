@@ -1,13 +1,11 @@
-﻿using IdGen;
-
-namespace Client
+﻿namespace ClientCore
 {
     public static class APP
     {
         public static ProtoSystem Prt => _prt;
         public static ContextSystem Ctx => _ctx;
 
-        public static void Init(string inCsvPath)
+        public static void Init(string inCsvPath, string serverUrl)
         {
             if (_isInit)
             {
@@ -15,15 +13,14 @@ namespace Client
                 return;
             }
 
-            var csvPath = Path.Join(GetProjPath(), inCsvPath);
-            Console.WriteLine(csvPath);
+            Console.WriteLine(inCsvPath);
 
             _isInit = true;
-            _prt.Init(csvPath);
-            _ctx.Init();
+            _prt.Init(inCsvPath);
+            _ctx.Init(serverUrl);
         }
 
-        private static string GetProjPath()
+        public static string GetProjPath()
         {
             var exeCfgDirNetPath = Path.GetDirectoryName(AppContext.BaseDirectory);
 

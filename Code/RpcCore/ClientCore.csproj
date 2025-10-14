@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="protobuf-net" Version="3.2.56" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Protocol\Protocol.csproj" />
+    <ProjectReference Include="..\Proto\Proto.csproj" />
+  </ItemGroup>
+
+</Project>

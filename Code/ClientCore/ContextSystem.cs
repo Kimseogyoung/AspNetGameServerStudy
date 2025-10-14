@@ -1,21 +1,15 @@
-﻿using NLog.LayoutRenderers.Wrappers;
-using Protocol;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Protocol;
 
-namespace Client
+namespace ClientCore
 {
     public partial class ContextSystem
     {
         public string SessionId => _rpcSystem.SessionId;
 
-        public void Init()
+        public void Init(string serverUrl)
         {
             _rpcSystem = new RpcSystem();
-            _rpcSystem.Init("http://localhost:5157", MsgProtocol.ProtoBufContentType);
+            _rpcSystem.Init(serverUrl, MsgProtocol.ProtoBufContentType);
         }
 
         public void Clear()

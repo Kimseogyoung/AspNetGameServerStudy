@@ -1,6 +1,6 @@
 ﻿using Proto;
 using Protocol;
-namespace Client
+namespace ClientCore
 {
     public partial class ContextSystem
     {

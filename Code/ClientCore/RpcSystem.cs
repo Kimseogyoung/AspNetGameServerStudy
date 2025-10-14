@@ -1,19 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
-using NLog;
-using Proto;
+﻿using Proto;
 using Protocol;
-using SharpYaml.Tokens;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
-namespace Client
+namespace ClientCore
 {
     public class RpcSystem
     {
@@ -79,7 +71,7 @@ namespace Client
                 Console.WriteLine("응답: " + json);
                 return res;
             }
-            else if(response.StatusCode == HttpStatusCode.InternalServerError)
+            else if (response.StatusCode == HttpStatusCode.InternalServerError)
             {
                 // TODO: 예외처리
                 var resContentType = response.Content.Headers.ContentType.MediaType.ToString();
@@ -167,7 +159,7 @@ namespace Client
                     break;
             }
 
-            if(res == null)
+            if (res == null)
             {
                 throw new Exception("FAILED_DESERIALIZE ~~~~~");
             }
@@ -186,7 +178,7 @@ namespace Client
         {
             var nowTime = DateTime.UtcNow;
             var timestmap = ((DateTimeOffset)nowTime).ToUnixTimeMilliseconds();
-            if ( _prevTimestamp == timestmap)
+            if (_prevTimestamp == timestmap)
             {
                 timestmap += 1;
             }
