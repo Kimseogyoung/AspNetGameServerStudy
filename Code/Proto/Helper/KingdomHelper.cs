@@ -1,4 +1,6 @@
 ﻿
+using System.Collections.Generic;
+
 namespace Proto.Helper
 {
     public struct TilePos

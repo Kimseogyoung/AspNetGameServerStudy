@@ -1,5 +1,6 @@
 using ProtoBuf;
 using Proto;
+using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
@@ -7,7 +8,7 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } = new();
+        public ReqInfoPacket Info { get; set; } = new ReqInfoPacket();
         
         [ProtoMember(2)]
         public ulong KingdomStructureId { get; set; } = default;
@@ -16,10 +17,10 @@ namespace Protocol
         public int KingdomItemNum { get; set; } = default;
         
         [ProtoMember(4)]
-        public List<CostObjPacket> CostObjList { get; set; } = new();
+        public List<CostObjPacket> CostObjList { get; set; } = new List<CostObjPacket>();
         
         [ProtoMember(5)]
-        public TilePosPacket StartTilePos { get; set; } = new();
+        public TilePosPacket StartTilePos { get; set; } = new TilePosPacket();
         
 
         public const string NAME = "kingdom/construct-structure";

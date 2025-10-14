@@ -109,7 +109,7 @@ namespace ClassGenerator
                     case "res":
                         template = _resPakTemplate;
                         classAttribute = "[ProtoContract]";
-                        defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ResInfoPacket", Idx = 1 , FieldValue = "= new();" });
+                        defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ResInfoPacket", Idx = 1 , FieldValue = "= new ResInfoPacket();" });
                         break;
                     default:
                         template = _commonPakTemplate;
@@ -127,7 +127,7 @@ namespace ClassGenerator
                     var defValue = "= default;";
                     if (!_typeMap.ContainsKey(typeName))
                     {
-                        defValue = "= new();";
+                        defValue = $"= new {typeName}();";
                     }
 
                     fields[i] = new Dictionary<string, object> {

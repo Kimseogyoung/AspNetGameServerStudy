@@ -1,5 +1,6 @@
 using ProtoBuf;
 using Proto;
+using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
@@ -7,7 +8,7 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } = new();
+        public ReqInfoPacket Info { get; set; } = new ReqInfoPacket();
         
         [ProtoMember(2)]
         public int WorldNum { get; set; } = default;
@@ -22,7 +23,7 @@ namespace Protocol
         public int TotalStar { get; set; } = default;
         
         [ProtoMember(6)]
-        public ObjValue RewardValue { get; set; } = new();
+        public ObjValue RewardValue { get; set; } = new ObjValue();
         
 
         public const string NAME = "world/reward-star";

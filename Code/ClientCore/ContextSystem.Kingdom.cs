@@ -1,6 +1,10 @@
 ﻿using Proto.Helper;
 using Protocol;
 using System.Text;
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ClientCore
 {

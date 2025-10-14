@@ -1,5 +1,6 @@
 using ProtoBuf;
 using Proto;
+using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
@@ -7,13 +8,13 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ResInfoPacket Info { get; set; } = new();
+        public ResInfoPacket Info { get; set; } = new ResInfoPacket();
         
         [ProtoMember(2)]
-        public List<ChgObjPacket> GachaResultChgObjList { get; set; } = new();
+        public List<ChgObjPacket> GachaResultChgObjList { get; set; } = new List<ChgObjPacket>();
         
         [ProtoMember(3)]
-        public ChgObjPacket CostChgObj { get; set; } = new();
+        public ChgObjPacket CostChgObj { get; set; } = new ChgObjPacket();
         
 	}
 }

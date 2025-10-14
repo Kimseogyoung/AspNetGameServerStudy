@@ -32,6 +32,7 @@
     <PackageReference Include="protobuf-net.AspNetCore" Version="3.2.12" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="7.1.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,8 +41,8 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <ProjectReference Include="..\Protocol\Protocol.csproj" />
-	  <ProjectReference Include="..\Proto\Proto.csproj" />
+    <ProjectReference Include="..\Protocol\Protocol.csproj" />
+    <ProjectReference Include="..\Proto\Proto.csproj" />
     <ProjectReference Include="..\ServerFramework\ServerFramework.csproj" />
   </ItemGroup>
 

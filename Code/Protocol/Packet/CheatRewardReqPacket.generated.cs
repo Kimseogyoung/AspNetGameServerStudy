@@ -1,5 +1,6 @@
 using ProtoBuf;
 using Proto;
+using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
@@ -7,10 +8,10 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } = new();
+        public ReqInfoPacket Info { get; set; } = new ReqInfoPacket();
         
         [ProtoMember(2)]
-        public List<ObjPacket> RewardList { get; set; } = new();
+        public List<ObjPacket> RewardList { get; set; } = new List<ObjPacket>();
         
 
         public const string NAME = "cheat/reward";

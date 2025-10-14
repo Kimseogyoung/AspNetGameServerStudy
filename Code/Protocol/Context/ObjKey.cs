@@ -1,5 +1,6 @@
 ﻿using Proto;
 using ProtoBuf;
+using System;
 
 namespace Protocol
 {
@@ -10,8 +11,6 @@ namespace Protocol
         public EObjType Type { get; set; }
         [ProtoMember(2)]
         public int Num { get; set; }
-
-        public ObjKey() { }
 
         public ObjKey(EObjType type, int num)
         {

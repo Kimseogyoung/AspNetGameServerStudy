@@ -16,7 +16,7 @@ namespace Protocol
                 public int Num { get; set; } = default;
                 
                 [ProtoMember(4)]
-                public TilePosPacket TilePos { get; set; } = new();
+                public TilePosPacket TilePos { get; set; } = new TilePosPacket();
                 
 	}
 }

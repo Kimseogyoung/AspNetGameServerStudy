@@ -98,7 +98,7 @@ while (isRunning)
         var inputStrArr = inputArr.Skip(1).ToArray();
         await outApiFund.Action.Invoke(inputStrArr);
     }
-    catch(Exception ex)
+    catch (Exception ex)
     {
         Console.WriteLine($"ERROR:{ex.Message.ToString()}, {ex.StackTrace}");
         //APP.Ctx.Clear();

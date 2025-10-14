@@ -1,5 +1,8 @@
 using ProtoBuf;
 using Proto;
+using System.Collections.Generic;
+using System;
+
 namespace Protocol
 {
 	[ProtoContract]
@@ -67,31 +70,31 @@ namespace Protocol
     		public double AccFreeCash { get; set; } = default; //
         
     		[ProtoMember(21)]
-    		public List<CookiePacket> CookieList { get; set; } = new(); //
+    		public List<CookiePacket> CookieList { get; set; } = new List<CookiePacket>(); //
         
     		[ProtoMember(22)]
-    		public List<PointPacket> PointList { get; set; } = new(); //
+    		public List<PointPacket> PointList { get; set; } = new List<PointPacket>(); //
         
     		[ProtoMember(23)]
-    		public List<TicketPacket> TicketList { get; set; } = new(); //
+    		public List<TicketPacket> TicketList { get; set; } = new List<TicketPacket>(); //
         
     		[ProtoMember(24)]
-    		public List<ItemPacket> ItemList { get; set; } = new(); //
+    		public List<ItemPacket> ItemList { get; set; } = new List<ItemPacket>(); //
         
     		[ProtoMember(25)]
-    		public List<KingdomStructurePacket> KingdomStructureList { get; set; } = new(); //
+    		public List<KingdomStructurePacket> KingdomStructureList { get; set; } = new List<KingdomStructurePacket>(); //
         
     		[ProtoMember(26)]
-    		public List<KingdomDecoPacket> KingdomDecoList { get; set; } = new(); //
+    		public List<KingdomDecoPacket> KingdomDecoList { get; set; } = new List<KingdomDecoPacket>(); //
         
     		[ProtoMember(27)]
-    		public KingdomMapPacket KingdomMap { get; set; } = new(); //
+    		public KingdomMapPacket KingdomMap { get; set; } = new KingdomMapPacket(); //
         
     		[ProtoMember(28)]
-    		public List<WorldPacket> WorldList { get; set; } = new(); //
+    		public List<WorldPacket> WorldList { get; set; } = new List<WorldPacket>(); //
         
     		[ProtoMember(29)]
-    		public List<WorldStagePacket> WorldStageList { get; set; } = new(); //
+    		public List<WorldStagePacket> WorldStageList { get; set; } = new List<WorldStagePacket>(); //
         
 	}
 }

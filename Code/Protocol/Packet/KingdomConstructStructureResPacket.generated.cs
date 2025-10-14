@@ -1,5 +1,6 @@
 using ProtoBuf;
 using Proto;
+using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
@@ -7,16 +8,16 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ResInfoPacket Info { get; set; } = new();
+        public ResInfoPacket Info { get; set; } = new ResInfoPacket();
         
         [ProtoMember(2)]
-        public KingdomStructurePacket KingdomStructure { get; set; } = new();
+        public KingdomStructurePacket KingdomStructure { get; set; } = new KingdomStructurePacket();
         
         [ProtoMember(3)]
-        public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } = new();
+        public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } = new List<PlacedKingdomItemPacket>();
         
         [ProtoMember(4)]
-        public List<ChgObjPacket> ChgObjList { get; set; } = new();
+        public List<ChgObjPacket> ChgObjList { get; set; } = new List<ChgObjPacket>();
         
 	}
 }

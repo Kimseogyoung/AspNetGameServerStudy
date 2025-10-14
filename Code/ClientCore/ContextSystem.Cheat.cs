@@ -1,5 +1,8 @@
 ﻿using Proto;
 using Protocol;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 namespace ClientCore
 {
     public partial class ContextSystem
@@ -16,7 +19,10 @@ namespace ClientCore
             }
             else if (string.IsNullOrEmpty(objTypeStr))
             {
-                objTypeList.AddRange(Enum.GetValues<EObjType>());
+                foreach(var type in Enum.GetValues(typeof(EObjType)))
+                {
+                    objTypeList.Add((EObjType)type);
+                }
             }
             else
             {

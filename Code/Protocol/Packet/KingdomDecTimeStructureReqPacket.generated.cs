@@ -1,5 +1,6 @@
 using ProtoBuf;
 using Proto;
+using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
@@ -7,7 +8,7 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } = new();
+        public ReqInfoPacket Info { get; set; } = new ReqInfoPacket();
         
         [ProtoMember(2)]
         public ulong KingdomStructureId { get; set; } = default;
@@ -19,7 +20,7 @@ namespace Protocol
         public int RemainSec { get; set; } = default;
         
         [ProtoMember(5)]
-        public CostCashPacket CashCost { get; set; } = new();
+        public CostCashPacket CashCost { get; set; } = new CostCashPacket();
         
 
         public const string NAME = "kingdom/dec-time-structure";

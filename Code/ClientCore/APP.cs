@@ -1,4 +1,7 @@
-﻿namespace ClientCore
+﻿using System;
+using System.IO;
+
+namespace ClientCore
 {
     public static class APP
     {

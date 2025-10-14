@@ -1,9 +1,13 @@
 ﻿using Proto;
 using Protocol;
+using System;
+using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading.Tasks;
 
 namespace ClientCore
 {
@@ -195,7 +199,7 @@ namespace ClientCore
         private string _contentType = string.Empty;
         private HttpClient _httpClient;
 
-        private static readonly DateTime s_timestampBaseTime = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime s_timestampBaseTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
         public readonly static JsonSerializerOptions Opts = new JsonSerializerOptions
         {

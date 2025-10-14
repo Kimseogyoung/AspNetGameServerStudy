@@ -7,7 +7,7 @@ namespace Protocol
         {
         
                 [ProtoMember(1)]
-                public EObjType Type { get; set; } = new();
+                public EObjType Type { get; set; } = new EObjType();
                 
                 [ProtoMember(2)]
                 public int Num { get; set; } = default;

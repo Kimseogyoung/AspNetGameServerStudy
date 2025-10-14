@@ -19,7 +19,7 @@ namespace Protocol
                 public string AccountEnv { get; set; } = default;
                 
                 [ProtoMember(5)]
-                public EAccountState AccountState { get; set; } = new();
+                public EAccountState AccountState { get; set; } = new EAccountState();
                 
 	}
 }

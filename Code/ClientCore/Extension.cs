@@ -1,4 +1,5 @@
 ﻿using Protocol;
+using System.Collections.Generic;
 
 namespace ClientCore
 {

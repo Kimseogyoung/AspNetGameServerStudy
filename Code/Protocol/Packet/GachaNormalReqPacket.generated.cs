@@ -1,5 +1,6 @@
 using ProtoBuf;
 using Proto;
+using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
@@ -7,7 +8,7 @@ namespace Protocol
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } = new();
+        public ReqInfoPacket Info { get; set; } = new ReqInfoPacket();
         
         [ProtoMember(2)]
         public int ScheduleNum { get; set; } = default;
@@ -16,7 +17,7 @@ namespace Protocol
         public int Cnt { get; set; } = default;
         
         [ProtoMember(4)]
-        public CostObjPacket CostObj { get; set; } = new();
+        public CostObjPacket CostObj { get; set; } = new CostObjPacket();
         
 
         public const string NAME = "gacha/normal";

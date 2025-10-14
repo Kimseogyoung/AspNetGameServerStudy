@@ -113,6 +113,9 @@ namespace ClassGenerator
                     }
 
 
+                    // .net standard 2.1 에서 new()키워드를 못쓰는 이슈때문에 임시처리
+                    fieldValue = fieldValue == "new()" ? $"new {fieldCodeType}()": fieldValue;
+
                     classDefinitionList.Add(new ModelDefinition
                     {
                         FolderName = folderName,
