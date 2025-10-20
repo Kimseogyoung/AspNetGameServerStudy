@@ -1,0 +1,3 @@
+IsLogMode : true
+IsDebugMode : true
+StartScene: "IntroScene"
