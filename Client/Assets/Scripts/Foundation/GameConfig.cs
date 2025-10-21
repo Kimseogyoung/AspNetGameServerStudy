@@ -5,5 +5,6 @@ namespace Config
         public string StartScene = "IntroScene";
         public string ServerUrl = "http://localhost:5157";
         public int RequestTimeoutSec = 30;
+        public int IntroLoadingMinSec = 1;
     }
 }

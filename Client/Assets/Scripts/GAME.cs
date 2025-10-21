@@ -152,14 +152,6 @@ public class GAME : ScriptBase
         APP.Ctx = ClientCore.APP.Ctx;
         APP.Prt = ClientCore.APP.Prt;
 
-        bool result = await _sceneManager.StartFirstScene();
-
-        if (!result)
-        {
-            LOG.E("Failed Init. GAME.Init()");
-            return;
-        }
-
         var isConnectServer = await APP.Ctx.IsSuccessConnect();
         if (!isConnectServer)
         {
@@ -167,9 +159,15 @@ public class GAME : ScriptBase
             return;
         }
 
+        bool isLoadSuccess = await _sceneManager.StartFirstScene();
+
+        if (!isLoadSuccess)
+        {
+            LOG.E("Failed Init. GAME.Init()");
+            return;
+        }
         LOG.I($"Success Game Init. ServerUrl({APP.Ctx.Host})");
         _state = EGameState.PLAY;
-
     }
 
     private void Pause(PauseEvent pause)
