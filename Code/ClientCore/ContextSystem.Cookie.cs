@@ -6,15 +6,16 @@ namespace ClientCore
 {
     public partial class ContextSystem
     {
-        public async Task RequestLoadSchedule()
+        public async Task<ScheduleLoadResPacket> RequestLoadSchedule()
         {
             var req = new ScheduleLoadReqPacket();
-            var res = await _rpcSystem.RequestAsync<ScheduleLoadReqPacket, ScheduleLoadResPacket>(req);
+            var res = await RpcSystem.RequestAsync<ScheduleLoadReqPacket, ScheduleLoadResPacket>(req);
 
             SyncScheduleList(res.ScheduleList);
+            return res;
         }
 
-        public async Task RequestGachaNormal(int scheduleNum, int cnt)
+        public async Task<GachaNormalResPacket> RequestGachaNormal(int scheduleNum, int cnt)
         {
             var prtGachaSchedule = APP.Prt.GetGachaSchedulePrt(scheduleNum);
 
@@ -22,26 +23,27 @@ namespace ClientCore
             if(costIdx == -1)
             {
                 Console.WriteLine($"INVALID_GACHA_CNT({cnt})");
-                return;
+                return new GachaNormalResPacket { Info = _errorRes };
             }
 
             var req = new GachaNormalReqPacket(scheduleNum, cnt, new CostObjPacket { Type = prtGachaSchedule.CostTypeList[costIdx], Num = 0, Amount = prtGachaSchedule.CostAmountList[costIdx] * cnt });
-            var res = await _rpcSystem.RequestAsync<GachaNormalReqPacket, GachaNormalResPacket>(req);
+            var res = await RpcSystem.RequestAsync<GachaNormalReqPacket, GachaNormalResPacket>(req);
 
             SyncChgObjList(res.GachaResultChgObjList);
             SyncChgObj(res.CostChgObj);
+            return res;
         }
 
         public void PrintCookieList()
         {
-            foreach (var cookie in _player.CookieList)
+            foreach (var cookie in Player.CookieList)
             {
                 var prtCookie = APP.Prt.GetCookiePrt(cookie.Num);
                 Console.WriteLine($"CookieNum:{cookie.Num}, Name:{prtCookie.Name}, Star:{cookie.Star}, Lv:{cookie.Lv}, SoulStone:{cookie.SoulStone}, State:{cookie.State.ToString()}");
             }
         }
 
-        public async Task RequestCookieEnhanceStar(int cookieNum, int aftStar)
+        public async Task<CookieEnhanceStarResPacket> RequestCookieEnhanceStar(int cookieNum, int aftStar)
         {
             var prtCookie = APP.Prt.GetCookiePrt(cookieNum);
             var cookie = GetCookieForce(cookieNum);
@@ -54,12 +56,13 @@ namespace ClientCore
             }
 
             var req = new CookieEnhanceStarReqPacket(cookieNum, cookie.Star, aftStar, useSoulStone);
-            var res = await _rpcSystem.RequestAsync<CookieEnhanceStarReqPacket, CookieEnhanceStarResPacket>(req);
+            var res = await RpcSystem.RequestAsync<CookieEnhanceStarReqPacket, CookieEnhanceStarResPacket>(req);
 
             SyncCookie(res.Cookie);
+            return res;
         }
 
-        public async Task RequestCookieEnhanceLv(int cookieNum, int aftLv)
+        public async Task<CookieEnhanceLvResPacket> RequestCookieEnhanceLv(int cookieNum, int aftLv)
         {
             var prtCookie = APP.Prt.GetCookiePrt(cookieNum);
             var cookie = GetCookieForce(cookieNum);
@@ -67,9 +70,10 @@ namespace ClientCore
 
 
             var req = new CookieEnhanceLvReqPacket(cookieNum, cookie.Lv, aftLv, new CostObjPacket { Type = Proto.EObjType.POINT_COOKIE_LV, Num = 0, Amount = cfgLvCost * (aftLv - cookie.Lv) });
-            var res = await _rpcSystem.RequestAsync<CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(req);
+            var res = await RpcSystem.RequestAsync<CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(req);
 
             SyncCookie(res.Cookie);
+            return res;
         }
     }
 }

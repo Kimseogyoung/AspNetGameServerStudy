@@ -155,7 +155,7 @@ public class GAME : ScriptBase
         var isConnectServer = await APP.Ctx.IsSuccessConnect();
         if (!isConnectServer)
         {
-            LOG.E($"Failed Connect Server. ServerUrl({APP.Ctx.Host})");
+            LOG.E($"Failed Connect Server. ServerUrl({APP.Ctx.RpcSystem.Host})");
             return;
         }
 
@@ -166,7 +166,7 @@ public class GAME : ScriptBase
             LOG.E("Failed Init. GAME.Init()");
             return;
         }
-        LOG.I($"Success Game Init. ServerUrl({APP.Ctx.Host})");
+        LOG.I($"Success Game Init. ServerUrl({APP.Ctx.RpcSystem.Host})");
         _state = EGameState.PLAY;
     }
 

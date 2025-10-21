@@ -47,7 +47,8 @@ public class IntroScene : SceneBase
             return;
         }
 
-        if(_currentTimeSec > APP.GameConf.IntroLoadingMinSec && _stage != ELoadStage.LOAD_NEXT_SCENE)
+        // 로딩이 빠르게 완료되었더라도 최소 _currentTimeSec만큼은 대기한 후 넘어감.
+        if (_currentTimeSec > APP.GameConf.IntroLoadingMinSec && _stage != ELoadStage.LOAD_NEXT_SCENE)
         {
             _stage = ELoadStage.LOAD_NEXT_SCENE;
              _ = APP.SceneManager.ChangeScene("InGameScene");
@@ -58,6 +59,7 @@ public class IntroScene : SceneBase
     {
         foreach (ELoadStage stage in Enum.GetValues(typeof(ELoadStage)))
         {
+            // NOTE: LOAD_NEXT_SCENE는 Update함수에서 Scene이동 하면서 처리함.
             if (stage == ELoadStage.LOAD_NEXT_SCENE)
             {
                 continue;
@@ -66,31 +68,10 @@ public class IntroScene : SceneBase
             _stage = stage;
             _ui.SetLoadingText(_stage.ToString());
 
-            switch (_stage)
+            var isSuccess = await HandleStageAsync(_stage);
+            if (!isSuccess)
             {
-                case ELoadStage.NONE:
-                    break;
-                case ELoadStage.LOAD_RESOURCE:
-                    break;
-                case ELoadStage.SIGN_IN:
-                    // TODO: 계정 있으면 SignIn
-                    await APP.Ctx.RequestSignUpAsync(Guid.NewGuid().ToString());
-                    if (string.IsNullOrEmpty(APP.Ctx.SessionId))
-                    {
-                        continue;
-                    }
-
-                    LOG.I($"Success SignUpRequest SessionId({APP.Ctx.SessionId})");
-                    break;
-                case ELoadStage.LOAD_PLAYER:
-                    await APP.Ctx.RequestEnterAsync();
-                    break;
-                case ELoadStage.FINISH:
-                    break;
-                default:
-                    LOG.E($"No Handling LoadStage({_stage})");
-                    continue;
-
+                break;
             }
 
             // 가짜 로딩하는 척
@@ -100,10 +81,32 @@ public class IntroScene : SceneBase
         if (_stage < ELoadStage.FINISH)
         {
             LOG.E($"Failed Intro Loading Stage({_stage})");
+            _ui.SetLoadingText(_stage.ToString() + "_FAILED");
             return false;
         }
 
         LOG.I("Success Intro Loading");
         return true;
+    }
+
+    private async Task<bool> HandleStageAsync(ELoadStage stage)
+    {
+        switch (stage)
+        {
+            case ELoadStage.NONE:
+            case ELoadStage.LOAD_RESOURCE:
+                return true;
+            case ELoadStage.SIGN_IN:
+                var signUpRes = await APP.Ctx.RequestSignUpAsync(Guid.NewGuid().ToString());
+                return !APP.Ctx.IsErrorRes(signUpRes);
+            case ELoadStage.LOAD_PLAYER:
+                var enterRes = await APP.Ctx.RequestEnterAsync();
+                return !APP.Ctx.IsErrorRes(enterRes);
+            case ELoadStage.FINISH:
+                return true;
+            default:
+                LOG.E($"No Handling LoadStage({stage})");
+                return false;
+        }
     }
 }

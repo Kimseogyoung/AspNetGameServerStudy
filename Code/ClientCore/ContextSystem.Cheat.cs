@@ -7,7 +7,7 @@ namespace ClientCore
 {
     public partial class ContextSystem
     {
-        public async Task RequestCheatReward(string objTypeStr, int objNum, int objAmount)
+        public async Task<CheatRewardResPacket> RequestCheatReward(string objTypeStr, int objNum, int objAmount)
         {
             var upperCashObjTypeStr = objTypeStr.ToUpper();
             var objTypeList = new List<EObjType>();
@@ -75,9 +75,10 @@ namespace ClientCore
             }
 
             var req = new CheatRewardReqPacket { RewardList = reqRewardList };
-            var res = await _rpcSystem.RequestAsync<CheatRewardReqPacket, CheatRewardResPacket>(req);
+            var res = await RpcSystem.RequestAsync<CheatRewardReqPacket, CheatRewardResPacket>(req);
 
             SyncChgObjList(res.ChgObjList);
+            return res;
         }
     }
 }

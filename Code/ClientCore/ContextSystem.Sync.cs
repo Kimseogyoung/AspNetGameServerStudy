@@ -15,22 +15,22 @@ namespace ClientCore
             switch (objTypeCategory)
             {
                 case EObjType.EXP:
-                    _player.Exp = pakChgObj.TotalAmount;
+                    Player.Exp = pakChgObj.TotalAmount;
                     break;
                 case EObjType.GOLD:
-                    _player.Gold = pakChgObj.TotalAmount;
+                    Player.Gold = pakChgObj.TotalAmount;
                     break;
                 case EObjType.FREE_CASH:
-                    _player.FreeCash = pakChgObj.TotalAmount;
+                    Player.FreeCash = pakChgObj.TotalAmount;
                     break;
                 case EObjType.REAL_CASH:
-                    _player.RealCash = pakChgObj.TotalAmount;
+                    Player.RealCash = pakChgObj.TotalAmount;
                     break;
                 case EObjType.TOTAL_CASH:
-                    var realCashCost = Math.Min(_player.RealCash, pakChgObj.TotalAmount);
-                    _player.RealCash -= realCashCost;
-                    var freeCashCost = Math.Min(_player.FreeCash, pakChgObj.TotalAmount - realCashCost);
-                    _player.FreeCash = freeCashCost;
+                    var realCashCost = Math.Min(Player.RealCash, pakChgObj.TotalAmount);
+                    Player.RealCash -= realCashCost;
+                    var freeCashCost = Math.Min(Player.FreeCash, pakChgObj.TotalAmount - realCashCost);
+                    Player.FreeCash = freeCashCost;
                     break;
                 case EObjType.POINT_START:
                     var pointType = pakChgObj.Type;
@@ -85,10 +85,10 @@ namespace ClientCore
         {
             foreach (var pakPlacedKingdomItem in pakPlacedKingdomItemList)
             {
-                var placedKingdomItem = _player.KingdomMap.PlacedKingdomItemList.Where(x => x.Id == pakPlacedKingdomItem.Id).FirstOrDefault();
+                var placedKingdomItem = Player.KingdomMap.PlacedKingdomItemList.Where(x => x.Id == pakPlacedKingdomItem.Id).FirstOrDefault();
                 if (placedKingdomItem == null)
                 {
-                    _player.KingdomMap.PlacedKingdomItemList.Add(pakPlacedKingdomItem);
+                    Player.KingdomMap.PlacedKingdomItemList.Add(pakPlacedKingdomItem);
                 }
                 else
                 {
@@ -111,10 +111,10 @@ namespace ClientCore
 
         public void SyncKingdomStructure(KingdomStructurePacket pakKingdomStructure)
         {
-            var kingdomStructure = _player.KingdomStructureList.Where(x => x.SfId == pakKingdomStructure.SfId).FirstOrDefault();
+            var kingdomStructure = Player.KingdomStructureList.Where(x => x.SfId == pakKingdomStructure.SfId).FirstOrDefault();
             if (kingdomStructure == null)
             {
-                _player.KingdomStructureList.Add(pakKingdomStructure);
+                Player.KingdomStructureList.Add(pakKingdomStructure);
             }
             else
             {
@@ -129,10 +129,10 @@ namespace ClientCore
 
         public void SyncKingdomDeco(KingdomDecoPacket pakKingdomDeco)
         {
-            var kingdomDeco = _player.KingdomDecoList.Where(x => x.Num == pakKingdomDeco.Num).FirstOrDefault();
+            var kingdomDeco = Player.KingdomDecoList.Where(x => x.Num == pakKingdomDeco.Num).FirstOrDefault();
             if (kingdomDeco == null)
             {
-                _player.KingdomDecoList.Add(pakKingdomDeco);
+                Player.KingdomDecoList.Add(pakKingdomDeco);
             }
             else
             {
@@ -147,10 +147,10 @@ namespace ClientCore
 
         public void SyncCookie(CookiePacket pakCookie)
         {
-            var cookie = _player.CookieList.Where(x => x.Num == pakCookie.Num).FirstOrDefault();
+            var cookie = Player.CookieList.Where(x => x.Num == pakCookie.Num).FirstOrDefault();
             if (cookie == null)
             {
-                _player.CookieList.Add(pakCookie);
+                Player.CookieList.Add(pakCookie);
             }
             else
             {
@@ -200,11 +200,11 @@ namespace ClientCore
         private PointPacket GetPointForce(EObjType objType)
         {
             var num = (int)objType;
-            var pakPoint = _player.PointList.FirstOrDefault(x => x.Num == num);
+            var pakPoint = Player.PointList.FirstOrDefault(x => x.Num == num);
             if (pakPoint == null)
             {
                 pakPoint = new PointPacket { Num = num };
-                _player.PointList.Add(pakPoint);
+                Player.PointList.Add(pakPoint);
             }
             return pakPoint;
         }
@@ -212,45 +212,45 @@ namespace ClientCore
         private TicketPacket GetTicketForce(EObjType objType)
         {
             var num = (int)objType;
-            var pakTicket = _player.TicketList.FirstOrDefault(x => x.Num == num);
+            var pakTicket = Player.TicketList.FirstOrDefault(x => x.Num == num);
             if (pakTicket == null)
             {
                 pakTicket = new TicketPacket { Num = num };
-                _player.TicketList.Add(pakTicket);
+                Player.TicketList.Add(pakTicket);
             }
             return pakTicket;
         }
 
         private ItemPacket GetItemForce(int num)
         {
-            var pakItem = _player.ItemList.FirstOrDefault(x => x.Num == num);
+            var pakItem = Player.ItemList.FirstOrDefault(x => x.Num == num);
             if (pakItem == null)
             {
                 pakItem = new ItemPacket { Num = num };
-                _player.ItemList.Add(pakItem);
+                Player.ItemList.Add(pakItem);
             }
             return pakItem;
         }
 
         private CookiePacket GetCookieForce(int num)
         {
-            var pakCookie = _player.CookieList.FirstOrDefault(x => x.Num == num);
+            var pakCookie = Player.CookieList.FirstOrDefault(x => x.Num == num);
             if (pakCookie == null)
             {
                 pakCookie = new CookiePacket { Num = num };
-                _player.CookieList.Add(pakCookie);
+                Player.CookieList.Add(pakCookie);
             }
             return pakCookie;
         }
 
         private WorldPacket GetWorldForce(int num)
         {
-            var pakWorld = _player.WorldList.Where(x => x.Num == num).FirstOrDefault();
+            var pakWorld = Player.WorldList.Where(x => x.Num == num).FirstOrDefault();
             if (pakWorld == null)
             {
                 var prtWorld = APP.Prt.GetWorldPrt(num);
                 pakWorld = new WorldPacket { Num = num };
-                _player.WorldList.Add(pakWorld);
+                Player.WorldList.Add(pakWorld);
             }
 
             return pakWorld;
@@ -258,12 +258,12 @@ namespace ClientCore
 
         private WorldStagePacket GetWorldStageForce(int num)
         {
-            var pakWorldStage = _player.WorldStageList.Where(x => x.Num == num).FirstOrDefault();
+            var pakWorldStage = Player.WorldStageList.Where(x => x.Num == num).FirstOrDefault();
             if (pakWorldStage == null)
             {
                 var prtStage = APP.Prt.GetWorldStagePrt(num);
                 pakWorldStage = new WorldStagePacket { Num = num, WorldNum = prtStage.WorldNum };
-                _player.WorldStageList.Add(pakWorldStage);
+                Player.WorldStageList.Add(pakWorldStage);
             }
 
             return pakWorldStage;

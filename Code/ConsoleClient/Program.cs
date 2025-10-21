@@ -71,7 +71,7 @@ var funcDict = new Dictionary<int, ApiFunc>()
 var isRunning = true;
 while (isRunning)
 {
-    Console.WriteLine($"\n--- 명령 선택 --- (현재 세션: {APP.Ctx.SessionId})");
+    Console.WriteLine($"\n--- 명령 선택 --- (현재 세션: {APP.Ctx.RpcSystem.SessionId})");
     foreach (var num in funcDict.Keys.OrderBy(x => x))
     {
         var apiPath = funcDict[num].ApiPath;

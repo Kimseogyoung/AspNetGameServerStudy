@@ -1,79 +1,88 @@
-﻿using Protocol;
+﻿using Proto;
+using Protocol;
 using System;
 using System.Threading.Tasks;
 namespace ClientCore
 {
     public partial class ContextSystem
     {
-        public string SessionId => _rpcSystem.SessionId;
-        public string Host => _rpcSystem.Host;
+        public PlayerPacket Player { get; private set; }
+        public RpcSystem RpcSystem { get; private set; }
+
+        public readonly ResInfoPacket _errorRes = new ResInfoPacket { ResultCode = (int)EErrorCode.NO_HANDLING_ERROR };
 
         public void Init(string serverUrl, TimeSpan timeoutSpan)
         {
-            _rpcSystem = new RpcSystem();
-            _rpcSystem.Init(serverUrl, MsgProtocol.ProtoBufContentType, timeoutSpan);
+            RpcSystem = new RpcSystem();
+            RpcSystem.Init(serverUrl, MsgProtocol.ProtoBufContentType, timeoutSpan);
         }
 
         public void Clear()
         {
-            _player = null;
-            _rpcSystem.Clear();
+            Player = null;
+            RpcSystem.Clear();
+        }
+
+        public bool IsErrorRes(IResPacket res)
+        {
+            return res.Info.ResultCode != (int)EErrorCode.OK;
         }
 
         public async Task<bool> IsSuccessConnect()
         {
-            var resultMsg = await RequestHealthCheckAsync();
-            if (string.IsNullOrEmpty(resultMsg))
+            var res = await RequestHealthCheckAsync();
+            if (string.IsNullOrEmpty(res.Msg))
             {
                 return false;
             }
 
-            Console.WriteLine(resultMsg);
+            Console.WriteLine(res);
             return true;
         }
 
-        public async Task<string> RequestHealthCheckAsync()
+        public async Task<HealthCheckResPacket> RequestHealthCheckAsync()
         {
             var req = new HealthCheckReqPacket();
-            var res = await _rpcSystem.RequestAsync<HealthCheckReqPacket, HealthCheckResPacket>(req);
-            return res.Msg;
+            var res = await RpcSystem.RequestAsync<HealthCheckReqPacket, HealthCheckResPacket>(req);
+            return res;
         }
 
-        public async Task RequestSignUpAsync(string deviceKey)
+        public async Task<AuthSignUpResPacket> RequestSignUpAsync(string deviceKey)
         {
             var req = new AuthSignUpReqPacket(deviceKey);
 
-            var res = await _rpcSystem.RequestAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(req);
-            _rpcSystem.SetSessionKey(res.Result.SessionKey);
+            var res = await RpcSystem.RequestAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(req);
+            RpcSystem.SetSessionKey(res.Result.SessionKey);
+            return res;
         }
 
-        public async Task RequestSignInAsync(string channelId)
+        public async Task<AuthSignInResPacket> RequestSignInAsync(string channelId)
         {
             var req = new AuthSignInReqPacket(channelId);
-            var res = await _rpcSystem.RequestAsync<AuthSignInReqPacket, AuthSignInResPacket>(req);
-            _rpcSystem.SetSessionKey(res.Result.SessionKey);
+            var res = await RpcSystem.RequestAsync<AuthSignInReqPacket, AuthSignInResPacket>(req);
+            RpcSystem.SetSessionKey(res.Result.SessionKey);
+            return res;
         }
 
-        public async Task RequestEnterAsync()
+        public async Task<GameEnterResPacket> RequestEnterAsync()
         {
             var req = new GameEnterReqPacket();
-            var res = await _rpcSystem.RequestAsync<GameEnterReqPacket, GameEnterResPacket>(req);
+            var res = await RpcSystem.RequestAsync<GameEnterReqPacket, GameEnterResPacket>(req);
             
-            _player = res.Player;
+            Player = res.Player;
 
             RefreshKingdom();
+            return res;
         }
 
-        public async Task RequestChangeNameAsync(string name)
+        public async Task<GameChangeNameResPacket> RequestChangeNameAsync(string name)
         {
-            var befName = _player.ProfileName;
+            var befName = Player.ProfileName;
             var req = new GameChangeNameReqPacket(name);
-            var res = await _rpcSystem.RequestAsync<GameChangeNameReqPacket, GameChangeNameResPacket>(req);
+            var res = await RpcSystem.RequestAsync<GameChangeNameReqPacket, GameChangeNameResPacket>(req);
             Console.WriteLine($"Name  {befName} -> {res.PlayerName}");
-            _player.ProfileName = res.PlayerName;
+            Player.ProfileName = res.PlayerName;
+            return res;
         }
-
-        private PlayerPacket _player;
-        private RpcSystem _rpcSystem;
     }
 }

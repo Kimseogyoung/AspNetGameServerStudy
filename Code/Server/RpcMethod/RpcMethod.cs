@@ -4,6 +4,7 @@ using Server.Helper;
 using WebStudyServer.Helper;
 using WebStudyServer;
 using Server.Repo;
+using Proto;
 
 namespace Server
 {
@@ -81,12 +82,14 @@ namespace Server
                 else
                 {
                     var res = await Task.Run(() => _run!(rpcSvc, (REQ)rpcReq));
+                    res.Info = new ResInfoPacket { ResultCode = (int)EErrorCode.OK };
                     return res;
                 }
             }
             else
             {
                 var res = await _runAsync(rpcSvc, (REQ)rpcReq);
+                res.Info = new ResInfoPacket { ResultCode = (int)EErrorCode.OK };
                 return res;
             }
         }
