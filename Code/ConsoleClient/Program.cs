@@ -2,11 +2,14 @@
 using ClientCore;
 using Protocol;
 var initPath = args.Length > 0 ? args[0] : "../../Data/Csv/Proto";
-APP.Init(Path.Join(APP.GetProjPath(), initPath), "http://localhost:5157");
+APP.Init(Path.Join(APP.GetProjPath(), initPath), "http://localhost:5157", TimeSpan.FromSeconds(5));
 APP.Prt.Bind();
 
 var funcDict = new Dictionary<int, ApiFunc>()
 {
+    { -1, new ApiFunc(){ ApiPath = HealthCheckReqPacket.NAME, Desc = "HealthCheck",
+        Action = async (valueArr) =>  await APP.Ctx.RequestHealthCheckAsync()} },
+
     { 1, new ApiFunc(){ ApiPath = AuthSignUpReqPacket.NAME, Desc = "회원 가입",
         Action = async (valueArr) =>  await APP.Ctx.RequestSignUpAsync(Guid.NewGuid().ToString())} },
     { 2, new ApiFunc(){ ApiPath = AuthSignInReqPacket.NAME, Desc = "기존 계정 로그인 (ChannelKey)",

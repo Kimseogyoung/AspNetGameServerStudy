@@ -5,6 +5,9 @@ common,SignInResult,,,,,
 ,SignInResult,ClientSecret,string,3,,
 ,SignInResult,AccountEnv,string,4,,
 ,SignInResult,AccountState,EAccountState,5,,
+req,HealthCheckReq,,,,,health-check
+res,HealthCheckRes,,,,,
+,HealthCheckRes,Msg,string,2,,
 req,AuthSignUpReq,,,,,auth/sign-up
 ,AuthSignUpReq,DeviceKey,string,2,,
 res,AuthSignUpRes,,,,,

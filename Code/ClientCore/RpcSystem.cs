@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -14,12 +15,13 @@ namespace ClientCore
     public class RpcSystem
     {
         public string SessionId => _sessionKey;
+        public string Host => _host;
 
-        public void Init(string host, string contentType)
+        public void Init(string host, string contentType, TimeSpan timeoutSpan)
         {
             _host = host.Trim('/');
             _contentType = contentType;
-            _httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
+            _httpClient = new HttpClient { Timeout = timeoutSpan };
         }
 
         public void Clear()
@@ -36,6 +38,7 @@ namespace ClientCore
         {
             _sessionKey = key;
         }
+
 
         public async Task<RES> RequestAsync<REQ, RES>(REQ req)
             where REQ : IReqPacket, new()
@@ -62,40 +65,58 @@ namespace ClientCore
             content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(_contentType);
 
             // POST 요청 보내기
-            var response = await _httpClient.PostAsync(fullUrl, content);
-
-            // 응답 처리
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var resContentType = response.Content.Headers.ContentType.MediaType.ToString();
-                var responseByteArr = await response.Content.ReadAsByteArrayAsync();
-                var res = Deserialize<RES>(resContentType, responseByteArr);
+                var response = await _httpClient.PostAsync(fullUrl, content);
 
-                var json = JsonSerializer.Serialize(res);
-                Console.WriteLine("응답: " + json);
-                return res;
+                // 응답 처리
+                if (response.IsSuccessStatusCode)
+                {
+                    var resContentType = response.Content.Headers.ContentType.MediaType.ToString();
+                    var responseByteArr = await response.Content.ReadAsByteArrayAsync();
+                    var res = Deserialize<RES>(resContentType, responseByteArr);
+
+                    var json = JsonSerializer.Serialize(res);
+                    Console.WriteLine("응답: " + json);
+                    return res;
+                }
+                else if (response.StatusCode == HttpStatusCode.InternalServerError)
+                {
+                    // TODO: 예외처리
+                    var resContentType = response.Content.Headers.ContentType.MediaType.ToString();
+                    Console.WriteLine($"에러: {response.StatusCode}");
+                    var responseByteArr = await response.Content.ReadAsByteArrayAsync();
+                    var errorRes = Deserialize<ErrorResponsePacket>(resContentType, responseByteArr);
+                    var res = new RES();
+                    res.Info = errorRes.Info;
+
+                    var json = JsonSerializer.Serialize(res);
+                    Console.WriteLine("응답: " + json);
+                    throw new Exception("ERROR");
+                }
+                else
+                {
+                    var res = new RES();
+                    res.Info.ResultCode = (int)EErrorCode.NO_HANDLING_ERROR;
+                    res.Info.ResultMsg = $"{response.StatusCode}Code";
+                    return res;
+                }
             }
-            else if (response.StatusCode == HttpStatusCode.InternalServerError)
+            catch (Exception exc)
             {
-                // TODO: 예외처리
-                var resContentType = response.Content.Headers.ContentType.MediaType.ToString();
-                Console.WriteLine($"에러: {response.StatusCode}");
-                var responseByteArr = await response.Content.ReadAsByteArrayAsync();
-                var errorRes = Deserialize<ErrorResponsePacket>(resContentType, responseByteArr);
                 var res = new RES();
-                res.Info = errorRes.Info;
+                if (exc.InnerException is SocketException)
+                {
+                    res.Info.ResultCode = (int)EErrorCode.SERVER_DOWN;
+                    res.Info.ResultMsg = exc.Message;
+                    return res;
+                }
 
-                var json = JsonSerializer.Serialize(res);
-                Console.WriteLine("응답: " + json);
-                throw new Exception("ERROR");
-            }
-            else
-            {
-                var res = new RES();
                 res.Info.ResultCode = (int)EErrorCode.NO_HANDLING_ERROR;
-                res.Info.ResultMsg = $"{response.StatusCode}Code";
+                res.Info.ResultMsg = $"Exception Msg({exc.Message}) InnerException({exc.InnerException.GetType().Name}:{exc.InnerException.Message})";
                 return res;
             }
+
         }
 
         private string StringSerialize<REQ>(REQ obj)

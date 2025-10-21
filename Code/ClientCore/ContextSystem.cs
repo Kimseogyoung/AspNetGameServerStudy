@@ -6,17 +6,37 @@ namespace ClientCore
     public partial class ContextSystem
     {
         public string SessionId => _rpcSystem.SessionId;
+        public string Host => _rpcSystem.Host;
 
-        public void Init(string serverUrl)
+        public void Init(string serverUrl, TimeSpan timeoutSpan)
         {
             _rpcSystem = new RpcSystem();
-            _rpcSystem.Init(serverUrl, MsgProtocol.ProtoBufContentType);
+            _rpcSystem.Init(serverUrl, MsgProtocol.ProtoBufContentType, timeoutSpan);
         }
 
         public void Clear()
         {
             _player = null;
             _rpcSystem.Clear();
+        }
+
+        public async Task<bool> IsSuccessConnect()
+        {
+            var resultMsg = await RequestHealthCheckAsync();
+            if (string.IsNullOrEmpty(resultMsg))
+            {
+                return false;
+            }
+
+            Console.WriteLine(resultMsg);
+            return true;
+        }
+
+        public async Task<string> RequestHealthCheckAsync()
+        {
+            var req = new HealthCheckReqPacket();
+            var res = await _rpcSystem.RequestAsync<HealthCheckReqPacket, HealthCheckResPacket>(req);
+            return res.Msg;
         }
 
         public async Task RequestSignUpAsync(string deviceKey)

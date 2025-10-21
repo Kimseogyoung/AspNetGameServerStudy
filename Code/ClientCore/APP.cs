@@ -8,7 +8,7 @@ namespace ClientCore
         public static ProtoSystem Prt => _prt;
         public static ContextSystem Ctx => _ctx;
 
-        public static void Init(string inCsvPath, string serverUrl)
+        public static void Init(string inCsvPath, string serverUrl, TimeSpan requestTimeoutSpan)
         {
             if (_isInit)
             {
@@ -20,7 +20,7 @@ namespace ClientCore
 
             _isInit = true;
             _prt.Init(inCsvPath);
-            _ctx.Init(serverUrl);
+            _ctx.Init(serverUrl, requestTimeoutSpan);
         }
 
         public static string GetProjPath()

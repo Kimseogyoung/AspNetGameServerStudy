@@ -35,6 +35,7 @@ namespace WebStudyServer
             services.AddScoped<ErrorHandler>();
             services.AddScoped<UserLockService>();
 
+            services.AddScoped<CommonService>();
             services.AddScoped<AuthService>();
             services.AddScoped<GameService>();
             services.AddScoped<CheatService>();

@@ -13,6 +13,8 @@ namespace WebStudyServer
             // RpcMethod 등록
             var rpcMethodList = new List<IRpcMethod>()
             {
+                new RpcMethod<CommonService, HealthCheckReqPacket, HealthCheckResPacket>(HealthCheckReqPacket.NAME, (commonSvc, req) => { return commonSvc.HealthCheck(); }),
+
                 // Auth api는 RpcMethod를 사용하여 인증 없이도 사용할 수 있도록 함.
                 new RpcMethod<AuthService, AuthSignUpReqPacket, AuthSignUpResPacket>(AuthSignUpReqPacket.NAME, (authSvc, req) => { return authSvc.SignUp(req.DeviceKey); }),
                 new RpcMethod<AuthService, AuthSignInReqPacket, AuthSignInResPacket>(AuthSignInReqPacket.NAME, (authSvc, req) => { return authSvc.SignIn(req.ChannelId); }),

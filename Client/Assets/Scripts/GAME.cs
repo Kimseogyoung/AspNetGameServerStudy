@@ -1,5 +1,7 @@
 ﻿using Proto;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class GAME : ScriptBase
@@ -66,14 +68,6 @@ public class GAME : ScriptBase
 
         APP.GAME = this;
 
-        var rootPath = System.IO.Path.GetFullPath(System.IO.Path.Join(Application.dataPath, "..", ".."));
-        var csvPath = System.IO.Path.Join(rootPath, "Data", "Csv");
-        LOG.I(csvPath);
-
-        ClientCore.APP.Init(csvPath, "http://localhost:5157");
-        APP.Ctx = ClientCore.APP.Ctx;
-        APP.Prt = ClientCore.APP.Prt;
-
         LOG.I("GameManager Awake");
 
         DontDestroyOnLoad(gameObject);
@@ -128,7 +122,7 @@ public class GAME : ScriptBase
             manager.StartManager();
         }
 
-        Init();
+        _ = InitAsync();
     }
 
     void FixedUpdate()
@@ -148,8 +142,16 @@ public class GAME : ScriptBase
 
     }
 
-    private async void Init()
+    private async Task InitAsync()
     {
+        LOG.I($"Start Init");
+
+        var csvPath = AppPath.GetCsvPath();
+        ClientCore.APP.Init(csvPath, APP.GameConf.ServerUrl, TimeSpan.FromSeconds(APP.GameConf.RequestTimeoutSec));
+
+        APP.Ctx = ClientCore.APP.Ctx;
+        APP.Prt = ClientCore.APP.Prt;
+
         bool result = await _sceneManager.StartFirstScene();
 
         if (!result)
@@ -158,7 +160,16 @@ public class GAME : ScriptBase
             return;
         }
 
+        var isConnectServer = await APP.Ctx.IsSuccessConnect();
+        if (!isConnectServer)
+        {
+            LOG.E($"Failed Connect Server. ServerUrl({APP.Ctx.Host})");
+            return;
+        }
+
+        LOG.I($"Success Game Init. ServerUrl({APP.Ctx.Host})");
         _state = EGameState.PLAY;
+
     }
 
     private void Pause(PauseEvent pause)

@@ -1,1 +1,3 @@
 StartScene: "IntroScene"
+ServerUrl: "http://localhost:5157"
+RequestTimeoutSec: 5
