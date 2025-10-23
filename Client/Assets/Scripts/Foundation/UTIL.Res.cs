@@ -44,7 +44,10 @@ static public partial class UTIL
             return false;
 
         if (parent != null)
+        {
             outGO.transform.SetParent(parent.transform);
+            outGO.transform.localScale = parent.transform.localScale;
+        }
 
         outGO.name = name;
 

@@ -33,8 +33,11 @@ abstract public class UI_Base : MonoBehaviour
             //GameLogger.Error($"Failed to bind({name}) to {nameof(gameObject.name)}");
             return null;
         }
-        GameObject newGameObject = obj as GameObject;
-        _objects.Add(name, newGameObject.AddComponent<T>());
+
+        var newGameObject = obj as GameObject;
+        var newComp = newGameObject.AddComponent<T>();
+        BindInternal(name, newComp);
+
         return Get<T>(name);
     }
 
@@ -53,9 +56,8 @@ abstract public class UI_Base : MonoBehaviour
 			return null;
         }
 
-		_objects.Add(name, obj);
+        BindInternal(name, obj);
 		return Get<T>(name);
-
     }
 
     protected List<T> BindManyComponent<T>(string name) where T : Component
@@ -74,7 +76,8 @@ abstract public class UI_Base : MonoBehaviour
             GameObject newGameObject = objs[i] as GameObject;
             componentArr[i] = newGameObject.AddComponent<T>();
         }
-        _objectLists.Add(name, componentArr);
+
+        BindListInternal(name, componentArr);
         return GetMany<T>(name);
 
     }
@@ -94,9 +97,30 @@ abstract public class UI_Base : MonoBehaviour
             return null;
         }
 
-        _objectLists.Add(name, objs);
-		return GetMany<T>(name);
+        BindListInternal(name, objs);
+        return GetMany<T>(name);
 
+    }
+
+    private void BindInternal(string name, Object obj)
+    {
+        _objects.Add(name, obj);
+        if (obj is UI_Base uiObj)
+        {
+            uiObj.Init();
+        }
+    }
+
+    private void BindListInternal(string name, Object[] objs)
+    {
+        _objectLists.Add(name, objs);
+        foreach (Object obj in objs)
+        {
+            if (obj is UI_Base uiObj)
+            {
+                uiObj.Init();
+            }
+        }
     }
 
 	//Get UI 오브젝트 가져오기

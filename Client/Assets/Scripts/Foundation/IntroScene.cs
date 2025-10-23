@@ -51,7 +51,7 @@ public class IntroScene : SceneBase
         if (_currentTimeSec > APP.GameConf.IntroLoadingMinSec && _stage != ELoadStage.LOAD_NEXT_SCENE)
         {
             _stage = ELoadStage.LOAD_NEXT_SCENE;
-             _ = APP.SceneManager.ChangeScene("InGameScene");
+             _ = APP.SceneManager.ChangeScene(nameof(InGameScene));
         }
     }
 
