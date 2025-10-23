@@ -55,6 +55,8 @@ public class UI_InGameScene : UI_Scene
         _menuButton.AddEvent(() => { LOG.I("MenuButton Click!"); });
         _friendButton.AddEvent(() => { LOG.I("FriendButton Click!"); });
         _mailButton.AddEvent(() => { LOG.I("MailButton Click!"); });
+        _editButton.AddEvent(() => { LOG.I("EditButton Click!"); });
+        _shopButton.AddEvent(() => { LOG.I("ShopButton Click!"); });
 
         _profileCookieImage = Bind<Image>(UI.ProfileCookieImage.ToString());
         _profileNameText = Bind<TMP_Text>(UI.ProfileNameText.ToString());
@@ -75,6 +77,17 @@ public class UI_InGameScene : UI_Scene
             _effHideImage.enabled = true;
         else
             _effHideImage.enabled = false;
+    }
+
+    public void Refresh()
+    {
+        _profileNameText.text = APP.Ctx.Player.ProfileName;
+        _lvText.text = "Lv." + APP.Ctx.Player.Lv.ToString();
+        _expText.text = "Exp." + APP.Ctx.Player.Exp.ToString();
+        _castleLvText.text = "CLv." + APP.Ctx.Player.CastleLv.ToString();
+
+        _cashPocketSlot.SetValue((long)(APP.Ctx.Player.FreeCash + APP.Ctx.Player.RealCash));
+        _goldPocketSlot.SetValue((long)APP.Ctx.Player.Gold);
     }
 
     enum UI

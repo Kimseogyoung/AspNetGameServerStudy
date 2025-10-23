@@ -30,6 +30,7 @@ public class InGameScene : SceneBase
     protected override void Start()
     {
         _rule.StartFirst();
+        _ui.Refresh();
     }
 
     protected override void Update()

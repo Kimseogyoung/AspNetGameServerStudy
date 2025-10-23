@@ -65,6 +65,7 @@ namespace WebStudyServer.Manager
 
             _model.Lv = pakDefaultPlayer.Lv;
             _model.CastleLv = pakDefaultPlayer.CastleLv;
+            _model.ProfileName = IdHelper.GenerateRandomName();
             _model.ProfileTitleNum = pakDefaultPlayer.ProfileTitleNum;
             _model.ProfileIconNum = pakDefaultPlayer.ProfileIconNum;
             _model.ProfileFrameNum = pakDefaultPlayer.ProfileFrameNum;
