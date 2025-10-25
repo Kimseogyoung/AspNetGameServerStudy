@@ -152,13 +152,6 @@ public class GAME : ScriptBase
         APP.Ctx = ClientCore.APP.Ctx;
         APP.Prt = ClientCore.APP.Prt;
 
-        var isConnectServer = await APP.Ctx.IsSuccessConnect();
-        if (!isConnectServer)
-        {
-            LOG.E($"Failed Connect Server. ServerUrl({APP.Ctx.RpcSystem.Host})");
-            return;
-        }
-
         bool isLoadSuccess = await _sceneManager.StartFirstScene();
 
         if (!isLoadSuccess)

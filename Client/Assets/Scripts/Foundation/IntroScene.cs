@@ -8,6 +8,7 @@ public class IntroScene : SceneBase
     {
         NONE,
         LOAD_RESOURCE,
+        CONNECT_SERVER,
         SIGN_IN,
         LOAD_PLAYER,
         FINISH,
@@ -95,6 +96,14 @@ public class IntroScene : SceneBase
         {
             case ELoadStage.NONE:
             case ELoadStage.LOAD_RESOURCE:
+                return true;
+            case ELoadStage.CONNECT_SERVER:
+                var isConnectServer = await APP.Ctx.IsSuccessConnect();
+                if (!isConnectServer)
+                {
+                    LOG.E($"Failed Connect Server. ServerUrl({APP.Ctx.RpcSystem.Host})");
+                    return false;
+                }
                 return true;
             case ELoadStage.SIGN_IN:
                 var signUpRes = await APP.Ctx.RequestSignUpAsync(Guid.NewGuid().ToString());
