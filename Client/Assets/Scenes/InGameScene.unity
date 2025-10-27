@@ -226,7 +226,7 @@ GameObject:
   m_Component:
   - component: {fileID: 187250166}
   m_Layer: 0
-  m_Name: TileRoot (1)
+  m_Name: KingdomItemRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
