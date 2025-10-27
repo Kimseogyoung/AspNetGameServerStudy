@@ -1,6 +1,7 @@
 ﻿using Proto;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -146,12 +147,14 @@ public class GAME : ScriptBase
     {
         LOG.I($"Start Init");
 
-        var csvPath = AppPath.GetCsvPath();
+        var csvPath = AppPath.GetPrtPath();
         ClientCore.APP.Init(csvPath, APP.GameConf.ServerUrl, TimeSpan.FromSeconds(APP.GameConf.RequestTimeoutSec));
+        LOG.I($"csvPath: {csvPath}");
 
         APP.Ctx = ClientCore.APP.Ctx;
         APP.Prt = ClientCore.APP.Prt;
-
+        APP.Prt.Bind();
+        LOG.I($"csvPath: {APP.Prt.GetKingdomItemPrts().Count()}");
         bool isLoadSuccess = await _sceneManager.StartFirstScene();
 
         if (!isLoadSuccess)

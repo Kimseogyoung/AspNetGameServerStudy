@@ -54,11 +54,13 @@ static public partial class UTIL
         return outGO;
     }
 
-    static public T Instantiate<T>(string path, Vector3 pos, GameObject parent, string name) where T : Component
+    static public T Instantiate<T>(string path, Vector3 pos, GameObject parent, string name = "") where T : Component
     {
         GameObject obj = Instantiate(path, pos, parent);
-        if (obj != null)
+
+        if (obj != null && string.IsNullOrEmpty(name))
             obj.name = name;
+
         return obj.AddGetComponent<T>();
     }
 
@@ -74,19 +76,25 @@ static public partial class UTIL
         return obj;
     }
 
-    static public GameObject Instantiate(string path, GameObject parent = null)
+    static public GameObject Instantiate(string path, GameObject parent = null, string name = "")
     {
         GameObject obj = GameObject.Instantiate(UTIL.LoadRes<GameObject>(path));
         if (parent != null)
             obj.transform.SetParent(parent.transform);
+
+        if (!string.IsNullOrEmpty(name))
+            obj.name = name;
         return obj;
     }
 
-    static public GameObject Instantiate(string path, Vector3 pos, GameObject parent = null)
+    static public GameObject Instantiate(string path, Vector3 pos, GameObject parent = null, string name = "")
     {
         GameObject obj = GameObject.Instantiate(UTIL.LoadRes<GameObject>(path));
         if (parent != null)
             obj.transform.SetParent(parent.transform);
+
+        if (!string.IsNullOrEmpty(name))
+            obj.name = name;
 
         obj.transform.position = pos;
 
@@ -111,13 +119,19 @@ static public partial class UTIL
         return true;
     }
 
-    static public Sprite LoadSprite(string imageName, string spriteName)
+
+    static public Sprite LoadSprite(string spritePath)
     {
-        Sprite[] all = Resources.LoadAll<Sprite>(imageName);
+        Sprite obj = LoadRes<Sprite>(AppPath.GetSpritePath(spritePath));
+        return obj;
+    }
+
+    static public Sprite LoadSprite(string spritePath, string spriteName)
+    {
+        Sprite[] all = Resources.LoadAll<Sprite>(AppPath.GetSpritePath(spritePath));
         foreach (var s in all)
         {
             if (s.name == spriteName) return s;
-
         }
         return null;
     }
