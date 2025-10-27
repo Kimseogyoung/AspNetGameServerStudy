@@ -62,11 +62,15 @@ static public partial class UTIL
         return obj.AddGetComponent<T>();
     }
 
-    static public GameObject Instantiate(GameObject resGO, GameObject parent = null)
+    static public GameObject Instantiate(GameObject resGO, GameObject parent = null, string name = "")
     {
         GameObject obj = GameObject.Instantiate(resGO);
         if (parent != null)
             obj.transform.SetParent(parent.transform);
+
+        if (!string.IsNullOrEmpty(name))
+            obj.name = name;
+        
         return obj;
     }
 

@@ -28,8 +28,8 @@
 	],
 	"KingdomMap":
 	{
-		"SizeX": 10,
-		"SizeY": 10,
+		"SizeX": 15,
+		"SizeY": 15,
 		"PlacedKingdomItemList": [
 		{
 			"Id": 1, 
