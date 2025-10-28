@@ -1,4 +1,4 @@
 ﻿Type,Name,ChargeSec,ChargeAmount,MaxAmount
 enum:EObjType:pk,string,int,int,int
-201,스테미너,100,1,30
+TICKET_STAMINA,스테미너,100,1,30
 

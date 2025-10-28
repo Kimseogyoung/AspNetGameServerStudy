@@ -2,4 +2,7 @@
 enum:EObjType:pk,string
 POINT_MILEAGE,마일리지
 POINT_COOKIE_LV,쿠키 레벨업 재화
+POINT_C_GACHA_NORMAL,일반 가챠 재화
+POINT_C_GACHA_SPECIAL,슾셜 가챠 재화
+POINT_C_GACHA_DESTINY,운명 가챠 재화
 

@@ -37,5 +37,8 @@ namespace Proto
     		[ProtoMember(11)]
     		public int Cri { get; set; }
         
+    		[ProtoMember(12)]
+    		public string Sprite { get; set; }
+        
 	}
 }
