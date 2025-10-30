@@ -15,6 +15,7 @@ public class UI_InGameScene : UI_Scene
     private UI_Button _friendButton;
     private UI_Button _editButton;
     private UI_Button _shopButton;
+    private UI_Button _cookieButton;
 
     private GameObject _pocketGroupRootGO;
     private UI_PocketSlot _cashPocketSlot;
@@ -29,6 +30,8 @@ public class UI_InGameScene : UI_Scene
 
     private GameObject _effRootGO;
     private Image _effHideImage;
+
+    private KingdomMap _kingdomMap;
 
     protected override void OnDestroyed()
     {
@@ -51,12 +54,14 @@ public class UI_InGameScene : UI_Scene
         _friendButton = Bind<UI_Button>(UI.FriendButton.ToString());
         _editButton = Bind<UI_Button>(UI.EditButton.ToString());
         _shopButton = Bind<UI_Button>(UI.ShopButton.ToString());
+        _cookieButton = Bind<UI_Button>(UI.CookieButton.ToString());
 
         _menuButton.AddEvent(() => { LOG.I("MenuButton Click!"); });
         _friendButton.AddEvent(() => { LOG.I("FriendButton Click!"); });
         _mailButton.AddEvent(() => { LOG.I("MailButton Click!"); });
-        _editButton.AddEvent(() => { LOG.I("EditButton Click!"); });
+        _editButton.AddEvent(() => { APP.UI.ShowPopupUI<UI_SettingPopup>(); });
         _shopButton.AddEvent(() => { LOG.I("ShopButton Click!"); });
+        _cookieButton.AddEvent(() => { APP.UI.ShowPopupUI<UI_CookiePopup>(); });
 
         _profileCookieImage = Bind<Image>(UI.ProfileCookieImage.ToString());
         _profileNameText = Bind<TMP_Text>(UI.ProfileNameText.ToString());
@@ -92,6 +97,7 @@ public class UI_InGameScene : UI_Scene
 
     enum UI
     {
+        KingdomMap,
         EffRoot,
         PocketGroupRoot,
 
@@ -100,6 +106,7 @@ public class UI_InGameScene : UI_Scene
         FriendButton,
         EditButton,
         ShopButton,
+        CookieButton,
 
         // Profile
         ProfileNameText,

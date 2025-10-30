@@ -8,6 +8,8 @@ public class InGameScene : SceneBase
     private Rule_InGame _rule = null;
     private UI_InGameScene _ui = null;
 
+    private KingdomMap _map = null;
+
     public InGameScene(string sceneName)
     {
         _sceneName = sceneName;
@@ -16,6 +18,7 @@ public class InGameScene : SceneBase
     protected override bool Enter()
     {
         _ui = APP.UI.ShowSceneUI<UI_InGameScene>("UI_InGameScene");
+        _map = UTIL.Find<KingdomMap>("KingdomMap");
         if (!Rule_InGame.Create(out _rule))
             return false;
 
@@ -31,6 +34,7 @@ public class InGameScene : SceneBase
     {
         _rule.StartFirst();
         _ui.Refresh();
+        _map.RefreshMap();
     }
 
     protected override void Update()

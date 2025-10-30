@@ -23,7 +23,6 @@ public class KingdomMap : ScriptBase
         _kingdomItemRootGO = UTIL.FindChild(gameObject, "KingdomItemRoot", true);
         _tilePrefab = UTIL.LoadRes<GameObject>(AppPath.GetPrefabPath("Tile"));
 
-        RefreshMap();
         return true;
     }
 
