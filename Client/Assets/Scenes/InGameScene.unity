@@ -339,7 +339,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1001 &760130674
+--- !u!1001 &454967328
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -369,6 +369,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1463028913936769609, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1514685032250740613, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
+      propertyPath: m_RaycastTarget
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1551678783221089648, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
@@ -401,18 +405,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1551678783221089648, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1551678783221089648, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1551678783221089648, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1551678783221089648, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
-      propertyPath: m_LocalScale.z
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1551678783221089648, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
@@ -463,6 +455,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1733033849403510629, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2387501197394661222, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -487,6 +483,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2487015661651927536, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2727038133399039092, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -581,14 +581,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4316612790853883991, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4511805543549097187, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
+      propertyPath: m_RaycastTarget
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5795327930968310081, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
       propertyPath: m_Name
       value: UI_CookiePopup
       objectReference: {fileID: 0}
-    - target: {fileID: 6558655453405088419, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
-      propertyPath: m_PresetInfoIsWorld
+    - target: {fileID: 6513976031144533637, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
+      propertyPath: m_RaycastTarget
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6889142098461739808, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
@@ -709,14 +713,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8084294761429807422, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8226269574510835397, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
-      propertyPath: m_RenderMode
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8226269574510835397, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
-      propertyPath: m_AdditionalShaderChannelsFlag
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9170294134466189894, guid: 2bbce8979ad3b84429c0b5ad603b4a38, type: 3}
@@ -1667,4 +1663,4 @@ SceneRoots:
   - {fileID: 879955192}
   - {fileID: 2132107714}
   - {fileID: 6746802277778163906}
-  - {fileID: 760130674}
+  - {fileID: 454967328}
