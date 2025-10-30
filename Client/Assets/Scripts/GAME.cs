@@ -123,7 +123,7 @@ public class GAME : ScriptBase
             manager.StartManager();
         }
 
-        _ = InitAsync();
+        InitAsync().FireAndForget();
     }
 
     void FixedUpdate()
@@ -154,7 +154,6 @@ public class GAME : ScriptBase
         APP.Ctx = ClientCore.APP.Ctx;
         APP.Prt = ClientCore.APP.Prt;
         APP.Prt.Bind();
-        LOG.I($"csvPath: {APP.Prt.GetKingdomItemPrts().Count()}");
         bool isLoadSuccess = await _sceneManager.StartFirstScene();
 
         if (!isLoadSuccess)
