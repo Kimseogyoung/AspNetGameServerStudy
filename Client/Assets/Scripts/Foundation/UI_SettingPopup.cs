@@ -1,8 +1,11 @@
 public class UI_SettingPopup : UI_Popup
 {
-    private void Awake()
+    public override void OnClose()
     {
+    }
 
+    public override void OnOpen()
+    {
     }
 
     enum UI

@@ -76,7 +76,7 @@ public class IntroScene : SceneBase
             }
 
             // 가짜 로딩하는 척
-            await Task.Delay(500);
+            await Task.Delay(100);
         }
 
         if (_stage < ELoadStage.FINISH)

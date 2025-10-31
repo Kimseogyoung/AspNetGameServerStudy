@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-abstract public class UI_Base : MonoBehaviour
+public abstract class UI_Base : MonoBehaviour
 {
 	protected string _exitButton = "ExitButton";
     protected bool _isInit = false;
@@ -191,7 +191,7 @@ abstract public class UI_Base : MonoBehaviour
     }
 
 
-    protected virtual void OnDestroyed() { }
+    protected abstract void OnDestroyed();
     protected abstract void InitImp();
 
 }

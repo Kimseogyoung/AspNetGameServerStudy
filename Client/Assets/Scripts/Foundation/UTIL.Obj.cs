@@ -11,8 +11,7 @@ static public partial class UTIL
 
     static public bool TryGetComponent<T>(out T comp, GameObject gameObject)
     {
-        comp = gameObject.GetComponent<T>();
-        return comp != null;
+        return gameObject.TryGetComponent<T>(out comp);
     }
 
     static public bool TryGetComponent<T>(out T comp, GameObject gameObject, string name)
@@ -25,9 +24,7 @@ static public partial class UTIL
         if (childTransform == null)
             return false;
 
-       comp = childTransform.GetComponent<T>();
-
-        return comp != null;
+        return childTransform.TryGetComponent<T>(out comp);
     }
 
 
@@ -130,7 +127,7 @@ static public partial class UTIL
         List<T> objects= new List<T>();
         foreach (T value in gameObject.GetComponentsInChildren<T>())
         {
-            if (value.name == name || value.name.StartsWith(name) && value.name.EndsWith(')'))
+            if (string.IsNullOrEmpty(name) || value.name == name || value.name.StartsWith(name) && value.name.EndsWith(')'))
                 objects.Add(value);
         }
         return objects.ToArray();

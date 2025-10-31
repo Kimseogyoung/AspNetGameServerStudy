@@ -10,8 +10,13 @@ public class UI_StarGroup : UI_Base
     
     protected override void InitImp()
     {
-        _starImageArr = BindManyComponent<Image>(UI.StarImage.ToString()).ToArray();
+        _starImageArr = BindMany<Image>(UI.StarImage.ToString()).ToArray();
         _maxStarCnt = _starImageArr.Length;
+    }
+
+    protected override void OnDestroyed()
+    {
+        _starImageArr = null;
     }
 
     public void SetMaxStarCnt(int maxStarCnt)
@@ -26,6 +31,7 @@ public class UI_StarGroup : UI_Base
         for (var i = _starImageArr.Length - 1; i >= 0; i--)
         {
             var starImage = _starImageArr[i];
+            starImage.color = DEF.C_WHITE;
             starImage.gameObject.SetActive(_maxStarCnt > i);
         }
     }
@@ -38,10 +44,10 @@ public class UI_StarGroup : UI_Base
             return;
         }
 
-        for (var i = 0; i < 0; i++)
+        for (var i = 0; i < _maxStarCnt; i++)
         {
             var starImage = _starImageArr[i];
-            starImage.gameObject.SetActive(true);
+            starImage.color = i < starCnt ? DEF.C_WHITE : DEF.C_CLEAR_BLOCK;
         }
     }
 
