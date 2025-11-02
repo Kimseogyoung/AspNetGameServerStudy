@@ -1,5 +1,6 @@
 ﻿using Proto;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace ClientCore
@@ -26,6 +27,7 @@ namespace ClientCore
             _prt.Bind<GachaProbProto>();
             _prt.Bind<WorldProto>();
             _prt.Bind<WorldStageProto>();
+            _prt.Bind<LocalizationProto>();
         }
 
         // PK
@@ -42,6 +44,8 @@ namespace ClientCore
         public TicketProto GetTicketPrt(int ticketNum) => GetTicketPrt((EObjType)ticketNum);
         public WorldProto GetWorldPrt(int worldNum) => _prt.Get<WorldProto>(worldNum);
         public WorldStageProto GetWorldStagePrt(int worldStageNum) => _prt.Get<WorldStageProto>(worldStageNum);
+        public LocalizationProto GetLocalizationPrt(string key) => _prt.Get<LocalizationProto>(key);
+        public bool TryGetLocalizationPrt(string key, out LocalizationProto prt) => _prt.TryGet(key, out prt);
 
         // MK
         public List<WorldStageProto> GetWorldStagePrtListByMk(int worldNum) => _prt.GetByMk<WorldStageProto>(worldNum);

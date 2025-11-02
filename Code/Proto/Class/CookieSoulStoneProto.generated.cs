@@ -13,5 +13,8 @@ namespace Proto
     		[ProtoMember(3)]
     		public int CookieNum { get; set; }
         
+    		[ProtoMember(4)]
+    		public string Key { get; set; }
+        
 	}
 }

@@ -11,33 +11,36 @@ namespace Proto
     		public int Num { get; set; }
         
     		[ProtoMember(3)]
-    		public string Name { get; set; }
+    		public string NameKey { get; set; }
         
     		[ProtoMember(4)]
-    		public EGradeType GradeType { get; set; }
+    		public string Name { get; set; }
         
     		[ProtoMember(5)]
-    		public ECookieRollType RollType { get; set; }
+    		public EGradeType GradeType { get; set; }
         
     		[ProtoMember(6)]
-    		public EFormationPositionType FormationPosType { get; set; }
+    		public ECookieRollType RollType { get; set; }
         
     		[ProtoMember(7)]
-    		public int InitSoulStone { get; set; }
+    		public EFormationPositionType FormationPosType { get; set; }
         
     		[ProtoMember(8)]
-    		public int Hp { get; set; }
+    		public int InitSoulStone { get; set; }
         
     		[ProtoMember(9)]
-    		public int Atk { get; set; }
+    		public int Hp { get; set; }
         
     		[ProtoMember(10)]
-    		public int Def { get; set; }
+    		public int Atk { get; set; }
         
     		[ProtoMember(11)]
-    		public int Cri { get; set; }
+    		public int Def { get; set; }
         
     		[ProtoMember(12)]
+    		public int Cri { get; set; }
+        
+    		[ProtoMember(13)]
     		public string Sprite { get; set; }
         
 	}

@@ -11,15 +11,18 @@ namespace Proto
     		public EObjType Type { get; set; }
         
     		[ProtoMember(3)]
-    		public string Name { get; set; }
+    		public string NameKey { get; set; }
         
     		[ProtoMember(4)]
-    		public int ChargeSec { get; set; }
+    		public string Name { get; set; }
         
     		[ProtoMember(5)]
-    		public int ChargeAmount { get; set; }
+    		public int ChargeSec { get; set; }
         
     		[ProtoMember(6)]
+    		public int ChargeAmount { get; set; }
+        
+    		[ProtoMember(7)]
     		public int MaxAmount { get; set; }
         
 	}

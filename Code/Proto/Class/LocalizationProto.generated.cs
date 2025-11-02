@@ -4,17 +4,17 @@ using System;
 namespace Proto
 {
 	[ProtoContract]
-	public partial class PointProto : ProtoBase
+	public partial class LocalizationProto : ProtoBase
 	{
     
     		[ProtoMember(2)]
-    		public EObjType Type { get; set; }
+    		public string Key { get; set; }
         
     		[ProtoMember(3)]
-    		public string NameKey { get; set; }
+    		public string ko { get; set; }
         
     		[ProtoMember(4)]
-    		public string Name { get; set; }
+    		public string en { get; set; }
         
 	}
 }

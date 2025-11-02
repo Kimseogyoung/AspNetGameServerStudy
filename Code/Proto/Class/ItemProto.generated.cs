@@ -14,18 +14,21 @@ namespace Proto
     		public EItemType Type { get; set; }
         
     		[ProtoMember(4)]
-    		public string Name { get; set; }
+    		public string NameKey { get; set; }
         
     		[ProtoMember(5)]
-    		public int DisplayOrder { get; set; }
+    		public string Name { get; set; }
         
     		[ProtoMember(6)]
-    		public EObjType SaleObjType { get; set; }
+    		public int DisplayOrder { get; set; }
         
     		[ProtoMember(7)]
-    		public int SaleObjNum { get; set; }
+    		public EObjType SaleObjType { get; set; }
         
     		[ProtoMember(8)]
+    		public int SaleObjNum { get; set; }
+        
+    		[ProtoMember(9)]
     		public int SaleObjAmount { get; set; }
         
 	}
