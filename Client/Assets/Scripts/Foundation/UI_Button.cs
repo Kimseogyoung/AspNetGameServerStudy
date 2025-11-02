@@ -9,7 +9,7 @@ public class UI_Button : UI_Base
 
     protected override void OnDestroyed()
     {
-        _button.onClick.RemoveAllListeners();
+        RemoveAllEvent();
     }
 
     protected override void InitImp()
@@ -23,6 +23,11 @@ public class UI_Button : UI_Base
     public void AddEvent(Action action)
     {
         _button.onClick.AddListener(() => { action(); });
+    }
+
+    public void RemoveAllEvent()
+    {
+        _button.onClick.RemoveAllListeners();
     }
 
     public void SetText(string text)
