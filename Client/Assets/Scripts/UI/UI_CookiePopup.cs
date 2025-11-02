@@ -20,6 +20,7 @@ public class UI_CookiePopup : UI_Popup
     private TMP_Text _cookieMainSoulStoneTxt;
     private TMP_Text _cookieMainRollTxt;
     private TMP_Text _cookieMainFormationTxt;
+    private TMP_Text _cookieMainGradeTxt;
     private UI_Button _cookieMainLvUpButton;
     private UI_Button _cookieMainStarUpButton;
 
@@ -79,6 +80,7 @@ public class UI_CookiePopup : UI_Popup
         _cookieMainSoulStoneTxt = Bind<TMP_Text>(UI.CookieSoulStoneTxt.ToString());
         _cookieMainRollTxt = Bind<TMP_Text>(UI.CookieRollTxt.ToString());
         _cookieMainFormationTxt = Bind<TMP_Text>(UI.CookieFormationTxt.ToString());
+        _cookieMainGradeTxt = Bind<TMP_Text>(UI.CookieGradeTxt.ToString());
         _cookieMainLvUpButton = Bind<UI_Button>(UI.CookieLvUpButton.ToString());
         _cookieMainStarUpButton = Bind<UI_Button>(UI.CookieStarUpButton.ToString());
 
@@ -112,12 +114,13 @@ public class UI_CookiePopup : UI_Popup
         _cookieMainGO.transform.localPosition = new Vector3(0, 0, 0);
 
         _cookieMainImage.sprite = UTIL.LoadSprite(cookiePrt.Sprite);
-        _cookieMainNameTxt.text = cookiePrt.Name;
+        _cookieMainNameTxt.text = L10n.GetText(cookiePrt.NameKey);
         _cookieMainLvTxt.text = $"Lv {cookieCtx.Lv}";
         _cookieMainStarTxt.text = $"Star {cookieCtx.Star}";
         _cookieMainSoulStoneTxt.text = $"SoulStone {cookieCtx.SoulStone}";
-        _cookieMainRollTxt.text = cookiePrt.RollType.ToString();
-        _cookieMainFormationTxt.text = cookiePrt.FormationPosType.ToString();
+        _cookieMainRollTxt.text = L10nKey.GetCookieRollText(cookiePrt.RollType);
+        _cookieMainFormationTxt.text = L10nKey.GetCookieFormationText(cookiePrt.FormationPosType);
+        _cookieMainGradeTxt.text = L10nKey.GetCookieGradeText(cookiePrt.GradeType);
 
         _cookieMainLvUpButton.AddEvent(() => { OnClickCookieLvUpButton(cookiePrt); });
         _cookieMainStarUpButton.AddEvent(() => { OnClickCookieStarUpButton(cookiePrt); });
@@ -165,6 +168,7 @@ public class UI_CookiePopup : UI_Popup
         CookieSoulStoneTxt,
         CookieRollTxt,
         CookieFormationTxt,
+        CookieGradeTxt,
         CookieLvUpButton,
         CookieStarUpButton,
     }

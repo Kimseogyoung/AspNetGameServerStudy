@@ -56,6 +56,7 @@ namespace ClientCore
         public IEnumerable<ItemProto> GetItemPrts() => _prt.GetAll<ItemProto>();
         public IEnumerable<PointProto> GetPointPrts() => _prt.GetAll<PointProto>();
         public IEnumerable<TicketProto> GetTicketPrts() => _prt.GetAll<TicketProto>();
+        public IEnumerable<LocalizationProto> GetLocalizationPrts() => _prt.GetAll<LocalizationProto>();
 
         private static ProtoHelper _prt = new ProtoHelper();
     }
