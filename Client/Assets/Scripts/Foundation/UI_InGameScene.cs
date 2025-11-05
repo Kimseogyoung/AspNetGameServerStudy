@@ -60,7 +60,7 @@ public class UI_InGameScene : UI_Scene
         _friendButton.AddEvent(() => { LOG.I("FriendButton Click!"); });
         _mailButton.AddEvent(() => { LOG.I("MailButton Click!"); });
         _editButton.AddEvent(() => { APP.UI.ShowPopupUI<UI_SettingPopup>(); });
-        _shopButton.AddEvent(() => { LOG.I("ShopButton Click!"); });
+        _shopButton.AddEvent(() => { APP.UI.ShowPopupUI<UI_ShopPopup>(); });
         _cookieButton.AddEvent(() => { APP.UI.ShowPopupUI<UI_CookiePopup>(); });
 
         _profileCookieImage = Bind<Image>(UI.ProfileCookieImage.ToString());

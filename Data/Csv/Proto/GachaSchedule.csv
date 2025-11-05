@@ -1,6 +1,6 @@
-﻿Num,Tag,DisplayOrder,Seq,Name,GachaProbNum,PickupCookieNumList,PickupCookieNumList,PickupCookieNumList,PickupCookieNumList,PickupCookieNumList,CostTypeList,CostAmountList,CostTypeList,CostAmountList,CntList,CntList
-int:pk,string,int,int,string,int,list:int,list:int,list:int,list:int,list:int,list:enum:EObjType,list:int,list:enum:EObjType,list:int,list:int,list:int
-1001001,COOKIE_NORMAL,0,0,일반 뽑기,1001,0,0,0,0,0,POINT_C_GACHA_NORMAL,1,TOTAL_CASH,100,1,10
-1002001,COOKIE_PICKUP_1,1,20250301,픽업 뽑기,2001,6020,0,0,0,0,POINT_C_GACHA_NORMAL,1,TOTAL_CASH,100,1,10
-1002002,COOKIE_PICKUP_1,2,20250301,픽업 뽑기,2001,6020,0,0,0,0,POINT_C_GACHA_NORMAL,1,TOTAL_CASH,100,1,10
+﻿Num,Tag,DisplayOrder,Seq,NameKey,Name,GachaProbNum,PickupCookieNumList,PickupCookieNumList,PickupCookieNumList,PickupCookieNumList,PickupCookieNumList,CostTypeList,CostAmountList,CostTypeList,CostAmountList,CntList,CntList
+int:pk,string,int,int,string,string,int,list:int,list:int,list:int,list:int,list:int,list:enum:EObjType,list:int,list:enum:EObjType,list:int,list:int,list:int
+1001001,COOKIE_NORMAL,0,0,일반 뽑기,일반 뽑기,1001,0,0,0,0,0,POINT_C_GACHA_NORMAL,1,TOTAL_CASH,100,1,10
+1002001,COOKIE_PICKUP_1,1,20250301,픽업 뽑기,픽업 뽑기,2001,6020,0,0,0,0,POINT_C_GACHA_NORMAL,1,TOTAL_CASH,100,1,10
+1002002,COOKIE_PICKUP_1,2,20250301,픽업 뽑기,픽업 뽑기,2001,6020,0,0,0,0,POINT_C_GACHA_NORMAL,1,TOTAL_CASH,100,1,10
 

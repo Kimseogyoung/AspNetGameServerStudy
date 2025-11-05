@@ -68,7 +68,7 @@ namespace ClientCore
             var cookie = GetCookieForce(cookieNum);
             var cfgLvCost = 10;
 
-
+            
             var req = new CookieEnhanceLvReqPacket(cookieNum, cookie.Lv, aftLv, new CostObjPacket { Type = Proto.EObjType.POINT_COOKIE_LV, Num = 0, Amount = cfgLvCost * (aftLv - cookie.Lv) });
             var res = await RpcSystem.RequestAsync<CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(req);
 

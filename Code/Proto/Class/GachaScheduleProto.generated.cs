@@ -20,21 +20,24 @@ namespace Proto
     		public int Seq { get; set; }
         
     		[ProtoMember(6)]
-    		public string Name { get; set; }
+    		public string NameKey { get; set; }
         
     		[ProtoMember(7)]
-    		public int GachaProbNum { get; set; }
+    		public string Name { get; set; }
         
     		[ProtoMember(8)]
+    		public int GachaProbNum { get; set; }
+        
+    		[ProtoMember(9)]
     		public List<int> PickupCookieNumList { get; set; }
         
-    		[ProtoMember(13)]
+    		[ProtoMember(14)]
     		public List<EObjType> CostTypeList { get; set; }
         
-    		[ProtoMember(14)]
+    		[ProtoMember(15)]
     		public List<int> CostAmountList { get; set; }
         
-    		[ProtoMember(17)]
+    		[ProtoMember(18)]
     		public List<int> CntList { get; set; }
         
 	}
