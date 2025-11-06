@@ -31,5 +31,8 @@ namespace Proto
     		[ProtoMember(9)]
     		public int SaleObjAmount { get; set; }
         
+    		[ProtoMember(10)]
+    		public string Sprite { get; set; }
+        
 	}
 }

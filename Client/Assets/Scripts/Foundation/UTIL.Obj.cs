@@ -9,6 +9,18 @@ static public partial class UTIL
         GameObject.Destroy(gameObject.gameObject);
     }
 
+    public static void DestoryChildren(GameObject gameObject)
+    {
+        var children = UTIL.FindChildAll(gameObject);
+        foreach (var child in children)
+        {
+            if (child != gameObject)
+            {
+                UTIL.Destroy(child);
+            }
+        }
+    }
+
     static public bool TryGetComponent<T>(out T comp, GameObject gameObject)
     {
         return gameObject.TryGetComponent<T>(out comp);
@@ -156,11 +168,11 @@ static public partial class UTIL
             return false;
         return true;
     }
+
     static public T Find<T>(string name) where T : UnityEngine.Object
     {
         return GameObject.FindObjectsOfType<T>().Where(e => e.name == name).FirstOrDefault();
     }
-
 }
 
 

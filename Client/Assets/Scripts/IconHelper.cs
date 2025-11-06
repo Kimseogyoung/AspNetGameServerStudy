@@ -1,0 +1,113 @@
+﻿using Proto;
+using Protocol;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
+
+public static class IconHelper
+{
+    private static Dictionary<ObjKey, Sprite> _cachedIconDict = new Dictionary<ObjKey, Sprite>();
+    private static Dictionary<EGradeType, Sprite> _cachedGradeIconDict = new Dictionary<EGradeType, Sprite>();
+    public static Sprite GetIcon(ObjKey objKey)
+    {
+        if (_cachedIconDict.TryGetValue(objKey, out var cachedSprite) && cachedSprite != null)
+        {
+            return cachedSprite;
+        }
+
+        var spritePath = "";
+        switch (objKey.Type)
+        {
+            case EObjType.EXP:
+                spritePath = "Icon1#Icon1_18";
+                break;
+            case EObjType.GOLD:
+                spritePath = "Icon1#Icon1_0";
+                break;
+            case EObjType.FREE_CASH:
+            case EObjType.REAL_CASH:
+            case EObjType.TOTAL_CASH:
+                spritePath = "Icon1#Icon1_12";
+                break;
+            case EObjType.POINT_MILEAGE:
+            case EObjType.POINT_COOKIE_LV:
+            case EObjType.POINT_C_GACHA_NORMAL:
+            case EObjType.POINT_C_GACHA_SPECIAL:
+            case EObjType.POINT_C_GACHA_DESTINY:
+                var prtPoint = APP.Prt.GetPointPrt(objKey.Type);
+                spritePath = prtPoint.IconSprite;
+                break;
+            case EObjType.TICKET_STAMINA:
+                var prtTicket = APP.Prt.GetTicketPrt(objKey.Type);
+                spritePath = prtTicket.IconSprite;
+                break;
+            case EObjType.COOKIE:
+            case EObjType.SOUL_STONE:
+                var prtCookie = APP.Prt.GetCookiePrt(objKey.Num);
+                spritePath = prtCookie.IconSprite;
+                break;
+            case EObjType.ITEM:
+                var prtItem = APP.Prt.GetItemPrt(objKey.Num);
+                spritePath = prtItem.Sprite;
+                break;
+            case EObjType.KINGDOM_ITEM:
+                var prtKingdomItem = APP.Prt.GetKingdomItemPrt(objKey.Num);
+                spritePath = prtKingdomItem.Sprite;
+                break;
+            default:
+                LOG.E($"No Handling ObjType({objKey.Type})");
+                break;
+        }
+
+
+        var loadedSprite = UTIL.LoadSprite(spritePath);
+        if (loadedSprite == null)
+        {
+            LOG.E($"Failed to load Icon Sprite ObjKey({objKey})");
+            return null;
+        }
+
+        _cachedIconDict.Add(objKey, cachedSprite);
+        return cachedSprite;
+    }
+
+    public static Sprite GetGradeIcon(EGradeType gradeType)
+    {
+        if (_cachedGradeIconDict.TryGetValue(gradeType, out var cachedSprite) && cachedSprite != null)
+        {
+            return cachedSprite;
+        }
+
+        var spritePath = "Icon1#Icon1_13";
+        switch (gradeType)
+        {
+            case EGradeType.COMMON:
+                break;
+            case EGradeType.RARE:
+                break;
+            case EGradeType.EPIC:
+                break;
+            case EGradeType.SUPER_EPIC:
+                break;
+            case EGradeType.ANCIENT:
+                break;
+            case EGradeType.LEGENDARY:
+                break;
+            default:
+                LOG.E($"No Handling Grade({gradeType})");
+                break;
+        }
+
+        var loadedSprite = UTIL.LoadSprite(spritePath);
+        if (loadedSprite == null)
+        {
+            LOG.E($"Failed to load Icon Sprite GradeType({gradeType})");
+            return null;
+        }
+
+        _cachedGradeIconDict.Add(gradeType, cachedSprite);
+
+        return null;
+    }
+}

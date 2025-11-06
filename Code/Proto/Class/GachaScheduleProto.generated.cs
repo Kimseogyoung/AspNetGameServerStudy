@@ -40,5 +40,8 @@ namespace Proto
     		[ProtoMember(18)]
     		public List<int> CntList { get; set; }
         
+    		[ProtoMember(20)]
+    		public string BGSprite { get; set; }
+        
 	}
 }

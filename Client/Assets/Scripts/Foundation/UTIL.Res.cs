@@ -122,8 +122,14 @@ static public partial class UTIL
 
     static public Sprite LoadSprite(string spritePath)
     {
-        Sprite obj = LoadRes<Sprite>(AppPath.GetSpritePath(spritePath));
-        return obj;
+        var spritePaths = spritePath.Split('#');
+        if (spritePaths.Length > 1)
+        {
+            return LoadSprite(spritePaths[0], spritePaths[1]);
+        }
+
+        var sprite = LoadRes<Sprite>(AppPath.GetSpritePath(spritePath));
+        return sprite;
     }
 
     static public Sprite LoadSprite(string spritePath, string spriteName)

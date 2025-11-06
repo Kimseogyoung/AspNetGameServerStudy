@@ -25,5 +25,8 @@ namespace Proto
     		[ProtoMember(7)]
     		public int MaxAmount { get; set; }
         
+    		[ProtoMember(8)]
+    		public string IconSprite { get; set; }
+        
 	}
 }

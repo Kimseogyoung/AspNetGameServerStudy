@@ -29,15 +29,7 @@ public class UI_CookiePopup : UI_Popup
         base.InitImp();
 
         _cookieSelectGroupGO = Bind<GameObject>(UI.CookieSelectGroup.ToString());
-
-        var slotList = UTIL.FindChildAll(_cookieSelectGroupGO);
-        foreach (var slot in slotList)
-        {
-            if (_cookieSelectGroupGO != slot)
-            {
-                UTIL.Destroy(slot);
-            }
-        }
+        UTIL.DestoryChildren(_cookieSelectGroupGO);
 
         var cookieSelectSlotPrefab = UTIL.LoadRes<GameObject>(AppPath.GetPrefabPath(UI.CookieSelectSlot.ToString()));
         foreach (var cookiePrt in APP.Prt.GetCookiePrts())

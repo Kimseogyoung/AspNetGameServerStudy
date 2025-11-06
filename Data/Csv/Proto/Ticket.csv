@@ -1,4 +1,4 @@
-﻿Type,NameKey,Name,ChargeSec,ChargeAmount,MaxAmount
-enum:EObjType:pk,string,string,int,int,int
-TICKET_STAMINA,TICKET_STAMINA_NAME,스테미너,100,1,30
+﻿Type,NameKey,Name,ChargeSec,ChargeAmount,MaxAmount,IconSprite
+enum:EObjType:pk,string,string,int,int,int,string
+TICKET_STAMINA,TICKET_STAMINA_NAME,스테미너,100,1,30,Icon1#Icon1_3
 
