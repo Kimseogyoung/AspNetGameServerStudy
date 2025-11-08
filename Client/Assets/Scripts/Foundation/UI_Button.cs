@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class UI_Button : UI_Base
@@ -20,6 +21,12 @@ public class UI_Button : UI_Base
         _text.text = gameObject.name;
     }
 
+    public void SetEvent(UnityAction action)
+    {
+        RemoveAllEvent();
+        _button.onClick.AddListener(action);
+    }
+
     public void AddEvent(Action action)
     {
         _button.onClick.AddListener(() => { action(); });
@@ -28,6 +35,11 @@ public class UI_Button : UI_Base
     public void RemoveAllEvent()
     {
         _button.onClick.RemoveAllListeners();
+    }
+
+    public void SetEnable(bool enable)
+    {
+        _button.interactable = enable;
     }
 
     public void SetText(string text)

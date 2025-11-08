@@ -1,5 +1,6 @@
 ﻿
 using Proto;
+using System;
 
 public static class L10n
 {
@@ -21,6 +22,11 @@ public static class L10n
         }
 
         return GetLanTextFromL10nPrt(l10nPrt);
+    }
+
+    public static string GetPeriodText(DateTime time)
+    {
+        return time.ToString("MM/dd HH:mm");
     }
 
     private static string GetLanTextFromL10nPrt(LocalizationProto prt)

@@ -77,14 +77,14 @@ public class UI_CookiePopup : UI_Popup
         _cookieMainStarUpButton = Bind<UI_Button>(UI.CookieStarUpButton.ToString());
 
         _cookieMainExitButton = Bind<UI_Button>(UI.CookieMainExitButton.ToString());
-        _cookieMainExitButton.AddEvent(() => { DownMainCookiePanel(); });
+        _cookieMainExitButton.SetEvent(() => { DownMainCookiePanel(); });
     }
 
-    public override void OnClose()
+    protected override void OnClose()
     {
     }
 
-    public override void OnOpen()
+    protected override void OnOpen()
     {
         Refresh();
     }
@@ -114,8 +114,8 @@ public class UI_CookiePopup : UI_Popup
         _cookieMainFormationTxt.text = L10nKey.GetCookieFormationText(cookiePrt.FormationPosType);
         _cookieMainGradeTxt.text = L10nKey.GetCookieGradeText(cookiePrt.GradeType);
 
-        _cookieMainLvUpButton.AddEvent(() => { OnClickCookieLvUpButton(cookiePrt); });
-        _cookieMainStarUpButton.AddEvent(() => { OnClickCookieStarUpButton(cookiePrt); });
+        _cookieMainLvUpButton.SetEvent(() => { OnClickCookieLvUpButton(cookiePrt); });
+        _cookieMainStarUpButton.SetEvent(() => { OnClickCookieStarUpButton(cookiePrt); });
     }
 
     private void DownMainCookiePanel()

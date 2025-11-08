@@ -1,9 +1,7 @@
 ﻿using Proto;
 using Protocol;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public static class IconHelper
 {
@@ -68,8 +66,8 @@ public static class IconHelper
             return null;
         }
 
-        _cachedIconDict.Add(objKey, cachedSprite);
-        return cachedSprite;
+        _cachedIconDict.Add(objKey, loadedSprite);
+        return loadedSprite;
     }
 
     public static Sprite GetGradeIcon(EGradeType gradeType)
@@ -106,8 +104,7 @@ public static class IconHelper
             return null;
         }
 
-        _cachedGradeIconDict.Add(gradeType, cachedSprite);
-
-        return null;
+        _cachedGradeIconDict.Add(gradeType, loadedSprite);
+        return loadedSprite;
     }
 }

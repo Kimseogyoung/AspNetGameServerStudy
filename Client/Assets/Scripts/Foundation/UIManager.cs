@@ -106,7 +106,7 @@ public class UIManager : IManager, IManagerUpdatable
 
         go.transform.SetParent(Root.transform);
         popup.Init();
-        popup.OnOpen();
+        popup.Open();
         return popup;
     }
 
@@ -130,7 +130,7 @@ public class UIManager : IManager, IManagerUpdatable
             return;
 
         UI_Popup popup = _popupStack.Pop();
-        popup.OnClose();
+        popup.Close();
 
         UTIL.Destroy(popup.gameObject);
         popup = null;

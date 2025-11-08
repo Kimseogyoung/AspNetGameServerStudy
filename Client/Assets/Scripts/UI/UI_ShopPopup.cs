@@ -1,4 +1,5 @@
 using Proto;
+using Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using static Unity.VisualScripting.Dependencies.Sqlite.SQLite3;
 
 public class UI_ShopPopup : UI_Popup
 {
@@ -15,6 +17,7 @@ public class UI_ShopPopup : UI_Popup
     private GameObject _gachaScheduleGroup;
     private List<GachaScheduleSlot> _gachaScheduleSlotList = new();
 
+    private Image _selectedGachaBG;
     private Image _selectedGachaCookieImage;
     private TMP_Text _selectedGachaNameTxt;
     private TMP_Text _selectedGachaPeriodTxt;
@@ -28,6 +31,7 @@ public class UI_ShopPopup : UI_Popup
     private GameObject _gachaResultSlotPrefab;
 
     private Task _loadingTask;
+    private List<SchedulePacket> _gachaSchedulePacketList = new();
 
     protected override void InitImp()
     {
@@ -43,6 +47,7 @@ public class UI_ShopPopup : UI_Popup
             _gachaScheduleSlotList.Add(gachaScheduleSlot);
         }
 
+        _selectedGachaBG = Bind<Image>(UI.SelectedGachaBG.ToString());
         _selectedGachaCookieImage = Bind<Image>(UI.SelectedGachaCookieImage.ToString());
         _selectedGachaNameTxt = Bind<TMP_Text>(UI.SelectedGachaName.ToString());
         _selectedGachaPeriodTxt = Bind<TMP_Text>(UI.SelectedGachaPeriod.ToString());
@@ -55,13 +60,20 @@ public class UI_ShopPopup : UI_Popup
         _gachaResultSlotPrefab = UTIL.LoadRes<GameObject>(AppPath.GetPrefabPath("GachaResultSlot"));
     }
 
-    public override void OnClose()
+    protected override void OnClose()
     {
         _loadingTask.Dispose();
         _loadingTask = null;
+
+        _probButton.RemoveAllEvent();
+
+        foreach (var costButton  in _costButtonList)
+        {
+            costButton.SetCost(EObjType.NONE, 0);
+        }
     }
 
-    public override void OnOpen()
+    protected override void OnOpen()
     {
         if (_loadingTask != null)
         {
@@ -75,6 +87,8 @@ public class UI_ShopPopup : UI_Popup
     public async Task Refresh()
     {
         var loadRes = await APP.Ctx.RequestLoadSchedule();
+        _gachaSchedulePacketList = loadRes.ScheduleList;
+
         for (var i = 0; i < _gachaScheduleSlotList.Count; i++)
         {
             var slot = _gachaScheduleSlotList[i];
@@ -84,17 +98,74 @@ public class UI_ShopPopup : UI_Popup
                 continue;
             }
             
-            var gachaSchedule = loadRes.ScheduleList[i];
+            var gachaSchedule = _gachaSchedulePacketList[i];
             var prtGachaSchedule = APP.Prt.GetGachaSchedulePrt(gachaSchedule.Num);
-            slot.SetGacha(prtGachaSchedule, () => SelectGacha(prtGachaSchedule));
+            var idx = i;
+            slot.SetGacha(prtGachaSchedule, () => SelectGacha(idx));
         }
 
-        SelectGacha(_gachaScheduleSlotList[0].Prt);
+        SelectGacha(0);
     }
 
-    private void SelectGacha(GachaScheduleProto prt)
+    private void SelectGacha(int scheduleIdx)
     {
-        LOG.I($"Select ({prt.Num})");
+        if(scheduleIdx >= _gachaSchedulePacketList.Count)
+        {
+            LOG.E($"Invalid GachaSchedule Index({scheduleIdx}) ScheduleCount({_gachaSchedulePacketList.Count})");
+            return;
+        }
+
+        var schedulePtk = _gachaSchedulePacketList[scheduleIdx];
+        var prtGachaSchedule = APP.Prt.GetGachaSchedulePrt(schedulePtk.Num);
+        _selectedGachaBG.sprite = UTIL.LoadSprite(prtGachaSchedule.BGSprite);
+        _selectedGachaNameTxt.text = L10n.GetText(prtGachaSchedule.NameKey);
+        _selectedGachaPeriodTxt.text = $"{L10n.GetPeriodText(schedulePtk.ActiveStartTime)} ~ {L10n.GetPeriodText(schedulePtk.ActiveEndTime)}";
+
+        if (prtGachaSchedule.PickupCookieNumList.Any(x=>x != 0)) // ÇÈ¾÷
+        {
+            _selectedGachaCookieImage.gameObject.SetActive(true);
+
+            var cookiePrt = APP.Prt.GetCookiePrt(prtGachaSchedule.PickupCookieNumList[0]);
+            _selectedGachaCookieImage.sprite = UTIL.LoadSprite(cookiePrt.Sprite);
+        }
+        else
+        {
+            _selectedGachaCookieImage.gameObject.SetActive(false);
+        }
+
+        _probButton.RemoveAllEvent();
+        _probButton.SetEvent(() => ShowGachaProb(prtGachaSchedule));
+
+        for (var costIdx = 0; costIdx < prtGachaSchedule.CostTypeList.Count; costIdx++)
+        {
+            var costType = prtGachaSchedule.CostTypeList[costIdx];
+            var costAmount = prtGachaSchedule.CostAmountList[costIdx];
+
+            for (var cntIdx = 0; cntIdx < prtGachaSchedule.CntList.Count; cntIdx++)
+            {
+                var cnt = prtGachaSchedule.CntList[cntIdx];
+                var buttonIdx = (costIdx * prtGachaSchedule.CntList.Count) + cntIdx;
+                if (buttonIdx >= _costButtonList.Count)
+                {
+                    LOG.E($"Not Enough Gacha CostButton ButtonIdx({buttonIdx})");
+                    continue;
+                }
+                var costButton = _costButtonList[buttonIdx];
+                costButton.SetCost(costType, costAmount);
+                costButton.Button.SetText($"{cnt}È¸ »Ì±â");
+                costButton.Button.SetEvent(() => RunGacha(prtGachaSchedule, costType, costAmount, cnt));
+            }
+        }
+    }
+
+    private void RunGacha(GachaScheduleProto prt, EObjType costType, int costAmount, int cnt)
+    {
+        LOG.I($"RunGacha {prt.Num}");
+    }
+
+    private void ShowGachaProb(GachaScheduleProto prt)
+    {
+        LOG.I($"ShowProbGacha {prt.Num}");
     }
 
     private void UpGachaResultPanel()
@@ -175,7 +246,8 @@ public class UI_ShopPopup : UI_Popup
         GachaRoot,
         GachaScheduleGroup,
         GachaScheduleSlot,
-        
+
+        SelectedGachaBG,
         SelectedGachaCookieImage,
         SelectedGachaName,
         SelectedGachaPeriod,

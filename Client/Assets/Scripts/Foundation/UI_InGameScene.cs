@@ -56,12 +56,12 @@ public class UI_InGameScene : UI_Scene
         _shopButton = Bind<UI_Button>(UI.ShopButton.ToString());
         _cookieButton = Bind<UI_Button>(UI.CookieButton.ToString());
 
-        _menuButton.AddEvent(() => { LOG.I("MenuButton Click!"); });
-        _friendButton.AddEvent(() => { LOG.I("FriendButton Click!"); });
-        _mailButton.AddEvent(() => { LOG.I("MailButton Click!"); });
-        _editButton.AddEvent(() => { APP.UI.ShowPopupUI<UI_SettingPopup>(); });
-        _shopButton.AddEvent(() => { APP.UI.ShowPopupUI<UI_ShopPopup>(); });
-        _cookieButton.AddEvent(() => { APP.UI.ShowPopupUI<UI_CookiePopup>(); });
+        _menuButton.SetEvent(() => { LOG.I("MenuButton Click!"); });
+        _friendButton.SetEvent(() => { LOG.I("FriendButton Click!"); });
+        _mailButton.SetEvent(() => { LOG.I("MailButton Click!"); });
+        _editButton.SetEvent(() => { APP.UI.ShowPopupUI<UI_SettingPopup>(); });
+        _shopButton.SetEvent(() => { APP.UI.ShowPopupUI<UI_ShopPopup>(); });
+        _cookieButton.SetEvent(() => { APP.UI.ShowPopupUI<UI_CookiePopup>(); });
 
         _profileCookieImage = Bind<Image>(UI.ProfileCookieImage.ToString());
         _profileNameText = Bind<TMP_Text>(UI.ProfileNameText.ToString());

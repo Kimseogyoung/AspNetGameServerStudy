@@ -41,7 +41,7 @@ public abstract class UI_Base : MonoBehaviour
         return Get<T>(name);
     }
 
-    //Bind UI 오브젝트 이름으로 찾아 바인딩해주기
+    //Bind UI 오브젝트 이름으로 찾아 바인딩해주기 (같은 오브젝트에 여러 컴포넌트 일경우 오류가 있으므로 개선 필요)
     protected T Bind<T>(string name) where T : UnityEngine.Object
 	{
 		Object obj = null;
