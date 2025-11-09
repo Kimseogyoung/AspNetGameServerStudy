@@ -25,15 +25,15 @@ namespace WebStudyServer.Manager
         }
 
         // TODO: Reward관련 내용 별도 멤버변수로 빼는것 고려
-        public ChgObjPacket DecCost(ObjPacket valCostObj, string reason)
+        public ChgObjPacket DecCost(ObjValue valCostObj, string reason)
         {
-            var amount = DecCost(valCostObj.Type, valCostObj.Num, valCostObj.Amount, reason);
+            var amount = DecCost(valCostObj.Key.Type, valCostObj.Key.Num, valCostObj.Value, reason);
             var obj = new ChgObjPacket
             {
                 TotalAmount = amount,
-                Amount = valCostObj.Amount,
-                Type = valCostObj.Type,
-                Num = valCostObj.Num,
+                Amount = valCostObj.Value,
+                Type = valCostObj.Key.Type,
+                Num = valCostObj.Key.Num,
             };
             return obj;
         }
@@ -83,18 +83,6 @@ namespace WebStudyServer.Manager
             return objList;
         }
 
-
-        public List<ChgObjPacket> IncRewardList(List<ObjPacket> valRewardListObj, string reason)
-        {
-            var objList = new List<ChgObjPacket>();
-            foreach(var valReward in valRewardListObj)
-            {
-                var obj = IncReward(valReward, reason);
-                objList.Add(obj);
-            }
-            return objList;
-        }
-
         public ChgObjPacket IncReward(ObjValue valRewardObjVal, string reason)
         {
             var amount = IncReward(valRewardObjVal.Key.Type, valRewardObjVal.Key.Num, valRewardObjVal.Value, reason);
@@ -104,19 +92,6 @@ namespace WebStudyServer.Manager
                 Amount = valRewardObjVal.Value,
                 Type = valRewardObjVal.Key.Type,
                 Num = valRewardObjVal.Key.Num,
-            };
-            return obj;
-        }
-
-        public ChgObjPacket IncReward(ObjPacket valRewardObj, string reason)
-        {
-            var amount = IncReward(valRewardObj.Type, valRewardObj.Num, valRewardObj.Amount, reason);
-            var obj = new ChgObjPacket
-            {
-                TotalAmount = amount,
-                Amount = valRewardObj.Amount,
-                Type = valRewardObj.Type,
-                Num = valRewardObj.Num,
             };
             return obj;
         }

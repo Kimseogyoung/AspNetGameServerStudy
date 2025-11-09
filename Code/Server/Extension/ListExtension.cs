@@ -29,5 +29,16 @@ namespace Server.Extension
                 objValList.AddOrInc(objValue);
             }
         }
+
+        public static List<ObjValue> Merge(this List<ObjValue> objValList)
+        {
+            var newList = new List<ObjValue>();
+            foreach (var objValue in objValList)
+            {
+                var newObjValue = new ObjValue(objValue.Key, objValue.Value);
+                newList.AddOrInc(newObjValue);
+            }
+            return newList;
+        }
     }
 }

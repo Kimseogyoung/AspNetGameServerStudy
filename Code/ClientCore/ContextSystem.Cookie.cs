@@ -1,4 +1,5 @@
-﻿using Protocol;
+﻿using Proto;
+using Protocol;
 using System;
 using System.Threading.Tasks;
 
@@ -18,21 +19,28 @@ namespace ClientCore
         public async Task<GachaNormalResPacket> RequestGachaNormal(int scheduleNum, int cnt)
         {
             var prtGachaSchedule = APP.Prt.GetGachaSchedulePrt(scheduleNum);
+            return await RequestGachaNormal(scheduleNum, prtGachaSchedule.CostTypeList[0], prtGachaSchedule.CostAmountList[0], cnt);
+        }
+
+        public async Task<GachaNormalResPacket> RequestGachaNormal(int scheduleNum, EObjType costType, int costAmount, int cnt)
+        {
+            var prtGachaSchedule = APP.Prt.GetGachaSchedulePrt(scheduleNum);
 
             var costIdx = prtGachaSchedule.CntList.FindIndex(x => x == cnt);
-            if(costIdx == -1)
+            if (costIdx == -1)
             {
                 Console.WriteLine($"INVALID_GACHA_CNT({cnt})");
                 return new GachaNormalResPacket { Info = _errorRes };
             }
 
-            var req = new GachaNormalReqPacket(scheduleNum, cnt, new CostObjPacket { Type = prtGachaSchedule.CostTypeList[costIdx], Num = 0, Amount = prtGachaSchedule.CostAmountList[costIdx] * cnt });
+            var req = new GachaNormalReqPacket(scheduleNum, cnt, new CostObjPacket { Type = costType, Num = 0, Amount = costAmount * cnt });
             var res = await RpcSystem.RequestAsync<GachaNormalReqPacket, GachaNormalResPacket>(req);
 
             SyncChgObjList(res.GachaResultChgObjList);
             SyncChgObj(res.CostChgObj);
             return res;
         }
+
 
         public void PrintCookieList()
         {
@@ -73,6 +81,7 @@ namespace ClientCore
             var res = await RpcSystem.RequestAsync<CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(req);
 
             SyncCookie(res.Cookie);
+            SyncChgObj(res.ChgObj);
             return res;
         }
     }

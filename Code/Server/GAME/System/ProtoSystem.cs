@@ -64,5 +64,8 @@ namespace WebStudyServer
         public IEnumerable<GachaItemProto> GetGachaItemPrts() => _prt.GetAll<GachaItemProto>();
         public IEnumerable<CookieProto> GetCookiePrts() => _prt.GetAll<CookieProto>();
         private static ProtoHelper _prt = new ProtoHelper();
+
+
+
     }
 }

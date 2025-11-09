@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
+using Unity.Android.Gradle.Manifest;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -28,7 +30,7 @@ public class UI_ShopPopup : UI_Popup
     private GameObject _gachaResultRoot;
     private GameObject _gachaResultGroup;
 
-    private GameObject _gachaResultSlotPrefab;
+    private List<GachaResultSlot> _gachaResultSlotList= new();
 
     private Task _loadingTask;
     private List<SchedulePacket> _gachaSchedulePacketList = new();
@@ -57,7 +59,15 @@ public class UI_ShopPopup : UI_Popup
 
         _gachaResultRoot = Bind<GameObject>(UI.GachaResultRoot.ToString());
         _gachaResultGroup = Bind<GameObject>(UI.GachaResultGroup.ToString());
-        _gachaResultSlotPrefab = UTIL.LoadRes<GameObject>(AppPath.GetPrefabPath("GachaResultSlot"));
+
+        var gachaResultSlotObjList = BindMany<GameObject>(UI.GachaResultSlot.ToString());
+        foreach (var gachaResultSlotObj in gachaResultSlotObjList)
+        {
+            var gachaResultSlot = new GachaResultSlot();
+            gachaResultSlot.Bind(gachaResultSlotObj);
+            _gachaResultSlotList.Add(gachaResultSlot);
+        }
+
     }
 
     protected override void OnClose()
@@ -80,12 +90,17 @@ public class UI_ShopPopup : UI_Popup
             return;
         }
 
+        
         _loadingTask = Refresh();
         _loadingTask.FireAndForget();
     }
 
     public async Task Refresh()
     {
+        // 임시 
+        await APP.Ctx.RequestCheatReward(new ObjValue(EObjType.POINT_C_GACHA_NORMAL, 0, 100));
+
+
         var loadRes = await APP.Ctx.RequestLoadSchedule();
         _gachaSchedulePacketList = loadRes.ScheduleList;
 
@@ -104,6 +119,7 @@ public class UI_ShopPopup : UI_Popup
             slot.SetGacha(prtGachaSchedule, () => SelectGacha(idx));
         }
 
+        // 첫번째 스케쥴 선택 상태로 만듦.
         SelectGacha(0);
     }
 
@@ -136,6 +152,7 @@ public class UI_ShopPopup : UI_Popup
         _probButton.RemoveAllEvent();
         _probButton.SetEvent(() => ShowGachaProb(prtGachaSchedule));
 
+        // Cost 버튼 세팅
         for (var costIdx = 0; costIdx < prtGachaSchedule.CostTypeList.Count; costIdx++)
         {
             var costType = prtGachaSchedule.CostTypeList[costIdx];
@@ -152,20 +169,55 @@ public class UI_ShopPopup : UI_Popup
                 }
                 var costButton = _costButtonList[buttonIdx];
                 costButton.SetCost(costType, costAmount);
-                costButton.Button.SetText($"{cnt}회 뽑기");
-                costButton.Button.SetEvent(() => RunGacha(prtGachaSchedule, costType, costAmount, cnt));
+                costButton.Button.SetText($"{cnt}회 뽑기"); // TODO: L10n
+                costButton.Button.SetEvent(() => RunGacha(prtGachaSchedule, costType, costAmount, cnt).FireAndForget());
             }
         }
     }
 
-    private void RunGacha(GachaScheduleProto prt, EObjType costType, int costAmount, int cnt)
+    private async Task RunGacha(GachaScheduleProto prt, EObjType costType, int costAmount, int cnt)
     {
         LOG.I($"RunGacha {prt.Num}");
+        var res = await APP.Ctx.RequestGachaNormal(prt.Num, costType, costAmount, cnt);
+        if (APP.Ctx.IsErrorRes(res))
+        {
+            return;
+        }
+
+        var gachaResultObjValueList = res.GachaResultList; // GachaResultObjValueList 가챠 결과
+        if (gachaResultObjValueList.Count > _gachaResultSlotList.Count)
+        {
+            // 표시 가능한 슬롯보다 많이 뽑는 경우는 오류
+            LOG.E($"Too Many GachaResult Cnt({gachaResultObjValueList.Count})");
+            return;
+        }
+
+        for (var i = 0; i < _gachaResultSlotList.Count; i++)
+        {
+            var gachaResultSlot = _gachaResultSlotList[i];
+            if (i >= gachaResultObjValueList.Count)
+            {
+                gachaResultSlot.Disable();
+                continue;
+            }
+
+            gachaResultSlot.SetResult(gachaResultObjValueList[i]);
+        }
     }
 
     private void ShowGachaProb(GachaScheduleProto prt)
     {
         LOG.I($"ShowProbGacha {prt.Num}");
+    }
+
+    private void ShowGachaResult(List<ObjValue> gachaResultObjValueList)
+    {
+
+    }
+
+    private void CloseGachaResult()
+    {
+
     }
 
     private void UpGachaResultPanel()
@@ -219,25 +271,54 @@ public class UI_ShopPopup : UI_Popup
 
     class GachaResultSlot 
     {
-        public Image CookieImage;
+        public Image Image;
         public Image GradeBGImage;
-        public TMP_Text GradeName;
-        public TMP_Text GradeTxt;
+        public Image GradeImage;
+        public TMP_Text GradeText;
+        public Image SoulStoneIconImage;
+        public TMP_Text SoulStoneCntText;
+        public TMP_Text SoulStoneHasCntText;
 
         private GameObject _gameObject;
+
         public void Bind(GameObject gameObject)
         {
             _gameObject = gameObject;
 
-            CookieImage = UTIL.FindChild<Image>(_gameObject, nameof(CookieImage));
+            Image = UTIL.FindChild<Image>(_gameObject, nameof(Image));
             GradeBGImage = UTIL.FindChild<Image>(_gameObject, nameof(GradeBGImage));
-            GradeName = UTIL.FindChild<TMP_Text>(_gameObject, nameof(GradeName));
-            GradeTxt = UTIL.FindChild<TMP_Text>(_gameObject, nameof(GradeTxt));
+            GradeImage = UTIL.FindChild<Image>(_gameObject, nameof(GradeImage));
+            GradeText = UTIL.FindChild<TMP_Text>(_gameObject, nameof(GradeText));
+            SoulStoneIconImage = UTIL.FindChild<Image>(_gameObject, nameof(SoulStoneIconImage));
+            SoulStoneCntText = UTIL.FindChild<TMP_Text>(_gameObject, nameof(SoulStoneCntText));
+            SoulStoneHasCntText = UTIL.FindChild<TMP_Text>(_gameObject, nameof(SoulStoneHasCntText));
         }
 
-        public void Activate(bool activate)
+        public void SetResult(GachaResultPacket gachaResult)
         {
-            _gameObject.SetActive(activate);
+            var image = IconHelper.GetFullImage(gachaResult.ResultObjValue.Key);
+            Image.sprite = image;
+
+            var soulStonePrt = APP.Prt.GetCookieSoulStonePrt(gachaResult.SoulStoneNum);
+            var soulStoneCnt = gachaResult.SoulStoneAmount;
+            var cookiePrt = APP.Prt.GetCookiePrt(soulStonePrt.CookieNum);
+            var cookiePkt = ContextHelper.GetCookie(cookiePrt.Num);
+
+            var prtCookieStarEnhance = APP.Prt.GetCookieStarEnhancePrt(cookiePrt.GradeType, cookiePkt.Star);
+
+            var grade = cookiePrt.GradeType;
+            GradeImage.sprite = IconHelper.GetGradeIconImage(grade);
+            GradeText.text = L10nKey.GetCookieGradeText(grade);
+
+            SoulStoneIconImage.sprite = IconHelper.GetIconImage(new ObjKey(EObjType.SOUL_STONE, soulStonePrt.Num));
+            SoulStoneCntText.text = $"x{soulStoneCnt}";
+            SoulStoneHasCntText.text = $"x{cookiePkt.SoulStone}/{prtCookieStarEnhance.SoulStone}";
+            _gameObject.SetActive(true);
+        }
+
+        public void Disable()
+        {
+            _gameObject.SetActive(false);
         }
     }
 
@@ -258,5 +339,6 @@ public class UI_ShopPopup : UI_Popup
 
         GachaResultRoot,
         GachaResultGroup,
+        GachaResultSlot,
     }
 }

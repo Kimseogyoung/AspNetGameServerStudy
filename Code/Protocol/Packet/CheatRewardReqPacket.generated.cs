@@ -11,13 +11,13 @@ namespace Protocol
         public ReqInfoPacket Info { get; set; } = new ReqInfoPacket();
         
         [ProtoMember(2)]
-        public List<ObjPacket> RewardList { get; set; } = new List<ObjPacket>();
+        public List<ObjValue> RewardList { get; set; } = new List<ObjValue>();
         
 
         public const string NAME = "cheat/reward";
         public string GetProtocolName() => NAME;
 
-        public CheatRewardReqPacket( List<ObjPacket> rewardlist )
+        public CheatRewardReqPacket( List<ObjValue> rewardlist )
 	    {   
          
                 RewardList = rewardlist; 

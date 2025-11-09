@@ -17,7 +17,7 @@ namespace Proto
     		public string Name { get; set; }
         
     		[ProtoMember(5)]
-    		public string IconSprite { get; set; }
+    		public string Sprite { get; set; }
         
 	}
 }

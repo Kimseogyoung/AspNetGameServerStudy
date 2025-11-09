@@ -11,6 +11,8 @@ public class UIManager : IManager, IManagerUpdatable
 
     public void StartManager()
     {
+        // TODO: Esc 클릭 시 팝업 닫기 
+        // TODO: ` 클릭 시 CheatPopup 열기
     }
 
     public void UpdateManager()

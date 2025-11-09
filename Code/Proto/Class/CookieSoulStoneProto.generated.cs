@@ -16,5 +16,8 @@ namespace Proto
     		[ProtoMember(4)]
     		public string Key { get; set; }
         
+    		[ProtoMember(5)]
+    		public string Sprite { get; set; }
+        
 	}
 }

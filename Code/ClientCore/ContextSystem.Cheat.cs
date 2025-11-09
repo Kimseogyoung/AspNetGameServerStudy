@@ -12,14 +12,14 @@ namespace ClientCore
             var upperCashObjTypeStr = objTypeStr.ToUpper();
             var objTypeList = new List<EObjType>();
             var canParse = Enum.TryParse(typeof(EObjType), upperCashObjTypeStr, out var parseObjType);
-            
+
             if (canParse)
             {
                 objTypeList.Add((EObjType)parseObjType);
             }
             else if (string.IsNullOrEmpty(objTypeStr))
             {
-                foreach(var type in Enum.GetValues(typeof(EObjType)))
+                foreach (var type in Enum.GetValues(typeof(EObjType)))
                 {
                     objTypeList.Add((EObjType)type);
                 }
@@ -42,8 +42,8 @@ namespace ClientCore
                         break;
                 }
             }
-        
-            var reqRewardList = new List<ObjPacket>();
+
+            var reqRewardList = new List<ObjValue>();
             foreach (var objType in objTypeList)
             {
                 switch (objType)
@@ -57,28 +57,39 @@ namespace ClientCore
                     case EObjType.POINT_C_GACHA_SPECIAL:
                     case EObjType.POINT_C_GACHA_DESTINY:
                     case EObjType.TICKET_STAMINA:
-                        reqRewardList.Add(new ObjPacket { Type = objType, Num = 0, Amount = objAmount });
+                        reqRewardList.Add(new ObjValue(objType, 0, objAmount));
                         break;
                     case EObjType.COOKIE:
                         foreach (var cookiePrt in APP.Prt.GetCookiePrts())
                         {
-                            reqRewardList.Add(new ObjPacket { Type = objType, Num = cookiePrt.Num, Amount = objAmount });
+                            reqRewardList.Add(new ObjValue(objType, cookiePrt.Num, objAmount));
                         }
                         break;
                     case EObjType.ITEM:
                         foreach (var itemPrt in APP.Prt.GetItemPrts())
                         {
-                            reqRewardList.Add(new ObjPacket { Type = objType, Num = itemPrt.Num, Amount = objAmount });
+                            reqRewardList.Add(new ObjValue(objType, itemPrt.Num, objAmount));
                         }
                         break;
                 }
             }
 
-            var req = new CheatRewardReqPacket { RewardList = reqRewardList };
+            return await RequestCheatReward(reqRewardList);
+        }
+
+        public async Task<CheatRewardResPacket> RequestCheatReward(ObjValue objValue)
+        {
+            return await RequestCheatReward(new List<ObjValue>() { objValue });
+        }
+
+        public async Task<CheatRewardResPacket> RequestCheatReward(List<ObjValue> objValueList)
+        {
+            var req = new CheatRewardReqPacket { RewardList = objValueList };
             var res = await RpcSystem.RequestAsync<CheatRewardReqPacket, CheatRewardResPacket>(req);
 
             SyncChgObjList(res.ChgObjList);
             return res;
         }
+
     }
 }

@@ -42,7 +42,7 @@ public class UI_CostButton : UI_Base
         else
         {
             gameObject.SetActive(true);
-            var iconSprite = IconHelper.GetIcon(new ObjKey(costType, 0));
+            var iconSprite = IconHelper.GetIconImage(new ObjKey(costType, 0));
             _iconImage.sprite = iconSprite;
 
             Refresh();

@@ -62,12 +62,12 @@ namespace WebStudyServer.Helper
             return roundValue;
         }
 
-        public static ObjPacket ValidCost(CostObjPacket reqCost, EObjType valObjType, int valObjNum, double valObjAmount, string reason)
+        public static ObjValue ValidCost(CostObjPacket reqCost, EObjType valObjType, int valObjNum, double valObjAmount, string reason)
         {
             ReqHelper.ValidProto(reqCost.Type == valObjType, "NOT_EQUAL_COST_TYPE", () => new { Reason = reason, ReqCost = reqCost, ValType = valObjType });
             ReqHelper.ValidProto(reqCost.Num == valObjNum, "NOT_EQUAL_COST_NUM", () => new { Reason = reason, ReqCost = reqCost, ValNum = valObjNum });
             ReqHelper.ValidProto(reqCost.Amount == valObjAmount, "NOT_EQUAL_COST_AMOUNT", () => new { Reason = reason, ReqCost = reqCost, ValAmount = valObjAmount });
-            var valObj = new ObjPacket { Type = reqCost.Type, Num = reqCost.Num, Amount = reqCost.Amount };
+            var valObj = new ObjValue(reqCost.Type, reqCost.Num, reqCost.Amount);
             return valObj;
         }
 

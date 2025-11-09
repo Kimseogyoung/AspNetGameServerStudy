@@ -14,6 +14,9 @@ namespace Protocol
         public List<ChgObjPacket> GachaResultChgObjList { get; set; } = new List<ChgObjPacket>();
         
         [ProtoMember(3)]
+        public List<GachaResultPacket> GachaResultList { get; set; } = new List<GachaResultPacket>();
+        
+        [ProtoMember(4)]
         public ChgObjPacket CostChgObj { get; set; } = new ChgObjPacket();
         
 	}

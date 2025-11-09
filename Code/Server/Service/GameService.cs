@@ -74,7 +74,7 @@ namespace Server.Service
             // 변경
             mgrPlayer.ChangeName(reqName);
 
-            return new GameChangeNameResPacket 
+            return new GameChangeNameResPacket
             {
                 PlayerName = mgrPlayer.Model.ProfileName,
             };
@@ -89,7 +89,7 @@ namespace Server.Service
             // Item 최대 보유량 체크
             var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
             var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
-            ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT", 
+            ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
 
             // Cost일치하는지 체크
@@ -197,9 +197,9 @@ namespace Server.Service
         public KingdomChangeItemResPacket KingdomItemChange(KingdomChangeItemReqPacket req)
         {
             var mgrKingdomMap = _userRepo.KingdomMap.Touch();
-            
+
             // Chg + Place 리스트중에 겹치는거 없는지 검증
-            var valSnapshot = mgrKingdomMap.ValiePlaceItemsSnapshot(req.StoreKingdomItemIdList, req.ChgKingdomItemList, req.PlaceKingdomItemList, 
+            var valSnapshot = mgrKingdomMap.ValiePlaceItemsSnapshot(req.StoreKingdomItemIdList, req.ChgKingdomItemList, req.PlaceKingdomItemList,
                 out var valStructureDeltaCntDict, out var valDecoDeltaCntDict);
 
             // Store + Create 한 변화량으로, 보유 수량 검증
@@ -219,7 +219,7 @@ namespace Server.Service
 
             // 처리
             // Store + Create 한 변화량 적용
-            foreach(var mgrKingdomStructure in mgrKingdomStructureList)
+            foreach (var mgrKingdomStructure in mgrKingdomStructureList)
             {
                 var cnt = valStructureDeltaCntDict[mgrKingdomStructure.Model.SfId];
                 if (cnt > 0)
@@ -312,18 +312,45 @@ namespace Server.Service
 
             var gachaRandom = new GachaRandom(scheduleMgr.GachaPrt, RpcContext.ServerTime);
             var rewardObjValList = new List<ObjValue>();
+            var gachaResultList = new List<GachaResultPacket>();
             for (var i = 0; i < valCnt; i++)
             {
                 var resultObjValue = gachaRandom.Roll(isNormal: true);
                 rewardObjValList.AddOrInc(resultObjValue);
+
+                GachaResultPacket gachaResult = null;
+                switch (resultObjValue.Key.Type)
+                {
+                    case EObjType.COOKIE:
+                        var prtCookie = APP.Prt.GetCookiePrt(resultObjValue.Key.Num);
+                        gachaResult = new GachaResultPacket
+                        {
+                            ResultObjValue = resultObjValue,
+                            SoulStoneNum = prtCookie.SoulStoneNum,
+                            SoulStoneAmount = prtCookie.InitSoulStone * (int)resultObjValue.Value
+                        };   
+                        break;
+                    case EObjType.SOUL_STONE:
+                        gachaResult = new GachaResultPacket
+                        {
+                            ResultObjValue = resultObjValue,
+                            SoulStoneNum = resultObjValue.Key.Num,
+                            SoulStoneAmount = (int)resultObjValue.Value
+                        };
+                        break;
+                    default:
+                        throw new GameException("NO_HANDLING_GACHA_RESULT", new { ObjType = resultObjValue.Key.Type } );
+                }
+                gachaResultList.Add(gachaResult);
             }
 
             var chgObjList = mgrPlayerDetail.IncRewardList(rewardObjValList, scheduleMgr.MakeGachaReason(valCnt));
 
             return new GachaNormalResPacket
             {
-               CostChgObj = resultCostObj,
-               GachaResultChgObjList = chgObjList
+                CostChgObj = resultCostObj,
+                GachaResultChgObjList = chgObjList,
+                GachaResultList = gachaResultList,
             };
         }
         #endregion
@@ -340,7 +367,7 @@ namespace Server.Service
             ReqHelper.ValidContext(req.UsedSoulStone == valUsedSoulStone, "NOT_EQUAL_USED_SOUL_STONE", () => new { CookieNum = mgrCookie.Model.Num, UsedSoulStone = req.UsedSoulStone, ValUsedSoulStone = valUsedSoulStone });
 
             mgrCookie.EnhanceStar(req.AftStar, valUsedSoulStone);
-      
+
             return new CookieEnhanceStarResPacket
             {
                 Cookie = _mapper.Map<CookiePacket>(mgrCookie.Model),
@@ -378,12 +405,12 @@ namespace Server.Service
             ReqHelper.ValidContext(mgrWorld.TryGetTopOpenStagePrt(out var prtNextWorldStage), "NOT_FOUND_TOP_OPEN_STAGE", () => new { WorldNum = mgrWorld.Prt.Num, TopFinishStageNum = mgrWorld.Model.TopFinishStageNum });
             ReqHelper.ValidContext(prtNextWorldStage.Num == req.StageNum, "NOT_EQUAL_FIRST_FINISH_STAGE", () => new { WorldNum = mgrWorld.Prt.Num, ReqStageNum = req.StageNum, ValStageNum = prtNextWorldStage.Num });
             ReqHelper.ValidContext(mgrWorld.IsFinishPrevWorld(), "NOT_FINISH_PREV_WORLD", () => new { WorldNum = mgrWorld.Prt.Num });
-            
+
             // 최초 보상
             var prtRewardList = new List<ObjValue>();
             var firstReward = new ObjValue(mgrWorldStage.Prt.FirstRewardTypeList[0], mgrWorldStage.Prt.FirstRewardNumList[0], mgrWorldStage.Prt.FirstRewardAmountList[0]);
             prtRewardList.AddOrInc(firstReward);
-            
+
             // Star 보상
             ReqHelper.ValidProto(req.Star <= mgrWorldStage.Prt.FirstRewardTypeList.Count, "TOO_MANY_STAGE_STAR", () => new { StageNum = req.StageNum, ReqStar = req.Star });
             var valStar = req.Star;
@@ -392,7 +419,7 @@ namespace Server.Service
                 var starReward = new ObjValue(mgrWorldStage.Prt.FirstRewardTypeList[star], mgrWorldStage.Prt.FirstRewardNumList[star], mgrWorldStage.Prt.FirstRewardAmountList[star]);
                 prtRewardList.AddOrInc(starReward);
             }
-            
+
             var reason = $"WORLD_FINISH_STAGE_FIRST:{mgrWorldStage.Num}";
             var valRewardList = ReqHelper.ValidRewardList(req.RewardValueList, prtRewardList, reason);
 

@@ -86,7 +86,7 @@ namespace WebStudyServer.Manager
             return _prtGacha.CntList[findIdx];
         }
 
-        public ObjPacket ValidGachaCost(CostObjPacket reqCostObj, int valCnt)
+        public ObjValue ValidGachaCost(CostObjPacket reqCostObj, int valCnt)
         {
             var costIdx = _prtGacha.CostTypeList.FindIndex(x => x == reqCostObj.Type);
             ReqHelper.ValidContext(costIdx != -1, "NOT_EQUAL_GACHA_COST_TYPE", () => new { ScheduleNum = _prt.Num, ReqCostObj = reqCostObj });

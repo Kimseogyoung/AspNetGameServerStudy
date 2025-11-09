@@ -26,24 +26,27 @@ namespace Proto
     		public EFormationPositionType FormationPosType { get; set; }
         
     		[ProtoMember(8)]
-    		public int InitSoulStone { get; set; }
+    		public int SoulStoneNum { get; set; }
         
     		[ProtoMember(9)]
-    		public int Hp { get; set; }
+    		public int InitSoulStone { get; set; }
         
     		[ProtoMember(10)]
-    		public int Atk { get; set; }
+    		public int Hp { get; set; }
         
     		[ProtoMember(11)]
-    		public int Def { get; set; }
+    		public int Atk { get; set; }
         
     		[ProtoMember(12)]
-    		public int Cri { get; set; }
+    		public int Def { get; set; }
         
     		[ProtoMember(13)]
-    		public string Sprite { get; set; }
+    		public int Cri { get; set; }
         
     		[ProtoMember(14)]
+    		public string Sprite { get; set; }
+        
+    		[ProtoMember(15)]
     		public string IconSprite { get; set; }
         
 	}

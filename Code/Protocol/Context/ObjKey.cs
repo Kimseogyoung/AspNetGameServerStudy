@@ -18,6 +18,12 @@ namespace Protocol
             Num = num;
         }
 
+        public ObjKey(EObjType type)
+        {
+            Type = type;
+            Num = 0;
+        }
+
         public bool IsNone()
         {
             return Type == EObjType.NONE;
@@ -45,6 +51,11 @@ namespace Protocol
         public override int GetHashCode()
         {
             return HashCode.Combine(this.Type, this.Num);
+        }
+
+        public override string ToString()
+        {
+            return $"{Type}:{Num}";
         }
     }
 
