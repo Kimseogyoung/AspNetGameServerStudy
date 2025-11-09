@@ -127,7 +127,7 @@ public static class IconHelper
             return null;
         }
 
-        _cachedIconDict.Add(objKey, loadedSprite);
+        _cachedFullImageDict.Add(objKey, loadedSprite);
         return loadedSprite;
     }
 

@@ -1,16 +1,12 @@
 using Proto;
 using Protocol;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
-using Unity.Android.Gradle.Manifest;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using static Unity.VisualScripting.Dependencies.Sqlite.SQLite3;
 
 public class UI_ShopPopup : UI_Popup
 {
@@ -24,12 +20,10 @@ public class UI_ShopPopup : UI_Popup
     private TMP_Text _selectedGachaNameTxt;
     private TMP_Text _selectedGachaPeriodTxt;
     private UI_Button _probButton;
-    private GameObject _costButtonGroup;
     private List<UI_CostButton> _costButtonList = new();
 
     private GameObject _gachaResultRoot;
-    private GameObject _gachaResultGroup;
-
+    private Vector3 _gachaResultPopupOriginPos = Vector3.zero;
     private List<GachaResultSlot> _gachaResultSlotList= new();
 
     private Task _loadingTask;
@@ -54,13 +48,13 @@ public class UI_ShopPopup : UI_Popup
         _selectedGachaNameTxt = Bind<TMP_Text>(UI.SelectedGachaName.ToString());
         _selectedGachaPeriodTxt = Bind<TMP_Text>(UI.SelectedGachaPeriod.ToString());
         _probButton = Bind<UI_Button>(UI.ProbButton.ToString());
-        _costButtonGroup = Bind<GameObject>(UI.CostButtonGroup.ToString());
         _costButtonList = BindMany<UI_CostButton>(UI.CostButtonObject.ToString());
 
         _gachaResultRoot = Bind<GameObject>(UI.GachaResultRoot.ToString());
-        _gachaResultGroup = Bind<GameObject>(UI.GachaResultGroup.ToString());
+        _gachaResultPopupOriginPos = _gachaResultRoot.gameObject.transform.localPosition;
+        Bind<UI_Button>(UI.GachaResultExitButton.ToString()).SetEvent(CloseGachaResult);
 
-        var gachaResultSlotObjList = BindMany<GameObject>(UI.GachaResultSlot.ToString());
+         var gachaResultSlotObjList = BindMany<GameObject>(UI.GachaResultSlot.ToString());
         foreach (var gachaResultSlotObj in gachaResultSlotObjList)
         {
             var gachaResultSlot = new GachaResultSlot();
@@ -184,6 +178,7 @@ public class UI_ShopPopup : UI_Popup
             return;
         }
 
+        ShowGachaResult(prt, res.GachaResultList);// GachaResultList 가챠 결과
         var gachaResultObjValueList = res.GachaResultList; // GachaResultObjValueList 가챠 결과
         if (gachaResultObjValueList.Count > _gachaResultSlotList.Count)
         {
@@ -210,14 +205,33 @@ public class UI_ShopPopup : UI_Popup
         LOG.I($"ShowProbGacha {prt.Num}");
     }
 
-    private void ShowGachaResult(List<ObjValue> gachaResultObjValueList)
+    private void ShowGachaResult(GachaScheduleProto prt, List<GachaResultPacket> gachaResultPktList)
     {
+        _gachaResultRoot.gameObject.transform.localPosition = Vector3.zero;
 
+        if (gachaResultPktList.Count > _gachaResultSlotList.Count)
+        {
+            // 표시 가능한 슬롯보다 많이 뽑는 경우는 오류
+            LOG.E($"Too Many GachaResult Cnt({gachaResultPktList.Count})");
+            return;
+        }
+
+        for (var i = 0; i < _gachaResultSlotList.Count; i++)
+        {
+            var gachaResultSlot = _gachaResultSlotList[i];
+            if (i >= gachaResultPktList.Count)
+            {
+                gachaResultSlot.Disable();
+                continue;
+            }
+
+            gachaResultSlot.SetResult(gachaResultPktList[i]);
+        }
     }
 
     private void CloseGachaResult()
     {
-
+        _gachaResultRoot.gameObject.transform.localPosition = _gachaResultPopupOriginPos;
     }
 
     private void UpGachaResultPanel()
@@ -312,7 +326,7 @@ public class UI_ShopPopup : UI_Popup
 
             SoulStoneIconImage.sprite = IconHelper.GetIconImage(new ObjKey(EObjType.SOUL_STONE, soulStonePrt.Num));
             SoulStoneCntText.text = $"x{soulStoneCnt}";
-            SoulStoneHasCntText.text = $"x{cookiePkt.SoulStone}/{prtCookieStarEnhance.SoulStone}";
+            SoulStoneHasCntText.text = $"{cookiePkt.SoulStone}/{prtCookieStarEnhance.SoulStone}";
             _gameObject.SetActive(true);
         }
 
@@ -340,5 +354,6 @@ public class UI_ShopPopup : UI_Popup
         GachaResultRoot,
         GachaResultGroup,
         GachaResultSlot,
+        GachaResultExitButton,
     }
 }

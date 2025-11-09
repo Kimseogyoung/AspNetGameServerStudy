@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public abstract class UI_Base : MonoBehaviour
 {
-	protected string _exitButton = "ExitButton";
     protected bool _isInit = false;
     private Dictionary<string, Object> _objects = new Dictionary<string, Object>();
     private Dictionary<string, Object[]> _objectLists = new Dictionary<string, Object[]>();
