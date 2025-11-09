@@ -344,6 +344,7 @@ namespace Server.Service
                 gachaResultList.Add(gachaResult);
             }
 
+            // TODO: 가챠 전용 Inc로 ㄱㄱ
             var chgObjList = mgrPlayerDetail.IncRewardList(rewardObjValList, scheduleMgr.MakeGachaReason(valCnt));
 
             return new GachaNormalResPacket

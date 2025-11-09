@@ -171,33 +171,16 @@ public class UI_ShopPopup : UI_Popup
 
     private async Task RunGacha(GachaScheduleProto prt, EObjType costType, int costAmount, int cnt)
     {
-        LOG.I($"RunGacha {prt.Num}");
+        // New표시해주려고 확인. TODO: 추후 서버에서 전달
+        var hasCookieNumSet = APP.Ctx.Player.CookieList.Where(x => x.State == ECookieState.AVAILABLE).Select(x=>x.Num).ToHashSet();
+
         var res = await APP.Ctx.RequestGachaNormal(prt.Num, costType, costAmount, cnt);
         if (APP.Ctx.IsErrorRes(res))
         {
             return;
         }
 
-        ShowGachaResult(prt, res.GachaResultList);// GachaResultList 가챠 결과
-        var gachaResultObjValueList = res.GachaResultList; // GachaResultObjValueList 가챠 결과
-        if (gachaResultObjValueList.Count > _gachaResultSlotList.Count)
-        {
-            // 표시 가능한 슬롯보다 많이 뽑는 경우는 오류
-            LOG.E($"Too Many GachaResult Cnt({gachaResultObjValueList.Count})");
-            return;
-        }
-
-        for (var i = 0; i < _gachaResultSlotList.Count; i++)
-        {
-            var gachaResultSlot = _gachaResultSlotList[i];
-            if (i >= gachaResultObjValueList.Count)
-            {
-                gachaResultSlot.Disable();
-                continue;
-            }
-
-            gachaResultSlot.SetResult(gachaResultObjValueList[i]);
-        }
+        ShowGachaResult(prt, res.GachaResultList, hasCookieNumSet);// GachaResultList 가챠 결과
     }
 
     private void ShowGachaProb(GachaScheduleProto prt)
@@ -205,7 +188,7 @@ public class UI_ShopPopup : UI_Popup
         LOG.I($"ShowProbGacha {prt.Num}");
     }
 
-    private void ShowGachaResult(GachaScheduleProto prt, List<GachaResultPacket> gachaResultPktList)
+    private void ShowGachaResult(GachaScheduleProto prt, List<GachaResultPacket> gachaResultPktList, HashSet<int> hasCookieNumList)
     {
         _gachaResultRoot.gameObject.transform.localPosition = Vector3.zero;
 
@@ -225,7 +208,9 @@ public class UI_ShopPopup : UI_Popup
                 continue;
             }
 
-            gachaResultSlot.SetResult(gachaResultPktList[i]);
+            var gachaResult = gachaResultPktList[i];
+            var isNew = gachaResult.ResultObjValue.Key.Type == EObjType.COOKIE ? !hasCookieNumList.Contains(gachaResult.ResultObjValue.Key.Num) : false;
+            gachaResultSlot.SetResult(gachaResult, isNew);
         }
     }
 
@@ -288,10 +273,10 @@ public class UI_ShopPopup : UI_Popup
         public Image Image;
         public Image GradeBGImage;
         public Image GradeImage;
-        public TMP_Text GradeText;
         public Image SoulStoneIconImage;
         public TMP_Text SoulStoneCntText;
         public TMP_Text SoulStoneHasCntText;
+        public GameObject NewText;
 
         private GameObject _gameObject;
 
@@ -302,13 +287,13 @@ public class UI_ShopPopup : UI_Popup
             Image = UTIL.FindChild<Image>(_gameObject, nameof(Image));
             GradeBGImage = UTIL.FindChild<Image>(_gameObject, nameof(GradeBGImage));
             GradeImage = UTIL.FindChild<Image>(_gameObject, nameof(GradeImage));
-            GradeText = UTIL.FindChild<TMP_Text>(_gameObject, nameof(GradeText));
             SoulStoneIconImage = UTIL.FindChild<Image>(_gameObject, nameof(SoulStoneIconImage));
             SoulStoneCntText = UTIL.FindChild<TMP_Text>(_gameObject, nameof(SoulStoneCntText));
             SoulStoneHasCntText = UTIL.FindChild<TMP_Text>(_gameObject, nameof(SoulStoneHasCntText));
+            NewText = UTIL.FindChild(_gameObject, nameof(NewText));
         }
 
-        public void SetResult(GachaResultPacket gachaResult)
+        public void SetResult(GachaResultPacket gachaResult, bool isNew)
         {
             var image = IconHelper.GetFullImage(gachaResult.ResultObjValue.Key);
             Image.sprite = image;
@@ -322,11 +307,12 @@ public class UI_ShopPopup : UI_Popup
 
             var grade = cookiePrt.GradeType;
             GradeImage.sprite = IconHelper.GetGradeIconImage(grade);
-            GradeText.text = L10nKey.GetCookieGradeText(grade);
 
             SoulStoneIconImage.sprite = IconHelper.GetIconImage(new ObjKey(EObjType.SOUL_STONE, soulStonePrt.Num));
             SoulStoneCntText.text = $"x{soulStoneCnt}";
             SoulStoneHasCntText.text = $"{cookiePkt.SoulStone}/{prtCookieStarEnhance.SoulStone}";
+            NewText.gameObject.SetActive(isNew);
+
             _gameObject.SetActive(true);
         }
 

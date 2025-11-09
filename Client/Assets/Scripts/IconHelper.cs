@@ -138,20 +138,26 @@ public static class IconHelper
             return cachedSprite;
         }
 
-        var spritePath = "Icon1#Icon1_13";
+        var spritePath = string.Empty;
         switch (gradeType)
         {
             case EGradeType.COMMON:
+                spritePath = "Grade#Grade_0";
                 break;
             case EGradeType.RARE:
+                spritePath = "Grade#Grade_1";
                 break;
             case EGradeType.EPIC:
+                spritePath = "Grade#Grade_2";
                 break;
             case EGradeType.SUPER_EPIC:
+                spritePath = "Grade#Grade_3";
                 break;
             case EGradeType.ANCIENT:
+                spritePath = "Grade#Grade_4";
                 break;
             case EGradeType.LEGENDARY:
+                spritePath = "Grade#Grade_5";
                 break;
             default:
                 LOG.E($"No Handling Grade({gradeType})");

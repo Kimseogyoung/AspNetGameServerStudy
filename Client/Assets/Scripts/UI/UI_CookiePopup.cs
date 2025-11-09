@@ -20,7 +20,7 @@ public class UI_CookiePopup : UI_Popup
     private TMP_Text _cookieMainSoulStoneTxt;
     private TMP_Text _cookieMainRollTxt;
     private TMP_Text _cookieMainFormationTxt;
-    private TMP_Text _cookieMainGradeTxt;
+    private Image _cookieMainGradeImage;
     private UI_Button _cookieMainLvUpButton;
     private UI_Button _cookieMainStarUpButton;
 
@@ -40,10 +40,10 @@ public class UI_CookiePopup : UI_Popup
             var button = UTIL.FindChild<Button>(cookieSelectSlot, UI.CookieSelectProfile.ToString());
             var image = UTIL.FindChild<Image>(cookieSelectSlot, UI.CookieSelectProfile.ToString());
             var starGroup = UTIL.FindChild<UI_StarGroup>(cookieSelectSlot);
-            var gradeText = UTIL.FindChild<TMP_Text>(cookieSelectSlot);
+            var gradeImage = UTIL.FindChild<Image>(cookieSelectSlot, UI.GradeImage.ToString());
 
             starGroup.Init();
-            gradeText.text = cookiePrt.GradeType.ToString();
+            gradeImage.sprite = IconHelper.GetGradeIconImage(cookiePrt.GradeType);
 
             starGroup.SetMaxStarCnt(5);
             image.sprite = UTIL.LoadSprite(cookiePrt.Sprite);
@@ -56,8 +56,7 @@ public class UI_CookiePopup : UI_Popup
                     Button = button,
                     CookieProfileImage = image,
                     StarGroup = starGroup,
-                    GradeText = gradeText,
-                    GradeImage = null // TODO: 
+                    GradeImage = gradeImage 
                 });
         }
 
@@ -72,7 +71,7 @@ public class UI_CookiePopup : UI_Popup
         _cookieMainSoulStoneTxt = Bind<TMP_Text>(UI.CookieSoulStoneTxt.ToString());
         _cookieMainRollTxt = Bind<TMP_Text>(UI.CookieRollTxt.ToString());
         _cookieMainFormationTxt = Bind<TMP_Text>(UI.CookieFormationTxt.ToString());
-        _cookieMainGradeTxt = Bind<TMP_Text>(UI.CookieGradeTxt.ToString());
+        _cookieMainGradeImage = Bind<Image>(UI.CookieGradeImage.ToString());
         _cookieMainLvUpButton = Bind<UI_Button>(UI.CookieLvUpButton.ToString());
         _cookieMainStarUpButton = Bind<UI_Button>(UI.CookieStarUpButton.ToString());
 
@@ -112,7 +111,7 @@ public class UI_CookiePopup : UI_Popup
         _cookieMainSoulStoneTxt.text = $"SoulStone {cookieCtx.SoulStone}";
         _cookieMainRollTxt.text = L10nKey.GetCookieRollText(cookiePrt.RollType);
         _cookieMainFormationTxt.text = L10nKey.GetCookieFormationText(cookiePrt.FormationPosType);
-        _cookieMainGradeTxt.text = L10nKey.GetCookieGradeText(cookiePrt.GradeType);
+        _cookieMainGradeImage.sprite = IconHelper.GetGradeIconImage(cookiePrt.GradeType);
 
         _cookieMainLvUpButton.SetEvent(() => { OnClickCookieLvUpButton(cookiePrt); });
         _cookieMainStarUpButton.SetEvent(() => { OnClickCookieStarUpButton(cookiePrt); });
@@ -152,6 +151,7 @@ public class UI_CookiePopup : UI_Popup
         CookieMainGO,
         CookieMainExitButton,
         CookieSelectProfile,
+        GradeImage,
 
         CookieFullImage,
         CookieNameTxt,
@@ -160,7 +160,7 @@ public class UI_CookiePopup : UI_Popup
         CookieSoulStoneTxt,
         CookieRollTxt,
         CookieFormationTxt,
-        CookieGradeTxt,
+        CookieGradeImage,
         CookieLvUpButton,
         CookieStarUpButton,
     }
