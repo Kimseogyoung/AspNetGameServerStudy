@@ -10,6 +10,7 @@ public interface IManager
 }
 public interface IManagerUpdatable
 {
+    public void FixedUpdateManager();
     public void UpdateManager();
     public void UpdatePausedManager();
     public void Pause(bool IsPause);

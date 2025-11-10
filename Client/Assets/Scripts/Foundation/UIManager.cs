@@ -2,6 +2,8 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI;
+using System.Linq;
 
 public class UIManager : IManager, IManagerUpdatable
 {
@@ -15,9 +17,14 @@ public class UIManager : IManager, IManagerUpdatable
         // TODO: ` 클릭 시 CheatPopup 열기
     }
 
-    public void UpdateManager()
+    public void FixedUpdateManager()
     {
         
+    }
+
+    public void UpdateManager()
+    {
+
     }
 
     public void UpdatePausedManager()
@@ -89,10 +96,24 @@ public class UIManager : IManager, IManagerUpdatable
         return sceneUI;
     }
 
+    public void ToggleCheatPopup()
+    {
+        var cheatPopup = _popupStack.FirstOrDefault(x => x is UI_CheatPopup);
+        if (cheatPopup == null)
+        {
+            ShowPopupUI<UI_CheatPopup>();
+            return;
+        }
+       
+        ClosePopupUI(cheatPopup);
+    }
+
     public T ShowPopupUI<T>(string name = null) where T : UI_Popup
     {
         if (string.IsNullOrEmpty(name)) // 이름을 안받았다면 T로 ㄱㄱ
+        {
             name = typeof(T).Name;
+        }
 
         T popup = null;
         GameObject go = null;
@@ -102,7 +123,9 @@ public class UIManager : IManager, IManagerUpdatable
             popup = UTIL.AddGetComponent<T>(go);
         }
         else
+        {
             go = popup.gameObject;
+        }
 
         _popupStack.Push(popup);
 

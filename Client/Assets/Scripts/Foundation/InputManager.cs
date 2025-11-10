@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class InputManager :IManager, IManagerUpdatable
 {
@@ -27,6 +28,7 @@ public class InputManager :IManager, IManagerUpdatable
     public void Init()
     {
         _action2keyMappings.Add(EInputAction.ESC, new List<KeyCode>() { KeyCode.Escape });
+        _action2keyMappings.Add(EInputAction.CHEAT, new List<KeyCode>() { KeyCode.BackQuote });
         _action2keyMappings.Add(EInputAction.TAB, new List<KeyCode>() { KeyCode.Tab });
         _action2keyMappings.Add(EInputAction.PAUSE, new List<KeyCode>() { KeyCode.P });
         _action2keyMappings.Add(EInputAction.PLAY, new List<KeyCode>() { KeyCode.P });
@@ -68,27 +70,31 @@ public class InputManager :IManager, IManagerUpdatable
             _actions[inputAction] = null; 
     }
 
-    public void UpdateManager()
+    public void FixedUpdateManager()
     {
         //게임 실행했을 때부터 초를 기록
         _time += Time.fixedDeltaTime;
+    }
 
+    public void UpdateManager()
+    {
         // TODO: 옛날 버전이라 바꿔야함.
         //float h = Input.GetAxisRaw("Horizontal");
         //float v = Input.GetAxisRaw("Vertical");
-        
+
         //if (h != 0 || v != 0)
         //    InvokeMoveKeyAction(new Vector2(h, v));
 
-        //foreach(EInputAction key in _action2keyMappings.Keys)
-        //{
-        //    for(int i=0; i< _action2keyMappings[key].Count; i++)
-        //    {
-        //        if (Input.GetKey(_action2keyMappings[key][i]))
-        //            InvokeKeyAction(key);
-        //    }
-        //}
-        
+        // TODO: 옛날 버전이라 InputSystem으로 바꿔야함.
+        foreach (EInputAction key in _action2keyMappings.Keys)
+        {
+            for (int i = 0; i < _action2keyMappings[key].Count; i++)
+            {
+                if (Input.GetKeyDown(_action2keyMappings[key][i]))
+                    InvokeKeyAction(key);
+            }
+        }
+
     }
 
     public void UpdatePausedManager()
@@ -109,6 +115,7 @@ public class InputManager :IManager, IManagerUpdatable
         _actions[inputAction]?.Invoke();
         _lastPlayedActionTime[inputAction] = _time;
     }
+
     public void InvokeMoveKeyAction(Vector2 dir)
     {
         if (!CanInvokeAction(EInputAction.RUN)) return;

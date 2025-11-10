@@ -95,6 +95,8 @@ public class GAME : ScriptBase
 
         APP.InputManager.AddInputAction(EInputAction.PAUSE, () => { Pause(new PauseEvent(true)); });
         APP.InputManager.AddInputAction(EInputAction.PLAY, () => { Pause(new PauseEvent(false)); });
+        APP.InputManager.AddInputAction(EInputAction.ESC, () => APP.UI.ClosePopupUI());
+        APP.InputManager.AddInputAction(EInputAction.CHEAT, () => APP.UI.ToggleCheatPopup());
 
         EventQueue.AddEventListener<PauseEvent>(EEventActionType.PAUSE, Pause);
         EventQueue.AddEventListener<PauseEvent>(EEventActionType.PLAY, Pause);
@@ -139,8 +141,19 @@ public class GAME : ScriptBase
         }
 
         for (int i = 0; i < _managerUpdatables.Count; i++)
-            _managerUpdatables[i].UpdateManager();
+            _managerUpdatables[i].FixedUpdateManager();
+    }
 
+    void Update()
+    {
+        if (_state == EGameState.PREPARE)
+            return;
+
+        if (_state == EGameState.STOP)
+            return;
+
+        for (int i = 0; i < _managerUpdatables.Count; i++)
+            _managerUpdatables[i].UpdateManager();
     }
 
     private async Task InitAsync()

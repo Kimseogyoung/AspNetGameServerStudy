@@ -10,6 +10,7 @@ public enum EInputAction
     PAUSE,
     PLAY,
     ESC,
+    CHEAT,
     TAB,
     FAST_MODE,
 

@@ -57,7 +57,7 @@ public class SceneManager : IManager, IManagerUpdatable
         return true;
     }
 
-    public void UpdateManager()
+    public void FixedUpdateManager()
     {
         if (_taskCompletion != null)
             return;
@@ -65,6 +65,11 @@ public class SceneManager : IManager, IManagerUpdatable
         if (_currentScene == null) 
             return;
         _currentScene.UpdateBase();
+    }
+
+    public void UpdateManager()
+    {
+
     }
 
     public void UpdatePausedManager()
