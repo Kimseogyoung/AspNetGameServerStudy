@@ -16,7 +16,8 @@ public class UI_CookiePopup : UI_Popup
     private Image _cookieMainImage;
     private TMP_Text _cookieMainNameTxt;
     private TMP_Text _cookieMainLvTxt;
-    private TMP_Text _cookieMainStarTxt;
+    private UI_StarGroup _cookieStarGroup;
+    private Image _cookieMainSoulStoneImage;
     private TMP_Text _cookieMainSoulStoneTxt;
     private TMP_Text _cookieMainRollTxt;
     private TMP_Text _cookieMainFormationTxt;
@@ -67,7 +68,8 @@ public class UI_CookiePopup : UI_Popup
         _cookieMainImage = Bind<Image>(UI.CookieFullImage.ToString());
         _cookieMainNameTxt = Bind<TMP_Text>(UI.CookieNameTxt.ToString());
         _cookieMainLvTxt = Bind<TMP_Text>(UI.CookieLvTxt.ToString());
-        _cookieMainStarTxt = Bind<TMP_Text>(UI.CookieStarTxt.ToString());
+        _cookieStarGroup = Bind<UI_StarGroup>(UI.CookieStarGroup.ToString());
+        _cookieMainSoulStoneImage = Bind<Image>(UI.CookieSoulStoneIconImage.ToString());
         _cookieMainSoulStoneTxt = Bind<TMP_Text>(UI.CookieSoulStoneTxt.ToString());
         _cookieMainRollTxt = Bind<TMP_Text>(UI.CookieRollTxt.ToString());
         _cookieMainFormationTxt = Bind<TMP_Text>(UI.CookieFormationTxt.ToString());
@@ -77,6 +79,8 @@ public class UI_CookiePopup : UI_Popup
 
         _cookieMainExitButton = Bind<UI_Button>(UI.CookieMainExitButton.ToString());
         _cookieMainExitButton.SetEvent(() => { DownMainCookiePanel(); });
+
+        _cookieStarGroup.SetMaxStarCnt(5); // TODO: Prt 기반으로 찾기
     }
 
     protected override void OnClose()
@@ -106,12 +110,14 @@ public class UI_CookiePopup : UI_Popup
 
         _cookieMainImage.sprite = UTIL.LoadSprite(cookiePrt.Sprite);
         _cookieMainNameTxt.text = L10n.GetText(cookiePrt.NameKey);
-        _cookieMainLvTxt.text = $"Lv {cookieCtx.Lv}";
-        _cookieMainStarTxt.text = $"Star {cookieCtx.Star}";
-        _cookieMainSoulStoneTxt.text = $"SoulStone {cookieCtx.SoulStone}";
+        _cookieMainLvTxt.text = $"Lv {cookieCtx.Lv} / 100";// TODO: MaxLv, Lv 레벨업 데이터 세팅
+        _cookieStarGroup.SetStarCnt(cookieCtx.Star);
+        _cookieMainSoulStoneImage.sprite = IconHelper.GetFullImage(new Protocol.ObjKey { Type = EObjType.SOUL_STONE, Num = cookiePrt.SoulStoneNum });
+        _cookieMainSoulStoneTxt.text = $"{cookieCtx.SoulStone} / {APP.Prt.GetCookieStarEnhancePrt(cookiePrt.GradeType, cookieCtx.Star).SoulStone}";
         _cookieMainRollTxt.text = L10nKey.GetCookieRollText(cookiePrt.RollType);
         _cookieMainFormationTxt.text = L10nKey.GetCookieFormationText(cookiePrt.FormationPosType);
         _cookieMainGradeImage.sprite = IconHelper.GetGradeIconImage(cookiePrt.GradeType);
+
 
         _cookieMainLvUpButton.SetEvent(() => { OnClickCookieLvUpButton(cookiePrt); });
         _cookieMainStarUpButton.SetEvent(() => { OnClickCookieStarUpButton(cookiePrt); });
@@ -156,7 +162,8 @@ public class UI_CookiePopup : UI_Popup
         CookieFullImage,
         CookieNameTxt,
         CookieLvTxt,
-        CookieStarTxt,
+        CookieStarGroup,
+        CookieSoulStoneIconImage,
         CookieSoulStoneTxt,
         CookieRollTxt,
         CookieFormationTxt,
