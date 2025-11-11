@@ -44,8 +44,8 @@ public class UI_InGameScene : UI_Scene
 
         _pocketGroupRootGO = Bind<GameObject>(UI.PocketGroupRoot.ToString());
 
-        UTIL.TryCreateInstance<UI_PocketSlot>(out _, "UI/PocketSlotObject", _pocketGroupRootGO, "CashSlot");
-        UTIL.TryCreateInstance<UI_PocketSlot>(out _, "UI/PocketSlotObject", _pocketGroupRootGO, "GoldSlot");
+        UTIL.TryCreateInstance<UI_PocketSlot>(out _, AppPath.GetPrefabPath("PocketSlotObject"), _pocketGroupRootGO, "CashSlot");
+        UTIL.TryCreateInstance<UI_PocketSlot>(out _, AppPath.GetPrefabPath("PocketSlotObject"), _pocketGroupRootGO, "GoldSlot");
         _cashPocketSlot = Bind<UI_PocketSlot>("CashSlot");
         _goldPocketSlot = Bind<UI_PocketSlot>("GoldSlot");
 
@@ -91,8 +91,8 @@ public class UI_InGameScene : UI_Scene
         _expText.text = "Exp." + APP.Ctx.Player.Exp.ToString();
         _castleLvText.text = "CLv." + APP.Ctx.Player.CastleLv.ToString();
 
-        _cashPocketSlot.SetValue((long)(APP.Ctx.Player.FreeCash + APP.Ctx.Player.RealCash));
-        _goldPocketSlot.SetValue((long)APP.Ctx.Player.Gold);
+        _cashPocketSlot.SetObjKey(new Protocol.ObjKey(Proto.EObjType.TOTAL_CASH));
+        _goldPocketSlot.SetObjKey(new Protocol.ObjKey(Proto.EObjType.GOLD));
     }
 
     enum UI
