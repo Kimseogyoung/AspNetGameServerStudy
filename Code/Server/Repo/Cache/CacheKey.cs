@@ -12,21 +12,21 @@ namespace WebStudyServer.Repo.Cache
         }
 
         // 단일 ulong PK 모델용 (예: PlayerModel)
-        public static CacheKey For<T>(ulong id)
+        public static CacheKey For<T>(ulong ownerId, ulong id)
         {
-            return new CacheKey($"{typeof(T).Name}:{id}");
+            return new CacheKey($"{typeof(T).Name}:{ownerId}:{id}");
         }
 
         // 복합 PK 모델용 (예: CookieModel — PlayerId + Num)
-        public static CacheKey For<T>(ulong id1, int id2)
+        public static CacheKey For<T>(ulong ownerId, ulong id1, int id2)
         {
-            return new CacheKey($"{typeof(T).Name}:{id1}:{id2}");
+            return new CacheKey($"{typeof(T).Name}:{ownerId}:{id1}:{id2}");
         }
 
         // PlayerId 기준 리스트 키
         public static CacheKey ListFor<T>(ulong ownerId)
         {
-            return new CacheKey($"{typeof(T).Name}:List:{ownerId}");
+            return new CacheKey($"{typeof(T).Name}:{ownerId}");
         }
 
         // 임의 문자열 키 (커스텀 캐시 용도)

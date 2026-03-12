@@ -5,8 +5,8 @@ namespace WebStudyServer.Repo.Cache
     // dirty key tracking으로 DB 롤백 시 해당 요청에서 수정된 키만 제거한다.
     public class InMemoryCacheLayer : ICacheLayer
     {
-        private readonly Dictionary<string, object> _store     = new();
-        private readonly HashSet<string>            _dirtyKeys = new();
+        private readonly Dictionary<string, object> _store = new();
+        private readonly HashSet<string> _dirtyKeys = new();
 
         public T Get<T>(CacheKey key) where T : class
         {
@@ -19,10 +19,8 @@ namespace WebStudyServer.Repo.Cache
 
         public IReadOnlyList<T> GetList<T>(CacheKey listKey) where T : class
         {
-            if (_store.TryGetValue(listKey.Value, out var value))
-            {
-                return value as List<T>;
-            }
+            // TODO: 순환, Linq 개선 필요.
+            var keyValues = _store.Where(x => x.Key.StartsWith(listKey.Value)).Select(x=>x.Value).ToList();
             return null;
         }
 
@@ -30,12 +28,6 @@ namespace WebStudyServer.Repo.Cache
         {
             _store[key.Value] = value;
             _dirtyKeys.Add(key.Value);
-        }
-
-        public void SetList<T>(CacheKey listKey, IEnumerable<T> values, TimeSpan? ttl = null) where T : class
-        {
-            _store[listKey.Value] = values.ToList();
-            _dirtyKeys.Add(listKey.Value);
         }
 
         public void BulkSet<T>(IEnumerable<T> values, Func<T, CacheKey> keySelector, TimeSpan? ttl = null) where T : class
@@ -53,20 +45,14 @@ namespace WebStudyServer.Repo.Cache
             _store.Remove(key.Value);
         }
 
-        // DB 커밋 성공 → dirty 목록 초기화 (값은 유지, 이후 조회에서 계속 히트)
         public void FlushPendingWrites()
         {
-            _dirtyKeys.Clear();
+            // Scoped이므로 요청에서만 _store값이 보존되므로 트랜잭션으로 인해 롤백이나 적용 할필요없음. 즉시 적용함 그냥.
         }
 
-        // DB 롤백 → 이 요청에서 수정된 키를 모두 제거
         public void DiscardPendingWrites()
         {
-            foreach (var key in _dirtyKeys)
-            {
-                _store.Remove(key);
-            }
-            _dirtyKeys.Clear();
+            // Scoped이므로 요청에서만 _store값이 보존되므로 트랜잭션으로 인해 롤백이나 적용 할필요없음. 즉시 적용함 그냥.
         }
     }
 }

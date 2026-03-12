@@ -8,7 +8,6 @@ namespace WebStudyServer.Repo.Cache
 
         // ── 쓰기 (ttl: null = 만료 없음, Redis에서만 적용) ─────────────
         void Set<T>(CacheKey key, T value, TimeSpan? ttl = null) where T : class;
-        void SetList<T>(CacheKey listKey, IEnumerable<T> values, TimeSpan? ttl = null) where T : class;
         void BulkSet<T>(IEnumerable<T> values, Func<T, CacheKey> keySelector, TimeSpan? ttl = null) where T : class;
 
         // ── 무효화 ────────────────────────────────────────────────────────
