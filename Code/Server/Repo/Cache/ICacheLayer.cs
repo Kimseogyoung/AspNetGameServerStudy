@@ -1,14 +1,16 @@
+using WebStudyServer.Model;
+
 namespace WebStudyServer.Repo.Cache
 {
     public interface ICacheLayer
     {
         // ── 읽기 ──────────────────────────────────────────────────────────
-        T Get<T>(CacheKey key) where T : class;
-        IReadOnlyList<T> GetList<T>(CacheKey listKey) where T : class;
+        T Get<T>(CacheKey key) where T : ModelBase;
+        IReadOnlyList<T> GetList<T>(CacheKey listKey) where T : ModelBase;
 
         // ── 쓰기 (ttl: null = 만료 없음, Redis에서만 적용) ─────────────
-        void Set<T>(CacheKey key, T value, TimeSpan? ttl = null) where T : class;
-        void BulkSet<T>(IEnumerable<T> values, Func<T, CacheKey> keySelector, TimeSpan? ttl = null) where T : class;
+        void Set<T>(CacheKey key, T value, TimeSpan? ttl = null) where T : ModelBase;
+        void BulkSet<T>(IEnumerable<T> values, Func<T, CacheKey> keySelector, TimeSpan? ttl = null) where T : ModelBase;
 
         // ── 무효화 ────────────────────────────────────────────────────────
         void Invalidate(CacheKey key);
