@@ -1,4 +1,309 @@
-﻿[*.cs]
+# EditorConfig: https://editorconfig.org
+# 참고: https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/
+root = true
 
-# CS8618: null을 허용하지 않는 필드는 생성자를 종료할 때 null이 아닌 값을 포함해야 합니다. 'required' 한정자를 추가하거나 nullable로 선언하는 것이 좋습니다.
+# ─── 모든 파일 공통 ───────────────────────────────────────────────────────────
+[*]
+charset                  = utf-8
+end_of_line              = crlf
+indent_style             = space
+indent_size              = 4
+tab_width                = 4
+insert_final_newline     = true
+trim_trailing_whitespace = true
+
+# ─── C# ──────────────────────────────────────────────────────────────────────
+[*.cs]
+
+# ════════════════════════════════════════════════════════════════════════════
+# 1. 중괄호 스타일: Allman (항상 새 줄)
+# ════════════════════════════════════════════════════════════════════════════
+csharp_new_line_before_open_brace                          = all
+csharp_new_line_before_else                                = true
+csharp_new_line_before_catch                               = true
+csharp_new_line_before_finally                             = true
+csharp_new_line_before_members_in_object_initializers      = true
+csharp_new_line_before_members_in_anonymous_types          = true
+csharp_new_line_between_query_expression_clauses           = true
+
+# ════════════════════════════════════════════════════════════════════════════
+# 2. 들여쓰기
+# ════════════════════════════════════════════════════════════════════════════
+csharp_indent_case_contents            = true
+csharp_indent_switch_labels            = true
+csharp_indent_labels                   = one_less_than_current
+csharp_indent_block_contents           = true
+csharp_indent_braces                   = false
+csharp_indent_case_contents_when_block = true
+
+# ════════════════════════════════════════════════════════════════════════════
+# 3. 공백 규칙
+# ════════════════════════════════════════════════════════════════════════════
+csharp_space_after_cast                                                  = false
+csharp_space_after_keywords_in_control_flow_statements                   = true
+csharp_space_between_parentheses                                         = false
+csharp_space_before_colon_in_inheritance_clause                          = true
+csharp_space_after_colon_in_inheritance_clause                           = true
+csharp_space_around_binary_operators                                     = before_and_after
+csharp_space_between_method_declaration_parameter_list_parentheses       = false
+csharp_space_between_method_declaration_empty_parameter_list_parentheses = false
+csharp_space_between_method_declaration_name_and_open_parenthesis        = false
+csharp_space_between_method_call_parameter_list_parentheses              = false
+csharp_space_between_method_call_empty_parameter_list_parentheses        = false
+csharp_space_between_method_call_name_and_opening_parenthesis            = false
+csharp_space_after_comma                                                 = true
+csharp_space_before_comma                                                = false
+csharp_space_after_dot                                                   = false
+csharp_space_before_dot                                                  = false
+csharp_space_after_semicolon_in_for_statement                            = true
+csharp_space_before_semicolon_in_for_statement                           = false
+csharp_space_around_declaration_statements                               = false
+csharp_space_before_open_square_brackets                                 = false
+csharp_space_between_empty_square_brackets                               = false
+csharp_space_between_square_brackets                                     = false
+
+# ════════════════════════════════════════════════════════════════════════════
+# 4. 줄 정리
+# ════════════════════════════════════════════════════════════════════════════
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks     = true
+
+# ════════════════════════════════════════════════════════════════════════════
+# 5. var 사용
+# ════════════════════════════════════════════════════════════════════════════
+csharp_style_var_for_built_in_types    = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere             = true:suggestion
+
+# ════════════════════════════════════════════════════════════════════════════
+# 6. 표현식 본문 (expression body)
+# ════════════════════════════════════════════════════════════════════════════
+csharp_style_expression_bodied_methods          = false:silent
+csharp_style_expression_bodied_constructors     = false:silent
+csharp_style_expression_bodied_operators        = false:silent
+csharp_style_expression_bodied_properties       = true:silent
+csharp_style_expression_bodied_indexers         = true:silent
+csharp_style_expression_bodied_accessors        = true:silent
+csharp_style_expression_bodied_lambdas          = true:silent
+csharp_style_expression_bodied_local_functions  = false:silent
+
+# ════════════════════════════════════════════════════════════════════════════
+# 7. 패턴 매칭
+# ════════════════════════════════════════════════════════════════════════════
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_prefer_switch_expression               = true:suggestion
+csharp_style_prefer_pattern_matching                = true:suggestion
+csharp_style_prefer_not_pattern                     = true:suggestion
+csharp_style_prefer_extended_property_pattern       = true:suggestion
+
+# ════════════════════════════════════════════════════════════════════════════
+# 8. null 처리
+# ════════════════════════════════════════════════════════════════════════════
+csharp_style_conditional_delegate_call = true:suggestion
+csharp_style_throw_expression          = true:suggestion
+csharp_style_coalesce_expression       = true:suggestion
+csharp_style_null_propagation          = true:suggestion
+
+# ════════════════════════════════════════════════════════════════════════════
+# 9. 로컬 변수 / 인라인 선언
+# ════════════════════════════════════════════════════════════════════════════
+csharp_style_inlined_variable_declaration          = true:suggestion
+csharp_style_deconstructed_variable_declaration    = true:suggestion
+csharp_prefer_simple_default_expression            = true:suggestion
+csharp_style_pattern_local_over_anonymous_function = true:suggestion
+csharp_style_prefer_index_operator                 = true:suggestion
+csharp_style_prefer_range_operator                 = true:suggestion
+# 미사용 값 처리: 버릴 때 discard(_) 사용 권장
+csharp_style_unused_value_assignment_preference          = discard_variable:suggestion
+csharp_style_unused_value_expression_statement_preference = discard_variable:silent
+
+# ════════════════════════════════════════════════════════════════════════════
+# 10. using / namespace
+# ════════════════════════════════════════════════════════════════════════════
+csharp_using_directive_placement     = outside_namespace:warning
+csharp_prefer_simple_using_statement = false:suggestion
+csharp_style_namespace_declarations  = block_scoped:suggestion
+
+# ════════════════════════════════════════════════════════════════════════════
+# 11. 중괄호 강제 & 기타 코드 스타일
+# ════════════════════════════════════════════════════════════════════════════
+csharp_prefer_braces                           = true:warning
+csharp_prefer_static_local_function            = true:suggestion
+csharp_style_prefer_local_over_anonymous_function = true:suggestion
+# new() 타입 생략 (타입이 명확할 때)
+csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
+# tuple swap (a, b) = (b, a)
+csharp_style_prefer_tuple_swap                 = true:suggestion
+# readonly struct
+csharp_style_prefer_readonly_struct            = true:suggestion
+csharp_style_prefer_readonly_struct_member     = true:suggestion
+
+# ════════════════════════════════════════════════════════════════════════════
+# 12. 한정자
+# ════════════════════════════════════════════════════════════════════════════
+csharp_preferred_modifier_order = public, private, protected, internal, file, static, extern, new, virtual, abstract, sealed, override, readonly, unsafe, required, volatile, async:suggestion
+
+# ════════════════════════════════════════════════════════════════════════════
+# 13. .NET 공통 스타일 (dotnet_style_*)
+# ════════════════════════════════════════════════════════════════════════════
+
+# this. 한정자 — 불필요한 this. 억제
+dotnet_style_qualification_for_field    = false:warning
+dotnet_style_qualification_for_property = false:warning
+dotnet_style_qualification_for_method   = false:warning
+dotnet_style_qualification_for_event    = false:warning
+
+# 내장 타입 키워드 선호 (int, string, bool ... vs Int32, String, Boolean ...)
+dotnet_style_predefined_type_for_locals_parameters_members = true:warning
+dotnet_style_predefined_type_for_member_access             = true:warning
+
+# using 정렬
+dotnet_sort_system_directives_first     = true
+dotnet_separate_import_directive_groups = false
+
+# 객체/컬렉션 이니셜라이저
+dotnet_style_object_initializer     = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+
+# 튜플 이름 명시 / 익명 타입 멤버 추론
+dotnet_style_explicit_tuple_names                    = true:suggestion
+dotnet_style_prefer_inferred_tuple_names             = true:suggestion
+dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
+
+# null 검사
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation    = true:suggestion
+
+# auto-property 선호
+dotnet_style_prefer_auto_properties = true:suggestion
+
+# readonly 필드
+dotnet_style_readonly_field = true:suggestion
+
+# 조건식 선호
+dotnet_style_prefer_conditional_expression_over_assignment = true:silent
+dotnet_style_prefer_conditional_expression_over_return     = true:silent
+
+# 복합 대입 (+=, -=, ??= ...)
+dotnet_style_prefer_compound_assignment = true:suggestion
+
+# 단순화된 boolean 표현식 (x == true → x)
+dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
+
+# 단순화된 문자열 보간 ($"{x.ToString()}" → $"{x}")
+dotnet_style_prefer_simplified_interpolation = true:suggestion
+
+# 괄호 선호도 — 연산자 우선순위가 명확해도 가독성 우선
+dotnet_style_parentheses_in_arithmetic_binary_operators   = always_for_clarity:silent
+dotnet_style_parentheses_in_relational_binary_operators   = always_for_clarity:silent
+dotnet_style_parentheses_in_other_binary_operators        = always_for_clarity:silent
+dotnet_style_parentheses_in_other_operators               = never_if_unnecessary:silent
+
+# ════════════════════════════════════════════════════════════════════════════
+# 14. 명명 규칙 (우선순위: 숫자가 낮을수록 먼저 적용)
+# ════════════════════════════════════════════════════════════════════════════
+
+# 비동기 메서드: *Async 접미사 (PascalCase)
+dotnet_naming_rule.async_methods_end_in_async.symbols  = sym_async_methods
+dotnet_naming_rule.async_methods_end_in_async.style    = style_async_pascal
+dotnet_naming_rule.async_methods_end_in_async.severity = suggestion
+
+dotnet_naming_symbols.sym_async_methods.applicable_kinds          = method
+dotnet_naming_symbols.sym_async_methods.applicable_accessibilities = *
+dotnet_naming_symbols.sym_async_methods.required_modifiers        = async
+
+dotnet_naming_style.style_async_pascal.required_suffix = Async
+dotnet_naming_style.style_async_pascal.capitalization   = pascal_case
+
+# 인터페이스: IPascalCase
+dotnet_naming_rule.interfaces_prefix_I.symbols  = sym_interface
+dotnet_naming_rule.interfaces_prefix_I.style    = style_prefix_I
+dotnet_naming_rule.interfaces_prefix_I.severity = suggestion
+
+dotnet_naming_symbols.sym_interface.applicable_kinds          = interface
+dotnet_naming_symbols.sym_interface.applicable_accessibilities = *
+
+dotnet_naming_style.style_prefix_I.required_prefix = I
+dotnet_naming_style.style_prefix_I.capitalization   = pascal_case
+
+# 타입 파라미터: TPascalCase
+dotnet_naming_rule.type_parameters_prefix_T.symbols  = sym_type_parameters
+dotnet_naming_rule.type_parameters_prefix_T.style    = style_prefix_T
+dotnet_naming_rule.type_parameters_prefix_T.severity = suggestion
+
+dotnet_naming_symbols.sym_type_parameters.applicable_kinds = type_parameter
+
+dotnet_naming_style.style_prefix_T.required_prefix = T
+dotnet_naming_style.style_prefix_T.capitalization   = pascal_case
+
+# 상수 필드: PascalCase (const)
+dotnet_naming_rule.constants_pascal_case.symbols  = sym_constants
+dotnet_naming_rule.constants_pascal_case.style    = style_pascal_case
+dotnet_naming_rule.constants_pascal_case.severity = suggestion
+
+dotnet_naming_symbols.sym_constants.applicable_kinds          = field
+dotnet_naming_symbols.sym_constants.required_modifiers        = const
+dotnet_naming_symbols.sym_constants.applicable_accessibilities = *
+
+dotnet_naming_style.style_pascal_case.capitalization = pascal_case
+
+# static readonly 필드: PascalCase
+dotnet_naming_rule.static_readonly_pascal_case.symbols  = sym_static_readonly
+dotnet_naming_rule.static_readonly_pascal_case.style    = style_pascal_case
+dotnet_naming_rule.static_readonly_pascal_case.severity = suggestion
+
+dotnet_naming_symbols.sym_static_readonly.applicable_kinds          = field
+dotnet_naming_symbols.sym_static_readonly.required_modifiers        = static, readonly
+dotnet_naming_symbols.sym_static_readonly.applicable_accessibilities = *
+
+# private / private_protected 필드: _camelCase
+dotnet_naming_rule.private_fields_underscore.symbols  = sym_private_fields
+dotnet_naming_rule.private_fields_underscore.style    = style_underscore_camel
+dotnet_naming_rule.private_fields_underscore.severity = suggestion
+
+dotnet_naming_symbols.sym_private_fields.applicable_kinds          = field
+dotnet_naming_symbols.sym_private_fields.applicable_accessibilities = private, private_protected
+
+dotnet_naming_style.style_underscore_camel.required_prefix = _
+dotnet_naming_style.style_underscore_camel.capitalization   = camel_case
+
+# 타입(클래스/구조체/열거형/델리게이트): PascalCase
+dotnet_naming_rule.types_pascal_case.symbols  = sym_types
+dotnet_naming_rule.types_pascal_case.style    = style_pascal_case
+dotnet_naming_rule.types_pascal_case.severity = suggestion
+
+dotnet_naming_symbols.sym_types.applicable_kinds          = class, struct, enum, delegate
+dotnet_naming_symbols.sym_types.applicable_accessibilities = *
+
+# 메서드/프로퍼티/이벤트: PascalCase
+dotnet_naming_rule.members_pascal_case.symbols  = sym_members
+dotnet_naming_rule.members_pascal_case.style    = style_pascal_case
+dotnet_naming_rule.members_pascal_case.severity = suggestion
+
+dotnet_naming_symbols.sym_members.applicable_kinds          = method, property, event
+dotnet_naming_symbols.sym_members.applicable_accessibilities = *
+
+# 로컬 변수/파라미터: camelCase
+dotnet_naming_rule.locals_camel_case.symbols  = sym_locals
+dotnet_naming_rule.locals_camel_case.style    = style_camel_case
+dotnet_naming_rule.locals_camel_case.severity = suggestion
+
+dotnet_naming_symbols.sym_locals.applicable_kinds = local, parameter
+
+dotnet_naming_style.style_camel_case.capitalization = camel_case
+
+# ════════════════════════════════════════════════════════════════════════════
+# 15. 진단 규칙 억제
+# ════════════════════════════════════════════════════════════════════════════
+# CS8618: null 비허용 필드가 생성자에서 초기화되지 않음
 dotnet_diagnostic.CS8618.severity = none
+
+# ─── JSON / YAML ─────────────────────────────────────────────────────────────
+[*.{json,yaml,yml}]
+indent_size = 2
+
+# ─── XML / csproj ────────────────────────────────────────────────────────────
+[*.{xml,csproj,props,targets}]
+indent_size = 2
