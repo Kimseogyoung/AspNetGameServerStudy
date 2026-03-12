@@ -1,0 +1,10 @@
+namespace WebStudyServer.Repo.Database
+{
+    public interface IDbExecutorFactory
+    {
+        void Execute(Action<IDbExecutor> action);
+        T Execute<T>(Func<IDbExecutor, T> func);
+        void Commit();
+        void Rollback();
+    }
+}
