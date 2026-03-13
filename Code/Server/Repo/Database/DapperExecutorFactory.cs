@@ -7,6 +7,9 @@ namespace WebStudyServer.Repo.Database
     {
         private readonly DBSqlExecutor _executor;
 
+        // RepoBase 과도기 전환용 — Step5 완료 후 제거
+        internal DBSqlExecutor RawExecutor => _executor;
+
         public DapperExecutorFactory(DBSqlExecutor executor)
         {
             _executor = executor;

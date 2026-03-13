@@ -1,8 +1,9 @@
-﻿using MySqlConnector;
+using MySqlConnector;
 using System.Data;
 using WebStudyServer;
 using WebStudyServer.GAME;
 using WebStudyServer.Repo;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.Repo.Database;
 
 namespace Server.Repo
@@ -16,9 +17,10 @@ namespace Server.Repo
         public CenterRepo Center => _lazyCenterRepo.Value;
         public AllUserRepo AllUser => _lazyAllUserRepo.Value;
 
-        public DbRepo(RpcContext rpcContext, ILogger<DbRepo> logger)
+        public DbRepo(RpcContext rpcContext, ICacheLayer cacheLayer, ILogger<DbRepo> logger)
         {
             _rpcContext = rpcContext;
+            _cacheLayer = cacheLayer;
             _logger = logger;
 
             _lazyAuthRepo = new Lazy<AuthRepo>(BeginAuthRepo);
@@ -28,24 +30,24 @@ namespace Server.Repo
 
         public void BeginOwnUserRepo()
         {
-            if(OwnUser != null)
+            if (OwnUser != null)
             {
                 return;
             }
 
             var dbConnStr = GetUserDbConnectionStr(_rpcContext.ShardId);
             var dbExecutor = TouchDbSqlExecutor(dbConnStr, IsolationLevel.ReadCommitted);
+            var dbFactory = new DapperExecutorFactory(dbExecutor);
             var userRepo = new UserRepo(_rpcContext);
-            userRepo.Init(_rpcContext.ShardId, dbExecutor);
+            userRepo.Init(_rpcContext.ShardId, dbFactory);
             OwnUser = userRepo;
         }
 
         private AuthRepo BeginAuthRepo()
-        {  
+        {
             var dbExecutor = TouchDbSqlExecutor(APP.Cfg.AuthDbConnectionStrList[0], IsolationLevel.ReadCommitted);
             var authRepo = new AuthRepo(_rpcContext);
-            authRepo.Init(0, dbExecutor);
-         
+            authRepo.Init(0, new DapperExecutorFactory(dbExecutor));
             return authRepo;
         }
 
@@ -53,7 +55,7 @@ namespace Server.Repo
         {
             var dbExecutor = TouchDbSqlExecutor(APP.Cfg.CenterDbConnectionStrList[0], IsolationLevel.ReadCommitted);
             var centerRepo = new CenterRepo(_rpcContext);
-            centerRepo.Init(0, dbExecutor);
+            centerRepo.Init(0, new DapperExecutorFactory(dbExecutor));
             return centerRepo;
         }
 
@@ -79,6 +81,7 @@ namespace Server.Repo
                 }
 
                 _dbExecutorDict.Clear();
+                _cacheLayer.FlushPendingWrites();
             }
             catch (Exception e)
             {
@@ -99,6 +102,7 @@ namespace Server.Repo
                 }
 
                 _dbExecutorDict.Clear();
+                _cacheLayer.DiscardPendingWrites();
             }
             catch (Exception e)
             {
@@ -182,6 +186,7 @@ namespace Server.Repo
 
         private Dictionary<string, DBSqlExecutor> _dbExecutorDict = new();
         private readonly RpcContext _rpcContext;
+        private readonly ICacheLayer _cacheLayer;
         private readonly ILogger _logger;
     }
 }

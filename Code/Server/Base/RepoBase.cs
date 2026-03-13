@@ -1,8 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
 using MySqlConnector;
 using System.Data;
-using WebStudyServer.Extension;
-using WebStudyServer.Model;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Base
@@ -12,12 +9,18 @@ namespace WebStudyServer.Base
         public int ShardId { get; private set; }
         protected abstract void PrepareComp();
 
+        // TODO(Step5): Component 전환 완료 후 _executor 제거
         protected DBSqlExecutor _executor = null!;
+        protected IDbExecutorFactory _dbFactory = null!;
 
-        public void Init(int shardId, DBSqlExecutor executor)
+        public void Init(int shardId, IDbExecutorFactory dbFactory)
         {
             ShardId = shardId;
-            _executor = executor;
+            _dbFactory = dbFactory;
+            if (dbFactory is DapperExecutorFactory dapper)
+            {
+                _executor = dapper.RawExecutor;
+            }
 
             PrepareComp();
         }

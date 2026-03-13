@@ -1,6 +1,7 @@
 ﻿using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WebStudyServer.Filter;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.Service;
 using Server.Service;
 
@@ -41,6 +42,7 @@ namespace WebStudyServer
             services.AddScoped<CheatService>();
 
             services.AddScoped<RpcContext>();
+            services.AddScoped<ICacheLayer, InMemoryCacheLayer>();
         }
 
         private void AddController(IServiceCollection services)
