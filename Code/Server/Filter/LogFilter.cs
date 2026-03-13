@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using WebStudyServer.Extension;
 
 namespace WebStudyServer.Filter

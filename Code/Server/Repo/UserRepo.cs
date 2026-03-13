@@ -1,8 +1,8 @@
-﻿using WebStudyServer.Base;
+using Server.Repo.Database;
+using WebStudyServer.Base;
 using WebStudyServer.Component;
 using WebStudyServer.GAME;
 using WebStudyServer.Repo.Cache;
-using Server.Repo.Database;
 
 namespace WebStudyServer.Repo
 {
@@ -18,7 +18,7 @@ namespace WebStudyServer.Repo
         public KingdomDecoComponent KingdomDeco => _kingdomDecoComponent;
         public KingdomMapComponent KingdomMap => _kingdomTileMapComponent;
         public WorldComponent World => _worldComponent;
-        public WorldStageComponent WorldStage=> _worldStageComponent;
+        public WorldStageComponent WorldStage => _worldStageComponent;
         public RpcContext RpcContext { get; private set; }
 
         public UserRepo(RpcContext rpcContext, ICacheLayer cacheLayer)

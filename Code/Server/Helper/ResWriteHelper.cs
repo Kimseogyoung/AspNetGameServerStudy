@@ -1,4 +1,4 @@
-﻿using NLog;
+using NLog;
 using Protocol;
 using Server.Serializer;
 using WebStudyServer.GAME;

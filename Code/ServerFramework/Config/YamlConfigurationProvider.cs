@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace WebFramework.Config
@@ -22,7 +22,7 @@ namespace WebFramework.Config
         {
 
             var data = YamlConfigurationFileParser.Parse(stream);
-            foreach(var (key, value) in data)
+            foreach (var (key, value) in data)
             {
                 if (!Data.TryAdd(key, value))
                 {

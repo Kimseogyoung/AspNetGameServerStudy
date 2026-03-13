@@ -1,18 +1,18 @@
-﻿using WebStudyServer.Repo;
-using WebStudyServer.Model;
-using Proto;
-using WebStudyServer.Helper;
-using WebStudyServer.GAME;
 using AutoMapper;
-using Protocol.Packet.Custom;
+using Proto;
 using Protocol;
+using Protocol.Packet.Custom;
+using WebStudyServer.GAME;
+using WebStudyServer.Helper;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
 
 namespace WebStudyServer.Manager
 {
     public partial class PlayerManager : UserManagerBase<PlayerModel>
     {
         public ulong Id => Model.Id;
-       
+
         public PlayerManager(UserRepo userRepo, PlayerModel model) : base(userRepo, model)
         {
         }
@@ -21,7 +21,7 @@ namespace WebStudyServer.Manager
         {
             // Player 초기 세팅
             var pakDefaultPlayer = APP.Cfg.PakDefaultPlayer;
-            
+
             // ------------------------------------------------------------ 디폴트 모델 생성           
             // PlayerDetail
             var newMdlPlayerDetail = mapper.Map<PlayerDetailModel>(pakDefaultPlayer);
@@ -81,7 +81,7 @@ namespace WebStudyServer.Manager
             pakPlayer.AccGold = mdlPlayerDetail.AccGold;
             pakPlayer.RealCash = mdlPlayerDetail.RealCash;
             pakPlayer.FreeCash = mdlPlayerDetail.FreeCash;
-            pakPlayer.AccRealCash= mdlPlayerDetail.AccRealCash;
+            pakPlayer.AccRealCash = mdlPlayerDetail.AccRealCash;
             pakPlayer.AccFreeCash = mdlPlayerDetail.AccFreeCash;
 
             pakPlayer.CookieList = mapper.Map<List<CookiePacket>>(mdlCookieList);

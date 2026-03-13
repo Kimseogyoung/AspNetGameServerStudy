@@ -1,6 +1,6 @@
-﻿using Scriban;
-using System.Text.RegularExpressions;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using Scriban;
 namespace ClassGenerator
 {
     class ModelGenerator
@@ -56,8 +56,8 @@ namespace ClassGenerator
                     var fieldDesc = values[3];
                     var protocolType = values[4];
                     var fieldValue = string.IsNullOrEmpty(values[2]) ? "default" : values[2];
-                    var keyList = values[5].Split(",").Select(x=>x.Trim()).ToList();
-                    
+                    var keyList = values[5].Split(",").Select(x => x.Trim()).ToList();
+
                     var fieldCodeType = "";
                     var fieldSQLType = "";
                     switch (fieldType)
@@ -91,7 +91,7 @@ namespace ClassGenerator
                             {
                                 throw new Exception($"LIST_CAN_NOT_SET_MODEL:{fieldName}");
                             }
-                            fieldSQLType = ""; 
+                            fieldSQLType = "";
                             fieldCodeType = $"List<{typeArr[1]}>";
                             break;
                         default:
@@ -108,13 +108,13 @@ namespace ClassGenerator
                                 fieldCodeType = fieldType;
                                 break;
                             }
-                            
+
                             throw new Exception($"NO_HANDLING_FIELD_TYPE:{fieldType}");
                     }
 
 
                     // .net standard 2.1 에서 new()키워드를 못쓰는 이슈때문에 임시처리
-                    fieldValue = fieldValue == "new()" ? $"new {fieldCodeType}()": fieldValue;
+                    fieldValue = fieldValue == "new()" ? $"new {fieldCodeType}()" : fieldValue;
 
                     classDefinitionList.Add(new ModelDefinition
                     {
@@ -150,8 +150,9 @@ namespace ClassGenerator
             foreach (var definition in classDefinitions)
             {
                 if (!groupedClassDict.ContainsKey(definition.ClassName))
+                {
                     groupedClassDict[definition.ClassName] = new List<ModelDefinition>();
-
+                }
 
                 groupedClassDict[definition.ClassName].Add(definition);
             }
@@ -214,8 +215,8 @@ namespace ClassGenerator
                         {"Value",  def.FieldValue},
                         {"Desc", def.Description }
                     };
-                    
-                    fieldList.Add(field);               
+
+                    fieldList.Add(field);
                 }
                 var classNameWithMdl = $"{className}Model";
                 var scriptObject = new Dictionary<string, object>
@@ -244,7 +245,7 @@ namespace ClassGenerator
         public static void GenerateLiquibaseChangeLog(Dictionary<string, List<ModelDefinition>> modelDefListDict, string mdlOutputPath)
         {
             var folderTableNameDict = new Dictionary<string, List<string>>();
-            foreach(var (key, defList) in modelDefListDict)
+            foreach (var (key, defList) in modelDefListDict)
             {
                 var mdlCnt = GetModelFieldCnt(defList);
                 if (mdlCnt == 0)
@@ -263,7 +264,7 @@ namespace ClassGenerator
                 }
             }
 
-            foreach(var (folderName, tableNameList) in folderTableNameDict)
+            foreach (var (folderName, tableNameList) in folderTableNameDict)
             {
                 var databaseChangeLog = new DatabaseChangeLogData();
                 var databaseChange1 = new DatabaseChangeLog
@@ -275,8 +276,8 @@ namespace ClassGenerator
                 };
                 databaseChangeLog.DatabaseChangeLog.Add(databaseChange1);
 
-                foreach (var (className, defList) in 
-                    modelDefListDict.Where(x=> tableNameList.Contains(x.Key))
+                foreach (var (className, defList) in
+                    modelDefListDict.Where(x => tableNameList.Contains(x.Key))
                     .OrderBy(x => x.Key != "Player" && x.Key != "Account").ThenBy(x => x.Key))
                 {
                     var mdlDefList = defList.Where(x => x.ProtocolType != "Packet").ToList();
@@ -428,7 +429,7 @@ namespace ClassGenerator
 
                 File.WriteAllText(filePath, json);
 
-            }      
+            }
         }
 
         public static void GeneratePacket(Dictionary<string, List<ModelDefinition>> modelDefListDict, string pakOutputPath)
@@ -438,7 +439,7 @@ namespace ClassGenerator
                 var parsedTemplate = Template.Parse(_pakTemplate);
                 var fieldList = new List<dynamic>();
                 var index = 1;
-                foreach (var def in defList.Where(x=>x.ProtocolType != "Model"))
+                foreach (var def in defList.Where(x => x.ProtocolType != "Model"))
                 {
                     var attribute = $"[ProtoMember({index})]";
                     var field = new Dictionary<string, object> {
@@ -482,7 +483,7 @@ namespace ClassGenerator
             var exeCfgDirPath = Path.GetDirectoryName(exeCfgDirNetPath);
             var binDirPath = Path.GetDirectoryName(exeCfgDirPath);
             var projectPath = Path.GetDirectoryName(binDirPath);
-            return projectPath == null? string.Empty : projectPath;
+            return projectPath == null ? string.Empty : projectPath;
         }
 
         private static int GetModelFieldCnt(List<ModelDefinition> defList)

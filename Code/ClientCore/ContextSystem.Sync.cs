@@ -1,9 +1,9 @@
-﻿using Proto;
-using Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Proto;
+using Protocol;
 
 namespace ClientCore
 {
@@ -52,8 +52,8 @@ namespace ClientCore
                         pakCookie.State = ECookieState.AVAILABLE;
                         soulStoneCnt -= prtCookie.InitSoulStone;
                     }
-                    
-                    if(soulStoneCnt > 0)
+
+                    if (soulStoneCnt > 0)
                     {
                         pakCookie.SoulStone += soulStoneCnt;
                     }
@@ -169,7 +169,7 @@ namespace ClientCore
         public void SyncWorld(WorldPacket pakWorld)
         {
             var world = GetWorldForce(pakWorld.Num);
-         
+
             world.Num = pakWorld.Num;
             world.TopFinishStageOrder = pakWorld.TopFinishStageOrder;
             world.LastPlayStageNum = pakWorld.LastPlayStageNum;
@@ -182,13 +182,13 @@ namespace ClientCore
         {
             var world = GetWorldStageForce(pakWorldStage.Num);
             world.Num = pakWorldStage.Num;
-            world.Star= pakWorldStage.Star;   
+            world.Star = pakWorldStage.Star;
         }
 
         public void SyncScheduleList(List<SchedulePacket> pakScheduleList)
         {
             _scheduleList.Clear();
-            foreach(var pakSchedule in pakScheduleList)
+            foreach (var pakSchedule in pakScheduleList)
             {
                 _scheduleList.Add(pakSchedule);
                 Console.WriteLine($"Schedule : {pakSchedule.Num}, {pakSchedule.ActiveStartTime} ~ {pakSchedule.ActiveEndTime}");

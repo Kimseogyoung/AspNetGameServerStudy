@@ -1,7 +1,7 @@
-﻿
+
+using System;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Protocol;
-using System;
 
 namespace Server.Serializer
 {
@@ -33,7 +33,9 @@ namespace Server.Serializer
         public byte[] Serialize<T>(T inObj)
         {
             if (inObj == null)
+            {
                 return null;
+            }
 
             using (var ms = new MemoryStream())
             {
@@ -45,7 +47,9 @@ namespace Server.Serializer
         public async Task SerializeAsync<T>(Stream inStream, T inObj)
         {
             if (inStream == null || inObj == null)
+            {
                 return;
+            }
 
             ProtoBuf.Serializer.Serialize(inStream, inObj);
             await inStream.FlushAsync();

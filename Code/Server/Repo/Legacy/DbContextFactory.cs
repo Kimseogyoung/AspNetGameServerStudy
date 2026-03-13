@@ -1,4 +1,4 @@
-﻿/*
+/*
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using System.Reflection;

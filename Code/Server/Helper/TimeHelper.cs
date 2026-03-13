@@ -1,4 +1,4 @@
-﻿namespace WebStudyServer.Helper
+namespace WebStudyServer.Helper
 {
     public class TimeHelper
     {

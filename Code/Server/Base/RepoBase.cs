@@ -1,5 +1,5 @@
-using MySqlConnector;
 using System.Data;
+using MySqlConnector;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Base

@@ -1,5 +1,5 @@
-﻿using Microsoft.OpenApi.Models;
 using System.Net;
+using Microsoft.OpenApi.Models;
 
 namespace WebStudyServer
 {

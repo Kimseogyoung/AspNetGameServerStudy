@@ -1,10 +1,10 @@
-﻿using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Models;
 using Protocol;
 using Server.Repo;
+using Server.Serializer;
 using WebStudyServer;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
-using Server.Serializer;
 namespace Server
 {
     public class RpcService
@@ -133,11 +133,12 @@ namespace Server
                     await rpcSvc.OnHttpBodyRequestAsync(httpCtx, pattern);
                 }).WithOpenApi((op) => new OpenApiOperation
                 {
-                  
+
                     RequestBody = keyPair.Value.CreateOpenApiRequestBody(),
                     //Parameters = keyPair.Value.CreateOpenApiParameters(),
                     Responses = keyPair.Value.CreateOpenApiResponse()
-                }); ;
+                });
+                ;
             }
         }
     }

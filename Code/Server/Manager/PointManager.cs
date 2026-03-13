@@ -1,7 +1,7 @@
-﻿using WebStudyServer.Repo;
-using WebStudyServer.Model;
 using Proto;
 using WebStudyServer.Helper;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
 
 namespace WebStudyServer.Manager
 {
@@ -16,7 +16,7 @@ namespace WebStudyServer.Manager
         public double DecAmount(double amount, string reason)
         {
             var befAmount = _model.Amount;
-            var befAccAmount= _model.AccAmount;
+            var befAccAmount = _model.AccAmount;
 
             ReqHelper.ValidEnough(amount, befAmount, $"POINT_{_model.Num}", reason);
 

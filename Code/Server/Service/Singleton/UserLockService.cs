@@ -1,4 +1,4 @@
-﻿using MySqlConnector;
+using MySqlConnector;
 using Server.Repo;
 using WebStudyServer.Extension;
 using WebStudyServer.GAME;
@@ -17,7 +17,7 @@ namespace WebStudyServer
 
         public async Task RunAtomicAsync(ulong accountId, DbRepo dbRepo, Func<Task> action)
         {
-            if (!_useDbLock 
+            if (!_useDbLock
                 || accountId == 0) // 익명 요청은 유저 락을 사용하지 않음
             {
                 _logger.Debug("SkipUserLock");

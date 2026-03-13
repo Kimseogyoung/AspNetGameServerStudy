@@ -1,9 +1,9 @@
-﻿using WebStudyServer.Repo;
-using WebStudyServer.Model;
 using Proto;
+using Protocol;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
-using Protocol;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
 
 namespace WebStudyServer.Manager
 {

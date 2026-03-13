@@ -1,5 +1,5 @@
-using Dapper;
 using System.Data;
+using Dapper;
 using WebStudyServer.Extension;
 
 namespace WebStudyServer.Repo.Database
@@ -14,7 +14,7 @@ namespace WebStudyServer.Repo.Database
         public DapperDbExecutor(IDbConnection conn, IDbTransaction tx)
         {
             _conn = conn;
-            _tx   = tx;
+            _tx = tx;
         }
 
         public T SelectByPk<T>(object param) where T : class

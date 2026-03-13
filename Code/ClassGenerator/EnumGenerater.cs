@@ -1,6 +1,6 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
-using Scriban;
 using System.Text.RegularExpressions;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Scriban;
 
 namespace ClassGenerator
 {
@@ -78,8 +78,9 @@ namespace ClassGenerator
             foreach (var definition in enumDefList)
             {
                 if (!groupedClassDict.ContainsKey(definition.Name))
+                {
                     groupedClassDict[definition.Name] = new List<EnumDefinition>();
-
+                }
 
                 groupedClassDict[definition.Name].Add(definition);
             }
@@ -88,7 +89,7 @@ namespace ClassGenerator
             foreach (var (className, defList) in groupedClassDict)
             {
                 var fields = new List<dynamic>();
-            
+
                 for (var i = 0; i < defList.Count; i++)
                 {
                     fields.Add(new Dictionary<string, object> {
@@ -98,16 +99,16 @@ namespace ClassGenerator
                     });
                 }
 
-                enums.Add(new Dictionary<string, object> 
+                enums.Add(new Dictionary<string, object>
                 {
                     { "Name",  className },
                     { "Fields",  fields }
-                });            
+                });
             }
 
             var scriptObj = new Dictionary<string, object>()
             {
-                { "Enums", enums } 
+                { "Enums", enums }
             };
             var result = parsedTemplate.Render(scriptObj);
 

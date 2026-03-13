@@ -1,7 +1,7 @@
-﻿using WebStudyServer.Repo;
-using WebStudyServer.Model;
 using Proto;
 using WebStudyServer.Helper;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
 
 namespace WebStudyServer.Manager
 {

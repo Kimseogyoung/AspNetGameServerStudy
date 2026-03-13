@@ -1,9 +1,9 @@
-﻿using WebStudyServer.Repo;
+using WebStudyServer.Repo;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Base
 {
-    public class AuthComponentBase 
+    public class AuthComponentBase
     {
         protected DBSqlExecutor _executor;
         protected AuthRepo _authRepo;

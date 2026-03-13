@@ -1,9 +1,9 @@
-﻿using Dapper;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
 using System.Text;
+using Dapper;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 
@@ -13,7 +13,7 @@ namespace WebStudyServer.Extension
     {
         private static readonly ConcurrentDictionary<Type, string> s_modelNameDict = new();
         private static readonly ConcurrentDictionary<Type, QueryParam> s_queryParamDict = new();
-        private static readonly ConcurrentDictionary<Type, string> s_pkWhereClauseDict= new();
+        private static readonly ConcurrentDictionary<Type, string> s_pkWhereClauseDict = new();
 
         // 여러 필드를 기본 키로 설정하는 메서드
 
@@ -48,7 +48,7 @@ namespace WebStudyServer.Extension
             {
                 insertSql += $@"
                 SELECT * FROM {queryParam.TableName} WHERE Id = CONVERT(LAST_INSERT_ID(), UNSIGNED);";
-                var mdl =  connection.QuerySingleOrDefault<T>(insertSql, entity, transaction);
+                var mdl = connection.QuerySingleOrDefault<T>(insertSql, entity, transaction);
                 ReqHelper.ValidParam(mdl != null, "INSERT_FAIL");
                 return mdl;
             }
@@ -131,7 +131,7 @@ namespace WebStudyServer.Extension
 
             string selectSql = $@"SELECT * FROM {tableName} WHERE PlayerId = @PlayerId;";
 
-            return connection.Query<T>(selectSql, new {PlayerId = playerId }, transaction);
+            return connection.Query<T>(selectSql, new { PlayerId = playerId }, transaction);
         }
 
         public static IEnumerable<T> SelectListByConditions<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
@@ -187,7 +187,9 @@ namespace WebStudyServer.Extension
             var tableName = GetTableName<T>();
 
             if (keyFields == null || keyFields.Length == 0)
+            {
                 throw new ArgumentException($"ZERO_KEY_FILED Name({tableName})");
+            }
 
             var whereClause = string.Join(" AND ", keyFields.Select(k => $"`{k}` = @{k}"));
             s_pkWhereClauseDict[typeof(T)] = whereClause;
@@ -232,7 +234,7 @@ namespace WebStudyServer.Extension
             {
                 throw new GameException($"NOT_FOUND_QUERY_PARAM", new { TableName = tableName });
             }
-           
+
             return outQueryParam;
         }
 

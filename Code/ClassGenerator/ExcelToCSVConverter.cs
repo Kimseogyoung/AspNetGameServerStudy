@@ -1,12 +1,12 @@
-﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
 using System.Linq;
 using System.Text;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace ClassGenerator
 {
     class ExcelToCSVConverter
-    {   
+    {
         public static void ConvertExcelToCSV(string excelFilePath, string csvFilePath)
         {
             // XLSX 파일 열기

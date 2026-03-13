@@ -1,7 +1,7 @@
-﻿using Proto;
-using Protocol;
 using System;
 using System.Threading.Tasks;
+using Proto;
+using Protocol;
 namespace ClientCore
 {
     public partial class ContextSystem
@@ -68,7 +68,7 @@ namespace ClientCore
         {
             var req = new GameEnterReqPacket();
             var res = await RpcSystem.RequestAsync<GameEnterReqPacket, GameEnterResPacket>(req);
-            
+
             Player = res.Player;
 
             RefreshKingdom();

@@ -1,4 +1,4 @@
-﻿using Proto;
+using Proto;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
 

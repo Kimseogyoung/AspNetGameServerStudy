@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+using System.Diagnostics;
+using System.Net.Http;
+using Microsoft.AspNetCore.Http;
 using Proto;
 using Protocol;
 using Server.Repo;
-using System.Diagnostics;
-using System.Net.Http;
 using WebStudyServer.Component;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
@@ -26,7 +26,7 @@ namespace WebStudyServer
         public string Ip { get; private set; } = string.Empty;
         public string DeviceKey { get; private set; } = string.Empty;
         public string HostUrl { get; private set; } = string.Empty;
-        public string ApiHash { get; private set;} = string.Empty;
+        public string ApiHash { get; private set; } = string.Empty;
         public string ApiPath { get; private set; } = string.Empty;
         public long Timestamp { get; private set; }
         public string Country { get; private set; }
@@ -56,22 +56,22 @@ namespace WebStudyServer
         // 유저 정보
         public void SetAccountId(ulong accountId)
         {
-            this.AccountId = accountId;
+            AccountId = accountId;
         }
 
         public void SetShardId(int shardId)
         {
-            this.ShardId = shardId;
+            ShardId = shardId;
         }
 
         public void SetPlayerId(ulong playerId)
         {
-            this.PlayerId = playerId;
+            PlayerId = playerId;
         }
 
         public void SetSessionKey(string sessionKey)
         {
-            this.SessionKey = sessionKey;
+            SessionKey = sessionKey;
         }
 
         public void LoadSession(HttpContext httpContext)
@@ -119,27 +119,27 @@ namespace WebStudyServer
             SetPlayerId(mgrSession.Model.PlayerId);
             SetAccountId(mgrSession.Model.AccountId);
             SetShardId(mgrSession.Model.ShardId);
-/*
-            authRepo.Commit();*/
+            /*
+                        authRepo.Commit();*/
         }
 
         // 요청 정보
         private void SetSeq(HttpContext httpContext)
         {
             var seq = GetQueryValue(httpContext, MsgProtocol.Query_Seq);
-            this.Seq = string.IsNullOrEmpty(seq) ? 0 : long.Parse(seq);
+            Seq = string.IsNullOrEmpty(seq) ? 0 : long.Parse(seq);
         }
 
         private void SetIp(HttpContext httpContext)
         {
             var ip = GetIp(httpContext);
-            this.Ip = ip;
+            Ip = ip;
         }
 
         private void SetDeviceKey(HttpContext httpContext)
         {
             var deviceKey = "";
-            this.DeviceKey = deviceKey;
+            DeviceKey = deviceKey;
         }
 
         private void SetHostUrl(HttpContext httpContext)
@@ -147,26 +147,26 @@ namespace WebStudyServer
             var host = httpContext.Request.Host.ToString();
             var http = httpContext.Request.IsHttps ? "https" : "http";
             var hostUrl = $"{http}://{host}";
-            this.HostUrl = hostUrl;
+            HostUrl = hostUrl;
         }
 
         private void SetApiHash(HttpContext httpContext)
         {
             var urlPath = httpContext.Request.Path.ToString();
-            this.ApiPath = urlPath;
-            this.ApiHash = HashHelper.CalculateSha256Hash(urlPath).Substring(0, 10);
+            ApiPath = urlPath;
+            ApiHash = HashHelper.CalculateSha256Hash(urlPath).Substring(0, 10);
         }
 
         public void SetTimestamp(HttpContext httpContext)
         {
             var timestamp = GetQueryValue(httpContext, MsgProtocol.Query_Timestamp);
-            this.Timestamp = string.IsNullOrEmpty(timestamp)? 0: long.Parse(timestamp);
+            Timestamp = string.IsNullOrEmpty(timestamp) ? 0 : long.Parse(timestamp);
         }
 
         public void SetCountry(HttpContext httpContext)
         {
             var country = GetHeaderValue(httpContext, "CloudFront-Viewer-Country");
-            this.Country = country;
+            Country = country;
         }
 
         private string GetIp(HttpContext httpCtx, string forwardedHeaderKey = "X-Forwarded-For")

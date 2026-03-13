@@ -1,8 +1,8 @@
-﻿using WebStudyServer.Repo;
-using WebStudyServer.Model;
 using Proto;
-using WebStudyServer.Helper;
 using WebStudyServer.GAME;
+using WebStudyServer.Helper;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
 
 namespace WebStudyServer.Manager
 {
@@ -37,9 +37,9 @@ namespace WebStudyServer.Manager
                 soulStoneCnt -= _prt.InitSoulStone;
             }
 
-            if(soulStoneCnt > 0)
+            if (soulStoneCnt > 0)
             {
-                _model.SoulStone += soulStoneCnt; 
+                _model.SoulStone += soulStoneCnt;
                 _model.AccSoulStone += soulStoneCnt;
             }
 

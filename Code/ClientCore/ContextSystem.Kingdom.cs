@@ -1,10 +1,10 @@
-﻿using Proto.Helper;
-using Protocol;
-using System.Text;
 using System;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Proto.Helper;
+using Protocol;
 
 namespace ClientCore
 {
@@ -54,7 +54,7 @@ namespace ClientCore
         public async Task<KingdomBuyDecoResPacket> RequestKingdomBuyDeco(int kingdomItemNum)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
-            var req = new KingdomBuyDecoReqPacket(kingdomItemNum,  new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount });
+            var req = new KingdomBuyDecoReqPacket(kingdomItemNum, new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount });
             var res = await RpcSystem.RequestAsync<KingdomBuyDecoReqPacket, KingdomBuyDecoResPacket>(req);
 
             SyncKingdomDeco(res.KingdomDeco);

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebStudyServer.Base
 {
@@ -22,7 +22,7 @@ namespace WebStudyServer.Base
 
         public override void Dispose()
         {
-            if(LeaseCnt > 0)
+            if (LeaseCnt > 0)
             {
                 throw new Exception($"LEASE_CNT:{LeaseCnt}");
             }

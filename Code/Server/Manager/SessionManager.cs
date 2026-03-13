@@ -1,8 +1,8 @@
-﻿using WebStudyServer.Model;
-using WebStudyServer.Repo;
 using Proto;
-using WebStudyServer.Helper;
 using WebStudyServer.GAME;
+using WebStudyServer.Helper;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
 namespace WebStudyServer.Manager
 {
     public class SessionManager : AuthManagerBase<SessionModel>
@@ -10,7 +10,7 @@ namespace WebStudyServer.Manager
         public SessionManager(AuthRepo authRepo, SessionModel model) : base(authRepo, model)
         {
         }
-        
+
         public void Start()
         {
             // 세션 시작
@@ -66,23 +66,23 @@ namespace WebStudyServer.Manager
 
             return true;
         }
-/*
-        private void RefreshState()
-        {
-            var expireTime = TimeHelper.TimeStampToDateTime(Model.ExpireTimestamp);
-            var serverTime = _authRepo.RpcContext.ServerTime;
+        /*
+                private void RefreshState()
+                {
+                    var expireTime = TimeHelper.TimeStampToDateTime(Model.ExpireTimestamp);
+                    var serverTime = _authRepo.RpcContext.ServerTime;
 
-            var isExpire = serverTime > expireTime;
-            var aftState = isExpire ? ESessionState.EXPIRED : ESessionState.ACTIVE;
+                    var isExpire = serverTime > expireTime;
+                    var aftState = isExpire ? ESessionState.EXPIRED : ESessionState.ACTIVE;
 
-            if (Model.State == aftState)
-            {
-                return;
-            }
+                    if (Model.State == aftState)
+                    {
+                        return;
+                    }
 
-            Model.State = aftState;
-            _authRepo.UpdateSession(Model);
-        }*/
+                    Model.State = aftState;
+                    _authRepo.UpdateSession(Model);
+                }*/
 
     }
 }

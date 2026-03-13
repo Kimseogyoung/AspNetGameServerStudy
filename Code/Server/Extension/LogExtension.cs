@@ -1,4 +1,4 @@
-﻿namespace WebStudyServer.Extension
+namespace WebStudyServer.Extension
 {
     public static class LogExtension
     {

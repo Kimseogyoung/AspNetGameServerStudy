@@ -1,4 +1,4 @@
-﻿using Proto;
+using Proto;
 using Protocol;
 
 namespace Server.Helper
@@ -15,8 +15,8 @@ namespace Server.Helper
         {
             var gradeRoll = _random.Next(GachaConstant.MaxWeight);
 
-            var gradeWeightList = isNormal? GachaConstant.GetNormalGachaWeightList(_prt, _currentSeq) : GachaConstant.GetPickupGachaWeightList(_prt);
-            var rolledGradeWeightIdx = RollGachaInternal(gradeWeightList.Select(x=>x.Weight));
+            var gradeWeightList = isNormal ? GachaConstant.GetNormalGachaWeightList(_prt, _currentSeq) : GachaConstant.GetPickupGachaWeightList(_prt);
+            var rolledGradeWeightIdx = RollGachaInternal(gradeWeightList.Select(x => x.Weight));
 
             var cookieNumList = gradeWeightList[rolledGradeWeightIdx].NumList;
             var cookieNumRoll = _random.Next(cookieNumList.Count);
@@ -54,7 +54,7 @@ namespace Server.Helper
                     roll -= rate;
                 }
             }
-          
+
             return -1;
         }
 

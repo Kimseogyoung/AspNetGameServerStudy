@@ -1,14 +1,14 @@
-﻿using WebStudyServer.Repo;
-using WebStudyServer.Model;
-using Proto;
-using WebStudyServer.Helper;
-using WebStudyServer.GAME;
-using Protocol.Packet.Custom;
-using Protocol;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Proto;
 using Proto.Helper;
+using Protocol;
+using Protocol.Packet.Custom;
 using Server.Serializer;
+using WebStudyServer.GAME;
+using WebStudyServer.Helper;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
 
 namespace WebStudyServer.Manager
 {
@@ -22,18 +22,18 @@ namespace WebStudyServer.Manager
         {
             if (model.Snapshot == null)
             {
-                this.Snapshot = new KingdomMapSnapshotPacket();
+                Snapshot = new KingdomMapSnapshotPacket();
                 RefreshTileMap();
             }
             else
             {
-                this.Snapshot = JsonDataSerializer.DeserializeStr<KingdomMapSnapshotPacket>(model.Snapshot);
+                Snapshot = JsonDataSerializer.DeserializeStr<KingdomMapSnapshotPacket>(model.Snapshot);
 
-                if (this.Snapshot.Ver != KingdomMapSnapshotPacket.c_curVer)
+                if (Snapshot.Ver != KingdomMapSnapshotPacket.c_curVer)
                 {
                     // TODO: 버전 다를때 처리
                     //this.Snapshot = new KingdomMapSnapshotPacket();
-                    switch (this.Snapshot.Ver)
+                    switch (Snapshot.Ver)
                     {
                         case KingdomMapSnapshotPacket.c_ver_1:
                             break;
@@ -50,10 +50,10 @@ namespace WebStudyServer.Manager
             var deletePlacedItemList = new List<PlacedKingdomItemPacket>();
             foreach (var placedItem in pak.PlacedKingdomItemList)
             {
-                if(placedItem.Type == EKingdomItemType.STRUCTURE)
+                if (placedItem.Type == EKingdomItemType.STRUCTURE)
                 {
                     var mdlKingdomStructure = mdlKingdomStructureList.Find(x => x.Num == placedItem.Num);
-                    if(mdlKingdomStructure == null)
+                    if (mdlKingdomStructure == null)
                     {
                         // TODO: 로그
                         // Struecture가 없는 경우 삭제 (DefaultPlacedItemList에 잘못된 값 들어감.)
@@ -67,7 +67,7 @@ namespace WebStudyServer.Manager
             }
 
             var idCounter = (ulong)pak.PlacedKingdomItemList.Count();
-            var placedObjDict = pak.PlacedKingdomItemList.Where(x=> !deletePlacedItemList.Contains(x)).ToDictionary(x => x.Id, x => x);
+            var placedObjDict = pak.PlacedKingdomItemList.Where(x => !deletePlacedItemList.Contains(x)).ToDictionary(x => x.Id, x => x);
             var snapshot = new KingdomMapSnapshotPacket
             {
                 ObjIdCounter = idCounter,
@@ -101,12 +101,12 @@ namespace WebStudyServer.Manager
 
             foreach (var tilePos in tilePosRanges)
             {
-                if (tilePos.X < 0 || tilePos.Y < 0 || tilePos.X >= this.XSize|| tilePos.Y >= this.XSize)
+                if (tilePos.X < 0 || tilePos.Y < 0 || tilePos.X >= XSize || tilePos.Y >= XSize)
                 {
-                    ReqHelper.ValidParam(false, "OUT_OF_KINGDOM_MAP", () => new { ReqX = tilePos.X, ReqY = tilePos.Y, SizeX = this.XSize, SizeY = this.YSize});
+                    ReqHelper.ValidParam(false, "OUT_OF_KINGDOM_MAP", () => new { ReqX = tilePos.X, ReqY = tilePos.Y, SizeX = XSize, SizeY = YSize });
                 }
 
-                var tileObjId = this.Snapshot.TileMap[tilePos.X][tilePos.Y];
+                var tileObjId = Snapshot.TileMap[tilePos.X][tilePos.Y];
                 ReqHelper.ValidContext(tileObjId == 0, "NOT_EMPTY_TILE", () => new { ReqX = tilePos.X, ReqY = tilePos.Y, ObjId = tileObjId });
             }
 
@@ -116,13 +116,13 @@ namespace WebStudyServer.Manager
         // TODO: 너무 길어서 개선 필요
         // Store, Chg, Place 액션을 전부 모아서  복제 맵에서 검증 및 실행 시뮬레이션 함.
         // 결과가 유효한지 한번에 검증. 유효하면 Snapshot 리턴
-        public KingdomMapSnapshotPacket ValiePlaceItemsSnapshot(List<ulong> reqStoreIdList, List<ChgKingdomItemPacket> reqChgItemList, List<ChgKingdomItemPacket> reqPlaceItemList, 
+        public KingdomMapSnapshotPacket ValiePlaceItemsSnapshot(List<ulong> reqStoreIdList, List<ChgKingdomItemPacket> reqChgItemList, List<ChgKingdomItemPacket> reqPlaceItemList,
             out Dictionary<ulong, int> structureDeltaCntDict, out Dictionary<int, int> decoDeltaCntDict)
         {
             structureDeltaCntDict = new();
             decoDeltaCntDict = new();
 
-            var copySnapshot = this.Snapshot.DeepCopy();
+            var copySnapshot = Snapshot.DeepCopy();
 
             // 보관/이동시킬 타일 정보 생성 (Store, Chg 리스트)
             var deleteItemIdList = reqStoreIdList;
@@ -136,7 +136,7 @@ namespace WebStudyServer.Manager
                 if (reqStoreIdList.Contains(deletedPlaceItemId))
                 {
                     // Store하는 경우
-                    switch(placedItem.Type)
+                    switch (placedItem.Type)
                     {
                         case EKingdomItemType.STRUCTURE:
                             structureDeltaCntDict.TryAdd(deletedPlaceItemId, 0);
@@ -186,7 +186,7 @@ namespace WebStudyServer.Manager
             // 2. Chg, Place(새 위치)들이 기존 타일과 충돌하는지 검증 
             foreach (var placeTilePos in placeTilePosList)
             {
-                ReqHelper.ValidContext(placeTilePos.X >= 0 && placeTilePos.Y >= 0 && placeTilePos.X < this.XSize && placeTilePos.Y < this.YSize, "OUT_OF_KINGDOM_MAP", () => new { ReqX = placeTilePos.X, ReqY = placeTilePos.Y, SizeX = this.XSize, SizeY = this.YSize });
+                ReqHelper.ValidContext(placeTilePos.X >= 0 && placeTilePos.Y >= 0 && placeTilePos.X < XSize && placeTilePos.Y < YSize, "OUT_OF_KINGDOM_MAP", () => new { ReqX = placeTilePos.X, ReqY = placeTilePos.Y, SizeX = XSize, SizeY = YSize });
 
                 var tileItemId = copySnapshot.TileMap[placeTilePos.Y][placeTilePos.X];
                 ReqHelper.ValidContext(tileItemId == 0, "NOT_EMPTY_TILE", () => new { ReqX = placeTilePos.X, ReqY = placeTilePos.Y, TileItemId = tileItemId });
@@ -255,9 +255,9 @@ namespace WebStudyServer.Manager
                 copySnapshot.TileMap[newPlacedObj.StartTileY][newPlacedObj.StartTileX] = newPlacedObj.Id;
             }
 
-/*            this.Snapshot = copySnapshot;
-            _model.Snapshot = SerializeHelper.JsonSerialize(this.Snapshot);
-            _userRepo.KingdomMap.Update(_model);*/
+            /*            this.Snapshot = copySnapshot;
+                        _model.Snapshot = SerializeHelper.JsonSerialize(this.Snapshot);
+                        _userRepo.KingdomMap.Update(_model);*/
 
             return copySnapshot;
         }
@@ -266,10 +266,10 @@ namespace WebStudyServer.Manager
         {
             if (newSnapshot != null)
             {
-                this.Snapshot = newSnapshot;
+                Snapshot = newSnapshot;
             }
 
-            _model.Snapshot = JsonDataSerializer.SerializeStr(this.Snapshot);
+            _model.Snapshot = JsonDataSerializer.SerializeStr(Snapshot);
             _userRepo.KingdomMap.UpdateMdl(_model);
         }
 
@@ -281,7 +281,7 @@ namespace WebStudyServer.Manager
                 ReqHelper.ValidContext(Snapshot.PlacedObjDict.TryGetValue(placeItemId, out var placedItem), "NOT_FOUND_PLACE_KINGDOM_ITEM", () => new { PlaceItemId = placeItemId });
                 validPlacedItemList.Add(placedItem);
             }
-            return validPlacedItemList; 
+            return validPlacedItemList;
         }
 
         public void ConstructStructure(KingdomStructureManager mgrStructManager, TilePosPacket valStartTilePos)
@@ -294,38 +294,38 @@ namespace WebStudyServer.Manager
             ConstructItemInternal(mgrDecoManager.Prt, valStartTilePos, 0);
         }
 
-/*        public void StoreItemList(List<PlacedKingdomItemPacket> placedKingdomItemlist)
-        {
-            foreach (var placedKingdomItem in placedKingdomItemlist)
-            {
-                if (!this.Snapshot.PlacedObjDict.ContainsKey(placedKingdomItem.Id))
+        /*        public void StoreItemList(List<PlacedKingdomItemPacket> placedKingdomItemlist)
                 {
-                    // 로그
-                    continue;
-                }
+                    foreach (var placedKingdomItem in placedKingdomItemlist)
+                    {
+                        if (!this.Snapshot.PlacedObjDict.ContainsKey(placedKingdomItem.Id))
+                        {
+                            // 로그
+                            continue;
+                        }
 
-                // 오브젝트 정보 삭제
-                this.Snapshot.PlacedObjDict.Remove(placedKingdomItem.Id);
-                var tilePoses = GetTilePosRanges(placedKingdomItem.StartTileX, placedKingdomItem.StartTileY, placedKingdomItem.SizeX, placedKingdomItem.SizeY);
+                        // 오브젝트 정보 삭제
+                        this.Snapshot.PlacedObjDict.Remove(placedKingdomItem.Id);
+                        var tilePoses = GetTilePosRanges(placedKingdomItem.StartTileX, placedKingdomItem.StartTileY, placedKingdomItem.SizeX, placedKingdomItem.SizeY);
 
-                // 타일 정보 삭제
-                foreach(var tilePos in tilePoses)
-                {
-                    this.Snapshot.TileMap[tilePos.Y][tilePos.X] = 0;
-                }
-            }
+                        // 타일 정보 삭제
+                        foreach(var tilePos in tilePoses)
+                        {
+                            this.Snapshot.TileMap[tilePos.Y][tilePos.X] = 0;
+                        }
+                    }
 
-            SaveSnapshot();
-        }*/
+                    SaveSnapshot();
+                }*/
 
         private void RefreshTileMap()
         {
-            FillSnapshotTileMap(this.Snapshot, this.XSize, this.YSize);
+            FillSnapshotTileMap(Snapshot, XSize, YSize);
         }
 
         private void ConstructItemInternal(KingdomItemProto prtKingdomItem, TilePosPacket valStartTilePos, ulong structId)
         {
-            var newPlacedObjId = ++this.Snapshot.ObjIdCounter;
+            var newPlacedObjId = ++Snapshot.ObjIdCounter;
             var newPlacedObj = new PlacedKingdomItemPacket
             {
                 Id = newPlacedObjId,
@@ -343,10 +343,10 @@ namespace WebStudyServer.Manager
             var tilePosRanges = KingdomHelper.GetTilePosRanges(valStartTilePos.X, valStartTilePos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
             foreach (var tilePos in tilePosRanges)
             {
-                this.Snapshot.TileMap[tilePos.Y][tilePos.X] = newPlacedObj.Id;
+                Snapshot.TileMap[tilePos.Y][tilePos.X] = newPlacedObj.Id;
             }
 
-            this.Snapshot.PlacedObjDict.Add(newPlacedObj.Id, newPlacedObj);
+            Snapshot.PlacedObjDict.Add(newPlacedObj.Id, newPlacedObj);
             SaveSnapshot();
         }
 

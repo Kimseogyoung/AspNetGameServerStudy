@@ -1,4 +1,4 @@
-﻿using WebStudyServer.GAME;
+using WebStudyServer.GAME;
 
 namespace WebStudyServer.Helper
 {

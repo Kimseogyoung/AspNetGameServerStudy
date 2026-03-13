@@ -1,19 +1,19 @@
-﻿using WebStudyServer.Service;
-using WebStudyServer;
-using Proto;
-using WebStudyServer.Repo;
-using WebStudyServer.Helper;
-using Protocol;
-using WebStudyServer.Model;
-using WebStudyServer.GAME;
 using AutoMapper;
+using Proto;
+using Protocol;
 using Server.Repo;
+using WebStudyServer;
+using WebStudyServer.GAME;
+using WebStudyServer.Helper;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
+using WebStudyServer.Service;
 
 namespace Server.Service
 {
     public class CheatService : ServiceBase
     {
-        public CheatService( DbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<CheatService> logger) : base(rpcContext, logger)
+        public CheatService(DbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<CheatService> logger) : base(rpcContext, logger)
         {
             _dbRepo = dbRepo;
             _mapper = mapper;

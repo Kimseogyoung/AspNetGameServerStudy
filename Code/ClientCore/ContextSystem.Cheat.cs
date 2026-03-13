@@ -1,8 +1,8 @@
-﻿using Proto;
-using Protocol;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Proto;
+using Protocol;
 namespace ClientCore
 {
     public partial class ContextSystem

@@ -1,4 +1,4 @@
-﻿using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 
 namespace Server.Helper
@@ -70,7 +70,7 @@ namespace Server.Helper
 
         public static OpenApiResponses CreateResponse(Type inType)
         {
-            var res =  new OpenApiResponses
+            var res = new OpenApiResponses
             {
                 ["200"] = new OpenApiResponse
                 {
@@ -80,7 +80,7 @@ namespace Server.Helper
                         {
                             Schema = new OpenApiSchema
                             {
-                                Type = inType.Name, 
+                                Type = inType.Name,
 
                             }
                         }
@@ -107,15 +107,30 @@ namespace Server.Helper
             innerSchema = null;
 
             if (propertyType == typeof(string) || propertyType == typeof(DateTime) || propertyType == typeof(DateTimeOffset))
+            {
                 return "string";
+            }
+
             if (propertyType == typeof(int) || propertyType == typeof(long) || propertyType == typeof(short) || propertyType == typeof(ulong) || propertyType == typeof(ushort))
+            {
                 return "integer";
+            }
+
             if (propertyType == typeof(double) || propertyType == typeof(float))
+            {
                 return "number";
+            }
+
             if (propertyType == typeof(bool))
+            {
                 return "boolean";
+            }
+
             if (propertyType.IsEnum)
+            {
                 return "integer";
+            }
+
             if (propertyType.IsClass && propertyType != typeof(string))
             {
                 // 만약 propertyType이 클래스라면, 내부 속성들을 처리하기 위해 재귀 호출
@@ -127,7 +142,7 @@ namespace Server.Helper
                 return "object";
             }
 
-            return "string"; 
+            return "string";
         }
 
         // Class 타입인 경우 재귀 호출

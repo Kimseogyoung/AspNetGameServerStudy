@@ -1,4 +1,4 @@
-﻿using System.Reflection.Metadata.Ecma335;
+using System.Reflection.Metadata.Ecma335;
 
 namespace WebStudyServer
 {
@@ -143,7 +143,7 @@ namespace WebStudyServer
                 return 0;
             }
 
-            if(poolIdx >= _poolArr.Length)
+            if (poolIdx >= _poolArr.Length)
             {
                 // TODO: 로그
                 return 0;
@@ -290,6 +290,6 @@ namespace WebStudyServer
       where TLease : ILeasable, IDisposable
     {
         public FactoryBase(int poolNum, bool usePooling, int maxCnt, TimeSpan idleTimeOut, TimeSpan lifeTimeOut, ILogger logger)
-            : base(usePooling, poolNum, maxCnt, idleTimeOut, lifeTimeOut,logger) { }
+            : base(usePooling, poolNum, maxCnt, idleTimeOut, lifeTimeOut, logger) { }
     }
 }

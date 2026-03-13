@@ -1,9 +1,9 @@
-﻿using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ProtoBuf;
 
 namespace Protocol.Packet.Custom
 {
@@ -28,30 +28,30 @@ namespace Protocol.Packet.Custom
 
         public KingdomMapSnapshotPacket(int ver, ulong objIdCounter, List<ulong> placedObjIdList, List<List<ulong>> tileMap, Dictionary<ulong, PlacedKingdomItemPacket> placedObjDict)
         {
-            this.Ver = c_curVer;
-            this.ObjIdCounter = objIdCounter;
-            this.TileMap = tileMap;
-            this.PlacedObjDict = placedObjDict;
+            Ver = c_curVer;
+            ObjIdCounter = objIdCounter;
+            TileMap = tileMap;
+            PlacedObjDict = placedObjDict;
         }
 
         public KingdomMapSnapshotPacket DeepCopy()
         {
             var copy = new KingdomMapSnapshotPacket
             {
-                Ver = this.Ver,
-                ObjIdCounter = this.ObjIdCounter
+                Ver = Ver,
+                ObjIdCounter = ObjIdCounter
             };
 
             // TileMap 깊은 복사
             copy.TileMap = new List<List<ulong>>();
-            foreach (var innerList in this.TileMap)
+            foreach (var innerList in TileMap)
             {
                 copy.TileMap.Add(new List<ulong>(innerList)); // 내부 리스트 복사
             }
 
             // PlacedObjDict 깊은 복사
             copy.PlacedObjDict = new Dictionary<ulong, PlacedKingdomItemPacket>();
-            foreach (var kvp in this.PlacedObjDict)
+            foreach (var kvp in PlacedObjDict)
             {
                 var copyObj = new PlacedKingdomItemPacket
                 {

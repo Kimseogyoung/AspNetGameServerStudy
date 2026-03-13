@@ -1,10 +1,10 @@
-﻿using WebStudyServer.Repo;
-using WebStudyServer.Model;
 using Proto;
-using WebStudyServer.Helper;
-using WebStudyServer.GAME;
 using Protocol;
 using Server.Extension;
+using WebStudyServer.GAME;
+using WebStudyServer.Helper;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
 
 namespace WebStudyServer.Manager
 {
@@ -57,8 +57,8 @@ namespace WebStudyServer.Manager
         public void FinishStage(WorldStageProto prtStage)
         {
             _model.LastPlayStageNum = prtStage.Num;
-            
-            if(_model.TopFinishStageOrder < prtStage.Order)
+
+            if (_model.TopFinishStageOrder < prtStage.Order)
             {
                 _model.TopFinishStageOrder = prtStage.Order;
                 _model.TopFinishStageNum = prtStage.Num;

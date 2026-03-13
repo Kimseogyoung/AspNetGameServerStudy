@@ -1,8 +1,8 @@
-﻿using Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Protocol;
 
 namespace ClientCore
 {
@@ -66,7 +66,7 @@ namespace ClientCore
 
         public void PrintWorldList()
         {
-            foreach(var pakWorld in Player.WorldList)
+            foreach (var pakWorld in Player.WorldList)
             {
                 var prtWorld = APP.Prt.GetWorldPrt(pakWorld.Num);
                 var valTotalStar = Player.WorldStageList.Where(x => x.WorldNum == pakWorld.Num).Sum(x => x.Star);

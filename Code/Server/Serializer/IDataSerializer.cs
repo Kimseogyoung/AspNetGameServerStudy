@@ -1,4 +1,4 @@
-﻿namespace Server.Serializer
+namespace Server.Serializer
 {
     public interface IDataSerializer
     {

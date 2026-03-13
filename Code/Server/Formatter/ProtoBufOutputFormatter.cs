@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc.Formatters;
-using Protocol;
-using ProtoBuf;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using ProtoBuf;
+using Protocol;
 using Server.Serializer;
 
 namespace WebStudyServer
@@ -20,7 +20,7 @@ namespace WebStudyServer
 
         public static async Task WriteResponseBodyAsync2(HttpContext httoContext, object obj)
         {
-            httoContext.Response.ContentType = MsgProtocol.ProtoBufContentType; 
+            httoContext.Response.ContentType = MsgProtocol.ProtoBufContentType;
             var writer = httoContext.Response.BodyWriter;
             if (writer == null)
             {

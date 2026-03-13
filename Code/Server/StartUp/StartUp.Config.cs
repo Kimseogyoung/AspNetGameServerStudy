@@ -1,4 +1,4 @@
-﻿using WebFramework.Config;
+using WebFramework.Config;
 using WebStudyServer.GAME;
 
 namespace WebStudyServer
@@ -7,7 +7,7 @@ namespace WebStudyServer
     {
         public void Config(WebApplicationBuilder builder, string workPath = "")
         {
-            workPath = string.IsNullOrEmpty(workPath)? Directory.GetCurrentDirectory() : workPath;
+            workPath = string.IsNullOrEmpty(workPath) ? Directory.GetCurrentDirectory() : workPath;
 
             builder.Configuration
              .SetBasePath(workPath)

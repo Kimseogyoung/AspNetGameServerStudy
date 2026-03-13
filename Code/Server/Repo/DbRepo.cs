@@ -1,5 +1,5 @@
-using MySqlConnector;
 using System.Data;
+using MySqlConnector;
 using WebStudyServer;
 using WebStudyServer.GAME;
 using WebStudyServer.Repo;
@@ -62,7 +62,7 @@ namespace Server.Repo
         private AllUserRepo BeginAllUserRepo()
         {
             var dbExcutorList = new List<DBSqlExecutor>();
-            foreach(var dbStr in APP.Cfg.UserDbConnectionStrList)
+            foreach (var dbStr in APP.Cfg.UserDbConnectionStrList)
             {
                 var dbExecutor = TouchDbSqlExecutor(dbStr, IsolationLevel.ReadCommitted);
                 dbExcutorList.Add(dbExecutor);
@@ -126,7 +126,7 @@ namespace Server.Repo
 
                     _dbExecutorDict.Clear();
                 }
-            
+
                 _lazyAuthRepo = null;
                 _lazyCenterRepo = null;
                 _lazyAllUserRepo = null;
@@ -168,7 +168,7 @@ namespace Server.Repo
 
             return APP.Cfg.UserDbConnectionStrList[shardIdx];
         }
-        
+
         public int c_maxShardCnt = 64;
 
         private int[] shardMap = new int[]

@@ -1,5 +1,5 @@
-﻿using Proto;
 using System.Threading.Channels;
+using Proto;
 using WebStudyServer.Base;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
@@ -15,7 +15,7 @@ namespace WebStudyServer.Component
         public ChannelComponent(AuthRepo authRepo, DBSqlExecutor executor) : base(authRepo, executor)
         {
         }
-    
+
 
         public bool TryGetActive(ulong accountId, out ChannelManager mgrChannel)
         {
@@ -24,7 +24,9 @@ namespace WebStudyServer.Component
             var mdlChannelList = GetList(accountId);
             var mdlActiveChannel = mdlChannelList.Where(x => x.State == EChannelState.ACTIVE).FirstOrDefault();
             if (mdlActiveChannel == null)
+            {
                 return false;
+            }
 
             mgrChannel = new ChannelManager(_authRepo, mdlActiveChannel);
             return true;
@@ -67,7 +69,7 @@ namespace WebStudyServer.Component
                 State = EChannelState.ACTIVE,
                 Token = ""
             };
-            
+
             ChannelModel repoChannel = null;
             // 데이터베이스에 삽입
             _executor.Excute((sqlConnection, transaction) =>

@@ -1,4 +1,3 @@
-﻿using ProtoBuf;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using ProtoBuf;
 
 namespace Proto
 {
@@ -98,7 +98,9 @@ namespace Proto
 
             var idx = protoData.List.IndexOf(prt);
             if (protoData.List.Count <= idx + 1)
+            {
                 return prt;
+            }
 
             return (TProto)protoData.List[idx + 1];
         }
@@ -132,11 +134,11 @@ namespace Proto
 
         public void Bind<TProto>(string className = "", IComparer<TProto>? comparer = null) where TProto : ProtoBase, new()
         {
-            if (className == "") 
+            if (className == "")
             {
                 className = typeof(TProto).Name.Replace("Proto", "");
             }
-            
+
             Type protoClassType = typeof(TProto);
 
             if (_protoDict.ContainsKey(typeof(TProto)))
@@ -246,7 +248,7 @@ namespace Proto
 
         private object GenerateKeyHash(object pkObj)
         {
-            if(pkObj is ITuple tuple)
+            if (pkObj is ITuple tuple)
             {
                 int hash = c_pkGenInitPrime; // 소수 기반 초기값
                 for (int i = 0; i < tuple.Length; i++)

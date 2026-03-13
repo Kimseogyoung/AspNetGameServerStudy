@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Protocol;
 using Server.Serializer;
 
@@ -15,7 +15,7 @@ namespace WebStudyServer
         public override async Task<InputFormatterResult> ReadRequestBodyAsync(InputFormatterContext context)
         {
             var request = context.HttpContext.Request;
-            var result = await _serializer.DeserializeAsync(context.ModelType, request.Body);  
+            var result = await _serializer.DeserializeAsync(context.ModelType, request.Body);
 
             // Return the result
             return await InputFormatterResult.SuccessAsync(result).ConfigureAwait(false);

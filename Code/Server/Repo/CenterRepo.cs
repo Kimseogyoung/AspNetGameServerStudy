@@ -1,4 +1,4 @@
-﻿using WebStudyServer.Base;
+using WebStudyServer.Base;
 using WebStudyServer.Component;
 using WebStudyServer.GAME;
 

@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using System.Text;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using NLog;
-using Protocol;
-using System.Text;
 using ProtoBuf.AspNetCore;
+using Protocol;
 namespace WebStudyServer
 {
     public class CustomInputFormatter : TextInputFormatter

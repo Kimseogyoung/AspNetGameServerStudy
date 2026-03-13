@@ -1,4 +1,4 @@
-﻿using Scriban;
+using Scriban;
 
 namespace ClassGenerator
 {
@@ -47,7 +47,7 @@ namespace ClassGenerator
                         {"Attribute", attribute },
                     };
 
-                    if (fieldList.Find(x=>x["Name"] == fieldName) != null)
+                    if (fieldList.Find(x => x["Name"] == fieldName) != null)
                     {
                         continue;
                     }
@@ -96,7 +96,11 @@ namespace ClassGenerator
                 for (int i = 0; i < names.Count; i++)
                 {
 
-                    if (names[i].StartsWith("#")) continue;
+                    if (names[i].StartsWith("#"))
+                    {
+                        continue;
+                    }
+
                     fieldNames.Add(names[i]);
 
                     if (types[i].EndsWith(":pk"))

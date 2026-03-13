@@ -1,4 +1,4 @@
-﻿using Proto;
+using Proto;
 using WebStudyServer.Base;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
@@ -32,11 +32,11 @@ namespace WebStudyServer.Component
         {
             mgrSession = null;
 
-            if(!TryGetByKeyInternal(key, out var mdlSession))
+            if (!TryGetByKeyInternal(key, out var mdlSession))
             {
                 return false;
             }
-           
+
             mgrSession = new SessionManager(_authRepo, mdlSession);
             return true;
         }

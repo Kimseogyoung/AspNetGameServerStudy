@@ -1,10 +1,10 @@
-﻿using MySqlConnector;
 using System.Data;
 using System.Data.Common;
+using MySqlConnector;
 
 namespace WebStudyServer.Repo.Database
 {
-    public class DBSqlExecutor 
+    public class DBSqlExecutor
     {
         public static DBSqlExecutor StartTransaction(string connectionStr, IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
         {
@@ -15,7 +15,7 @@ namespace WebStudyServer.Repo.Database
 
         private IDbConnection _connection;
         private IDbTransaction _transaction;
-        
+
         public DBSqlExecutor(string connectionStr)
         {
             _connection = new MySqlConnection(connectionStr);

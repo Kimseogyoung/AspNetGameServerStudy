@@ -1,4 +1,4 @@
-﻿namespace WebStudyServer
+namespace WebStudyServer
 {
     public interface ILeasable : IDisposable
     {

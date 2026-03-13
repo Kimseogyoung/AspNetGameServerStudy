@@ -1,12 +1,12 @@
-using WebStudyServer.Base;
-using WebStudyServer.Manager;
-using WebStudyServer.Repo;
-using WebStudyServer.Model;
-using WebStudyServer.Repo.Cache;
-using WebStudyServer.Helper;
-using WebStudyServer.GAME;
-using Server.Repo.Database;
 using Proto;
+using Server.Repo.Database;
+using WebStudyServer.Base;
+using WebStudyServer.GAME;
+using WebStudyServer.Helper;
+using WebStudyServer.Manager;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
+using WebStudyServer.Repo.Cache;
 
 namespace WebStudyServer.Component
 {
@@ -64,7 +64,7 @@ namespace WebStudyServer.Component
 
         private bool TryGetInternal(ulong sfId, out KingdomStructureModel outKingdomStructure)
         {
-            var kingdomStructure = GetMdl(Key.Single(_rpcContext.PlayerId, sfId),db => db.SelectByPk<KingdomStructureModel>(new { SfId = sfId }));
+            var kingdomStructure = GetMdl(Key.Single(_rpcContext.PlayerId, sfId), db => db.SelectByPk<KingdomStructureModel>(new { SfId = sfId }));
 
             outKingdomStructure = kingdomStructure;
             return outKingdomStructure != null;

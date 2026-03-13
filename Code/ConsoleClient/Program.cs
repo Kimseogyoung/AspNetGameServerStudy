@@ -1,4 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
+// See https://aka.ms/new-console-template for more information
 using ClientCore;
 using Protocol;
 var initPath = args.Length > 0 ? args[0] : "../../Data/Csv/Proto";

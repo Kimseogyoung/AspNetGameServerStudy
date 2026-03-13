@@ -1,5 +1,5 @@
-﻿using Proto;
 using System.Text;
+using Proto;
 using WebStudyServer;
 using WebStudyServer.GAME;
 using WebStudyServer.Helper;
@@ -137,56 +137,56 @@ namespace Server.Helper
                 }
 
                 // 검증 코드 주석
-            /*    var includedNumsWithoutPickup = GetPickupIncluededNumList(prtGachaSchedule, prtGachaSchedule.PickupItemNumArr);
-                for (var i = 0; i < prtGachaProb.RateArr.Count; i++)
-                {
-                    var grade = (EGradeType)i + 1;
-                    var numList = new List<int>();
+                /*    var includedNumsWithoutPickup = GetPickupIncluededNumList(prtGachaSchedule, prtGachaSchedule.PickupItemNumArr);
+                    for (var i = 0; i < prtGachaProb.RateArr.Count; i++)
+                    {
+                        var grade = (EGradeType)i + 1;
+                        var numList = new List<int>();
 
-                    switch (prtGachaSchedule.GachaObjType)
-                    {
-                        case EObjectType.HERO:
-                            numList = HeroProto.ProtoCollection.Where(x => x.Grade == grade && includedNumsWithoutPickup.Contains(x.Num)).Select(x => x.Num).ToList();
-                            break;
-                        case EObjectType.ARTIFACT:
-                            numList = ArtifactProto.ProtoCollection.Where(x => x.Grade == grade && includedNumsWithoutPickup.Contains(x.Num)).Select(x => x.Num).ToList();
-                            break;
-                        default:
-                            throw new GameException(GameErrorCode.WrongServerProto, $"WRONG_GACHA_OBJ_TYPE:{prtGachaSchedule.GachaObjType}");
-                    }*/
-                
+                        switch (prtGachaSchedule.GachaObjType)
+                        {
+                            case EObjectType.HERO:
+                                numList = HeroProto.ProtoCollection.Where(x => x.Grade == grade && includedNumsWithoutPickup.Contains(x.Num)).Select(x => x.Num).ToList();
+                                break;
+                            case EObjectType.ARTIFACT:
+                                numList = ArtifactProto.ProtoCollection.Where(x => x.Grade == grade && includedNumsWithoutPickup.Contains(x.Num)).Select(x => x.Num).ToList();
+                                break;
+                            default:
+                                throw new GameException(GameErrorCode.WrongServerProto, $"WRONG_GACHA_OBJ_TYPE:{prtGachaSchedule.GachaObjType}");
+                        }*/
 
-               /* var includedNums = GachaProbHelper.GetPickupIncluededNums(prtGachaSchedule);
-                for (var i = 0; i < prtGachaProb.PickupRateArr.Count; i++)
-                {
-                    var rate = prtGachaProb.PickupRateArr[i];
-                    var pickupItemNum = prtGachaSchedule.PickupItemNumArr[i];
-                    if (prtGachaProb.PickupCnt >= i + 1)
-                    {
-                        // 영웅 확률 제외가 필요하여 주석처리
-                        //ReqHelper.ValidServer(rate != 0, $"ZERO_PICKUP_RATE:{rate}", new { Tag= prtGachaSchedule.Tag, Order = prtGachaSchedule.Order, GachaType = prtGacha.Type, PickupCnt = prtGacha.PickupCnt });
-                        ReqHelper.ValidServer(pickupItemNum != 0, $"ZERO_PICKUP_ITEM_NUM:{pickupItemNum}", new { Tag = prtGachaSchedule.Tag, Order = prtGachaSchedule.Order, GachaType = prtGachaProb.Type, PickupCnt = prtGachaProb.PickupCnt });
-                        ReqHelper.ValidServer(includedNums.Contains(pickupItemNum), $"NOT_INCLUEDED_PICKUP_ITEM_NUM_IN_GACHA_ITEM:{pickupItemNum}", new { Tag = prtGachaSchedule.Tag, Order = prtGachaSchedule.Order, GachaType = prtGachaProb.Type, PickupCnt = prtGachaProb.PickupCnt });
-                    }
-                    else
-                    {
-                        ReqHelper.ValidServer(rate == 0, $"NOT_ZERO_PICKUP_RATE:{rate}", new { Tag = prtGachaSchedule.Tag, Order = prtGachaSchedule.Order, GachaType = prtGachaProb.Type, PickupCnt = prtGachaProb.PickupCnt });
-                        ReqHelper.ValidServer(pickupItemNum == 0, $"NOT_ZERO_PICKUP_ITEM_NUM:{pickupItemNum}", new { Tag = prtGachaSchedule.Tag, Order = prtGachaSchedule.Order, GachaType = prtGachaProb.Type, PickupCnt = prtGachaProb.PickupCnt });
-                        continue;
-                    }
 
-                    switch (prtGachaSchedule.GachaObjType)
-                    {
-                        case EObjectType.HERO:
-                            ProtoHelper.ValidProtoPk<HeroProto>(pickupItemNum);
-                            break;
-                        case EObjectType.ARTIFACT:
-                            ProtoHelper.ValidProtoPk<ArtifactProto>(pickupItemNum);
-                            break;
-                        default:
-                            throw new GameException(GameErrorCode.WrongServerProto, "WRONG_GACHA_OBJ_TYPE");
-                    }
-                }*/
+                /* var includedNums = GachaProbHelper.GetPickupIncluededNums(prtGachaSchedule);
+                 for (var i = 0; i < prtGachaProb.PickupRateArr.Count; i++)
+                 {
+                     var rate = prtGachaProb.PickupRateArr[i];
+                     var pickupItemNum = prtGachaSchedule.PickupItemNumArr[i];
+                     if (prtGachaProb.PickupCnt >= i + 1)
+                     {
+                         // 영웅 확률 제외가 필요하여 주석처리
+                         //ReqHelper.ValidServer(rate != 0, $"ZERO_PICKUP_RATE:{rate}", new { Tag= prtGachaSchedule.Tag, Order = prtGachaSchedule.Order, GachaType = prtGacha.Type, PickupCnt = prtGacha.PickupCnt });
+                         ReqHelper.ValidServer(pickupItemNum != 0, $"ZERO_PICKUP_ITEM_NUM:{pickupItemNum}", new { Tag = prtGachaSchedule.Tag, Order = prtGachaSchedule.Order, GachaType = prtGachaProb.Type, PickupCnt = prtGachaProb.PickupCnt });
+                         ReqHelper.ValidServer(includedNums.Contains(pickupItemNum), $"NOT_INCLUEDED_PICKUP_ITEM_NUM_IN_GACHA_ITEM:{pickupItemNum}", new { Tag = prtGachaSchedule.Tag, Order = prtGachaSchedule.Order, GachaType = prtGachaProb.Type, PickupCnt = prtGachaProb.PickupCnt });
+                     }
+                     else
+                     {
+                         ReqHelper.ValidServer(rate == 0, $"NOT_ZERO_PICKUP_RATE:{rate}", new { Tag = prtGachaSchedule.Tag, Order = prtGachaSchedule.Order, GachaType = prtGachaProb.Type, PickupCnt = prtGachaProb.PickupCnt });
+                         ReqHelper.ValidServer(pickupItemNum == 0, $"NOT_ZERO_PICKUP_ITEM_NUM:{pickupItemNum}", new { Tag = prtGachaSchedule.Tag, Order = prtGachaSchedule.Order, GachaType = prtGachaProb.Type, PickupCnt = prtGachaProb.PickupCnt });
+                         continue;
+                     }
+
+                     switch (prtGachaSchedule.GachaObjType)
+                     {
+                         case EObjectType.HERO:
+                             ProtoHelper.ValidProtoPk<HeroProto>(pickupItemNum);
+                             break;
+                         case EObjectType.ARTIFACT:
+                             ProtoHelper.ValidProtoPk<ArtifactProto>(pickupItemNum);
+                             break;
+                         default:
+                             throw new GameException(GameErrorCode.WrongServerProto, "WRONG_GACHA_OBJ_TYPE");
+                     }
+                 }*/
 
                 var key = MakePickupGachaKey(prtGachaSchedule.Num);
                 _gradeGachaWeightDict.Add(key, outWeightList);
@@ -270,7 +270,7 @@ namespace Server.Helper
             {
                 var weight = prtGachaProb.GradeWeightList[i];
                 var pickupItemNum = prtGachaSchedule.PickupCookieNumList[i];
-              
+
                 // 픽업 확률
                 var weightStruct = new GachaWeightStruct(EGradeType.NONE, weight, new List<int>() { pickupItemNum });
                 outWeightList.Add(weightStruct);
@@ -282,16 +282,16 @@ namespace Server.Helper
 
         public static List<int> GetNormalIncluededNumList(int seq)
         {
-            var includedNumList = _prtGachaItemList.Where(x => x.Type == EGachaItemType.ORIGINAL && x.Seq <= seq).Select(x=>x.Num).ToList();
+            var includedNumList = _prtGachaItemList.Where(x => x.Type == EGachaItemType.ORIGINAL && x.Seq <= seq).Select(x => x.Num).ToList();
             return includedNumList;
         }
 
         public static List<int> GetPickupIncluededNumList(string tag, int seq, List<int> excluededNumList = null)
         {
             var includedNumList = _prtGachaItemList
-            .Where(x => x.Type == EGachaItemType.ORIGINAL && x.Seq <= seq 
+            .Where(x => x.Type == EGachaItemType.ORIGINAL && x.Seq <= seq
             || x.Type == EGachaItemType.SPECIAL && x.Seq <= seq && x.Tag == tag)
-            .Select(x=>x.Num)
+            .Select(x => x.Num)
             .ToList();
 
             if (excluededNumList != null)
@@ -301,7 +301,7 @@ namespace Server.Helper
 
             return includedNumList;
         }
-        
+
         public static string MakePickupGachaKey(int scheduleNum)
         {
             return "pickup:" + scheduleNum;

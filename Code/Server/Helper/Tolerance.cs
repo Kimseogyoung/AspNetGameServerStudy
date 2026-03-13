@@ -1,4 +1,4 @@
-﻿namespace Server.Helper
+namespace Server.Helper
 {
     public static class Tolerance
     {

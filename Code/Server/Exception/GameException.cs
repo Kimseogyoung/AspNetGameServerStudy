@@ -1,10 +1,10 @@
-﻿using Proto;
+using Proto;
 
 namespace WebStudyServer
 {
     public class GameException : Exception
     {
-        public int Code {  get; private set; }
+        public int Code { get; private set; }
 
         public dynamic Args { get; private set; }
 

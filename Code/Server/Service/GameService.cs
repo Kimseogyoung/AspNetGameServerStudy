@@ -1,15 +1,15 @@
-﻿using WebStudyServer.Service;
-using WebStudyServer;
-using Proto;
-using WebStudyServer.Repo;
-using WebStudyServer.Helper;
-using Protocol;
-using WebStudyServer.Model;
-using WebStudyServer.GAME;
 using AutoMapper;
-using Server.Helper;
+using Proto;
+using Protocol;
 using Server.Extension;
+using Server.Helper;
 using Server.Repo;
+using WebStudyServer;
+using WebStudyServer.GAME;
+using WebStudyServer.Helper;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
+using WebStudyServer.Service;
 
 namespace Server.Service
 {
@@ -328,7 +328,7 @@ namespace Server.Service
                             ResultObjValue = resultObjValue,
                             SoulStoneNum = prtCookie.SoulStoneNum,
                             SoulStoneAmount = prtCookie.InitSoulStone * (int)resultObjValue.Value
-                        };   
+                        };
                         break;
                     case EObjType.SOUL_STONE:
                         gachaResult = new GachaResultPacket
@@ -339,7 +339,7 @@ namespace Server.Service
                         };
                         break;
                     default:
-                        throw new GameException("NO_HANDLING_GACHA_RESULT", new { ObjType = resultObjValue.Key.Type } );
+                        throw new GameException("NO_HANDLING_GACHA_RESULT", new { ObjType = resultObjValue.Key.Type });
                 }
                 gachaResultList.Add(gachaResult);
             }

@@ -1,16 +1,16 @@
-﻿using WebStudyServer.Base;
-using WebStudyServer;
-using WebStudyServer.Repo;
 using Proto;
-using WebStudyServer.GAME;
 using Protocol;
 using Server.Repo;
+using WebStudyServer;
+using WebStudyServer.Base;
+using WebStudyServer.GAME;
+using WebStudyServer.Repo;
 
 namespace WebStudyServer.Service
 {
     public class AuthService : ServiceBase
     {
-        public AuthService(DbRepo dbRepo, RpcContext rpcContext, ILogger<AuthService> logger) :base(rpcContext, logger) 
+        public AuthService(DbRepo dbRepo, RpcContext rpcContext, ILogger<AuthService> logger) : base(rpcContext, logger)
         {
             _dbRepo = dbRepo;
         }
@@ -40,11 +40,11 @@ namespace WebStudyServer.Service
                                 AccountEnv = APP.Cfg.EnvName,
                                 ClientSecret = ""
                             }
-                        }; 
+                        };
                     }
                 }
             }
-            
+
             // ~idfv가 없다면
 
             // Account 생성
@@ -55,7 +55,7 @@ namespace WebStudyServer.Service
             mgrDevice = _authRepo.Device.Create(idfv);
             // 채널 생성
             var mgrChannel = _authRepo.Channel.Create(mgrAccount.Id, EChannelType.GUEST);
-            
+
             // 세션 갱신 및 리턴
             mgrSession.Start();
 

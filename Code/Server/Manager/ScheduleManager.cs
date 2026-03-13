@@ -1,4 +1,4 @@
-﻿using Proto;
+using Proto;
 using Protocol;
 using WebStudyServer.GAME;
 using WebStudyServer.Helper;
@@ -45,22 +45,22 @@ namespace WebStudyServer.Manager
             }
         }
 
-   /*     public ScheduleManager(CenterRepo centerRepo, int scheduleNum, ScheduleModel model = null) : base(centerRepo, model)
-        {
-            _prt = APP.Prt.GetSchedulePrt(scheduleNum);
-            ActiveStartTime = _prt.ActiveStartTime;
-            ActiveEndTime = _prt.ActiveEndTime;
-            ContentStartTime = _prt.ContentStartTime;
-            ContentEndTime = _prt.ContentEndTime;
+        /*     public ScheduleManager(CenterRepo centerRepo, int scheduleNum, ScheduleModel model = null) : base(centerRepo, model)
+             {
+                 _prt = APP.Prt.GetSchedulePrt(scheduleNum);
+                 ActiveStartTime = _prt.ActiveStartTime;
+                 ActiveEndTime = _prt.ActiveEndTime;
+                 ContentStartTime = _prt.ContentStartTime;
+                 ContentEndTime = _prt.ContentEndTime;
 
-            if (model != null)
-            {
-                ActiveStartTime = model.ActiveStartTime;
-                ActiveEndTime = model.ActiveEndTime;
-                ContentStartTime = model.ContentStartTime;
-                ContentEndTime = model.ContentEndTime;
-            }
-        }*/
+                 if (model != null)
+                 {
+                     ActiveStartTime = model.ActiveStartTime;
+                     ActiveEndTime = model.ActiveEndTime;
+                     ContentStartTime = model.ContentStartTime;
+                     ContentEndTime = model.ContentEndTime;
+                 }
+             }*/
 
         public bool IsActivePeriod(DateTime nowTime)
         {
@@ -81,7 +81,7 @@ namespace WebStudyServer.Manager
         public int ValidGachaCnt(int reqCnt)
         {
             var findIdx = _prtGacha.CntList.FindIndex(x => x == reqCnt);
-            ReqHelper.ValidContext(findIdx != -1, "NOT_EQUAL_GACHA_CNT", () => new { ScheduleNum = _prt.Num, ReqCnt = reqCnt});
+            ReqHelper.ValidContext(findIdx != -1, "NOT_EQUAL_GACHA_CNT", () => new { ScheduleNum = _prt.Num, ReqCnt = reqCnt });
 
             return _prtGacha.CntList[findIdx];
         }
@@ -102,7 +102,7 @@ namespace WebStudyServer.Manager
 
         public string MakeGachaReason(int cnt)
         {
-            var reason = $"GACHA:{this.Num}:{_prtGacha.Tag}:{cnt}";
+            var reason = $"GACHA:{Num}:{_prtGacha.Tag}:{cnt}";
             return reason;
         }
         #endregion

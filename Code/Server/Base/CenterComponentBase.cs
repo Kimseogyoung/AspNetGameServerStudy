@@ -1,4 +1,4 @@
-﻿using WebStudyServer.Extension;
+using WebStudyServer.Extension;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -6,7 +6,7 @@ using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Base
 {
-    public class CenterComponentBase 
+    public class CenterComponentBase
     {
         protected DBSqlExecutor _executor;
         protected CenterRepo _centerRepo;

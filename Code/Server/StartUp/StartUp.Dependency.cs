@@ -1,9 +1,9 @@
-﻿using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Models;
+using Server.Service;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WebStudyServer.Filter;
 using WebStudyServer.Repo.Cache;
 using WebStudyServer.Service;
-using Server.Service;
 
 namespace WebStudyServer
 {
@@ -54,11 +54,11 @@ namespace WebStudyServer
             });
 
             //net 6.0
-/*            ).AddMvcOptions(options =>
-            {
-                options.InputFormatters.Insert(0, new CustomInputFormatter());
-                options.OutputFormatters.Insert(0, new CustomOutputFormatter());
-            });*/
+            /*            ).AddMvcOptions(options =>
+                        {
+                            options.InputFormatters.Insert(0, new CustomInputFormatter());
+                            options.OutputFormatters.Insert(0, new CustomOutputFormatter());
+                        });*/
         }
 
         private void AddSwagger(IServiceCollection services)
@@ -78,13 +78,13 @@ namespace WebStudyServer
                 // swagger default req 설정되도록 함.
                 var securityScheme = new OpenApiSecurityScheme
                 {
-                    Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme,  Id = "Default" }
+                    Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Default" }
                 };
-/*                    var opsSecurityScheme = new OpenApiSecurityScheme
-                {
-                    Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Ops" }
-                };
-*/
+                /*                    var opsSecurityScheme = new OpenApiSecurityScheme
+                                {
+                                    Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Ops" }
+                                };
+                */
                 operation.Security = new List<OpenApiSecurityRequirement>
                 {
                     new()

@@ -1,6 +1,6 @@
-﻿using Proto;
-using ProtoBuf;
 using System;
+using Proto;
+using ProtoBuf;
 
 namespace Protocol
 {
@@ -35,7 +35,7 @@ namespace Protocol
 
         public bool Equals(ObjKey obj)
         {
-            return this.Type == obj.Type && this.Num == obj.Num;
+            return Type == obj.Type && Num == obj.Num;
         }
 
         public static bool operator ==(ObjKey left, ObjKey right)
@@ -50,7 +50,7 @@ namespace Protocol
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(this.Type, this.Num);
+            return HashCode.Combine(Type, Num);
         }
 
         public override string ToString()

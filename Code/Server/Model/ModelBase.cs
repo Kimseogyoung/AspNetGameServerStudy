@@ -1,4 +1,4 @@
-﻿namespace WebStudyServer.Model
+namespace WebStudyServer.Model
 {
     public class ModelBase
     {

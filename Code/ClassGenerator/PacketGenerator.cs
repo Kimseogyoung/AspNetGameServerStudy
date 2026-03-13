@@ -1,6 +1,6 @@
-﻿using Scriban;
-using Scriban.Runtime;
 using System.Security.Cryptography;
+using Scriban;
+using Scriban.Runtime;
 
 namespace ClassGenerator
 {
@@ -31,7 +31,7 @@ namespace ClassGenerator
                 for (int i = 1; i < lines.Length; i++)
                 {
                     var values = lines[i].Split(',');
-                    values = values.Concat(Enumerable.Repeat("", c_maxColCnt - values.Length)).ToArray(); 
+                    values = values.Concat(Enumerable.Repeat("", c_maxColCnt - values.Length)).ToArray();
 
                     if (string.IsNullOrEmpty(lines[i]) || values[0].StartsWith("#"))
                     {
@@ -83,8 +83,9 @@ namespace ClassGenerator
             foreach (var definition in classDefinitions)
             {
                 if (!groupedClassDict.ContainsKey(definition.ClassName))
+                {
                     groupedClassDict[definition.ClassName] = new List<ClassDefinition>();
-
+                }
 
                 groupedClassDict[definition.ClassName].Add(definition);
             }
@@ -104,12 +105,12 @@ namespace ClassGenerator
                         template = _reqPakTemplate;
                         classAttribute = "[ProtoContract]";
                         protocolName = firstDef.ProtocolName;
-                        defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ReqInfoPacket", Idx = 1 , FieldValue = ""});
+                        defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ReqInfoPacket", Idx = 1, FieldValue = "" });
                         break;
                     case "res":
                         template = _resPakTemplate;
                         classAttribute = "[ProtoContract]";
-                        defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ResInfoPacket", Idx = 1 , FieldValue = "= new ResInfoPacket();" });
+                        defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ResInfoPacket", Idx = 1, FieldValue = "= new ResInfoPacket();" });
                         break;
                     default:
                         template = _commonPakTemplate;
@@ -119,7 +120,7 @@ namespace ClassGenerator
 
                 var parsedTemplate = Template.Parse(template);
                 var fields = new dynamic[defList.Count];
-                for (var i =0; i< defList.Count; i++)
+                for (var i = 0; i < defList.Count; i++)
                 {
                     var isLast = i == defList.Count - 1;
                     var attribute = $"[ProtoMember({defList[i].Idx})]";
@@ -173,7 +174,7 @@ namespace ClassGenerator
             var exeCfgDirPath = Path.GetDirectoryName(exeCfgDirNetPath);
             var binDirPath = Path.GetDirectoryName(exeCfgDirPath);
             var projectPath = Path.GetDirectoryName(binDirPath);
-            return projectPath == null? string.Empty : projectPath;
+            return projectPath == null ? string.Empty : projectPath;
         }
 
         private const int c_maxColCnt = 7;
@@ -181,7 +182,7 @@ namespace ClassGenerator
         private static string _resPakTemplate = string.Empty;
         private static string _commonPakTemplate = string.Empty;
 
-        private static Dictionary<string, Type>  _typeMap = new Dictionary<string, Type>
+        private static Dictionary<string, Type> _typeMap = new Dictionary<string, Type>
         {
             { "bool", typeof(bool) },
             { "byte", typeof(byte) },

@@ -1,6 +1,6 @@
-﻿using SharpYaml.Serialization;
 using System.Collections;
 using System.Text.Json;
+using SharpYaml.Serialization;
 
 namespace WebFramework.Config
 {
@@ -54,7 +54,7 @@ namespace WebFramework.Config
             {
                 ParseYaml(dict);
             }
-            else if(value is IDictionary<object, object> dict2)
+            else if (value is IDictionary<object, object> dict2)
             {
                 ParseYaml(dict2);
             }

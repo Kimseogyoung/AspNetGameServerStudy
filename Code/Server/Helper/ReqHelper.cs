@@ -1,4 +1,4 @@
-﻿using Proto;
+using Proto;
 using Protocol;
 using Server.Helper;
 
@@ -40,12 +40,12 @@ namespace WebStudyServer.Helper
         }
 
         public static int ValidUnderFlowParam(int reqValue, string paramName, bool allowZero = false) => (int)ValidUnderFlowParam((double)reqValue, paramName, allowZero);
-        
+
         public static double ValidUnderFlowParam(double reqValue, string paramName, bool allowZero = false)
         {
             if (allowZero)
             {
-                ReqHelper.ValidProto(reqValue >= 0, "NOT_EQUAL_COST_TYPE", () => new {ParamName = paramName, Value = reqValue});
+                ReqHelper.ValidProto(reqValue >= 0, "NOT_EQUAL_COST_TYPE", () => new { ParamName = paramName, Value = reqValue });
             }
             else
             {
@@ -98,7 +98,7 @@ namespace WebStudyServer.Helper
                 ReqHelper.ValidProto(valReward != null, "NOT_EXIST_REWARD", () => new { Reason = reason, ReqReward = reqReward, ValRewardList = valRewardList });
                 ReqHelper.ValidProto(reqReward.Value == valReward.Value, "NOT_EQUAL_REWARD_VALUE", () => new { Reason = reason, ReqReward = reqReward, ValReward = valReward });
             }
-     
+
             return reqRewardList;
         }
     }

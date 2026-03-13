@@ -1,7 +1,7 @@
-﻿using NLog;
 using System.Security.Cryptography;
-using System.Text.Json;
 using System.Text;
+using System.Text.Json;
+using NLog;
 using WebStudyServer.GAME;
 
 namespace WebStudyServer.Helper
@@ -21,7 +21,7 @@ namespace WebStudyServer.Helper
             {
                 if (useLog)
                 {
-                    _logger.Warn("NOT_MATCHED_HASH ReqHash({ReqHash}) CalHash({CalHash}) SecretKey({SecretKey}) Data({Data})", 
+                    _logger.Warn("NOT_MATCHED_HASH ReqHash({ReqHash}) CalHash({CalHash}) SecretKey({SecretKey}) Data({Data})",
                         targetHash, calHash, secret, obj);
                 }
                 return false;
@@ -61,7 +61,7 @@ namespace WebStudyServer.Helper
             var builder = new StringBuilder();
             foreach (var b in hashBytes)
             {
-                builder.Append(b.ToString("x2")); 
+                builder.Append(b.ToString("x2"));
             }
 
             return builder.ToString();

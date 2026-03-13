@@ -1,4 +1,4 @@
-﻿using Proto;
+using Proto;
 using WebStudyServer.Base;
 using WebStudyServer.Extension;
 using WebStudyServer.Manager;

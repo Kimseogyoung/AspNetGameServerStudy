@@ -1,5 +1,5 @@
-﻿using Protocol;
 using System.Collections.Generic;
+using Protocol;
 
 namespace ClientCore
 {

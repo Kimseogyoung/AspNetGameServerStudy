@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using Proto;
 using Protocol;
 using WebStudyServer.Extension;
@@ -8,7 +8,7 @@ namespace WebStudyServer
 {
     public class ErrorHandler
     {
-        public ErrorHandler() 
+        public ErrorHandler()
         {
         }
 

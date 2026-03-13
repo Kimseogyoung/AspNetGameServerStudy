@@ -1,4 +1,4 @@
-﻿using Proto;
+using Proto;
 using WebStudyServer.Base;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
@@ -17,7 +17,7 @@ namespace WebStudyServer.Component
 
         public AccountManager GetActive(ulong accountId)
         {
-            ReqHelper.ValidContext(TryGet(accountId, out var mgrAccount), "NOT_FOUND_ACCOUNT", ()=> new {AccountId = accountId});
+            ReqHelper.ValidContext(TryGet(accountId, out var mgrAccount), "NOT_FOUND_ACCOUNT", () => new { AccountId = accountId });
             ReqHelper.ValidContext(mgrAccount.IsActive(), "NOT_ACTIVE_ACCOUNT", () => new { AccountId = accountId, State = mgrAccount.Model.State });
             return mgrAccount;
         }

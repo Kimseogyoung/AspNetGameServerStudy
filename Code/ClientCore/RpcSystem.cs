@@ -1,5 +1,3 @@
-﻿using Proto;
-using Protocol;
 using System;
 using System.IO;
 using System.Net;
@@ -9,6 +7,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
+using Proto;
+using Protocol;
 
 namespace ClientCore
 {

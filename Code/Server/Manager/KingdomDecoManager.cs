@@ -1,11 +1,11 @@
-﻿using WebStudyServer.Repo;
-using WebStudyServer.Model;
-using Proto;
-using WebStudyServer.Helper;
-using WebStudyServer.GAME;
-using System.Security.Cryptography.Xml;
 using System.Globalization;
+using System.Security.Cryptography.Xml;
+using Proto;
 using Protocol;
+using WebStudyServer.GAME;
+using WebStudyServer.Helper;
+using WebStudyServer.Model;
+using WebStudyServer.Repo;
 
 namespace WebStudyServer.Manager
 {
@@ -44,7 +44,7 @@ namespace WebStudyServer.Manager
             {
                 // 창고로 cnt만큼 Store => Placed된게 Cnt만큼  있어야함
                 var placedCnt = _model.TotalCnt - _model.UnplacedCnt;
-                ReqHelper.ValidContext(placedCnt >= cnt, "NOT_ENOUGH_PLACED_KINGDOM_STRUCTURE", () => new { PlacedCnt = placedCnt, StoreCnt = cnt});
+                ReqHelper.ValidContext(placedCnt >= cnt, "NOT_ENOUGH_PLACED_KINGDOM_STRUCTURE", () => new { PlacedCnt = placedCnt, StoreCnt = cnt });
             }
             else if (cnt < 0)
             {

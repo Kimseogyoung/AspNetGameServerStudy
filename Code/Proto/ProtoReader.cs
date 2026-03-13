@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,10 +33,16 @@ namespace Proto
             for (int i = 2; i < lines.Length; i++)
             {
                 if (lines[i].StartsWith("#"))
+                {
                     continue;
+                }
 
                 List<string> value = lines[i].Split(",").ToList<string>();
-                if (value.Count < names.Count) continue;
+                if (value.Count < names.Count)
+                {
+                    continue;
+                }
+
                 columns.Add(value);
 
             }
@@ -54,7 +60,10 @@ namespace Proto
                     string value = columns[i][j];
 
 
-                    if (value == string.Empty) continue;
+                    if (value == string.Empty)
+                    {
+                        continue;
+                    }
 
                     var property = typeof(T).GetProperty(propertyName);
                     if (property == null)
@@ -69,7 +78,10 @@ namespace Proto
                     if (IsListType(propertyType))
                     {
                         if (!listValueDict.ContainsKey(propertyName))
+                        {
                             listValueDict[propertyName] = new List<string>();
+                        }
+
                         listValueDict[propertyName].Add(value);
                     }
                     else
@@ -151,12 +163,12 @@ namespace Proto
 
         private void RegisterType()
         {
-            foreach(var baseType in _baseTypeList)
+            foreach (var baseType in _baseTypeList)
             {
                 _typeMappingDict.Add(baseType.Key, baseType.Value);
-/*
-                var genericListType = typeof(List<>).MakeGenericType(baseType.Value);
-                _typeMappingDict.Add($"list:{baseType}", genericListType);*/
+                /*
+                                var genericListType = typeof(List<>).MakeGenericType(baseType.Value);
+                                _typeMappingDict.Add($"list:{baseType}", genericListType);*/
             }
 
             var enums = PrtEnum.GetEnums();
@@ -217,13 +229,13 @@ namespace Proto
 
         private Dictionary<string, Type> _typeMappingDict = new Dictionary<string, Type>();
         private Dictionary<string, Type> _baseTypeList = new Dictionary<string, Type>
-        { 
-            {"int", typeof(int) }, 
-            { "float", typeof(float) }, 
-            { "double", typeof(double) }, 
+        {
+            {"int", typeof(int) },
+            { "float", typeof(float) },
+            { "double", typeof(double) },
             { "bool", typeof(bool) },
             {"DateTime", typeof(DateTime) },
-            { "string", typeof(string) } 
+            { "string", typeof(string) }
         };
     }
 }

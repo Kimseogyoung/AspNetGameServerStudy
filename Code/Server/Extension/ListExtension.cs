@@ -1,4 +1,4 @@
-﻿using Protocol;
+using Protocol;
 
 namespace Server.Extension
 {
@@ -6,10 +6,10 @@ namespace Server.Extension
     {
         public static void AddOrInc(this List<ObjValue> objValList, ObjValue objValue)
         {
-            if(objValue.Key.IsNone())
+            if (objValue.Key.IsNone())
             {
                 return;
-            }    
+            }
 
             var findObjValue = objValList.Find(x => x.Key == objValue.Key);
             if (findObjValue == null)
@@ -24,7 +24,7 @@ namespace Server.Extension
 
         public static void AddOrInc(this List<ObjValue> objValList, List<ObjValue> objValList2)
         {
-            foreach(var objValue in objValList2)
+            foreach (var objValue in objValList2)
             {
                 objValList.AddOrInc(objValue);
             }

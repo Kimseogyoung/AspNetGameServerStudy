@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using NLog;
 using NLog.Targets;
 using Protocol;
 using Server.Serializer;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
 
@@ -63,20 +63,20 @@ namespace WebStudyServer
                 context.ContentType = outputType; // WriteAsync에서 context.ContentType 읽어서  httpContext.Response.ContentType에 넣어줌
                 await formatter.WriteAsync(context);
             }
-         /*   catch (MessagePackSerializationException ex)
-            {
-                if (ex.InnerException is OperationCanceledException)
-                {
-                    // Handle the cancellation specifically
-                    _logger.Warning("FAILED_WRITE_RESPONSE_BODY ErrorMsg({ErrorMsg}) Stack({Stack}) IsCancellationRequested({IsCancellationRequested})"
-                        , ex.InnerException.ToString(), ex.StackTrace, context.HttpContext.RequestAborted.IsCancellationRequested);
-                    throw new CancelReqException(context.HttpContext.Request.Path);
-                }
-                else
-                {
-                    throw;
-                }
-            }*/
+            /*   catch (MessagePackSerializationException ex)
+               {
+                   if (ex.InnerException is OperationCanceledException)
+                   {
+                       // Handle the cancellation specifically
+                       _logger.Warning("FAILED_WRITE_RESPONSE_BODY ErrorMsg({ErrorMsg}) Stack({Stack}) IsCancellationRequested({IsCancellationRequested})"
+                           , ex.InnerException.ToString(), ex.StackTrace, context.HttpContext.RequestAborted.IsCancellationRequested);
+                       throw new CancelReqException(context.HttpContext.Request.Path);
+                   }
+                   else
+                   {
+                       throw;
+                   }
+               }*/
             // NOTE: 중간에 클라 요청이 취소된 경우
             catch (OperationCanceledException ex) when (context.HttpContext.RequestAborted.IsCancellationRequested)
             {

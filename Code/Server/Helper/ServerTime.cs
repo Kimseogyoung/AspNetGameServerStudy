@@ -1,4 +1,4 @@
-﻿using System.Xml.Linq;
+using System.Xml.Linq;
 
 namespace WebStudyServer.Helper
 {
@@ -11,13 +11,19 @@ namespace WebStudyServer.Helper
                 var dateTime = DateTime.UtcNow;
 
                 if (_addHours != 0)
+                {
                     dateTime = dateTime.AddHours(_addHours);
+                }
 
                 if (_addMinutes != 0)
+                {
                     dateTime = dateTime.AddMinutes(_addMinutes);
+                }
 
                 if (_addSeconds != 0)
+                {
                     dateTime = dateTime.AddSeconds(_addSeconds);
+                }
 
                 return dateTime;
             }
@@ -49,8 +55,8 @@ namespace WebStudyServer.Helper
 
         public static ServerTime Instance
         {
-            get 
-            { 
+            get
+            {
                 if (_instance == null)
                 {
                     _instance = new ServerTime();

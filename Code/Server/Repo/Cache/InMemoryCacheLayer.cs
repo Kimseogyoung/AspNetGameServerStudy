@@ -12,7 +12,10 @@ namespace WebStudyServer.Repo.Cache
         public T Get<T>(CacheKey key) where T : ModelBase
         {
             if (_store.TryGetValue(key.Value, out var value))
+            {
                 return value as T;
+            }
+
             return null;
         }
 
@@ -34,7 +37,9 @@ namespace WebStudyServer.Repo.Cache
         public void BulkSet<T>(IEnumerable<T> values, Func<T, CacheKey> keySelector, TimeSpan? ttl = null) where T : ModelBase
         {
             foreach (var v in values)
+            {
                 _store[keySelector(v).Value] = v;
+            }
         }
 
         public void Invalidate(CacheKey key)

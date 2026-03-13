@@ -1,12 +1,12 @@
-﻿using System.Net.Sockets;
-using System.Net;
-using Microsoft.EntityFrameworkCore;
-using WebStudyServer.StartUp;
-using Microsoft.VisualBasic;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using Protocol;
-using WebStudyServer.Helper;
 using Server.Serializer;
+using WebStudyServer.Helper;
+using WebStudyServer.StartUp;
 
 namespace WebStudyServer
 {

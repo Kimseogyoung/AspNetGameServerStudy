@@ -1,6 +1,6 @@
-﻿using Dapper;
 using System.Numerics;
 using System.Threading.Channels;
+using Dapper;
 using WebStudyServer.Base;
 using WebStudyServer.Component;
 using WebStudyServer.Extension;
@@ -17,14 +17,14 @@ namespace WebStudyServer.Repo
         public ChannelComponent Channel => _channelComponent;
         public PlayerMapComponent PlayerMap => _playerMapComponent;
 
-        public RpcContext RpcContext {  get; private set; }
+        public RpcContext RpcContext { get; private set; }
         public AuthRepo(RpcContext rpcContext)
         {
             RpcContext = rpcContext;
         }
 
         protected override void PrepareComp()
-        { 
+        {
             // TODO: Lazy
             _accountComponent = new AccountComponent(this, _executor);
             _sessionComponent = new SessionComponent(this, _executor);
@@ -34,7 +34,7 @@ namespace WebStudyServer.Repo
         }
 
         #region PLAYER_MAP
-        
+
         #endregion
 
         private AccountComponent _accountComponent;

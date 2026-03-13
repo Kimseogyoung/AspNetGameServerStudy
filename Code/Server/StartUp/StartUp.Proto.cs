@@ -1,7 +1,7 @@
-﻿using Microsoft.OpenApi.Models;
+using System.Net;
+using Microsoft.OpenApi.Models;
 using Proto;
 using Server.Helper;
-using System.Net;
 using WebStudyServer.GAME;
 
 namespace WebStudyServer
@@ -12,8 +12,8 @@ namespace WebStudyServer
         {
             APP.Prt.Bind();
 
-            GachaConstant.Init(APP.Prt.GetSchedulePrts().ToList(), APP.Prt.GetGachaSchedulePrts().ToList(), 
-                APP.Prt.GetGachaProbPrts().ToList(), APP.Prt.GetGachaItemPrts().ToList(), 
+            GachaConstant.Init(APP.Prt.GetSchedulePrts().ToList(), APP.Prt.GetGachaSchedulePrts().ToList(),
+                APP.Prt.GetGachaProbPrts().ToList(), APP.Prt.GetGachaItemPrts().ToList(),
                 APP.Prt.GetCookiePrts().ToList(), APP.Prt.GetCookieSoulStonePrts().ToList());
         }
     }

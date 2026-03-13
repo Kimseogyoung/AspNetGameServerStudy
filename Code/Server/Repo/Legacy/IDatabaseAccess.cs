@@ -1,4 +1,4 @@
-﻿using WebStudyServer.Model;
+using WebStudyServer.Model;
 
 namespace WebStudyServer.Repo
 {
@@ -12,6 +12,6 @@ namespace WebStudyServer.Repo
 
         void Update(TModel entity);
 
-        void Create(TModel entity);  
+        void Create(TModel entity);
     }
 }

@@ -1,5 +1,5 @@
-﻿using Proto;
 using System.Security.Cryptography;
+using Proto;
 using WebStudyServer.Base;
 using WebStudyServer.Extension;
 using WebStudyServer.GAME;
@@ -36,7 +36,7 @@ namespace WebStudyServer.Component
                 var mgr = new ScheduleManager(_centerRepo, prt, mdl);
                 mgrList.Add(mgr);
             }
-          
+
 
             return mgrList;
         }
@@ -66,7 +66,7 @@ namespace WebStudyServer.Component
 
             _executor.Excute((sqlConnection, transaction) =>
             {
-                mdlSchedule = sqlConnection.SelectByPk<ScheduleModel>(new { Num = num}, transaction);
+                mdlSchedule = sqlConnection.SelectByPk<ScheduleModel>(new { Num = num }, transaction);
             });
 
             outSchedule = new ScheduleManager(_centerRepo, prt, mdlSchedule);

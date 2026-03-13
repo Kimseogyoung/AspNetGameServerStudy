@@ -1,15 +1,15 @@
-﻿using System.Net.Sockets;
-using System.Net;
-using Microsoft.EntityFrameworkCore;
-using WebStudyServer.StartUp;
-using Microsoft.VisualBasic;
 using System.Diagnostics;
-using Protocol;
+using System.Net;
+using System.Net.Sockets;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using Proto;
+using Protocol;
 using WebStudyServer.GAME;
+using WebStudyServer.StartUp;
 
 namespace WebStudyServer
-{ 
+{
     public class ProtoSystem
     {
 
