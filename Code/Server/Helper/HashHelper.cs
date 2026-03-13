@@ -12,7 +12,7 @@ namespace WebStudyServer.Helper
         {
             if (APP.Cfg.UseStrictValidation)
             {
-                _logger.Warn("STRICT_SKIP_HASH_CHECK");
+                Log.Warn("STRICT_SKIP_HASH_CHECK");
                 return false;
             }
 
@@ -21,7 +21,7 @@ namespace WebStudyServer.Helper
             {
                 if (useLog)
                 {
-                    _logger.Warn("NOT_MATCHED_HASH ReqHash({ReqHash}) CalHash({CalHash}) SecretKey({SecretKey}) Data({Data})",
+                    Log.Warn("NOT_MATCHED_HASH ReqHash({ReqHash}) CalHash({CalHash}) SecretKey({SecretKey}) Data({Data})",
                         targetHash, calHash, secret, obj);
                 }
                 return false;
@@ -90,17 +90,17 @@ namespace WebStudyServer.Helper
             }
 
             using var sha256 = SHA256.Create();
-            byte[] bytes = sha256.ComputeHash(jsonBytes);
+            var bytes = sha256.ComputeHash(jsonBytes);
 
             // 바이트 배열을 16진수 문자열로 변환
-            StringBuilder builder = new StringBuilder();
-            foreach (byte b in bytes)
+            var builder = new StringBuilder();
+            foreach (var b in bytes)
             {
                 builder.Append(b.ToString("x2"));
             }
             return builder.ToString();
         }
 
-        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
     }
 }

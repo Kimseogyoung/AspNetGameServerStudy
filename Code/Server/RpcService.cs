@@ -15,7 +15,7 @@ namespace Server
 
             foreach (var method in methodList)
             {
-                _nameToMethodDict.Add(method.Name, method);
+                NameToMethodDict.Add(method.Name, method);
             }
         }
 
@@ -37,7 +37,7 @@ namespace Server
                 }
 
                 var methodName = GetMethodNameFromPath(httpCtx, pattern);
-                if (!_nameToMethodDict.TryGetValue(methodName, out var rpcMethod))
+                if (!NameToMethodDict.TryGetValue(methodName, out var rpcMethod))
                 {
                     throw new GameException("NOT_FOUND_METHOD", new { MethodName = methodName });
                 }
@@ -62,12 +62,12 @@ namespace Server
                 //};
 
                 _logger.Info("Req Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcReqObj);
-                rpcResObj = await HandleMethod(rpcCtx, httpCtx, rpcMethod, rpcReqObj);
+                rpcResObj = await HandleMethodAsync(rpcCtx, httpCtx, rpcMethod, rpcReqObj);
             }
             catch (Exception exc)
             {
                 var errorSvc = httpCtx.RequestServices.GetRequiredService<ErrorHandler>();
-                rpcResObj = await errorSvc.HandleWithExceptionAsnyc(httpCtx, exc);
+                rpcResObj = await errorSvc.HandleWithExceptionAsync(httpCtx, exc);
             }
             finally
             {
@@ -75,7 +75,7 @@ namespace Server
             }
         }
 
-        private async Task<object> HandleMethod(RpcContext rpcCtx, HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj)
+        private async Task<object> HandleMethodAsync(RpcContext rpcCtx, HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj)
         {
             var userLockSvc = httpCtx.RequestServices.GetRequiredService<UserLockService>();
             var dbRepo = httpCtx.RequestServices.GetRequiredService<DbRepo>();
@@ -106,12 +106,11 @@ namespace Server
             return methodName;
         }
 
-        public Dictionary<string, IRpcMethod> NameToMethodDict => _nameToMethodDict;
+        public Dictionary<string, IRpcMethod> NameToMethodDict { get; } = [];
 
-        private readonly Dictionary<string, IRpcMethod> _nameToMethodDict = new Dictionary<string, IRpcMethod>();
         private readonly ILogger<RpcService> _logger;
 
-        private Dictionary<string, IDataSerializer> _contentTypeToSerializerDict = new()
+        private readonly Dictionary<string, IDataSerializer> _contentTypeToSerializerDict = new()
         {
             {MsgProtocol.JsonContentType, new JsonDataSerializer()},
             {MsgProtocol.ProtoBufContentType, new ProtoBufDataSerializer()},

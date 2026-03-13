@@ -6,7 +6,7 @@ namespace WebStudyServer.Repo
 {
     public class CenterRepo : RepoBase
     {
-        public ScheduleComponent Schedule => _scheduleComponent;
+        public ScheduleComponent Schedule { get; private set; }
         public RpcContext RpcContext { get; private set; }
 
         public CenterRepo(RpcContext rpcContext)
@@ -17,7 +17,7 @@ namespace WebStudyServer.Repo
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            _scheduleComponent = new ScheduleComponent(this, _executor);
+            Schedule = new ScheduleComponent(this, _executor);
         }
 
         public static CenterRepo CreateInstance(RpcContext rpcContext)
@@ -25,7 +25,5 @@ namespace WebStudyServer.Repo
             var centerRepo = new CenterRepo(rpcContext);
             return centerRepo;
         }
-
-        private ScheduleComponent _scheduleComponent;
     }
 }

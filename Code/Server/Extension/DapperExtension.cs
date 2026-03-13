@@ -11,9 +11,9 @@ namespace WebStudyServer.Extension
 {
     public static class DapperExtension
     {
-        private static readonly ConcurrentDictionary<Type, string> s_modelNameDict = new();
-        private static readonly ConcurrentDictionary<Type, QueryParam> s_queryParamDict = new();
-        private static readonly ConcurrentDictionary<Type, string> s_pkWhereClauseDict = new();
+        private static readonly ConcurrentDictionary<Type, string> ModelNameDict = new();
+        private static readonly ConcurrentDictionary<Type, QueryParam> QueryParamDict = new();
+        private static readonly ConcurrentDictionary<Type, string> PkWhereClauseDict = new();
 
         // 여러 필드를 기본 키로 설정하는 메서드
 
@@ -24,9 +24,9 @@ namespace WebStudyServer.Extension
             var tableName = type.Name;
             if (tableName.EndsWith("Model"))
             {
-                tableName = tableName.Substring(0, tableName.Length - 5);
+                tableName = tableName[..^5];
             }
-            s_modelNameDict[type] = tableName;
+            ModelNameDict[type] = tableName;
             SetPKWhereClause<T>(keyFields);
             SetQueryParameter<T>(keyFields);
         }
@@ -39,7 +39,7 @@ namespace WebStudyServer.Extension
             // `Id` 속성 존재 여부 확인
             var hasAutoIncreaseProperty = tableName != "Player" && typeof(T).GetProperty("Id") != null;
 
-            string insertSql = $@"
+            var insertSql = $@"
                 INSERT INTO {queryParam.TableName} ({queryParam.Fields}) 
                 VALUES ({queryParam.Parameters});";
 
@@ -67,7 +67,7 @@ namespace WebStudyServer.Extension
             var whereClause = GetWhereClause<T>();
 
             // Build UPDATE SQL
-            string updateSql = $@"
+            var updateSql = $@"
             UPDATE {tableName} 
             SET {queryParam.UpdateSet} 
             WHERE {whereClause};";
@@ -78,10 +78,11 @@ namespace WebStudyServer.Extension
         public static T SelectByPk<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
         {
             var tableName = GetTableName<T>();
-            var queryParam = GetQueryParameter<T>();
+
+            _ = GetQueryParameter<T>();
             var whereClause = GetWhereClause<T>();
 
-            string selectSql = $@"SELECT * FROM {tableName} WHERE {whereClause};";
+            var selectSql = $@"SELECT * FROM {tableName} WHERE {whereClause};";
 
             return connection.QuerySingleOrDefault<T>(selectSql, keyValues, transaction);
         }
@@ -89,7 +90,8 @@ namespace WebStudyServer.Extension
         public static T SelectByConditions<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
         {
             var tableName = GetTableName<T>();
-            var queryParam = GetQueryParameter<T>();
+
+            _ = GetQueryParameter<T>();
             var queryBuilder = new StringBuilder();
 
             // 기본 쿼리
@@ -126,10 +128,12 @@ namespace WebStudyServer.Extension
         public static IEnumerable<T> SelectListByPlayerId<T>(this IDbConnection connection, ulong playerId, IDbTransaction transaction)
         {
             var tableName = GetTableName<T>();
-            var queryParam = GetQueryParameter<T>();
-            var whereClause = GetWhereClause<T>();
 
-            string selectSql = $@"SELECT * FROM {tableName} WHERE PlayerId = @PlayerId;";
+            _ = GetQueryParameter<T>();
+
+            _ = GetWhereClause<T>();
+
+            var selectSql = $@"SELECT * FROM {tableName} WHERE PlayerId = @PlayerId;";
 
             return connection.Query<T>(selectSql, new { PlayerId = playerId }, transaction);
         }
@@ -176,7 +180,7 @@ namespace WebStudyServer.Extension
                 }
             }
 
-            string selectSql = queryBuilder.ToString();
+            var selectSql = queryBuilder.ToString();
 
             // Dapper 실행
             return connection.Query<T>(selectSql, keyValues, transaction);
@@ -192,7 +196,7 @@ namespace WebStudyServer.Extension
             }
 
             var whereClause = string.Join(" AND ", keyFields.Select(k => $"`{k}` = @{k}"));
-            s_pkWhereClauseDict[typeof(T)] = whereClause;
+            PkWhereClauseDict[typeof(T)] = whereClause;
         }
 
         private static void SetQueryParameter<T>(params string[] keyFields)
@@ -213,13 +217,13 @@ namespace WebStudyServer.Extension
             var queryParam = new QueryParam(tableName, fields, parameters, updateSet);
 
             // 캐시된 필드와 파라미터 정보 가져오기 또는 새로 생성
-            s_queryParamDict[typeof(T)] = queryParam;
+            QueryParamDict[typeof(T)] = queryParam;
         }
 
         private static string GetWhereClause<T>()
         {
             var tableName = GetTableName<T>();
-            if (!s_pkWhereClauseDict.TryGetValue(typeof(T), out var outWhereClause))
+            if (!PkWhereClauseDict.TryGetValue(typeof(T), out var outWhereClause))
             {
                 throw new GameException($"NOT_FOUND_WHERE_CLAUSE", new { TableName = tableName });
             }
@@ -230,7 +234,7 @@ namespace WebStudyServer.Extension
         private static QueryParam GetQueryParameter<T>()
         {
             var tableName = GetTableName<T>();
-            if (!s_queryParamDict.TryGetValue(typeof(T), out var outQueryParam))
+            if (!QueryParamDict.TryGetValue(typeof(T), out var outQueryParam))
             {
                 throw new GameException($"NOT_FOUND_QUERY_PARAM", new { TableName = tableName });
             }
@@ -241,7 +245,7 @@ namespace WebStudyServer.Extension
         private static string GetTableName<T>()
         {
             var typeName = typeof(T).Name;
-            if (!s_modelNameDict.TryGetValue(typeof(T), out var name))
+            if (!ModelNameDict.TryGetValue(typeof(T), out var name))
             {
                 throw new GameException($"NOT_FOUND_QUERY_PARAM", new { TableName = typeName });
             }

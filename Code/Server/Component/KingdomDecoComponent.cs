@@ -52,20 +52,20 @@ namespace WebStudyServer.Component
         {
             if (numList.Count == 0)
             {
-                return new List<KingdomDecoManager>();
+                return [];
             }
 
             var mdlList = GetMdlList(x => numList.Contains(x.Num));
             ReqHelper.ValidContext(mdlList.Count != numList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST",
                 () => new { NumList = numList, MdlNumList = mdlList.Select(x => x.Num) });
-            return mdlList.Select(x => new KingdomDecoManager(_userRepo, x)).ToList();
+            return [.. mdlList.Select(x => new KingdomDecoManager(_userRepo, x))];
         }
 
         private bool TryGetInternal(int num, out KingdomDecoModel outKingdomDeco)
         {
             outKingdomDeco = GetMdl(
-                Key.Single(_rpcContext.PlayerId, num),
-                db => db.SelectByPk<KingdomDecoModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
+                Key.Single(RpcCtx.PlayerId, num),
+                db => db.SelectByPk<KingdomDecoModel>(new { RpcCtx.PlayerId, Num = num }));
             return outKingdomDeco != null;
         }
     }

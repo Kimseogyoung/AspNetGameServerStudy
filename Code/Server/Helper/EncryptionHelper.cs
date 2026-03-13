@@ -6,7 +6,7 @@ namespace WebStudyServer.Helper
         {
             if (string.IsNullOrEmpty(secret))
             {
-                return new byte[0];
+                return [];
             }
             var byteArr = Convert.FromBase64String(secret);
             return byteArr;

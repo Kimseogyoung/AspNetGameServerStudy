@@ -29,17 +29,16 @@ namespace WebStudyServer
             return HandleInternalAsync(httpContext, exception);
         }
 
-        public async Task<object> HandleWithExceptionAsnyc(HttpContext httpContext, Exception exception)
+        public async Task<object> HandleWithExceptionAsync(HttpContext httpContext, Exception exception)
         {
             return await HandleInternalAsync(httpContext, exception);
         }
 
         private async Task<object> HandleInternalAsync(HttpContext httpContext, Exception exception)
         {
-            dynamic dynArgs = "";
             var errorCode = (int)EErrorCode.NO_HANDLING_ERROR;
             var errorMsg = exception.Message;
-            var errorHash = HashHelper.CalculateMD5Hash(errorMsg).Substring(0, 6);
+            var errorHash = HashHelper.CalculateMD5Hash(errorMsg)[..6];
             var errorArgs = "";
             switch (exception)
             {

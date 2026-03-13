@@ -43,14 +43,14 @@ namespace WebStudyServer.Helper
                         {
                             var text = JsonDataSerializer.SerializeStr(body);
                             await httpContext.Response.WriteAsync(text);
-                            _logger.Error("UNKNOWN_MSG_PROTOCOL ContentType{ContentType})", contentType, contentType);
+                            Log.Error("UNKNOWN_MSG_PROTOCOL ContentType{ContentType})", contentType, contentType);
                             return;
                         }
                 }
             }
             catch (ObjectDisposedException exc)
             {
-                _logger.Error("FAILED_WRITE_BODY ErrMsg({Msg}) CallStack({CallStack})", exc.Message, exc.StackTrace);
+                Log.Error("FAILED_WRITE_BODY ErrMsg({Msg}) CallStack({CallStack})", exc.Message, exc.StackTrace);
             }
 
         }
@@ -122,6 +122,6 @@ namespace WebStudyServer.Helper
         //    return clientIpAddress;
         //}
 
-        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
     }
 }

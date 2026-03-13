@@ -14,7 +14,8 @@ namespace WebStudyServer.Filter
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             var httpReq = context.HttpContext.Request;
-            var args = new Dictionary<string, object>()
+
+            _ = new Dictionary<string, object>()
             {
                 { "Method", httpReq.Method },
                 { "Path", httpReq.Path.ToString() },
@@ -35,7 +36,7 @@ namespace WebStudyServer.Filter
                 resBody = result.Value;
             }
 
-            var args = new Dictionary<string, object>()
+            _ = new Dictionary<string, object>()
             {
                 { "Method", httpReq.Method },
                 { "Path", httpReq.Path.ToString() },

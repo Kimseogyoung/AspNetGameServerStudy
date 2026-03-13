@@ -12,9 +12,9 @@ namespace WebStudyServer
         {
             APP.Prt.Bind();
 
-            GachaConstant.Init(APP.Prt.GetSchedulePrts().ToList(), APP.Prt.GetGachaSchedulePrts().ToList(),
-                APP.Prt.GetGachaProbPrts().ToList(), APP.Prt.GetGachaItemPrts().ToList(),
-                APP.Prt.GetCookiePrts().ToList(), APP.Prt.GetCookieSoulStonePrts().ToList());
+            GachaConstant.Init([.. APP.Prt.GetSchedulePrts()], [.. APP.Prt.GetGachaSchedulePrts()],
+                [.. APP.Prt.GetGachaProbPrts()], [.. APP.Prt.GetGachaItemPrts()],
+                [.. APP.Prt.GetCookiePrts()], [.. APP.Prt.GetCookieSoulStonePrts()]);
         }
     }
 }

@@ -31,7 +31,7 @@ namespace WebStudyServer.Helper
 
         public void SetTime(DateTime time)
         {
-            var befTime = UtcNow;
+            _ = UtcNow;
             var timeSpan = time - DateTime.UtcNow;
             _addHours = (int)timeSpan.TotalHours;
             _addMinutes = timeSpan.Minutes;
@@ -57,10 +57,7 @@ namespace WebStudyServer.Helper
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = new ServerTime();
-                }
+                _instance ??= new ServerTime();
                 return _instance;
             }
         }

@@ -8,12 +8,12 @@ namespace WebStudyServer.Manager
 {
     public partial class WorldStageManager : UserManagerBase<WorldStageModel>
     {
-        public int Num => _prt.Num;
-        public WorldStageProto Prt => _prt;
+        public int Num => Prt.Num;
+        public WorldStageProto Prt { get; } = null;
 
         public WorldStageManager(UserRepo userRepo, WorldStageModel model) : base(userRepo, model)
         {
-            _prt = APP.Prt.GetWorldStagePrt(model.Num);
+            Prt = APP.Prt.GetWorldStagePrt(model.Num);
         }
 
         public void SetStar(int star)
@@ -21,7 +21,5 @@ namespace WebStudyServer.Manager
             _model.Star = star;
             _userRepo.WorldStage.UpdateMdl(_model);
         }
-
-        private readonly WorldStageProto _prt = null;
     }
 }

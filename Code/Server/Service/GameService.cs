@@ -24,7 +24,7 @@ namespace Server.Service
         #region GAME
         public GameEnterResPacket Enter(GameEnterReqPacket req)
         {
-            var mgrPlayer = _userRepo.Player.Touch();
+            var mgrPlayer = OwnUser.Player.Touch();
 
             if (mgrPlayer.Model.State >= Proto.EPlayerState.PREPARED)
             {
@@ -45,7 +45,7 @@ namespace Server.Service
                 {
                     AccountId = accountId,
                     PlayerId = mgrPlayer.Id,
-                    ShardId = _userRepo.ShardId,
+                    ShardId = OwnUser.ShardId,
                 });
 
                 if (authRepo.Session.TryGetByAccountId(accountId, out var mdlSession))
@@ -64,7 +64,7 @@ namespace Server.Service
         public GameChangeNameResPacket ChangeNameFirst(GameChangeNameReqPacket req)
         {
             var reqName = req.PlayerName;
-            var mgrPlayer = _userRepo.Player.Touch();
+            var mgrPlayer = OwnUser.Player.Touch();
 
             mgrPlayer.ValidState(EPlayerState.CHANGED_NAME_FIRST);
 
@@ -87,8 +87,8 @@ namespace Server.Service
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
-            var hasItemCnt = _userRepo.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
+            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
+            var hasItemCnt = OwnUser.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
             ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
 
@@ -98,7 +98,7 @@ namespace Server.Service
 
             var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
 
-            var mgrKingdomStructure = _userRepo.KingdomStructure.Create(prtKingdomItem);
+            var mgrKingdomStructure = OwnUser.KingdomStructure.Create(prtKingdomItem);
             return new KingdomBuyStructureResPacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
@@ -111,8 +111,8 @@ namespace Server.Service
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
-            var mgrKingdomDeco = _userRepo.KingdomDeco.Touch(prtKingdomItem.Num);
+            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
+            var mgrKingdomDeco = OwnUser.KingdomDeco.Touch(prtKingdomItem.Num);
             ReqHelper.ValidContext(mgrKingdomDeco.Model.TotalCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_DECO_CNT",
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = mgrKingdomDeco.Model.TotalCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
 
@@ -131,9 +131,9 @@ namespace Server.Service
 
         public KingdomConstructStructureResPacket KingdomConstructStructure(KingdomConstructStructureReqPacket req)
         {
-            var mgrKingdomStructure = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
-            var mgrKingdomMap = _userRepo.KingdomMap.Touch();
+            var mgrKingdomStructure = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
+            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
+            var mgrKingdomMap = OwnUser.KingdomMap.Touch();
 
             // Tile 위치 중복 체크
             var valTileStartPos = mgrKingdomMap.ValidEmptyTile(req.StartTilePos, mgrKingdomStructure.Prt);
@@ -148,7 +148,7 @@ namespace Server.Service
             var chgCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
 
             // DELETEME: Map 형태로 저장 형식 변경            // 처리: 타일 설치
-            // var placedKingdomItem = _userRepo.PlacedKingdomItem.Create(mgrKingdomStructure.Prt, reqStartTilePos.X, reqStartTilePos.Y, mgrKingdomStructure);
+            // var placedKingdomItem = OwnUser.PlacedKingdomItem.Create(mgrKingdomStructure.Prt, reqStartTilePos.X, reqStartTilePos.Y, mgrKingdomStructure);
 
             // 처리: 건설 시작(상태 변경)
             mgrKingdomMap.ConstructStructure(mgrKingdomStructure, valTileStartPos);
@@ -156,22 +156,23 @@ namespace Server.Service
             return new KingdomConstructStructureResPacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
-                PlacedKingdomItemList = mgrKingdomMap.Snapshot.PlacedObjDict.Values.ToList(),
-                ChgObjList = new List<ChgObjPacket> { chgCostObj },
+                PlacedKingdomItemList = [.. mgrKingdomMap.Snapshot.PlacedObjDict.Values],
+                ChgObjList = [chgCostObj],
             };
         }
 
         public KingdomConstructDecoResPacket KingdomConstructDeco(KingdomConstructDecoReqPacket req)
         {
-            var mgrKingdomDeco = _userRepo.KingdomDeco.Touch(req.KingdomItemNum);
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
-            var mgrKingdomMap = _userRepo.KingdomMap.Touch();
+            var mgrKingdomDeco = OwnUser.KingdomDeco.Touch(req.KingdomItemNum);
+
+            _ = OwnUser.PlayerDetail.Touch();
+            var mgrKingdomMap = OwnUser.KingdomMap.Touch();
 
             // Tile 위치 중복 체크
             var valTileStartPos = mgrKingdomMap.ValidEmptyTile(req.StartTilePos, mgrKingdomDeco.Prt);
 
             // DELETEME: Map 형태로 저장 형식 변경 // 처리: 타일 설치
-            // var placedKingdomItem = _userRepo.PlacedKingdomItem.Create(mgrKingdomDeco.Prt, reqStartTilePos.X, reqStartTilePos.Y);
+            // var placedKingdomItem = OwnUser.PlacedKingdomItem.Create(mgrKingdomDeco.Prt, reqStartTilePos.X, reqStartTilePos.Y);
 
             // 처리: 건설 완료 (보유 개수 차감)
             mgrKingdomMap.ConstructDeco(mgrKingdomDeco, valTileStartPos);
@@ -180,13 +181,13 @@ namespace Server.Service
             return new KingdomConstructDecoResPacket
             {
                 KingdomDeco = _mapper.Map<KingdomDecoPacket>(mgrKingdomDeco.Model),
-                PlacedKingdomItemList = mgrKingdomMap.Snapshot.PlacedObjDict.Values.ToList(),
+                PlacedKingdomItemList = [.. mgrKingdomMap.Snapshot.PlacedObjDict.Values],
             };
         }
 
         public KingdomFinishConstructStructureResPacket KingdomFinishConstructStructure(KingdomFinishConstructStructureReqPacket req)
         {
-            var mgrKingdomItem = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
+            var mgrKingdomItem = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
             mgrKingdomItem.SetReady(EKingdomItemState.CONSTRUCTING);
             return new KingdomFinishConstructStructureResPacket
             {
@@ -196,15 +197,15 @@ namespace Server.Service
 
         public KingdomChangeItemResPacket KingdomItemChange(KingdomChangeItemReqPacket req)
         {
-            var mgrKingdomMap = _userRepo.KingdomMap.Touch();
+            var mgrKingdomMap = OwnUser.KingdomMap.Touch();
 
             // Chg + Place 리스트중에 겹치는거 없는지 검증
             var valSnapshot = mgrKingdomMap.ValiePlaceItemsSnapshot(req.StoreKingdomItemIdList, req.ChgKingdomItemList, req.PlaceKingdomItemList,
                 out var valStructureDeltaCntDict, out var valDecoDeltaCntDict);
 
             // Store + Create 한 변화량으로, 보유 수량 검증
-            var mgrKingdomStructureList = _userRepo.KingdomStructure.GetAllList(valStructureDeltaCntDict.Keys.ToList());
-            var mgrKingdomDecoList = _userRepo.KingdomDeco.GetAllList(valDecoDeltaCntDict.Keys.ToList());
+            var mgrKingdomStructureList = OwnUser.KingdomStructure.GetAllList([.. valStructureDeltaCntDict.Keys]);
+            var mgrKingdomDecoList = OwnUser.KingdomDeco.GetAllList([.. valDecoDeltaCntDict.Keys]);
             foreach (var mgrKingdomStructure in mgrKingdomStructureList)
             {
                 var cnt = valStructureDeltaCntDict[mgrKingdomStructure.Model.SfId];
@@ -253,19 +254,20 @@ namespace Server.Service
             {
                 KingdomStructureList = _mapper.Map<List<KingdomStructurePacket>>(mgrKingdomStructureList),
                 KingdomDecoList = _mapper.Map<List<KingdomDecoPacket>>(mgrKingdomDecoList),
-                PlacedKingdomItemList = mgrKingdomMap.Snapshot.PlacedObjDict.Values.ToList(),
+                PlacedKingdomItemList = [.. mgrKingdomMap.Snapshot.PlacedObjDict.Values],
             };
         }
 
         public KingdomDecTimeStructureResPacket KingdomStructureDecTime(KingdomDecTimeStructureReqPacket req)
         {
-            var mgrKingdomItem = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mgrKingdomItem = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
+            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
+
 
             // TODO: 남은 시간, 캐시 보유량 일치하는지 검증
             //
 
-            var cashAmount = mgrPlayerDetail.DecCash(req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
+            _ = mgrPlayerDetail.DecCash(req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
             mgrKingdomItem.DecTime();
             return new KingdomDecTimeStructureResPacket
             {
@@ -276,12 +278,12 @@ namespace Server.Service
 
         public KingdomFinishCraftStructureResPacket KingdomFinishCraftStructure(KingdomFinishCraftStructureReqPacket req)
         {
-            var mgrKingdomItem = _userRepo.KingdomStructure.Get(req.KingdomStructureId);
+            var mgrKingdomItem = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
             mgrKingdomItem.SetReady(EKingdomItemState.CRAFTING);
             return new KingdomFinishCraftStructureResPacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
-                ChgObjList = new List<ChgObjPacket>(), // TODO: Creft 결과
+                ChgObjList = [], // TODO: Creft 결과
             };
         }
         #endregion
@@ -301,7 +303,7 @@ namespace Server.Service
         {
             var centerRepo = _dbRepo.Center;
             var scheduleMgr = centerRepo.Schedule.Get(req.ScheduleNum, EScheduleTimeType.TOTAL);
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
 
             // Cost일치하는지 체크
             var valCnt = scheduleMgr.ValidGachaCnt(req.Cnt);
@@ -318,7 +320,7 @@ namespace Server.Service
                 var resultObjValue = gachaRandom.Roll(isNormal: true);
                 rewardObjValList.AddOrInc(resultObjValue);
 
-                GachaResultPacket gachaResult = null;
+                GachaResultPacket gachaResult;
                 switch (resultObjValue.Key.Type)
                 {
                     case EObjType.COOKIE:
@@ -359,13 +361,13 @@ namespace Server.Service
         #region COOKIE
         public CookieEnhanceStarResPacket EnhanceCookieStar(CookieEnhanceStarReqPacket req)
         {
-            var mgrCookie = _userRepo.Cookie.Touch(req.CookieNum);
-            ReqHelper.ValidContext(req.BefStar == mgrCookie.Model.Star, "NOT_EQUAL_COOKIE_STAR", () => new { CookieNum = mgrCookie.Model.Num, BefStar = req.BefStar, CookieStar = mgrCookie.Model.Star });
+            var mgrCookie = OwnUser.Cookie.Touch(req.CookieNum);
+            ReqHelper.ValidContext(req.BefStar == mgrCookie.Model.Star, "NOT_EQUAL_COOKIE_STAR", () => new { CookieNum = mgrCookie.Model.Num, req.BefStar, CookieStar = mgrCookie.Model.Star });
             var deltaLv = req.AftStar - req.BefStar;
             ReqHelper.ValidUnderFlowParam(deltaLv, "REQ_COOKIE_ENHANCE_DELTA_STAR");
 
             var valUsedSoulStone = mgrCookie.GetSoulStoneByEnhanceStar(mgrCookie.Model.Star, req.AftStar);
-            ReqHelper.ValidContext(req.UsedSoulStone == valUsedSoulStone, "NOT_EQUAL_USED_SOUL_STONE", () => new { CookieNum = mgrCookie.Model.Num, UsedSoulStone = req.UsedSoulStone, ValUsedSoulStone = valUsedSoulStone });
+            ReqHelper.ValidContext(req.UsedSoulStone == valUsedSoulStone, "NOT_EQUAL_USED_SOUL_STONE", () => new { CookieNum = mgrCookie.Model.Num, req.UsedSoulStone, ValUsedSoulStone = valUsedSoulStone });
 
             mgrCookie.EnhanceStar(req.AftStar, valUsedSoulStone);
 
@@ -377,14 +379,14 @@ namespace Server.Service
 
         public CookieEnhanceLvResPacket EnhanceCookieLv(CookieEnhanceLvReqPacket req)
         {
-            var mgrCookie = _userRepo.Cookie.Touch(req.CookieNum);
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mgrCookie = OwnUser.Cookie.Touch(req.CookieNum);
+            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
             var cfgLvCost = 10;
 
             var reason = $"ENHANCE_COOKIE_LV:{req.BefLv}~{req.AftLv}";
             var deltaLv = req.AftLv - req.BefLv;
             ReqHelper.ValidUnderFlowParam(deltaLv, "REQ_COOKIE_ENHANCE_DELTA_LV");
-            ReqHelper.ValidContext(req.BefLv == mgrCookie.Model.Lv, "NOT_EQUAL_COOKIE_Lv", () => new { CookieNum = mgrCookie.Model.Num, BefLv = req.BefLv, CookieLv = mgrCookie.Model.Lv });
+            ReqHelper.ValidContext(req.BefLv == mgrCookie.Model.Lv, "NOT_EQUAL_COOKIE_Lv", () => new { CookieNum = mgrCookie.Model.Num, req.BefLv, CookieLv = mgrCookie.Model.Lv });
             var valCostObj = ReqHelper.ValidCost(req.CostObj, EObjType.POINT_COOKIE_LV, 0, deltaLv * cfgLvCost, reason);
 
             var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
@@ -401,9 +403,9 @@ namespace Server.Service
         #region WORLD
         public WorldFinishStageFirstResPacket WorldFinishStageFirst(WorldFinishStageFirstReqPacket req)
         {
-            var mgrWorld = _userRepo.World.Touch(req.WorldNum);
-            var mgrWorldStage = _userRepo.WorldStage.Touch(req.StageNum);
-            ReqHelper.ValidContext(mgrWorld.TryGetTopOpenStagePrt(out var prtNextWorldStage), "NOT_FOUND_TOP_OPEN_STAGE", () => new { WorldNum = mgrWorld.Prt.Num, TopFinishStageNum = mgrWorld.Model.TopFinishStageNum });
+            var mgrWorld = OwnUser.World.Touch(req.WorldNum);
+            var mgrWorldStage = OwnUser.WorldStage.Touch(req.StageNum);
+            ReqHelper.ValidContext(mgrWorld.TryGetTopOpenStagePrt(out var prtNextWorldStage), "NOT_FOUND_TOP_OPEN_STAGE", () => new { WorldNum = mgrWorld.Prt.Num, mgrWorld.Model.TopFinishStageNum });
             ReqHelper.ValidContext(prtNextWorldStage.Num == req.StageNum, "NOT_EQUAL_FIRST_FINISH_STAGE", () => new { WorldNum = mgrWorld.Prt.Num, ReqStageNum = req.StageNum, ValStageNum = prtNextWorldStage.Num });
             ReqHelper.ValidContext(mgrWorld.IsFinishPrevWorld(), "NOT_FINISH_PREV_WORLD", () => new { WorldNum = mgrWorld.Prt.Num });
 
@@ -413,7 +415,7 @@ namespace Server.Service
             prtRewardList.AddOrInc(firstReward);
 
             // Star 보상
-            ReqHelper.ValidProto(req.Star <= mgrWorldStage.Prt.FirstRewardTypeList.Count, "TOO_MANY_STAGE_STAR", () => new { StageNum = req.StageNum, ReqStar = req.Star });
+            ReqHelper.ValidProto(req.Star <= mgrWorldStage.Prt.FirstRewardTypeList.Count, "TOO_MANY_STAGE_STAR", () => new { req.StageNum, ReqStar = req.Star });
             var valStar = req.Star;
             for (var star = 1; star <= valStar; star++)
             {
@@ -425,7 +427,7 @@ namespace Server.Service
             var valRewardList = ReqHelper.ValidRewardList(req.RewardValueList, prtRewardList, reason);
 
             // 처리
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
             var chgObjList = mgrPlayerDetail.IncRewardList(valRewardList, reason);
 
             mgrWorld.FinishStage(mgrWorldStage.Prt);
@@ -441,14 +443,14 @@ namespace Server.Service
 
         public WorldFinishStageRepeatResPacket WorldFinishStageRepeat(WorldFinishStageRepeatReqPacket req)
         {
-            var mgrWorld = _userRepo.World.Touch(req.WorldNum);
-            var mgrWorldStage = _userRepo.WorldStage.Touch(req.StageNum);
+            var mgrWorld = OwnUser.World.Touch(req.WorldNum);
+            var mgrWorldStage = OwnUser.WorldStage.Touch(req.StageNum);
 
-            ReqHelper.ValidContext(req.StageNum <= mgrWorld.Model.TopFinishStageNum, "NOT_FINISHED_STAGE", () => new { WorldNum = req.WorldNum, StageNum = req.StageNum, TopFinishStageNum = mgrWorld.Model.TopFinishStageNum });
+            ReqHelper.ValidContext(req.StageNum <= mgrWorld.Model.TopFinishStageNum, "NOT_FINISHED_STAGE", () => new { req.WorldNum, req.StageNum, mgrWorld.Model.TopFinishStageNum });
 
             // Star 보상
             var prtRewardList = new List<ObjValue>();
-            ReqHelper.ValidProto(req.Star <= mgrWorldStage.Prt.FirstRewardTypeList.Count, "TOO_MANY_STAGE_STAR", () => new { StageNum = req.StageNum, ReqStar = req.Star });
+            ReqHelper.ValidProto(req.Star <= mgrWorldStage.Prt.FirstRewardTypeList.Count, "TOO_MANY_STAGE_STAR", () => new { req.StageNum, ReqStar = req.Star });
             var valStar = req.Star;
             for (var star = mgrWorldStage.Model.Star + 1; star <= valStar; star++)
             {
@@ -465,7 +467,7 @@ namespace Server.Service
             var valRewardList = ReqHelper.ValidRewardList(req.RewardValueList, prtRewardList, reason);
 
             // 처리
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
             var chgObjList = mgrPlayerDetail.IncRewardList(valRewardList, reason);
             mgrWorld.FinishStage(mgrWorldStage.Prt);
             mgrWorldStage.SetStar(valStar);
@@ -480,9 +482,9 @@ namespace Server.Service
 
         public WorldRewardStarResPacket WorldRewardStar(WorldRewardStarReqPacket req)
         {
-            var mgrWorld = _userRepo.World.Touch(req.WorldNum);
+            var mgrWorld = OwnUser.World.Touch(req.WorldNum);
 
-            var valTotalStar = _userRepo.WorldStage.GetTotalStar(mgrWorld.Model.Num);
+            var valTotalStar = OwnUser.WorldStage.GetTotalStar(mgrWorld.Model.Num);
             var maxTotalStar = mgrWorld.Prt.RewardStarList[req.AftRewardStar - 1];
             ReqHelper.ValidContext(maxTotalStar <= valTotalStar, "NOT_ENOUGH_TOTAL_STAR", () => new { WorldNum = mgrWorld.Prt.Num, ValTotalStar = valTotalStar, PrtMaxTotalStar = maxTotalStar });
             ReqHelper.ValidContext(req.BefRewardStar >= mgrWorld.Model.RecvStarReward, "ALREADY_RECV_WORLD_STAR_REWARD", () => new { WorldNum = mgrWorld.Prt.Num, ReqBefStar = req.BefRewardStar });
@@ -498,7 +500,7 @@ namespace Server.Service
             var valReward = ReqHelper.ValidReward(req.RewardValue, prtReward, reason);
 
             // 처리
-            var mgrPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
             mgrWorld.RewardStar(req.AftRewardStar, valTotalStar);
             var chgObj = mgrPlayerDetail.IncReward(valReward, reason);
 
@@ -510,7 +512,7 @@ namespace Server.Service
         }
         #endregion
 
-        private UserRepo _userRepo => _dbRepo.OwnUser;
+        private UserRepo OwnUser => _dbRepo.OwnUser;
 
         private readonly DbRepo _dbRepo;
         private readonly IMapper _mapper;

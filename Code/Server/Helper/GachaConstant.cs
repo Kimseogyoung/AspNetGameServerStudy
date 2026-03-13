@@ -39,8 +39,8 @@ namespace Server.Helper
         public const int MaxWeight = 1000000;
 
         // 미리 계산
-        private static Dictionary<string, List<GachaWeightStruct>> _gradeGachaWeightDict = new(); // key별로 확률 , NumList를 저장
-        private static Dictionary<int, List<GachaWeightStruct>> _detailGachaWeightDict = new();
+        private static readonly Dictionary<string, List<GachaWeightStruct>> GradeGachaWeightDict = []; // key별로 확률 , NumList를 저장
+        private static readonly Dictionary<int, List<GachaWeightStruct>> DetailGachaWeightDict = [];
 
         private static List<ScheduleProto> _prtScheduleList;
         private static List<GachaScheduleProto> _prtGachaScheduleList;
@@ -48,7 +48,7 @@ namespace Server.Helper
         private static List<GachaItemProto> _prtGachaItemList;
         private static List<CookieProto> _prtCookieList;
 
-        private static Dictionary<int, CookieSoulStoneProto> _cookieNumSoulStoneDict = new();
+        private static Dictionary<int, CookieSoulStoneProto> _cookieNumSoulStoneDict = [];
 
         public static void Init(List<ScheduleProto> prtScheduleList, List<GachaScheduleProto> prtGachaScheduleList, List<GachaProbProto> prtGachaProbList, List<GachaItemProto> prtGachaItemList, List<CookieProto> prtCookieList, List<CookieSoulStoneProto> prtSoulStoneList)
         {
@@ -81,7 +81,7 @@ namespace Server.Helper
         public static List<GachaWeightStruct> GetNormalGachaWeightList(GachaScheduleProto prtGachaSchedule, int gachaSeq)
         {
             var key = MakeNormalGachaKey(prtGachaSchedule.Num, gachaSeq);
-            if (!_gradeGachaWeightDict.TryGetValue(key, out var rateStructList))
+            if (!GradeGachaWeightDict.TryGetValue(key, out var rateStructList))
             {
                 throw new Exception($"NOT_FOUND_GACHA_KEY:{key}");
             }
@@ -91,7 +91,7 @@ namespace Server.Helper
         public static List<GachaWeightStruct> GetPickupGachaWeightList(GachaScheduleProto prtGachaSchedule)
         {
             var key = MakePickupGachaKey(prtGachaSchedule.Num);
-            if (!_gradeGachaWeightDict.TryGetValue(key, out var rateStructList))
+            if (!GradeGachaWeightDict.TryGetValue(key, out var rateStructList))
             {
                 throw new Exception($"NOT_FOUND_GACHA_KEY:{key}");
             }
@@ -111,7 +111,7 @@ namespace Server.Helper
             foreach (var scheduleSeq in _prtGachaScheduleList.Select(x => x.Seq))
             {
                 var key = MakeNormalGachaKey(prtGachaSchedule.Num, scheduleSeq);
-                if (_gradeGachaWeightDict.ContainsKey(key)) // 이미 캐싱해둔거 있으면 스킵
+                if (GradeGachaWeightDict.ContainsKey(key)) // 이미 캐싱해둔거 있으면 스킵
                 {
                     continue;
                 }
@@ -121,7 +121,7 @@ namespace Server.Helper
                     new Exception("FAILED_TRY_GET_NORMAL_GACHA_WEIGHT_LIST");
                 }
 
-                _gradeGachaWeightDict.Add(key, weightList);
+                GradeGachaWeightDict.Add(key, weightList);
             }
         }
 
@@ -189,7 +189,7 @@ namespace Server.Helper
                  }*/
 
                 var key = MakePickupGachaKey(prtGachaSchedule.Num);
-                _gradeGachaWeightDict.Add(key, outWeightList);
+                GradeGachaWeightDict.Add(key, outWeightList);
             }
         }
 
@@ -235,7 +235,7 @@ namespace Server.Helper
         public static bool TryGetNormalGachaWeightList(GachaProbProto prtGachaProb, int gachaSeq, out List<GachaWeightStruct> outWeightList)
         {
             var includedNumList = GetNormalIncluededNumList(gachaSeq);
-            outWeightList = new List<GachaWeightStruct>();
+            outWeightList = [];
 
             for (var i = 0; i < prtGachaProb.GradeWeightList.Count; i++)
             {
@@ -254,7 +254,7 @@ namespace Server.Helper
         {
             var includedNumWithoutPickupList = GetPickupIncluededNumList(prtGachaSchedule.Tag, prtGachaSchedule.Seq, prtGachaSchedule.PickupCookieNumList);
 
-            outWeightList = new List<GachaWeightStruct>();
+            outWeightList = [];
 
             for (var i = 0; i < prtGachaProb.GradeWeightList.Count; i++)
             {
@@ -272,7 +272,7 @@ namespace Server.Helper
                 var pickupItemNum = prtGachaSchedule.PickupCookieNumList[i];
 
                 // 픽업 확률
-                var weightStruct = new GachaWeightStruct(EGradeType.NONE, weight, new List<int>() { pickupItemNum });
+                var weightStruct = new GachaWeightStruct(EGradeType.NONE, weight, [pickupItemNum]);
                 outWeightList.Add(weightStruct);
             }
 

@@ -85,8 +85,8 @@ namespace WebStudyServer
                                     Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Ops" }
                                 };
                 */
-                operation.Security = new List<OpenApiSecurityRequirement>
-                {
+                operation.Security =
+                [
                     new()
                     {
                         { securityScheme, new List<string>() }
@@ -95,7 +95,7 @@ namespace WebStudyServer
                     {
                         { opsSecurityScheme, new List<string>() }
                     }*/
-                };
+                ];
             }
         }
     }

@@ -8,38 +8,38 @@ using WebStudyServer.Helper;
 
 namespace Server
 {
-    public class RpcMethod<SVC, REQ, RES> : IRpcMethod where SVC : class where RES : IResPacket where REQ : IReqPacket, new()
+    public class RpcMethod<TSvc, TReq, TRes> : IRpcMethod where TSvc : class where TRes : IResPacket where TReq : IReqPacket, new()
     {
-        public delegate Task<RES> RunAsyncDelegate(SVC svc, REQ req);
-        public delegate RES RunDelegate(SVC svc, REQ req);
+        public delegate Task<TRes> RunAsyncDelegate(TSvc svc, TReq req);
+        public delegate TRes RunDelegate(TSvc svc, TReq req);
 
-        public string Name => _name;
-        public Type Req => _req;
-        public Type Res => _res;
+        public string Name { get; }
+        public Type Req { get; }
+        public Type Res { get; }
 
 
         public RpcMethod()
         {
-            _req = typeof(REQ);
-            _res = typeof(RES);
+            Req = typeof(TReq);
+            Res = typeof(TRes);
         }
 
         public RpcMethod(string name, RunAsyncDelegate runAsync, ERpcMethodType type = ERpcMethodType.NONE)
         {
-            _name = name;
+            Name = name;
             _runAsync = runAsync;
             _type = type;
-            _req = typeof(REQ);
-            _res = typeof(RES);
+            Req = typeof(TReq);
+            Res = typeof(TRes);
         }
 
         public RpcMethod(string name, RunDelegate run, ERpcMethodType type = ERpcMethodType.NONE)
         {
-            _name = name;
+            Name = name;
             _run = run;
             _type = type;
-            _req = typeof(REQ);
-            _res = typeof(RES);
+            Req = typeof(TReq);
+            Res = typeof(TRes);
         }
 
         public async Task<object> RunAsync(RpcContext rpcCtx, HttpContext httpCtx, object rpcReq)
@@ -51,17 +51,17 @@ namespace Server
                     break;
                 case ERpcMethodType.AUTHORIZED:
                     {
-                        ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { SessionKey = rpcCtx.SessionKey, SessionLoadState = rpcCtx.SessionLoadState });
-                        ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { SessionKey = rpcCtx.SessionKey });
+                        ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { rpcCtx.SessionKey, rpcCtx.SessionLoadState });
+                        ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { rpcCtx.SessionKey });
                         var dbRepo = httpCtx.RequestServices.GetRequiredService<DbRepo>();
                         dbRepo.BeginOwnUserRepo();
                         break;
                     }
                 case ERpcMethodType.AUTHORIZED_PLAYER:
                     {
-                        ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { SessionKey = rpcCtx.SessionKey, SessionLoadState = rpcCtx.SessionLoadState });
-                        ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { SessionKey = rpcCtx.SessionKey });
-                        ReqHelper.ValidContext(rpcCtx.PlayerId != 0, "NOT_FOUND_PLAYER_IN_RPC_METHOD_RUN", () => new { SessionKey = rpcCtx.SessionKey, AccountId = rpcCtx.AccountId });
+                        ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { rpcCtx.SessionKey, rpcCtx.SessionLoadState });
+                        ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { rpcCtx.SessionKey });
+                        ReqHelper.ValidContext(rpcCtx.PlayerId != 0, "NOT_FOUND_PLAYER_IN_RPC_METHOD_RUN", () => new { rpcCtx.SessionKey, rpcCtx.AccountId });
                         var dbRepo = httpCtx.RequestServices.GetRequiredService<DbRepo>();
                         dbRepo.BeginOwnUserRepo();
                         break;
@@ -72,7 +72,7 @@ namespace Server
                     throw new Exception($"NO_HANDLING_RPC_METHOD_TYPE:{_type}");
             }
 
-            var rpcSvc = httpCtx.RequestServices.GetRequiredService<SVC>();
+            var rpcSvc = httpCtx.RequestServices.GetRequiredService<TSvc>();
             if (_runAsync == null)
             {
                 if (_run == null)
@@ -81,14 +81,14 @@ namespace Server
                 }
                 else
                 {
-                    var res = await Task.Run(() => _run!(rpcSvc, (REQ)rpcReq));
+                    var res = await Task.Run(() => _run!(rpcSvc, (TReq)rpcReq));
                     res.Info = new ResInfoPacket { ResultCode = (int)EErrorCode.OK };
                     return res;
                 }
             }
             else
             {
-                var res = await _runAsync(rpcSvc, (REQ)rpcReq);
+                var res = await _runAsync(rpcSvc, (TReq)rpcReq);
                 res.Info = new ResInfoPacket { ResultCode = (int)EErrorCode.OK };
                 return res;
             }
@@ -96,24 +96,21 @@ namespace Server
 
         public List<OpenApiParameter> CreateOpenApiParameters()
         {
-            return OpenApiHelper.CreateParameters(typeof(REQ));
+            return OpenApiHelper.CreateParameters(typeof(TReq));
         }
 
         public OpenApiRequestBody CreateOpenApiRequestBody()
         {
-            return OpenApiHelper.CreateRequestBody(typeof(REQ));
+            return OpenApiHelper.CreateRequestBody(typeof(TReq));
         }
 
         public OpenApiResponses CreateOpenApiResponse()
         {
-            return OpenApiHelper.CreateResponse(typeof(RES));
+            return OpenApiHelper.CreateResponse(typeof(TRes));
         }
 
 
         private readonly ERpcMethodType _type;
-        private readonly string _name;
-        private readonly Type _req;
-        private readonly Type _res;
         private readonly RunAsyncDelegate _runAsync;
         private readonly RunDelegate _run;
 

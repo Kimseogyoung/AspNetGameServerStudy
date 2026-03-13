@@ -144,8 +144,9 @@ namespace WebStudyServer.Manager
         public double IncGold(double amount, string reason) => IncGoldInternal(amount, reason);
         private double DecGoldInternal(double amount, string reason)
         {
-            var befGold = _model.Gold;
-            var befAccGold = _model.AccGold;
+            _ = _model.Gold;
+
+            _ = _model.AccGold;
 
             _model.Gold -= amount;
             _model.AccGold -= amount;
@@ -155,8 +156,9 @@ namespace WebStudyServer.Manager
 
         private double IncGoldInternal(double amount, string reason)
         {
-            var befGold = _model.Gold;
-            var befAccGold = _model.AccGold;
+            _ = _model.Gold;
+
+            _ = _model.AccGold;
 
             _model.Gold += amount;
             _model.AccGold += amount;
@@ -171,7 +173,8 @@ namespace WebStudyServer.Manager
         private double DecExpInternal(double amount, string reason)
         {
             var befExp = _model.Exp;
-            var befAccExp = _model.AccExp;
+
+            _ = _model.AccExp;
 
             ReqHelper.ValidEnough(amount, befExp, "PLAYER_EXP", reason);
 
@@ -183,8 +186,9 @@ namespace WebStudyServer.Manager
 
         private double IncExpInternal(double amount, string reason)
         {
-            var befExp = _model.Exp;
-            var befAccExp = _model.AccExp;
+            _ = _model.Exp;
+
+            _ = _model.AccExp;
 
             _model.Exp += amount;
             _model.AccExp += amount;
@@ -204,13 +208,14 @@ namespace WebStudyServer.Manager
             var befRealCash = _model.RealCash;
             var befAccRealCash = _model.AccRealCash;
             var befTotalCash = befFreeCash + befRealCash;
-            var befAccTotalCash = befAccFreeCash + befAccRealCash;
+
+            _ = befAccFreeCash + befAccRealCash;
 
             ReqHelper.ValidEnough(amount, befTotalCash, "PLAYER_TOTAL_CASH", reason);
 
             // RealCash 먼저 소모
-            double realCashCost = Math.Min(befRealCash, amount);
-            double freeCashCost = amount - realCashCost;
+            var realCashCost = Math.Min(befRealCash, amount);
+            var freeCashCost = amount - realCashCost;
 
             if (realCashCost > 0)
             {
@@ -232,8 +237,9 @@ namespace WebStudyServer.Manager
 
         private double IncFreeCashInternal(double amount, string reason)
         {
-            var befGold = _model.FreeCash;
-            var befAccGold = _model.AccFreeCash;
+            _ = _model.FreeCash;
+
+            _ = _model.AccFreeCash;
 
             _model.FreeCash += amount;
             _model.AccFreeCash += amount;
@@ -243,8 +249,9 @@ namespace WebStudyServer.Manager
 
         private double IncRealCashInternal(double amount, string reason)
         {
-            var befGold = _model.RealCash;
-            var befAccGold = _model.AccRealCash;
+            _ = _model.RealCash;
+
+            _ = _model.AccRealCash;
 
             _model.RealCash += amount;
             _model.AccRealCash += amount;

@@ -11,11 +11,11 @@ namespace WebStudyServer.Repo
 {
     public class AuthRepo : RepoBase
     {
-        public AccountComponent Account => _accountComponent;
-        public SessionComponent Session => _sessionComponent;
-        public DeviceComponent Device => _deviceComponent;
-        public ChannelComponent Channel => _channelComponent;
-        public PlayerMapComponent PlayerMap => _playerMapComponent;
+        public AccountComponent Account { get; private set; }
+        public SessionComponent Session { get; private set; }
+        public DeviceComponent Device { get; private set; }
+        public ChannelComponent Channel { get; private set; }
+        public PlayerMapComponent PlayerMap { get; private set; }
 
         public RpcContext RpcContext { get; private set; }
         public AuthRepo(RpcContext rpcContext)
@@ -26,21 +26,16 @@ namespace WebStudyServer.Repo
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            _accountComponent = new AccountComponent(this, _executor);
-            _sessionComponent = new SessionComponent(this, _executor);
-            _deviceComponent = new DeviceComponent(this, _executor);
-            _channelComponent = new ChannelComponent(this, _executor);
-            _playerMapComponent = new PlayerMapComponent(this, _executor);
+            Account = new AccountComponent(this, _executor);
+            Session = new SessionComponent(this, _executor);
+            Device = new DeviceComponent(this, _executor);
+            Channel = new ChannelComponent(this, _executor);
+            PlayerMap = new PlayerMapComponent(this, _executor);
         }
 
         #region PLAYER_MAP
 
         #endregion
 
-        private AccountComponent _accountComponent;
-        private SessionComponent _sessionComponent;
-        private DeviceComponent _deviceComponent;
-        private ChannelComponent _channelComponent;
-        private PlayerMapComponent _playerMapComponent;
     }
 }

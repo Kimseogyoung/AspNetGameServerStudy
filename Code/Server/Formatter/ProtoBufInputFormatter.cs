@@ -21,6 +21,6 @@ namespace WebStudyServer
             return await InputFormatterResult.SuccessAsync(result).ConfigureAwait(false);
         }
 
-        private ProtoBufDataSerializer _serializer = new ProtoBufDataSerializer();
+        private readonly ProtoBufDataSerializer _serializer = new();
     }
 }

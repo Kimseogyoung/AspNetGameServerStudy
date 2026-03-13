@@ -24,14 +24,14 @@ namespace WebStudyServer
             var writer = httoContext.Response.BodyWriter;
             if (writer == null)
             {
-                await _serializer.SerializeAsync(httoContext.Response.Body, obj);
+                await Serializer.SerializeAsync(httoContext.Response.Body, obj);
             }
 
             var memory = writer.GetMemory(); // 메모리 버퍼 할당
             using (var stream = new MemoryStream(memory.Length))
             {
                 // MemoryStream에 직렬화
-                await _serializer.SerializeAsync(stream, obj);
+                await Serializer.SerializeAsync(stream, obj);
                 stream.Position = 0;
 
                 // MemoryStream 데이터를 PipeWriter에 기록
@@ -42,6 +42,6 @@ namespace WebStudyServer
             await writer.FlushAsync().AsTask();
         }
 
-        private static ProtoBufDataSerializer _serializer = new ProtoBufDataSerializer();
+        private static readonly ProtoBufDataSerializer Serializer = new();
     }
 }

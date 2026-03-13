@@ -53,7 +53,7 @@ namespace Server.Serializer
             return ret;
         }
 
-        public readonly static JsonSerializerOptions Opts = new JsonSerializerOptions
+        public static readonly JsonSerializerOptions Opts = new()
         {
             //PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             TypeInfoResolver = new DefaultJsonTypeInfoResolver() // .net 8.0 이상부터 설정 필요.

@@ -18,16 +18,16 @@ namespace WebStudyServer.Service
         public AuthSignUpResPacket SignUp(string idfv)
         {
             // idfv 찾기.           
-            if (_authRepo.Device.TryGet(idfv, out var mgrDevice))
+            if (Auth.Device.TryGet(idfv, out var mgrDevice))
             {
                 // 일치하는 idfv가 이미 있다면 해당 계정 정보 리턴
 
                 // 계정 찾기
-                if (_authRepo.Account.TryGet(mgrDevice.Model.AccountId, out var originMgrAccount))
+                if (Auth.Account.TryGet(mgrDevice.Model.AccountId, out var originMgrAccount))
                 {
-                    if (_authRepo.Channel.TryGetActive(originMgrAccount.Id, out var originMgrChannel))
+                    if (Auth.Channel.TryGetActive(originMgrAccount.Id, out var originMgrChannel))
                     {
-                        var originMgrSession = _authRepo.Session.Touch(originMgrAccount.Id);
+                        var originMgrSession = Auth.Session.Touch(originMgrAccount.Id);
                         originMgrSession.Start();
 
                         return new AuthSignUpResPacket
@@ -48,13 +48,13 @@ namespace WebStudyServer.Service
             // ~idfv가 없다면
 
             // Account 생성
-            var mgrAccount = _authRepo.Account.Create();
+            var mgrAccount = Auth.Account.Create();
             // Session 생성
-            var mgrSession = _authRepo.Session.Touch(mgrAccount.Id);
+            var mgrSession = Auth.Session.Touch(mgrAccount.Id);
             // Device 정보 생성
-            mgrDevice = _authRepo.Device.Create(idfv);
+            _ = Auth.Device.Create(idfv);
             // 채널 생성
-            var mgrChannel = _authRepo.Channel.Create(mgrAccount.Id, EChannelType.GUEST);
+            var mgrChannel = Auth.Channel.Create(mgrAccount.Id, EChannelType.GUEST);
 
             // 세션 갱신 및 리턴
             mgrSession.Start();
@@ -75,13 +75,13 @@ namespace WebStudyServer.Service
         public AuthSignInResPacket SignIn(string channelId)
         {
             // 채널 찾기
-            var mgrChannel = _authRepo.Channel.Get(channelId);
+            var mgrChannel = Auth.Channel.Get(channelId);
 
             // 채널 -> Account 찾기
-            var mgrAccount = _authRepo.Account.GetActive(mgrChannel.Model.AccountId);
+            var mgrAccount = Auth.Account.GetActive(mgrChannel.Model.AccountId);
 
             // 세션 갱신 및 리턴
-            var mgrSession = _authRepo.Session.Touch(mgrAccount.Id);
+            var mgrSession = Auth.Session.Touch(mgrAccount.Id);
             mgrSession.Start();
             return new AuthSignInResPacket
             {
@@ -97,6 +97,6 @@ namespace WebStudyServer.Service
         }
 
         private readonly DbRepo _dbRepo;
-        private AuthRepo _authRepo => _dbRepo.Auth;
+        private AuthRepo Auth => _dbRepo.Auth;
     }
 }

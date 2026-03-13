@@ -38,8 +38,8 @@ namespace Server.Helper
 
         private int RollGachaInternal(IEnumerable<int> weights)
         {
-            var OriginRoll = _random.Next(GachaConstant.MaxWeight);
-            var roll = OriginRoll;
+            var originRoll = _random.Next(GachaConstant.MaxWeight);
+            var roll = originRoll;
 
             var idx = -1;
             foreach (var rate in weights)
@@ -61,6 +61,6 @@ namespace Server.Helper
         private readonly Random _random = Random.Shared;
 
         private static int _currentSeq;
-        private GachaScheduleProto _prt;
+        private readonly GachaScheduleProto _prt;
     }
 }

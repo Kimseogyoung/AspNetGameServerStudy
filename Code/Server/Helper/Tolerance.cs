@@ -5,9 +5,9 @@ namespace Server.Helper
         public static bool AreEquals(double value1, double value2)
         {
             var diff = Math.Abs(value1 - value2);
-            return diff < c_doubleTolerance;
+            return diff < DoubleTolerance;
         }
 
-        public const double c_doubleTolerance = 0.001;
+        public const double DoubleTolerance = 0.001;
     }
 }

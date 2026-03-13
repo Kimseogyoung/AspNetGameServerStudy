@@ -11,7 +11,7 @@ namespace Server.Serializer
 
         public async Task<T> DeserializeAsync<T>(Stream inStream)
         {
-            var type = typeof(T);
+            _ = typeof(T);
             using var ms = new MemoryStream();
             await inStream.CopyToAsync(ms);
             ms.Position = 0;

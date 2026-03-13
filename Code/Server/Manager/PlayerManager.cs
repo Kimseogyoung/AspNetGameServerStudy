@@ -25,7 +25,7 @@ namespace WebStudyServer.Manager
             // ------------------------------------------------------------ 디폴트 모델 생성           
             // PlayerDetail
             var newMdlPlayerDetail = mapper.Map<PlayerDetailModel>(pakDefaultPlayer);
-            newMdlPlayerDetail.PlayerId = _rpcContext.PlayerId;
+            newMdlPlayerDetail.PlayerId = RpcCtx.PlayerId;
             var mdlPlayerDetail = _userRepo.PlayerDetail.CreateMdl(newMdlPlayerDetail);
 
             // Cookie
@@ -33,7 +33,7 @@ namespace WebStudyServer.Manager
             foreach (var pakCookie in pakDefaultPlayer.CookieList)
             {
                 var newMdlCookie = mapper.Map<CookieModel>(pakCookie);
-                newMdlCookie.PlayerId = _rpcContext.PlayerId;
+                newMdlCookie.PlayerId = RpcCtx.PlayerId;
                 var mdlCookie = _userRepo.Cookie.CreateMdl(newMdlCookie);
                 mdlCookieList.Add(mdlCookie);
             }
@@ -43,7 +43,7 @@ namespace WebStudyServer.Manager
             foreach (var pakKingdomStructure in pakDefaultPlayer.KingdomStructureList)
             {
                 var newMdlKingdomStructure = mapper.Map<KingdomStructureModel>(pakKingdomStructure);
-                newMdlKingdomStructure.PlayerId = _rpcContext.PlayerId;
+                newMdlKingdomStructure.PlayerId = RpcCtx.PlayerId;
                 var mdlKingdomStructure = _userRepo.KingdomStructure.CreateMdl(newMdlKingdomStructure);
                 mdlKindgomStructureList.Add(mdlKingdomStructure);
             }
@@ -53,14 +53,14 @@ namespace WebStudyServer.Manager
             foreach (var pakKingdomDeco in pakDefaultPlayer.KingdomDecoList)
             {
                 var newMdlKingdomDeco = mapper.Map<KingdomDecoModel>(pakKingdomDeco);
-                newMdlKingdomDeco.PlayerId = _rpcContext.PlayerId;
+                newMdlKingdomDeco.PlayerId = RpcCtx.PlayerId;
                 var mdlKingdomDeco = _userRepo.KingdomDeco.CreateMdl(newMdlKingdomDeco);
                 mdlKindgomDecoList.Add(mdlKingdomDeco);
             }
 
             // KingdomMap
             var (newMdlKingdomMap, kingdomSnapshot) = KingdomMapManager.CreateKingdomMapModelDummy(pakDefaultPlayer.KingdomMap, mdlKindgomStructureList);
-            newMdlKingdomMap.PlayerId = _rpcContext.PlayerId;
+            newMdlKingdomMap.PlayerId = RpcCtx.PlayerId;
             var mdlKingdomMap = _userRepo.KingdomMap.CreateMdl(newMdlKingdomMap);
 
             _model.Lv = pakDefaultPlayer.Lv;
@@ -92,7 +92,7 @@ namespace WebStudyServer.Manager
                 State = mdlKingdomMap.State,
                 SizeX = mdlKingdomMap.SizeX,
                 SizeY = mdlKingdomMap.SizeY,
-                PlacedKingdomItemList = kingdomSnapshot.PlacedObjDict.Values.ToList()
+                PlacedKingdomItemList = [.. kingdomSnapshot.PlacedObjDict.Values]
             };
 
             return pakPlayer;
@@ -110,7 +110,7 @@ namespace WebStudyServer.Manager
             pakPlayer.AccRealCash = mdlPlayerDetail.Model.AccRealCash;
             pakPlayer.AccFreeCash = mdlPlayerDetail.Model.AccFreeCash;
 
-            var mdlCookieList = _userRepo.Cookie.GetMdlList();
+            _ = _userRepo.Cookie.GetMdlList();
             pakPlayer.CookieList = mapper.Map<List<CookiePacket>>(_userRepo.Cookie.GetMdlList());
             pakPlayer.PointList = mapper.Map<List<PointPacket>>(_userRepo.Point.GetMdlList());
             pakPlayer.TicketList = mapper.Map<List<TicketPacket>>(_userRepo.Ticket.GetMdlList());
@@ -124,7 +124,7 @@ namespace WebStudyServer.Manager
                 State = mgrKingdomMap.Model.State,
                 SizeX = mgrKingdomMap.Model.SizeX,
                 SizeY = mgrKingdomMap.Model.SizeY,
-                PlacedKingdomItemList = mgrKingdomMap.Snapshot.PlacedObjDict.Values.ToList()
+                PlacedKingdomItemList = [.. mgrKingdomMap.Snapshot.PlacedObjDict.Values]
             };
 
             return pakPlayer;

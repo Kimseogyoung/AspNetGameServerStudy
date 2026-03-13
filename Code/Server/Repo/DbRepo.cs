@@ -159,11 +159,11 @@ namespace Server.Repo
                 throw new Exception("dd");
             }
 
-            var shardIdx = shardMap[shardId];
+            var shardIdx = _shardMap[shardId];
             var dbConnCnt = APP.Cfg.UserDbConnectionStrList.Count;
             if (shardIdx >= dbConnCnt)
             {
-                shardIdx = shardIdx % dbConnCnt;
+                shardIdx %= dbConnCnt;
             }
 
             return APP.Cfg.UserDbConnectionStrList[shardIdx];
@@ -171,20 +171,20 @@ namespace Server.Repo
 
         public int c_maxShardCnt = 64;
 
-        private int[] shardMap = new int[]
-        {   0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
+        private readonly int[] _shardMap =
+        [   0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
             0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
             0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
             0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
             0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
             0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
-            0, 1, 2, 4 };
+            0, 1, 2, 4 ];
 
         private Lazy<AuthRepo> _lazyAuthRepo = null;
         private Lazy<CenterRepo> _lazyCenterRepo = null;
         private Lazy<AllUserRepo> _lazyAllUserRepo = null;
 
-        private Dictionary<string, DBSqlExecutor> _dbExecutorDict = new();
+        private readonly Dictionary<string, DBSqlExecutor> _dbExecutorDict = [];
         private readonly RpcContext _rpcContext;
         private readonly ICacheLayer _cacheLayer;
         private readonly ILogger _logger;

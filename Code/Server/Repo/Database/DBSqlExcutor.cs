@@ -13,7 +13,7 @@ namespace WebStudyServer.Repo.Database
             return excutor;
         }
 
-        private IDbConnection _connection;
+        private readonly IDbConnection _connection;
         private IDbTransaction _transaction;
 
         public DBSqlExecutor(string connectionStr)
@@ -40,20 +40,14 @@ namespace WebStudyServer.Repo.Database
 
         public void Commit()
         {
-            if (_transaction != null)
-            {
-                _transaction.Commit();
-            }
+            _transaction?.Commit();
 
             CloseInternal();
         }
 
         public void Rollback()
         {
-            if (_transaction != null)
-            {
-                _transaction.Rollback();
-            }
+            _transaction?.Rollback();
 
             CloseInternal();
         }
@@ -65,10 +59,7 @@ namespace WebStudyServer.Repo.Database
 
         private void CloseInternal()
         {
-            if (_transaction != null)
-            {
-                _transaction.Dispose();
-            }
+            _transaction?.Dispose();
 
             if (_connection != null)
             {

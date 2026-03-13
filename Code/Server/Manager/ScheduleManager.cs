@@ -15,10 +15,9 @@ namespace WebStudyServer.Manager
         public DateTime ContentStartTime { get; private set; }
         public DateTime ContentEndTime { get; private set; }
         public int State { get; private set; }
-        public GachaScheduleProto GachaPrt => _prtGacha;
+        public GachaScheduleProto GachaPrt { get; }
 
-        private ScheduleProto _prt;
-        private GachaScheduleProto _prtGacha;
+        private readonly ScheduleProto _prt;
 
         public ScheduleManager(CenterRepo centerRepo, ScheduleProto prt, ScheduleModel model = null) : base(centerRepo, model)
         {
@@ -27,7 +26,7 @@ namespace WebStudyServer.Manager
             switch (_prt.Type)
             {
                 case EScheduleType.GACHA:
-                    _prtGacha = APP.Prt.GetGachaSchedulePrt(_prt.Num); // <-------이거 변하지 않는 값이므로 Schedule관련 정보채로 캐싱해두는것 좋음
+                    GachaPrt = APP.Prt.GetGachaSchedulePrt(_prt.Num); // <-------이거 변하지 않는 값이므로 Schedule관련 정보채로 캐싱해두는것 좋음
                     break;
             }
 
@@ -80,19 +79,19 @@ namespace WebStudyServer.Manager
         #region GACHA
         public int ValidGachaCnt(int reqCnt)
         {
-            var findIdx = _prtGacha.CntList.FindIndex(x => x == reqCnt);
+            var findIdx = GachaPrt.CntList.FindIndex(x => x == reqCnt);
             ReqHelper.ValidContext(findIdx != -1, "NOT_EQUAL_GACHA_CNT", () => new { ScheduleNum = _prt.Num, ReqCnt = reqCnt });
 
-            return _prtGacha.CntList[findIdx];
+            return GachaPrt.CntList[findIdx];
         }
 
         public ObjValue ValidGachaCost(CostObjPacket reqCostObj, int valCnt)
         {
-            var costIdx = _prtGacha.CostTypeList.FindIndex(x => x == reqCostObj.Type);
+            var costIdx = GachaPrt.CostTypeList.FindIndex(x => x == reqCostObj.Type);
             ReqHelper.ValidContext(costIdx != -1, "NOT_EQUAL_GACHA_COST_TYPE", () => new { ScheduleNum = _prt.Num, ReqCostObj = reqCostObj });
 
-            var prtCostType = _prtGacha.CostTypeList[costIdx];
-            var prtCostAmount = _prtGacha.CostAmountList[costIdx];
+            var prtCostType = GachaPrt.CostTypeList[costIdx];
+            var prtCostAmount = GachaPrt.CostAmountList[costIdx];
             var valCostAmount = prtCostAmount * valCnt;
 
             var reason = MakeGachaReason(valCnt);
@@ -102,7 +101,7 @@ namespace WebStudyServer.Manager
 
         public string MakeGachaReason(int cnt)
         {
-            var reason = $"GACHA:{Num}:{_prtGacha.Tag}:{cnt}";
+            var reason = $"GACHA:{Num}:{GachaPrt.Tag}:{cnt}";
             return reason;
         }
         #endregion

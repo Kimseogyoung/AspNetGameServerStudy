@@ -49,7 +49,7 @@ namespace WebStudyServer
             finally
             {
                 _logger.Debug("ExitUserLock AccountId({AccountId})", accountId);
-                var releaseLockResult = dbRepo.Auth.RunCommand<long>("SELECT RELEASE_LOCK(@id)", new MySqlParameter[] { idParam });
+                var releaseLockResult = dbRepo.Auth.RunCommand<long>("SELECT RELEASE_LOCK(@id)", [idParam]);
                 if (releaseLockResult <= 0) // NOTE: result가 0이면 ReleaseLock에 실패
                 {
                     _logger.Error("FAILED_RELEASE_USER_LOCK AccountId({AccountId}) Result({Result})", accountId, releaseLockResult);

@@ -26,19 +26,19 @@ namespace WebStudyServer.Manager
             if (cnt > 0)
             {
                 // 창고로 이동시켜야하므로 배치 상태인 것만 가능
-                ReqHelper.ValidContext(_model.State != EKingdomItemState.STORED && _model.State != EKingdomItemState.NONE, "NOT_PLACED_KINGDOM_STRUCTURE", () => new { State = _model.State });
+                ReqHelper.ValidContext(_model.State is not EKingdomItemState.STORED and not EKingdomItemState.NONE, "NOT_PLACED_KINGDOM_STRUCTURE", () => new { _model.State });
             }
             else if (cnt < 0)
             {
                 // 배치해야하므로 보유 상태인 것만 가능
-                ReqHelper.ValidContext(_model.State == EKingdomItemState.STORED, "PLACED_KINGDOM_STRUCTURE", () => new { State = _model.State });
+                ReqHelper.ValidContext(_model.State == EKingdomItemState.STORED, "PLACED_KINGDOM_STRUCTURE", () => new { _model.State });
             }
         }
 
         public void Construct()
         {
             _model.State = EKingdomItemState.CONSTRUCTING;
-            _model.EndTime = _rpcContext.ServerTime + TimeSpan.FromSeconds(Prt.ConstructSec);
+            _model.EndTime = RpcCtx.ServerTime + TimeSpan.FromSeconds(Prt.ConstructSec);
 
             if (Prt.ConstructSec == 0)
             {
@@ -51,8 +51,8 @@ namespace WebStudyServer.Manager
 
         public void SetReady(EKingdomItemState correctBefState)
         {
-            ReqHelper.ValidContext(_model.State == correctBefState, "NOT_EQUAL_CORRECT_BEF_KINGDOM_STRUCTURE_STATE", () => new { State = _model.State, CorrectBefState = correctBefState });
-            ReqHelper.ValidContext(_model.EndTime >= _rpcContext.ServerTime, "NOT_FINISHED_KINGDOM_STRUCTURE", () => new { EndTime = _model.EndTime, ServerTime = _rpcContext.ServerTime });
+            ReqHelper.ValidContext(_model.State == correctBefState, "NOT_EQUAL_CORRECT_BEF_KINGDOM_STRUCTURE_STATE", () => new { _model.State, CorrectBefState = correctBefState });
+            ReqHelper.ValidContext(_model.EndTime >= RpcCtx.ServerTime, "NOT_FINISHED_KINGDOM_STRUCTURE", () => new { _model.EndTime, RpcCtx.ServerTime });
 
             _model.EndTime = DateTime.MinValue;
             _model.State = EKingdomItemState.READY;

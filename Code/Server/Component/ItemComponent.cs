@@ -40,8 +40,8 @@ namespace WebStudyServer.Component
         public bool TryGetInternal(int num, out ItemModel outItem)
         {
             outItem = GetMdl(
-                Key.Single(_rpcContext.PlayerId, num),
-                db => db.SelectByPk<ItemModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
+                Key.Single(RpcCtx.PlayerId, num),
+                db => db.SelectByPk<ItemModel>(new { RpcCtx.PlayerId, Num = num }));
             return outItem != null;
         }
     }

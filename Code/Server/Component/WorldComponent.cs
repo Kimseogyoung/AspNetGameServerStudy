@@ -38,8 +38,8 @@ namespace WebStudyServer.Component
         public bool TryGetInternal(int num, out WorldModel outWorld)
         {
             outWorld = GetMdl(
-                Key.Single(_rpcContext.PlayerId, num),
-                db => db.SelectByPk<WorldModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
+                Key.Single(RpcCtx.PlayerId, num),
+                db => db.SelectByPk<WorldModel>(new { RpcCtx.PlayerId, Num = num }));
             return outWorld != null;
         }
     }

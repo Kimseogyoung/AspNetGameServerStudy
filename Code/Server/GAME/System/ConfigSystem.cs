@@ -21,9 +21,9 @@ namespace WebStudyServer
         public bool UseUserLock { get; private set; }
         public TimeSpan UserLockTimeoutSpan { get; private set; } = new();
         public MySqlServerVersion? DbVersion { get; private set; }
-        public List<string> CenterDbConnectionStrList { get; private set; } = new();
-        public List<string> UserDbConnectionStrList { get; private set; } = new();
-        public List<string> AuthDbConnectionStrList { get; private set; } = new();
+        public List<string> CenterDbConnectionStrList { get; private set; } = [];
+        public List<string> UserDbConnectionStrList { get; private set; } = [];
+        public List<string> AuthDbConnectionStrList { get; private set; } = [];
         public TimeSpan SessionExpireSpan { get; private set; } = new();
         public string DefaultPlayerPath { get; private set; } = string.Empty;
         public PlayerPacket PakDefaultPlayer { get; private set; } = new();

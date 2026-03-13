@@ -25,7 +25,7 @@ namespace WebStudyServer.Component
             // 전부 로드
             _executor.Excute((sqlConnection, transaction) =>
             {
-                mdlList = sqlConnection.SelectListByConditions<ScheduleModel>(null, transaction).ToList();
+                mdlList = [.. sqlConnection.SelectListByConditions<ScheduleModel>(null, transaction)];
             });
 
             var prts = APP.Prt.GetSchedulePrts();

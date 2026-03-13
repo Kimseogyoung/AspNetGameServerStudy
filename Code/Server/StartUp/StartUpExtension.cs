@@ -10,7 +10,7 @@ namespace WebStudyServer.StartUp
             var strValue = configuration.GetValue<string>(key);
             if (string.IsNullOrEmpty(strValue))
             {
-                return new();
+                return [];
             }
 
             var list = JsonSerializer.Deserialize<List<string>>(strValue)!;

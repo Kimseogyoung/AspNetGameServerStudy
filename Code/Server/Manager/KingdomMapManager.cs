@@ -119,8 +119,8 @@ namespace WebStudyServer.Manager
         public KingdomMapSnapshotPacket ValiePlaceItemsSnapshot(List<ulong> reqStoreIdList, List<ChgKingdomItemPacket> reqChgItemList, List<ChgKingdomItemPacket> reqPlaceItemList,
             out Dictionary<ulong, int> structureDeltaCntDict, out Dictionary<int, int> decoDeltaCntDict)
         {
-            structureDeltaCntDict = new();
-            decoDeltaCntDict = new();
+            structureDeltaCntDict = [];
+            decoDeltaCntDict = [];
 
             var copySnapshot = Snapshot.DeepCopy();
 
@@ -374,7 +374,7 @@ namespace WebStudyServer.Manager
             {
                 for (var y = 0; y < sizeY; y++)
                 {
-                    snapshot.TileMap.Add(new List<ulong>());
+                    snapshot.TileMap.Add([]);
                     for (var x = 0; x < sizeX; x++)
                     {
                         snapshot.TileMap[y].Add(0);
@@ -392,7 +392,7 @@ namespace WebStudyServer.Manager
                 {
                     if (y >= snapshot.TileMap.Count)
                     {
-                        snapshot.TileMap.Add(new List<ulong>());
+                        snapshot.TileMap.Add([]);
                     }
 
                     for (var x = 0; x < sizeX; x++)

@@ -39,8 +39,8 @@ namespace WebStudyServer.Component
         private bool TryGetInternal(out KingdomMapModel outKingdomMap)
         {
             outKingdomMap = GetMdl(
-                Key.Single(_rpcContext.PlayerId),
-                db => db.SelectByPk<KingdomMapModel>(new { PlayerId = _rpcContext.PlayerId }));
+                Key.Single(RpcCtx.PlayerId),
+                db => db.SelectByPk<KingdomMapModel>(new { RpcCtx.PlayerId }));
             return outKingdomMap != null;
         }
     }

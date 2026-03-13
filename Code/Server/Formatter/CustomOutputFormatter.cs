@@ -100,6 +100,6 @@ namespace WebStudyServer
         }
 
         private readonly NLog.ILogger _logger = LogManager.GetCurrentClassLogger();
-        private readonly Dictionary<string, IOutputFormatter> _formatterDict = new();
+        private readonly Dictionary<string, IOutputFormatter> _formatterDict = [];
     }
 }

@@ -4,7 +4,7 @@ namespace WebStudyServer.Helper
     {
         public static long DateTimeToTimeStamp(DateTime value) => ((DateTimeOffset)value).ToUnixTimeMilliseconds();
 
-        public static DateTime TimeStampToDateTime(long value) => s_timestampBaseTime.AddMilliseconds(value).ToUniversalTime();
+        public static DateTime TimeStampToDateTime(long value) => TimestampBaseTime.AddMilliseconds(value).ToUniversalTime();
 
         public static bool IsValidDateTime(DateTime nowTime, DateTime startTime, DateTime endTime)
         {
@@ -15,6 +15,6 @@ namespace WebStudyServer.Helper
             return true;
         }
 
-        private static readonly DateTime s_timestampBaseTime = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime TimestampBaseTime = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
     }
 }

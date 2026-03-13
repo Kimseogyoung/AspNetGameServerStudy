@@ -53,18 +53,18 @@ namespace WebStudyServer.Component
         {
             if (sfIdList.Count == 0)
             {
-                return new List<KingdomStructureManager>();
+                return [];
             }
 
             var mdlList = GetMdlList(x => sfIdList.Contains(x.SfId));
             ReqHelper.ValidContext(mdlList.Count != sfIdList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST",
                 () => new { SfIdList = sfIdList, MdlIdList = mdlList.Select(x => x.SfId) });
-            return mdlList.Select(x => new KingdomStructureManager(_userRepo, x)).ToList();
+            return [.. mdlList.Select(x => new KingdomStructureManager(_userRepo, x))];
         }
 
         private bool TryGetInternal(ulong sfId, out KingdomStructureModel outKingdomStructure)
         {
-            var kingdomStructure = GetMdl(Key.Single(_rpcContext.PlayerId, sfId), db => db.SelectByPk<KingdomStructureModel>(new { SfId = sfId }));
+            var kingdomStructure = GetMdl(Key.Single(RpcCtx.PlayerId, sfId), db => db.SelectByPk<KingdomStructureModel>(new { SfId = sfId }));
 
             outKingdomStructure = kingdomStructure;
             return outKingdomStructure != null;

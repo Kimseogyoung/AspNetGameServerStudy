@@ -31,7 +31,7 @@ namespace WebStudyServer.Manager
 
             // 최대 보유량 검증
             ReqHelper.ValidContext(_model.TotalCnt + cnt <= Prt.MaxCnt, "FULL_MAX_DECO_CNT",
-                () => new { Num = _model.Num, TotalCnt = _model.TotalCnt, PrtMaxCnt = Prt.MaxCnt });
+                () => new { _model.Num, _model.TotalCnt, PrtMaxCnt = Prt.MaxCnt });
 
             _model.TotalCnt += cnt;
             _model.UnplacedCnt += cnt;
@@ -49,13 +49,13 @@ namespace WebStudyServer.Manager
             else if (cnt < 0)
             {
                 // cnt만큼 배치해야함 => Unplaced된게 Cnt만큼 있어야함
-                ReqHelper.ValidContext(_model.UnplacedCnt >= cnt, "NOT_ENOUGH_UNPLACED_KINGDOM_STRUCTURE", () => new { State = _model.State });
+                ReqHelper.ValidContext(_model.UnplacedCnt >= cnt, "NOT_ENOUGH_UNPLACED_KINGDOM_STRUCTURE", () => new { _model.State });
             }
         }
 
         public void Place(int cnt = 1)
         {
-            ReqHelper.ValidContext(_model.UnplacedCnt >= cnt, "NOT_ENOUGH_DECO_CNT", () => new { Num = _model.Num, UnplacedCnt = _model.UnplacedCnt, DecCnt = cnt });
+            ReqHelper.ValidContext(_model.UnplacedCnt >= cnt, "NOT_ENOUGH_DECO_CNT", () => new { _model.Num, _model.UnplacedCnt, DecCnt = cnt });
             var befTotalCnt = _model.TotalCnt;
             var befUnplacedCnt = _model.UnplacedCnt;
 
@@ -66,7 +66,7 @@ namespace WebStudyServer.Manager
         public void Store(int cnt = 1)
         {
             var placedCnt = _model.TotalCnt - _model.UnplacedCnt;
-            ReqHelper.ValidContext(placedCnt >= cnt, "NOT_ENOUGH_DECO_CNT", () => new { Num = _model.Num, UnplacedCnt = _model.UnplacedCnt, DecCnt = cnt });
+            ReqHelper.ValidContext(placedCnt >= cnt, "NOT_ENOUGH_DECO_CNT", () => new { _model.Num, _model.UnplacedCnt, DecCnt = cnt });
             var befTotalCnt = _model.TotalCnt;
             var befUnplacedCnt = _model.UnplacedCnt;
 
@@ -83,7 +83,7 @@ namespace WebStudyServer.Manager
              _model.EndTileX = endTileX;
              _model.EndTileY = endTileY;
              _model.State = EKingdomItemState.CONSTRUCTING;
-             _model.EndTime = _rpcContext.ServerTime + TimeSpan.FromSeconds(Prt.ConstructSec);
+             _model.EndTime = RpcCtx.ServerTime + TimeSpan.FromSeconds(Prt.ConstructSec);
              _userRepo.KingdomItem.Update(_model);
          }
 

@@ -10,7 +10,7 @@ namespace WebStudyServer.Base
     {
         protected readonly IDbLayer _db;
         protected UserRepo _userRepo;
-        protected RpcContext _rpcContext => _userRepo.RpcContext;
+        protected RpcContext RpcCtx => _userRepo.RpcContext;
 
         protected UserComponentBase(UserRepo userRepo, IDbLayer db)
         {
@@ -35,11 +35,11 @@ namespace WebStudyServer.Base
 
         // DB 미스 시 BulkSet으로 캐시 적재
         public List<T> GetMdlList()
-            => _db.GetListByPlayerId<T>(ListKeyFor(_rpcContext.PlayerId), _rpcContext.PlayerId, KeyFor);
+            => _db.GetListByPlayerId<T>(ListKeyFor(RpcCtx.PlayerId), RpcCtx.PlayerId, KeyFor);
 
         // 캐시 히트 시 predicate 적용. 미스 시 캐시 미갱신.
         public List<T> GetMdlList(Func<T, bool> predicate)
-            => _db.GetListByPlayerIdAndPredicate<T>(ListKeyFor(_rpcContext.PlayerId), _rpcContext.PlayerId, predicate);
+            => _db.GetListByPlayerIdAndPredicate<T>(ListKeyFor(RpcCtx.PlayerId), RpcCtx.PlayerId, predicate);
 
         protected T GetMdl(CacheKey key, Func<IDbExecutor, T> dbFetch)
             => _db.Get<T>(key, dbFetch);

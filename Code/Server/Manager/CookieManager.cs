@@ -27,8 +27,9 @@ namespace WebStudyServer.Manager
 
         public double IncCookie(int amount, string reason)
         {
-            var befStarExp = _model.SoulStone;
-            var befAccStarExp = _model.AccSoulStone;
+            _ = _model.SoulStone;
+
+            _ = _model.AccSoulStone;
 
             var soulStoneCnt = amount * _prt.InitSoulStone;
             if (_model.State != ECookieState.AVAILABLE)
@@ -49,8 +50,9 @@ namespace WebStudyServer.Manager
 
         public double IncSoulStone(int amount, string reason)
         {
-            var befStarExp = _model.SoulStone;
-            var befAccStarExp = _model.AccSoulStone;
+            _ = _model.SoulStone;
+
+            _ = _model.AccSoulStone;
 
             _model.SoulStone += amount;
             _model.AccSoulStone += amount;
@@ -60,7 +62,7 @@ namespace WebStudyServer.Manager
 
         public void EnhanceStar(int aftStar, int usedSoulStone)
         {
-            var befStar = _model.Star;
+            _ = _model.Star;
             var befSoulStone = _model.SoulStone;
             ReqHelper.ValidEnough(usedSoulStone, befSoulStone, $"COOKIE_SOUL_STONE:{_prt.Num}", "ENHANCE_STAR");
 
@@ -71,7 +73,7 @@ namespace WebStudyServer.Manager
 
         public void EnhanceLv(int aftLv)
         {
-            var befLv = _model.Lv;
+            _ = _model.Lv;
 
             _model.Lv = aftLv;
             _userRepo.Cookie.UpdateMdl(_model);

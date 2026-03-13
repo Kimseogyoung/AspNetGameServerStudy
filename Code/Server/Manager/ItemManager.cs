@@ -13,7 +13,8 @@ namespace WebStudyServer.Manager
         public double DecAmount(double amount, string reason)
         {
             var befAmount = _model.Amount;
-            var befAccAmount = _model.AccAmount;
+
+            _ = _model.AccAmount;
             ReqHelper.ValidEnough(amount, befAmount, $"ITEM_{_model.Num}", reason);
 
             _model.Amount -= amount;
@@ -24,8 +25,9 @@ namespace WebStudyServer.Manager
 
         public double IncAmount(double amount, string reason)
         {
-            var befAmount = _model.Amount;
-            var befAccAmount = _model.AccAmount;
+            _ = _model.Amount;
+
+            _ = _model.AccAmount;
 
             _model.Amount += amount;
             _model.AccAmount += amount;

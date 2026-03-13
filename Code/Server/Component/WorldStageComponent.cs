@@ -41,14 +41,14 @@ namespace WebStudyServer.Component
             // TODO: 캐시
             var sql = "SELECT SUM(RewardAmount) FROM WorldStage WHERE PlayerId = @PlayerId AND WorldNum = @WorldNum";
             return DbFactory.Execute(db => db.QuerySingle<int>(sql,
-                new { PlayerId = _rpcContext.PlayerId, WorldNum = worldNum }));
+                new { RpcCtx.PlayerId, WorldNum = worldNum }));
         }
 
         public bool TryGetInternal(int num, out WorldStageModel outWorldStage)
         {
             outWorldStage = GetMdl(
-                Key.Single(_rpcContext.PlayerId, num),
-                db => db.SelectByPk<WorldStageModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
+                Key.Single(RpcCtx.PlayerId, num),
+                db => db.SelectByPk<WorldStageModel>(new { RpcCtx.PlayerId, Num = num }));
             return outWorldStage != null;
         }
     }

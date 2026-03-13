@@ -107,7 +107,7 @@ namespace WebStudyServer
                 return;
             }
 
-            var isUpdate = mgrSession.Extend();
+            _ = mgrSession.Extend();
 
             if (mgrSession.IsExpire())
             {
@@ -154,7 +154,7 @@ namespace WebStudyServer
         {
             var urlPath = httpContext.Request.Path.ToString();
             ApiPath = urlPath;
-            ApiHash = HashHelper.CalculateSha256Hash(urlPath).Substring(0, 10);
+            ApiHash = HashHelper.CalculateSha256Hash(urlPath)[..10];
         }
 
         public void SetTimestamp(HttpContext httpContext)

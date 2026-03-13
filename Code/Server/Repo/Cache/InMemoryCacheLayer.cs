@@ -7,7 +7,7 @@ namespace WebStudyServer.Repo.Cache
     // GetList: listKey.Value를 prefix로 StartsWith 스캔 — BulkSet으로 저장된 개별 키 대상.
     public class InMemoryCacheLayer : ICacheLayer
     {
-        private readonly Dictionary<string, object> _store = new();
+        private readonly Dictionary<string, object> _store = [];
 
         public T Get<T>(CacheKey key) where T : ModelBase
         {

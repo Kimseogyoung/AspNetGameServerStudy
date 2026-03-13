@@ -87,7 +87,7 @@ namespace WebStudyServer.Component
 
             _executor.Excute((sqlConnection, transaction) =>
             {
-                mdlChannelList = sqlConnection.SelectListByConditions<ChannelModel>(new { AccountId = accountId }, transaction).ToList();
+                mdlChannelList = [.. sqlConnection.SelectListByConditions<ChannelModel>(new { AccountId = accountId }, transaction)];
             });
 
             return mdlChannelList;

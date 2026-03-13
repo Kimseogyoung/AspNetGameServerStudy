@@ -9,8 +9,8 @@ namespace WebStudyServer.Repo
 {
     public class AllUserRepo
     {
-        private List<DBSqlExecutor> _executorList = new();
-        private List<string> _dbConnStrList => APP.Cfg.UserDbConnectionStrList;
+        private readonly List<DBSqlExecutor> _executorList = [];
+        private List<string> DbConnStrList => APP.Cfg.UserDbConnectionStrList;
         public AllUserRepo(List<DBSqlExecutor> executorList)
         {
         }
@@ -22,7 +22,7 @@ namespace WebStudyServer.Repo
 
             // 찾기
             PlayerModel foundMdlPlayer = null;
-            foreach (DBSqlExecutor executor in _executorList)
+            foreach (var executor in _executorList)
             {
                 var sql = "SELECT * FROM Player WHERE ProfileName = @ProfileName";
                 executor.Excute((sqlConnection, transaction) =>
