@@ -1,18 +1,25 @@
-﻿using WebStudyServer.Base;
+using WebStudyServer.Base;
 using WebStudyServer.Manager;
 using WebStudyServer.Repo;
 using WebStudyServer.Model;
-using WebStudyServer.Repo.Database;
-using WebStudyServer.Extension;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.GAME;
+using Server.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class WorldComponent : UserComponentBase<WorldModel>
     {
-        public WorldComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
+        public static class Key
         {
+            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<WorldModel>(playerId, playerId, num);
+            public static CacheKey List(ulong playerId) => CacheKey.ListFor<WorldModel>(playerId);
         }
+
+        public WorldComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+
+        protected override CacheKey KeyFor(WorldModel model) => Key.Single(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
 
         public WorldManager Touch(int worldNum)
         {
@@ -25,20 +32,14 @@ namespace WebStudyServer.Component
                 });
             }
 
-            var mgrWorld = new WorldManager(_userRepo, mdlWorld);
-            return mgrWorld;
+            return new WorldManager(_userRepo, mdlWorld);
         }
 
         public bool TryGetInternal(int num, out WorldModel outWorld)
         {
-            WorldModel mdlWorld = null;
-
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                mdlWorld = sqlConnection.SelectByPk<WorldModel>(new { PlayerId = _userRepo.RpcContext.PlayerId, Num = num }, transaction);
-            });
-
-            outWorld = mdlWorld;
+            outWorld = GetMdl(
+                Key.Single(_rpcContext.PlayerId, num),
+                db => db.SelectByPk<WorldModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
             return outWorld != null;
         }
     }

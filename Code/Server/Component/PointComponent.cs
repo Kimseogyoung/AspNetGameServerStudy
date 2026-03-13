@@ -1,19 +1,25 @@
-﻿using WebStudyServer.Base;
+using WebStudyServer.Base;
 using WebStudyServer.Manager;
 using WebStudyServer.Repo;
 using WebStudyServer.Model;
-using WebStudyServer.Repo.Database;
-using WebStudyServer.Extension;
+using WebStudyServer.Repo.Cache;
+using Server.Repo.Database;
 using Proto;
 
 namespace WebStudyServer.Component
 {
     public class PointComponent : UserComponentBase<PointModel>
     {
-        public PointComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
+        public static class Key
         {
-
+            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<PointModel>(playerId, playerId, num);
+            public static CacheKey List(ulong playerId) => CacheKey.ListFor<PointModel>(playerId);
         }
+
+        public PointComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+
+        protected override CacheKey KeyFor(PointModel model) => Key.Single(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
 
         public PointManager Touch(EObjType objType)
         {
@@ -28,20 +34,14 @@ namespace WebStudyServer.Component
                 });
             }
 
-            var mgrPoint = new PointManager(_userRepo, mdlPoint);
-            return mgrPoint;
+            return new PointManager(_userRepo, mdlPoint);
         }
 
         public bool TryGetInternal(int num, out PointModel outPoint)
         {
-            PointModel mdlPoint = null;
-
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                mdlPoint = sqlConnection.SelectByPk<PointModel>(new { PlayerId = _userRepo.RpcContext.PlayerId, Num = num }, transaction);
-            });
-
-            outPoint = mdlPoint;
+            outPoint = GetMdl(
+                Key.Single(_rpcContext.PlayerId, num),
+                db => db.SelectByPk<PointModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
             return outPoint != null;
         }
     }

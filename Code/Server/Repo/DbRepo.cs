@@ -38,7 +38,7 @@ namespace Server.Repo
             var dbConnStr = GetUserDbConnectionStr(_rpcContext.ShardId);
             var dbExecutor = TouchDbSqlExecutor(dbConnStr, IsolationLevel.ReadCommitted);
             var dbFactory = new DapperExecutorFactory(dbExecutor);
-            var userRepo = new UserRepo(_rpcContext);
+            var userRepo = new UserRepo(_rpcContext, _cacheLayer);
             userRepo.Init(_rpcContext.ShardId, dbFactory);
             OwnUser = userRepo;
         }

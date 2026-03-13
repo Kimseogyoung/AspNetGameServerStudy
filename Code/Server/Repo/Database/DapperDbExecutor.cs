@@ -1,3 +1,4 @@
+using Dapper;
 using System.Data;
 using WebStudyServer.Extension;
 
@@ -34,6 +35,11 @@ namespace WebStudyServer.Repo.Database
         public void Update<T>(T entity) where T : class
         {
             _conn.Update(entity, _tx);
+        }
+
+        public T QuerySingle<T>(string sql, object param)
+        {
+            return _conn.QuerySingleOrDefault<T>(sql, param, transaction: _tx);
         }
     }
 }

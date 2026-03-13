@@ -1,25 +1,29 @@
-﻿using WebStudyServer.Base;
+using WebStudyServer.Base;
 using WebStudyServer.Manager;
 using WebStudyServer.Repo;
 using WebStudyServer.Model;
-using WebStudyServer.Repo.Database;
-using WebStudyServer.Extension;
-using Proto;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.Helper;
-using IdGen;
+using Server.Repo.Database;
+using Proto;
 
 namespace WebStudyServer.Component
 {
     public class KingdomDecoComponent : UserComponentBase<KingdomDecoModel>
     {
-        public KingdomDecoComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
+        public static class Key
         {
-
+            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<KingdomDecoModel>(playerId, playerId, num);
+            public static CacheKey List(ulong playerId) => CacheKey.ListFor<KingdomDecoModel>(playerId);
         }
+
+        public KingdomDecoComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+
+        protected override CacheKey KeyFor(KingdomDecoModel model) => Key.Single(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
 
         public KingdomDecoManager Touch(int itemNum)
         {
-
             if (!TryGetInternal(itemNum, out var mdlDeco))
             {
                 mdlDeco = CreateMdl(new KingdomDecoModel
@@ -29,23 +33,20 @@ namespace WebStudyServer.Component
                 });
             }
 
-            var mgrDeco = new KingdomDecoManager(_userRepo, mdlDeco);
-            return mgrDeco;
+            return new KingdomDecoManager(_userRepo, mdlDeco);
         }
 
         public KingdomDecoManager Create(KingdomItemProto prt)
         {
-            var mdlKingdomDeco = base.CreateMdl(new KingdomDecoModel
+            var mdlKingdomDeco = CreateMdl(new KingdomDecoModel
             {
                 Num = prt.Num,
                 State = EKingdomItemState.STORED,
                 PlayerId = _userRepo.RpcContext.PlayerId,
             });
 
-            var mgrKingdomDeco = new KingdomDecoManager(_userRepo, mdlKingdomDeco, prt);
-            return mgrKingdomDeco;
+            return new KingdomDecoManager(_userRepo, mdlKingdomDeco, prt);
         }
-
 
         public List<KingdomDecoManager> GetAllList(List<int> numList)
         {
@@ -54,34 +55,17 @@ namespace WebStudyServer.Component
                 return new List<KingdomDecoManager>();
             }
 
-            var mdlKingdomDecoList = GetListInternal(numList);
-            ReqHelper.ValidContext(mdlKingdomDecoList.Count != numList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST", () => new { NumList = numList, MdlNumList = mdlKingdomDecoList.Select(x => x.Num) });
-            var mgrKingdomStructureList = mdlKingdomDecoList.Select(x => new KingdomDecoManager(_userRepo, x)).ToList();
-            return mgrKingdomStructureList;
-        }
-
-        private List<KingdomDecoModel> GetListInternal(List<int> numList)
-        {
-            List<KingdomDecoModel> mdlKingdomDecoList = null;
-
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                mdlKingdomDecoList = sqlConnection.SelectListByConditions<KingdomDecoModel>(new { PlayerId = _rpcContext.PlayerId, Num = numList }, transaction).ToList();
-            });
-
-            return mdlKingdomDecoList;
+            var mdlList = GetMdlList(x => numList.Contains(x.Num));
+            ReqHelper.ValidContext(mdlList.Count != numList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST",
+                () => new { NumList = numList, MdlNumList = mdlList.Select(x => x.Num) });
+            return mdlList.Select(x => new KingdomDecoManager(_userRepo, x)).ToList();
         }
 
         private bool TryGetInternal(int num, out KingdomDecoModel outKingdomDeco)
         {
-            KingdomDecoModel mdlKingdomDeco = null;
-
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                mdlKingdomDeco = sqlConnection.SelectByPk<KingdomDecoModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }, transaction);
-            });
-
-            outKingdomDeco = mdlKingdomDeco;
+            outKingdomDeco = GetMdl(
+                Key.Single(_rpcContext.PlayerId, num),
+                db => db.SelectByPk<KingdomDecoModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
             return outKingdomDeco != null;
         }
     }

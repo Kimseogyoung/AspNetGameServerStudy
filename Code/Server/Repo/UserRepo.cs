@@ -1,6 +1,8 @@
 ﻿using WebStudyServer.Base;
 using WebStudyServer.Component;
 using WebStudyServer.GAME;
+using WebStudyServer.Repo.Cache;
+using Server.Repo.Database;
 
 namespace WebStudyServer.Repo
 {
@@ -19,32 +21,30 @@ namespace WebStudyServer.Repo
         public WorldStageComponent WorldStage=> _worldStageComponent;
         public RpcContext RpcContext { get; private set; }
 
-        public UserRepo(RpcContext rpcContext)
+        public UserRepo(RpcContext rpcContext, ICacheLayer cacheLayer)
         {
             RpcContext = rpcContext;
+            _cacheLayer = cacheLayer;
         }
 
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            _playerComponent = new PlayerComponent(this, _executor);
-            _playerDetailComponent = new PlayerDetailComponent(this, _executor);
-            _pointComponent = new PointComponent(this, _executor);
-            _ticketComponent = new TicketComponent(this, _executor);
-            _cookieComponent = new CookieComponent(this, _executor);
-            _kingdomStructureComponent = new KingdomStructureComponent(this, _executor);
-            _kingdomDecoComponent = new KingdomDecoComponent(this, _executor);
-            _kingdomTileMapComponent = new KingdomMapComponent(this, _executor);
-            _itemComponent = new ItemComponent(this, _executor);
-            _worldComponent = new WorldComponent(this, _executor);
-            _worldStageComponent = new WorldStageComponent(this, _executor);
+            var dbLayer = new DbLayer(_cacheLayer, _dbFactory);
+            _playerComponent = new PlayerComponent(this, dbLayer);
+            _playerDetailComponent = new PlayerDetailComponent(this, dbLayer);
+            _pointComponent = new PointComponent(this, dbLayer);
+            _ticketComponent = new TicketComponent(this, dbLayer);
+            _cookieComponent = new CookieComponent(this, dbLayer);
+            _kingdomStructureComponent = new KingdomStructureComponent(this, dbLayer);
+            _kingdomDecoComponent = new KingdomDecoComponent(this, dbLayer);
+            _kingdomTileMapComponent = new KingdomMapComponent(this, dbLayer);
+            _itemComponent = new ItemComponent(this, dbLayer);
+            _worldComponent = new WorldComponent(this, dbLayer);
+            _worldStageComponent = new WorldStageComponent(this, dbLayer);
         }
 
-        public static UserRepo CreateInstance(RpcContext rpcContext)
-        {
-            var userRepo = new UserRepo(rpcContext);
-            return userRepo;
-        }
+        private readonly ICacheLayer _cacheLayer;
 
         private PlayerComponent _playerComponent;
         private PlayerDetailComponent _playerDetailComponent;

@@ -1,22 +1,28 @@
-﻿using WebStudyServer.Base;
+using WebStudyServer.Base;
 using WebStudyServer.Manager;
 using WebStudyServer.Repo;
 using WebStudyServer.Model;
-using WebStudyServer.Repo.Database;
-using WebStudyServer.Extension;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.GAME;
+using Server.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class ItemComponent : UserComponentBase<ItemModel>
     {
-        public ItemComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
+        public static class Key
         {
+            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<ItemModel>(playerId, playerId, num);
+            public static CacheKey List(ulong playerId) => CacheKey.ListFor<ItemModel>(playerId);
         }
+
+        public ItemComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+
+        protected override CacheKey KeyFor(ItemModel model) => Key.Single(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
 
         public ItemManager Touch(int itemNum)
         {
-
             if (!TryGetInternal(itemNum, out var mdlItem))
             {
                 var prt = APP.Prt.GetItemPrt(itemNum);
@@ -28,20 +34,14 @@ namespace WebStudyServer.Component
                 });
             }
 
-            var mgrItem = new ItemManager(_userRepo, mdlItem);
-            return mgrItem;
+            return new ItemManager(_userRepo, mdlItem);
         }
 
         public bool TryGetInternal(int num, out ItemModel outItem)
         {
-            ItemModel mdlItem = null;
-
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                mdlItem = sqlConnection.SelectByPk<ItemModel>(new { PlayerId = _userRepo.RpcContext.PlayerId, Num = num }, transaction);
-            });
-
-            outItem = mdlItem;
+            outItem = GetMdl(
+                Key.Single(_rpcContext.PlayerId, num),
+                db => db.SelectByPk<ItemModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
             return outItem != null;
         }
     }

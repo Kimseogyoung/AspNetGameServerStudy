@@ -1,3 +1,5 @@
+using WebStudyServer.Model;
+
 namespace WebStudyServer.Repo.Cache
 {
     // 요청 스코프(Scoped) InMemory 캐시.

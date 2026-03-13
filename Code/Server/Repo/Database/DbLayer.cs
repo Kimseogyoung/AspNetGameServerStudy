@@ -10,6 +10,7 @@ namespace Server.Repo.Database
         private readonly IDbExecutorFactory _dbFactory; // DapperExecutorFactory or InMemoryExecutorFactory
 
         public ICacheLayer Cache => _cache;
+        public IDbExecutorFactory DbFactory => _dbFactory;
 
         public DbLayer(ICacheLayer cache, IDbExecutorFactory dbFactory)
         {
@@ -22,12 +23,16 @@ namespace Server.Repo.Database
         {
             var hit = _cache.Get<T>(key);
             if (hit != null)
+            {
                 return hit;
+            }
 
             var result = _dbFactory.Execute(db => dbFetch(db));
 
             if (result != null)
+            {
                 _cache.Set(key, result);
+            }
 
             return result;
         }

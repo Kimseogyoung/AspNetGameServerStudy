@@ -1,18 +1,25 @@
-﻿using WebStudyServer.Base;
+using WebStudyServer.Base;
 using WebStudyServer.Manager;
 using WebStudyServer.Repo;
 using WebStudyServer.Model;
-using WebStudyServer.Repo.Database;
-using WebStudyServer.Extension;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.GAME;
+using Server.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class CookieComponent : UserComponentBase<CookieModel>
     {
-        public CookieComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
+        public static class Key
         {
+            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<CookieModel>(playerId, playerId, num);
+            public static CacheKey List(ulong playerId) => CacheKey.ListFor<CookieModel>(playerId);
         }
+
+        public CookieComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+
+        protected override CacheKey KeyFor(CookieModel model) => Key.Single(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
 
         public CookieManager Touch(int cookieNum)
         {
@@ -27,27 +34,20 @@ namespace WebStudyServer.Component
                 });
             }
 
-            var mgrPoint = new CookieManager(_userRepo, mdlCookie);
-            return mgrPoint;
+            return new CookieManager(_userRepo, mdlCookie);
         }
 
         public CookieManager TouchBySoulStone(int soulStoneNum)
         {
             var prt = APP.Prt.GetCookieSoulStonePrt(soulStoneNum);
-            var mgrCookie = Touch(prt.CookieNum);
-            return mgrCookie;
+            return Touch(prt.CookieNum);
         }
 
         public bool TryGetInternal(int num, out CookieModel outCookie)
         {
-            CookieModel mdlCookie = null;
-
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                mdlCookie = sqlConnection.SelectByPk<CookieModel>(new { PlayerId = _userRepo.RpcContext.PlayerId, Num = num }, transaction);
-            });
-
-            outCookie = mdlCookie;
+            outCookie = GetMdl(
+                Key.Single(_rpcContext.PlayerId, num),
+                db => db.SelectByPk<CookieModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
             return outCookie != null;
         }
     }

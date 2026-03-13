@@ -1,19 +1,25 @@
-﻿using WebStudyServer.Base;
+using WebStudyServer.Base;
 using WebStudyServer.Manager;
 using WebStudyServer.Repo;
 using WebStudyServer.Model;
-using WebStudyServer.Repo.Database;
-using WebStudyServer.Extension;
+using WebStudyServer.Repo.Cache;
+using Server.Repo.Database;
 using Proto;
 
 namespace WebStudyServer.Component
 {
     public class TicketComponent : UserComponentBase<TicketModel>
     {
-        public TicketComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
+        public static class Key
         {
-
+            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<TicketModel>(playerId, playerId, num);
+            public static CacheKey List(ulong playerId) => CacheKey.ListFor<TicketModel>(playerId);
         }
+
+        public TicketComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+
+        protected override CacheKey KeyFor(TicketModel model) => Key.Single(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
 
         public TicketManager Touch(EObjType objType)
         {
@@ -28,20 +34,14 @@ namespace WebStudyServer.Component
                 });
             }
 
-            var mgrTIcket = new TicketManager(_userRepo, mdlTicket);
-            return mgrTIcket;
+            return new TicketManager(_userRepo, mdlTicket);
         }
 
         public bool TryGetInternal(int num, out TicketModel outTicket)
         {
-            TicketModel mdlTIcket = null;
-
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                mdlTIcket = sqlConnection.SelectByPk<TicketModel>(new { PlayerId = _userRepo.RpcContext.PlayerId, Num = num }, transaction);
-            });
-
-            outTicket = mdlTIcket;
+            outTicket = GetMdl(
+                Key.Single(_rpcContext.PlayerId, num),
+                db => db.SelectByPk<TicketModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
             return outTicket != null;
         }
     }

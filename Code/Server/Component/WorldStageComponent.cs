@@ -1,21 +1,26 @@
-﻿using WebStudyServer.Base;
+using Dapper;
+using WebStudyServer.Base;
 using WebStudyServer.Manager;
 using WebStudyServer.Repo;
 using WebStudyServer.Model;
-using WebStudyServer.Repo.Database;
-using WebStudyServer.Extension;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.GAME;
-using System;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-using Dapper;
+using Server.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class WorldStageComponent : UserComponentBase<WorldStageModel>
     {
-        public WorldStageComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
+        public static class Key
         {
+            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<WorldStageModel>(playerId, playerId, num);
+            public static CacheKey List(ulong playerId) => CacheKey.ListFor<WorldStageModel>(playerId);
         }
+
+        public WorldStageComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+
+        protected override CacheKey KeyFor(WorldStageModel model) => Key.Single(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
 
         public WorldStageManager Touch(int worldStageNum)
         {
@@ -28,33 +33,22 @@ namespace WebStudyServer.Component
                 });
             }
 
-            var mgrWorldStage = new WorldStageManager(_userRepo, mdlWorldStage);
-            return mgrWorldStage;
+            return new WorldStageManager(_userRepo, mdlWorldStage);
         }
 
         public int GetTotalStar(int worldNum)
         {
-            var totalStar = 0;
             // TODO: 캐시
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                var sql = "SELECT SUM(RewardAmount) FROM WorldStage WHERE PlayerId = @PlayerId AND WorldNum = @WorldNum";
-                totalStar = sqlConnection.QuerySingleOrDefault<int>(sql, new { PlayerId = _userRepo.RpcContext.PlayerId, WorldNum = worldNum });
-            });
-
-            return totalStar;
+            var sql = "SELECT SUM(RewardAmount) FROM WorldStage WHERE PlayerId = @PlayerId AND WorldNum = @WorldNum";
+            return DbFactory.Execute(db => db.QuerySingle<int>(sql,
+                new { PlayerId = _rpcContext.PlayerId, WorldNum = worldNum }));
         }
 
         public bool TryGetInternal(int num, out WorldStageModel outWorldStage)
         {
-            WorldStageModel mdlWorldStage = null;
-
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                mdlWorldStage = sqlConnection.SelectByPk<WorldStageModel>(new { PlayerId = _userRepo.RpcContext.PlayerId, Num = num }, transaction);
-            });
-
-            outWorldStage = mdlWorldStage;
+            outWorldStage = GetMdl(
+                Key.Single(_rpcContext.PlayerId, num),
+                db => db.SelectByPk<WorldStageModel>(new { PlayerId = _rpcContext.PlayerId, Num = num }));
             return outWorldStage != null;
         }
     }

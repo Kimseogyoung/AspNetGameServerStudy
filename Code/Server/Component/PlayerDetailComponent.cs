@@ -1,18 +1,24 @@
-﻿using WebStudyServer.Base;
+using WebStudyServer.Base;
 using WebStudyServer.Manager;
 using WebStudyServer.Repo;
 using WebStudyServer.Model;
-using WebStudyServer.Repo.Database;
-using WebStudyServer.Extension;
+using WebStudyServer.Repo.Cache;
+using Server.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class PlayerDetailComponent : UserComponentBase<PlayerDetailModel>
     {
-        public PlayerDetailComponent(UserRepo userRepo, DBSqlExecutor excutor) : base(userRepo, excutor)
+        public static class Key
         {
-
+            public static CacheKey Single(ulong playerId) => CacheKey.For<PlayerDetailModel>(playerId, playerId);
+            public static CacheKey List(ulong playerId) => CacheKey.ListFor<PlayerDetailModel>(playerId);
         }
+
+        public PlayerDetailComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+
+        protected override CacheKey KeyFor(PlayerDetailModel model) => Key.Single(model.PlayerId);
+        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
 
         public PlayerDetailManager Touch()
         {
@@ -26,20 +32,14 @@ namespace WebStudyServer.Component
                 });
             }
 
-            var mgrPlayerDetail = new PlayerDetailManager(_userRepo, mdlPlayerDetail);
-            return mgrPlayerDetail;
+            return new PlayerDetailManager(_userRepo, mdlPlayerDetail);
         }
 
         public bool TryGet(ulong id, out PlayerDetailModel outPlayer)
         {
-            PlayerDetailModel mdlPlayer = null;
-
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                mdlPlayer = sqlConnection.SelectByPk<PlayerDetailModel>(new { PlayerId = id }, transaction);
-            });
-
-            outPlayer = mdlPlayer;
+            outPlayer = GetMdl(
+                Key.Single(id),
+                db => db.SelectByPk<PlayerDetailModel>(new { PlayerId = id }));
             return outPlayer != null;
         }
     }
