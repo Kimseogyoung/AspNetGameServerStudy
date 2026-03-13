@@ -12,8 +12,8 @@ namespace WebStudyServer.Component
     {
         public static class Key
         {
-            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<ItemModel>(playerId, playerId, num);
-            public static CacheKey List(ulong playerId) => CacheKey.ListFor<ItemModel>(playerId);
+            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<ItemModel>(playerId, num);
+            public static CacheKey List(ulong playerId) => CacheKey.For<ItemModel>(playerId);
         }
 
         public ItemComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }

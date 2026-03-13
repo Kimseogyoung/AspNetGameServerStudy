@@ -13,8 +13,8 @@ namespace WebStudyServer.Component
     {
         public static class Key
         {
-            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<KingdomDecoModel>(playerId, playerId, num);
-            public static CacheKey List(ulong playerId) => CacheKey.ListFor<KingdomDecoModel>(playerId);
+            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<KingdomDecoModel>(playerId, num);
+            public static CacheKey List(ulong playerId) => CacheKey.For<KingdomDecoModel>(playerId);
         }
 
         public KingdomDecoComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }

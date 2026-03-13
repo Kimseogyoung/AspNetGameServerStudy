@@ -12,9 +12,9 @@ namespace WebStudyServer.Component
     {
         public static class Key
         {
-            public static CacheKey Single(ulong playerId) => CacheKey.For<PlayerModel>(playerId, playerId);
-            public static CacheKey ByAccount(ulong accountId) => CacheKey.Raw($"PlayerModel:AccountId:{accountId}");
-            public static CacheKey List(ulong playerId) => CacheKey.ListFor<PlayerModel>(playerId);
+            public static CacheKey Single(ulong playerId) => CacheKey.For<PlayerModel>(playerId);
+            public static CacheKey ByAccount(ulong accountId) => CacheKey.For<PlayerModel>("AccountId", accountId);
+            public static CacheKey List(ulong playerId) => CacheKey.For<PlayerModel>(playerId);
         }
 
         public PlayerComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }

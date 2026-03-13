@@ -12,8 +12,8 @@ namespace WebStudyServer.Component
     {
         public static class Key
         {
-            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<CookieModel>(playerId, playerId, num);
-            public static CacheKey List(ulong playerId) => CacheKey.ListFor<CookieModel>(playerId);
+            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<CookieModel>(playerId, num);
+            public static CacheKey List(ulong playerId) => CacheKey.For<CookieModel>(playerId);
         }
 
         public CookieComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
