@@ -19,7 +19,7 @@ namespace Protocol
     		public EKingdomTileMapState State { get; set; } = default; //
         
     		[ProtoMember(4)]
-    		public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } = default; //
+    		public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } = new List<PlacedKingdomItemPacket>(); //
         
 	}
 }

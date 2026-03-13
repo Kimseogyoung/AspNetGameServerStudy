@@ -95,8 +95,14 @@ namespace WebStudyServer.Helper
                 return outContentType;
             }
 
-            // 강제 형식
-            return APP.Cfg.ForceContentType;
+            // 요청 Content-Type을 그대로 사용 (echo)
+            var reqContentType = httpContext.Request.ContentType?.Split(';')[0].Trim();
+            if (MsgProtocol.ContentTypeList.Contains(reqContentType))
+            {
+                return reqContentType;
+            }
+
+            return MsgProtocol.JsonContentType;
         }
 
         //private static string GetClientIpAddress(HttpContext httpContext)
