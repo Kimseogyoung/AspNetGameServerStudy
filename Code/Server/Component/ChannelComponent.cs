@@ -12,7 +12,7 @@ namespace WebStudyServer.Component
 {
     public class ChannelComponent : AuthComponentBase
     {
-        public ChannelComponent(AuthRepo authRepo, DBSqlExecutor executor) : base(authRepo, executor)
+        public ChannelComponent(AuthRepo authRepo, IDbExecutorFactory dbFactory) : base(authRepo, dbFactory)
         {
         }
 
@@ -43,9 +43,9 @@ namespace WebStudyServer.Component
             mgrChannel = null;
             ChannelModel mdlChannel = null;
 
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                mdlChannel = sqlConnection.SelectByPk<ChannelModel>(new { Key = key }, transaction);
+                mdlChannel = db.SelectByPk<ChannelModel>(new { Key = key });
             });
 
             mgrChannel = new ChannelManager(_authRepo, mdlChannel);
@@ -72,9 +72,9 @@ namespace WebStudyServer.Component
 
             ChannelModel repoChannel = null;
             // 데이터베이스에 삽입
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                repoChannel = sqlConnection.Insert(newChannel, transaction);
+                repoChannel = db.Insert(newChannel);
             });
 
             var mgrChannel = new ChannelManager(_authRepo, repoChannel);
@@ -85,9 +85,9 @@ namespace WebStudyServer.Component
         {
             var mdlChannelList = new List<ChannelModel>();
 
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                mdlChannelList = [.. sqlConnection.SelectListByConditions<ChannelModel>(new { AccountId = accountId }, transaction)];
+                mdlChannelList = [.. db.SelectListByConditions<ChannelModel>(new { AccountId = accountId })];
             });
 
             return mdlChannelList;
@@ -95,10 +95,7 @@ namespace WebStudyServer.Component
 
         public void Update(ChannelModel mdlChannel)
         {
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                sqlConnection.Update(mdlChannel, transaction);
-            });
+            _dbFactory.Execute(db => db.Update(mdlChannel));
         }
     }
 }

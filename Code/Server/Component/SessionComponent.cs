@@ -11,7 +11,7 @@ namespace WebStudyServer.Component
 {
     public class SessionComponent : AuthComponentBase
     {
-        public SessionComponent(AuthRepo authRepo, DBSqlExecutor executor) : base(authRepo, executor)
+        public SessionComponent(AuthRepo authRepo, IDbExecutorFactory dbFactory) : base(authRepo, dbFactory)
         {
         }
 
@@ -69,19 +69,16 @@ namespace WebStudyServer.Component
 
         public void Update(SessionModel mdlSession)
         {
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                sqlConnection.Update(mdlSession, transaction);
-            });
+            _dbFactory.Execute(db => db.Update(mdlSession));
         }
 
         private bool TryGetByKeyInternal(string key, out SessionModel outSession)
         {
             SessionModel mdlSession = null;
 
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                mdlSession = sqlConnection.SelectByConditions<SessionModel>(new { Key = key }, transaction);
+                mdlSession = db.SelectByConditions<SessionModel>(new { Key = key });
             });
             outSession = mdlSession;
 
@@ -92,9 +89,9 @@ namespace WebStudyServer.Component
         {
             SessionModel mdlSession = null;
 
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                mdlSession = sqlConnection.SelectByConditions<SessionModel>(new { AccountId = accountId }, transaction);
+                mdlSession = db.SelectByConditions<SessionModel>(new { AccountId = accountId });
             });
 
             outSession = mdlSession;
@@ -105,9 +102,9 @@ namespace WebStudyServer.Component
         {
             SessionModel newSession = null;
             // 데이터베이스에 삽입
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                newSession = sqlConnection.Insert(inSession, transaction);
+                newSession = db.Insert(inSession);
             });
 
             return newSession; // 새로 생성된 계정 모델 반환

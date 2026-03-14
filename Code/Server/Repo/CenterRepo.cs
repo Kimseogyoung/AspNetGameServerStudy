@@ -17,7 +17,7 @@ namespace WebStudyServer.Repo
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            Schedule = new ScheduleComponent(this, _executor);
+            Schedule = new ScheduleComponent(this, _dbFactory);
         }
 
         public static CenterRepo CreateInstance(RpcContext rpcContext)

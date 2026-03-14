@@ -10,7 +10,7 @@ namespace WebStudyServer.Component
 {
     public class DeviceComponent : AuthComponentBase
     {
-        public DeviceComponent(AuthRepo authRepo, DBSqlExecutor executor) : base(authRepo, executor)
+        public DeviceComponent(AuthRepo authRepo, IDbExecutorFactory dbFactory) : base(authRepo, dbFactory)
         {
         }
 
@@ -47,19 +47,16 @@ namespace WebStudyServer.Component
 
         public void Update(DeviceModel mdlDevice)
         {
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                sqlConnection.Update(mdlDevice, transaction);
-            });
+            _dbFactory.Execute(db => db.Update(mdlDevice));
         }
 
         private DeviceModel CreateInternal(DeviceModel inChannel)
         {
             DeviceModel newDevice = null;
             // 데이터베이스에 삽입
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                newDevice = sqlConnection.Insert(inChannel, transaction);
+                newDevice = db.Insert(inChannel);
             });
 
             return newDevice; // 새로 생성된 계정 모델 반환
@@ -69,9 +66,9 @@ namespace WebStudyServer.Component
         {
             DeviceModel mdlDevice = null;
 
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                mdlDevice = sqlConnection.SelectByPk<DeviceModel>(new { Key = deviceKey }, transaction);
+                mdlDevice = db.SelectByPk<DeviceModel>(new { Key = deviceKey });
             });
             outDevice = mdlDevice;
             return outDevice != null;

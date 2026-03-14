@@ -11,7 +11,7 @@ namespace WebStudyServer.Component
 {
     public class AccountComponent : AuthComponentBase
     {
-        public AccountComponent(AuthRepo authRepo, DBSqlExecutor executor) : base(authRepo, executor)
+        public AccountComponent(AuthRepo authRepo, IDbExecutorFactory dbFactory) : base(authRepo, dbFactory)
         {
         }
 
@@ -26,9 +26,9 @@ namespace WebStudyServer.Component
         {
             AccountModel mdlAccount = null;
 
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                mdlAccount = sqlConnection.SelectByPk<AccountModel>(new { Id = id }, transaction);
+                mdlAccount = db.SelectByPk<AccountModel>(new { Id = id });
             });
 
             outAccount = new AccountManager(_authRepo, mdlAccount);
@@ -55,18 +55,15 @@ namespace WebStudyServer.Component
 
         public void UpdateAccount(AccountModel mdlAccount)
         {
-            _executor.Excute((sqlConnection, transaction) =>
-            {
-                sqlConnection.Update(mdlAccount, transaction);
-            });
+            _dbFactory.Execute(db => db.Update(mdlAccount));
         }
 
         private AccountModel CreateAccountInternal(AccountModel newAccount)
         {
             // 데이터베이스에 삽입
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                newAccount = sqlConnection.Insert<AccountModel>(newAccount, transaction);
+                newAccount = db.Insert<AccountModel>(newAccount);
             });
 
             return newAccount; // 새로 생성된 계정 모델 반환

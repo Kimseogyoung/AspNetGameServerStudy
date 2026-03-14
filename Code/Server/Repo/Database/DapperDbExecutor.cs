@@ -22,9 +22,19 @@ namespace WebStudyServer.Repo.Database
             return _conn.SelectByPk<T>(param, _tx);
         }
 
+        public T SelectByConditions<T>(object conditions) where T : class
+        {
+            return _conn.SelectByConditions<T>(conditions, _tx);
+        }
+
         public IEnumerable<T> SelectListByPlayerId<T>(ulong playerId) where T : class
         {
             return _conn.SelectListByPlayerId<T>(playerId, _tx);
+        }
+
+        public IEnumerable<T> SelectListByConditions<T>(object conditions) where T : class
+        {
+            return _conn.SelectListByConditions<T>(conditions, _tx);
         }
 
         public T Insert<T>(T entity) where T : class

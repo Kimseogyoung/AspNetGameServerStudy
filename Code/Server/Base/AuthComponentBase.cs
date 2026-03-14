@@ -5,13 +5,13 @@ namespace WebStudyServer.Base
 {
     public class AuthComponentBase
     {
-        protected DBSqlExecutor _executor;
+        protected IDbExecutorFactory _dbFactory;
         protected AuthRepo _authRepo;
 
-        public AuthComponentBase(AuthRepo authRepo, DBSqlExecutor executor)
+        public AuthComponentBase(AuthRepo authRepo, IDbExecutorFactory dbFactory)
         {
             _authRepo = authRepo;
-            _executor = executor;
+            _dbFactory = dbFactory;
         }
     }
 }

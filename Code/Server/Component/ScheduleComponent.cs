@@ -13,7 +13,7 @@ namespace WebStudyServer.Component
 {
     public class ScheduleComponent : CenterComponentBase
     {
-        public ScheduleComponent(CenterRepo centerRepo, DBSqlExecutor executor) : base(centerRepo, executor)
+        public ScheduleComponent(CenterRepo centerRepo, IDbExecutorFactory dbFactory) : base(centerRepo, dbFactory)
         {
         }
 
@@ -23,9 +23,9 @@ namespace WebStudyServer.Component
 
             // TODO: 자주 바뀌지 않으므로 Mgr 캐싱
             // 전부 로드
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                mdlList = [.. sqlConnection.SelectListByConditions<ScheduleModel>(null, transaction)];
+                mdlList = [.. db.SelectListByConditions<ScheduleModel>(null)];
             });
 
             var prts = APP.Prt.GetSchedulePrts();
@@ -64,9 +64,9 @@ namespace WebStudyServer.Component
             var prt = APP.Prt.GetSchedulePrt(num);
             ScheduleModel mdlSchedule = null;
 
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                mdlSchedule = sqlConnection.SelectByPk<ScheduleModel>(new { Num = num }, transaction);
+                mdlSchedule = db.SelectByPk<ScheduleModel>(new { Num = num });
             });
 
             outSchedule = new ScheduleManager(_centerRepo, prt, mdlSchedule);

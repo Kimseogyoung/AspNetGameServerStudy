@@ -26,11 +26,11 @@ namespace WebStudyServer.Repo
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            Account = new AccountComponent(this, _executor);
-            Session = new SessionComponent(this, _executor);
-            Device = new DeviceComponent(this, _executor);
-            Channel = new ChannelComponent(this, _executor);
-            PlayerMap = new PlayerMapComponent(this, _executor);
+            Account = new AccountComponent(this, _dbFactory);
+            Session = new SessionComponent(this, _dbFactory);
+            Device = new DeviceComponent(this, _dbFactory);
+            Channel = new ChannelComponent(this, _dbFactory);
+            PlayerMap = new PlayerMapComponent(this, _dbFactory);
         }
 
         #region PLAYER_MAP

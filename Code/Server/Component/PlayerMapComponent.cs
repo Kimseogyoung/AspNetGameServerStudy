@@ -11,7 +11,7 @@ namespace WebStudyServer.Component
 {
     public class PlayerMapComponent : AuthComponentBase
     {
-        public PlayerMapComponent(AuthRepo authRepo, DBSqlExecutor executor) : base(authRepo, executor)
+        public PlayerMapComponent(AuthRepo authRepo, IDbExecutorFactory dbFactory) : base(authRepo, dbFactory)
         {
         }
 
@@ -19,9 +19,9 @@ namespace WebStudyServer.Component
         {
             PlayerMapModel newPlayerMap = null;
             // 데이터베이스에 삽입
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                newPlayerMap = sqlConnection.Insert(inPlayerMap, transaction);
+                newPlayerMap = db.Insert(inPlayerMap);
             });
 
             return newPlayerMap;
@@ -31,9 +31,9 @@ namespace WebStudyServer.Component
         {
             PlayerMapModel playerMap = null;
 
-            _executor.Excute((sqlConnection, transaction) =>
+            _dbFactory.Execute(db =>
             {
-                playerMap = sqlConnection.SelectByPk<PlayerMapModel>(new { AccountId = accountId }, transaction);
+                playerMap = db.SelectByPk<PlayerMapModel>(new { AccountId = accountId });
             });
 
             outPlayerMap = playerMap;

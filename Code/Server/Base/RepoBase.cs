@@ -9,25 +9,21 @@ namespace WebStudyServer.Base
         public int ShardId { get; private set; }
         protected abstract void PrepareComp();
 
-        // TODO(Step5): Component 전환 완료 후 _executor 제거
-        protected DBSqlExecutor _executor = null!;
         protected IDbExecutorFactory _dbFactory = null!;
 
         public void Init(int shardId, IDbExecutorFactory dbFactory)
         {
             ShardId = shardId;
             _dbFactory = dbFactory;
-            if (dbFactory is DapperExecutorFactory dapper)
-            {
-                _executor = dapper.RawExecutor;
-            }
-
             PrepareComp();
         }
 
         public T RunCommand<T>(string commandText, params MySqlParameter[] parameters)
         {
-            return _executor.Excute((sqlConnection, transaction) =>
+            if (_dbFactory is not DapperExecutorFactory dapper)
+                throw new NotSupportedException("RunCommand는 MySQL 모드에서만 지원됩니다.");
+
+            return dapper.RawExecutor.Excute((sqlConnection, transaction) =>
             {
                 using var command = sqlConnection.CreateCommand();
                 command.Transaction = transaction;
