@@ -45,7 +45,7 @@ namespace WebStudyServer.Base
             => _db.Get<T>(key, dbFetch);
 
         // IDbExecutor 범위 밖 특수 쿼리 전용 (SelectListByConditions, 집계 SQL 등)
-        protected IDbExecutorFactory DbFactory => _db.DbFactory;
+        protected IDbSession DbFactory => _db.DbFactory;
 
         protected ICacheLayer CacheLayer => _db.Cache;
     }

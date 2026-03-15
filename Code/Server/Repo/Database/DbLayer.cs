@@ -7,9 +7,9 @@ namespace Server.Repo.Database
     public class DbLayer : IDbLayer
     {
         public ICacheLayer Cache { get; }
-        public IDbExecutorFactory DbFactory { get; }
+        public IDbSession DbFactory { get; }
 
-        public DbLayer(ICacheLayer cache, IDbExecutorFactory dbFactory)
+        public DbLayer(ICacheLayer cache, IDbSession dbFactory)
         {
             Cache = cache;
             DbFactory = dbFactory;

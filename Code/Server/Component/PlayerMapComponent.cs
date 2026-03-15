@@ -11,7 +11,7 @@ namespace WebStudyServer.Component
 {
     public class PlayerMapComponent : AuthComponentBase
     {
-        public PlayerMapComponent(AuthRepo authRepo, IDbExecutorFactory dbFactory) : base(authRepo, dbFactory)
+        public PlayerMapComponent(AuthRepo authRepo, IDbSession dbFactory) : base(authRepo, dbFactory)
         {
         }
 

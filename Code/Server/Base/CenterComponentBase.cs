@@ -8,10 +8,10 @@ namespace WebStudyServer.Base
 {
     public class CenterComponentBase
     {
-        protected IDbExecutorFactory _dbFactory;
+        protected IDbSession _dbFactory;
         protected CenterRepo _centerRepo;
 
-        public CenterComponentBase(CenterRepo centerRepo, IDbExecutorFactory dbFactory)
+        public CenterComponentBase(CenterRepo centerRepo, IDbSession dbFactory)
         {
             _centerRepo = centerRepo;
             _dbFactory = dbFactory;

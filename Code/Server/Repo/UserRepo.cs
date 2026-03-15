@@ -30,7 +30,15 @@ namespace WebStudyServer.Repo
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            var dbLayer = new DbLayer(_cacheLayer, _dbFactory);
+            IDbLayer dbLayer;
+            if (APP.Cfg.DbType == DbType.InMemory)
+            {
+                dbLayer = new InMemoryDbLayer(_dbFactory, _cacheLayer);
+            }
+            else
+            {
+                dbLayer = new DbLayer(_cacheLayer, _dbFactory);
+            }
             Player = new PlayerComponent(this, dbLayer);
             PlayerDetail = new PlayerDetailComponent(this, dbLayer);
             Point = new PointComponent(this, dbLayer);

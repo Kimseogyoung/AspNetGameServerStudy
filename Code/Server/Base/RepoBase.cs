@@ -9,9 +9,9 @@ namespace WebStudyServer.Base
         public int ShardId { get; private set; }
         protected abstract void PrepareComp();
 
-        protected IDbExecutorFactory _dbFactory = null!;
+        protected IDbSession _dbFactory = null!;
 
-        public void Init(int shardId, IDbExecutorFactory dbFactory)
+        public void Init(int shardId, IDbSession dbFactory)
         {
             ShardId = shardId;
             _dbFactory = dbFactory;
@@ -20,7 +20,7 @@ namespace WebStudyServer.Base
 
         public T RunCommand<T>(string commandText, params MySqlParameter[] parameters)
         {
-            if (_dbFactory is not DapperExecutorFactory dapper)
+            if (_dbFactory is not DapperDbSession dapper)
                 throw new NotSupportedException("RunCommand는 MySQL 모드에서만 지원됩니다.");
 
             return dapper.RawExecutor.Excute((sqlConnection, transaction) =>

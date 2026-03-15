@@ -5,10 +5,10 @@ namespace WebStudyServer.Base
 {
     public class AuthComponentBase
     {
-        protected IDbExecutorFactory _dbFactory;
+        protected IDbSession _dbFactory;
         protected AuthRepo _authRepo;
 
-        public AuthComponentBase(AuthRepo authRepo, IDbExecutorFactory dbFactory)
+        public AuthComponentBase(AuthRepo authRepo, IDbSession dbFactory)
         {
             _authRepo = authRepo;
             _dbFactory = dbFactory;

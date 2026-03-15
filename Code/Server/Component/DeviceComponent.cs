@@ -10,7 +10,7 @@ namespace WebStudyServer.Component
 {
     public class DeviceComponent : AuthComponentBase
     {
-        public DeviceComponent(AuthRepo authRepo, IDbExecutorFactory dbFactory) : base(authRepo, dbFactory)
+        public DeviceComponent(AuthRepo authRepo, IDbSession dbFactory) : base(authRepo, dbFactory)
         {
         }
 

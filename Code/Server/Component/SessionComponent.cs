@@ -11,7 +11,7 @@ namespace WebStudyServer.Component
 {
     public class SessionComponent : AuthComponentBase
     {
-        public SessionComponent(AuthRepo authRepo, IDbExecutorFactory dbFactory) : base(authRepo, dbFactory)
+        public SessionComponent(AuthRepo authRepo, IDbSession dbFactory) : base(authRepo, dbFactory)
         {
         }
 

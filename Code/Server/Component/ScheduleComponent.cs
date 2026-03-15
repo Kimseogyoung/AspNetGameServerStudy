@@ -13,7 +13,7 @@ namespace WebStudyServer.Component
 {
     public class ScheduleComponent : CenterComponentBase
     {
-        public ScheduleComponent(CenterRepo centerRepo, IDbExecutorFactory dbFactory) : base(centerRepo, dbFactory)
+        public ScheduleComponent(CenterRepo centerRepo, IDbSession dbFactory) : base(centerRepo, dbFactory)
         {
         }
 

@@ -10,6 +10,12 @@ using WebStudyServer.StartUp;
 
 namespace WebStudyServer
 {
+    public enum DbType
+    {
+        MySql,
+        InMemory,
+    }
+
     public class ConfigSystem
     {
         public string LogFolder { get; private set; } = string.Empty;
@@ -28,6 +34,8 @@ namespace WebStudyServer
         public string DefaultPlayerPath { get; private set; } = string.Empty;
         public PlayerPacket PakDefaultPlayer { get; private set; } = new();
 
+        public DbType DbType { get; private set; } = DbType.MySql;
+
         public bool IsShowErrorDetail { get; private set; }
         public bool UseStrictValidation { get; private set; }
         public string ForceContentType { get; private set; }
@@ -43,6 +51,8 @@ namespace WebStudyServer
 
             SessionExpireSpan = config.GetValue("SessionExpireSpan", TimeSpan.FromMinutes(20));
 
+
+            DbType = config.GetValue("Db:Type", DbType.MySql);
             DbVersion = new MySqlServerVersion(config.GetValue("Db:Version", "0.0.0"));
             UserDbConnectionStrList = config.GetValueStringList("Db:UserDb:ConnectionStrList");
             AuthDbConnectionStrList = config.GetValueStringList("Db:AuthDb:ConnectionStrList");

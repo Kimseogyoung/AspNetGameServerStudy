@@ -12,7 +12,7 @@ namespace WebStudyServer.Component
 {
     public class ChannelComponent : AuthComponentBase
     {
-        public ChannelComponent(AuthRepo authRepo, IDbExecutorFactory dbFactory) : base(authRepo, dbFactory)
+        public ChannelComponent(AuthRepo authRepo, IDbSession dbFactory) : base(authRepo, dbFactory)
         {
         }
 

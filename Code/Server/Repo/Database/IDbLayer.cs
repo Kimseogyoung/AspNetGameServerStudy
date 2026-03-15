@@ -9,7 +9,7 @@ namespace Server.Repo.Database
         // 캐시 직접 접근 — 캐시 특화 기능용 (R9)
         ICacheLayer Cache { get; }
         // IDbExecutor 범위 밖 특수 쿼리(SelectListByConditions, 집계 SQL 등) 전용
-        IDbExecutorFactory DbFactory { get; }
+        IDbSession DbFactory { get; }
 
         // Select 단일: Cache → DB fallback (R2, R7)
         // IDbExecutor로 connection/transaction 숨김 (R11)

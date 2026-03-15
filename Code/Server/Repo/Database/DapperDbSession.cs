@@ -1,14 +1,14 @@
 namespace WebStudyServer.Repo.Database
 {
-    // DBSqlExecutor(트랜잭션 라이프사이클)를 IDbExecutorFactory로 래핑한다.
+    // DBSqlExecutor(트랜잭션 라이프사이클)를 IDbSession로 래핑한다.
     // Execute 호출마다 DapperDbExecutor 인스턴스를 생성하지만,
     // 내부 conn/tx는 DBSqlExecutor가 보유하므로 재연결 비용은 없다.
-    public class DapperExecutorFactory : IDbExecutorFactory
+    public class DapperDbSession : IDbSession
     {
         // RepoBase 과도기 전환용 — Step5 완료 후 제거
         internal DBSqlExecutor RawExecutor { get; }
 
-        public DapperExecutorFactory(DBSqlExecutor executor)
+        public DapperDbSession(DBSqlExecutor executor)
         {
             RawExecutor = executor;
         }
@@ -31,6 +31,11 @@ namespace WebStudyServer.Repo.Database
         public void Rollback()
         {
             RawExecutor.Rollback();
+        }
+
+        public void Close()
+        {
+            RawExecutor.Close();
         }
     }
 }

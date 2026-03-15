@@ -1,7 +1,3 @@
-using Dapper;
-using WebStudyServer.Base;
-using WebStudyServer.Extension;
-using WebStudyServer.GAME;
 using WebStudyServer.Model;
 using WebStudyServer.Repo.Database;
 
@@ -9,10 +5,11 @@ namespace WebStudyServer.Repo
 {
     public class AllUserRepo
     {
-        private readonly List<DBSqlExecutor> _executorList = [];
-        private List<string> DbConnStrList => APP.Cfg.UserDbConnectionStrList;
-        public AllUserRepo(List<DBSqlExecutor> executorList)
+        private readonly List<IDbSession> _factories;
+
+        public AllUserRepo(List<IDbSession> factories)
         {
+            _factories = factories;
         }
 
         public bool TryGetPlayerByName(string name, out PlayerModel outMdlPlayer)
@@ -20,20 +17,23 @@ namespace WebStudyServer.Repo
             // TODO: 캐시
             //
 
-            // 찾기
+            // 샤드 전체 탐색
             PlayerModel foundMdlPlayer = null;
-            foreach (var executor in _executorList)
+            foreach (var factory in _factories)
             {
-                var sql = "SELECT * FROM Player WHERE ProfileName = @ProfileName";
-                executor.Excute((sqlConnection, transaction) =>
+                factory.Execute(db =>
                 {
-                    var mdlPlayer = sqlConnection.QueryFirstOrDefault<PlayerModel>(sql, new { ProfileName = name }, transaction);
+                    var mdlPlayer = db.SelectByConditions<PlayerModel>(new { ProfileName = name });
                     if (mdlPlayer != null)
                     {
                         foundMdlPlayer = mdlPlayer;
                     }
                 });
 
+                if (foundMdlPlayer != null)
+                {
+                    break;
+                }
             }
 
             outMdlPlayer = foundMdlPlayer;
