@@ -96,7 +96,7 @@ namespace WebStudyServer
             // TODO: 점검 상태일때 세션 만료
             //
 
-            var dbRepo = httpContext.RequestServices.GetService<DbRepo>();
+            var dbRepo = httpContext.RequestServices.GetService<GlobalDbRepo>();
             var authRepo = dbRepo.Auth;
             var sessionComp = authRepo.Session;
 

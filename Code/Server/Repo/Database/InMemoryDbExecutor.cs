@@ -25,12 +25,6 @@ namespace WebStudyServer.Repo.Database
             return ScanFirst<T>(conditions);
         }
 
-        public IEnumerable<T> SelectListByPlayerId<T>(ulong playerId) where T : class
-        {
-            return _store.GetAll(typeof(T)).Cast<T>()
-                .Where(e => GetPropValue(e, "PlayerId") is ulong pid && pid == playerId);
-        }
-
         public IEnumerable<T> SelectListByConditions<T>(object conditions) where T : class
         {
             if (conditions == null)
@@ -97,9 +91,5 @@ namespace WebStudyServer.Repo.Database
             return true;
         }
 
-        private static object GetPropValue(object entity, string name)
-        {
-            return entity.GetType().GetProperty(name)?.GetValue(entity);
-        }
     }
 }

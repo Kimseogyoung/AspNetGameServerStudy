@@ -1,5 +1,6 @@
 using System.Data;
 using MySqlConnector;
+using Server.Repo.Database;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Base
@@ -9,18 +10,18 @@ namespace WebStudyServer.Base
         public int ShardId { get; private set; }
         protected abstract void PrepareComp();
 
-        protected IDbSession _dbFactory = null!;
+        protected IRepository _repository = null!;
 
-        public void Init(int shardId, IDbSession dbFactory)
+        public RepoBase(int shardId, IRepository repository)
         {
             ShardId = shardId;
-            _dbFactory = dbFactory;
+            _repository = repository;
             PrepareComp();
         }
 
         public T RunCommand<T>(string commandText, params MySqlParameter[] parameters)
         {
-            if (_dbFactory is not DapperDbSession dapper)
+            if (_repository.Db is not DapperDbSession dapper)
                 throw new NotSupportedException("RunCommand는 MySQL 모드에서만 지원됩니다.");
 
             return dapper.RawExecutor.Excute((sqlConnection, transaction) =>
@@ -30,13 +31,13 @@ namespace WebStudyServer.Base
                 command.CommandType = CommandType.Text;
                 command.CommandText = commandText;
 
-                // 파라미터 추가
                 foreach (var parameter in parameters)
                 {
                     command.Parameters.Add(parameter);
                 }
 
-                return (T)command.ExecuteScalar();
+                var scalar = command.ExecuteScalar();
+                return (T)Convert.ChangeType(scalar, typeof(T));
             });
         }
     }

@@ -53,7 +53,7 @@ namespace Server
                     {
                         ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { rpcCtx.SessionKey, rpcCtx.SessionLoadState });
                         ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { rpcCtx.SessionKey });
-                        var dbRepo = httpCtx.RequestServices.GetRequiredService<DbRepo>();
+                        var dbRepo = httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>();
                         dbRepo.BeginOwnUserRepo();
                         break;
                     }
@@ -62,7 +62,7 @@ namespace Server
                         ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { rpcCtx.SessionKey, rpcCtx.SessionLoadState });
                         ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { rpcCtx.SessionKey });
                         ReqHelper.ValidContext(rpcCtx.PlayerId != 0, "NOT_FOUND_PLAYER_IN_RPC_METHOD_RUN", () => new { rpcCtx.SessionKey, rpcCtx.AccountId });
-                        var dbRepo = httpCtx.RequestServices.GetRequiredService<DbRepo>();
+                        var dbRepo = httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>();
                         dbRepo.BeginOwnUserRepo();
                         break;
                     }

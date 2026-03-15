@@ -15,7 +15,7 @@ namespace WebStudyServer
             _useDbLock = APP.Cfg.UseUserLock;
         }
 
-        public async Task RunAtomicAsync(ulong accountId, DbRepo dbRepo, Func<Task> action)
+        public async Task RunAtomicAsync(ulong accountId, GlobalDbRepo dbRepo, Func<Task> action)
         {
             if (!_useDbLock
                 || accountId == 0) // 익명 요청은 유저 락을 사용하지 않음

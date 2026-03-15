@@ -32,8 +32,8 @@ namespace WebStudyServer
                 services.AddSingleton<IDbSessionFactory, MySqlDbSessionFactory>();
             }
 
-            services.AddScoped<DbScope>();
-            services.AddScoped<DbRepo>();
+            services.AddScoped<DbSessionManager>();
+            services.AddScoped<GlobalDbRepo>();
 
             // Auth
             ModelRegistration.Init<AccountModel>("Id");

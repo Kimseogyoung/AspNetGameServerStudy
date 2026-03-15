@@ -17,7 +17,7 @@ namespace WebStudyServer.Component
             public static CacheKey List(ulong playerId) => CacheKey.For<WorldStageModel>(playerId);
         }
 
-        public WorldStageComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+        public WorldStageComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
         protected override CacheKey KeyFor(WorldStageModel model) => Key.Single(model.PlayerId, model.Num);
         protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
@@ -40,7 +40,7 @@ namespace WebStudyServer.Component
         {
             // TODO: 캐시
             var sql = "SELECT SUM(RewardAmount) FROM WorldStage WHERE PlayerId = @PlayerId AND WorldNum = @WorldNum";
-            return DbFactory.Execute(db => db.QuerySingle<int>(sql,
+            return DbSession.Execute(db => db.QuerySingle<int>(sql,
                 new { RpcCtx.PlayerId, WorldNum = worldNum }));
         }
 

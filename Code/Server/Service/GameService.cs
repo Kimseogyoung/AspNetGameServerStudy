@@ -15,7 +15,7 @@ namespace Server.Service
 {
     public class GameService : ServiceBase
     {
-        public GameService(DbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
+        public GameService(GlobalDbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
         {
             _dbRepo = dbRepo;
             _mapper = mapper;
@@ -514,7 +514,7 @@ namespace Server.Service
 
         private UserRepo OwnUser => _dbRepo.OwnUser;
 
-        private readonly DbRepo _dbRepo;
+        private readonly GlobalDbRepo _dbRepo;
         private readonly IMapper _mapper;
     }
 }

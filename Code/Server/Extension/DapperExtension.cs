@@ -125,19 +125,6 @@ namespace WebStudyServer.Extension
             return connection.QuerySingleOrDefault<T>(queryBuilder.ToString(), keyValues, transaction);
         }
 
-        public static IEnumerable<T> SelectListByPlayerId<T>(this IDbConnection connection, ulong playerId, IDbTransaction transaction)
-        {
-            var tableName = GetTableName<T>();
-
-            _ = GetQueryParameter<T>();
-
-            _ = GetWhereClause<T>();
-
-            var selectSql = $@"SELECT * FROM {tableName} WHERE PlayerId = @PlayerId;";
-
-            return connection.Query<T>(selectSql, new { PlayerId = playerId }, transaction);
-        }
-
         public static IEnumerable<T> SelectListByConditions<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
         {
             var tableName = GetTableName<T>();

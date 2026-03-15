@@ -42,7 +42,7 @@ namespace WebStudyServer
             services.AddScoped<CheatService>();
 
             services.AddScoped<RpcContext>();
-            services.AddScoped<ICacheLayer, InMemoryCacheLayer>();
+            services.AddScoped<ICacheSession, InMemoryCacheLayer>();
         }
 
         private void AddController(IServiceCollection services)

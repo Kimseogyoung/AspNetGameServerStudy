@@ -1,6 +1,9 @@
+using Server.Repo.Database;
 using WebStudyServer.Base;
 using WebStudyServer.Component;
 using WebStudyServer.GAME;
+using WebStudyServer.Repo.Cache;
+using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Repo
 {
@@ -9,7 +12,7 @@ namespace WebStudyServer.Repo
         public ScheduleComponent Schedule { get; private set; }
         public RpcContext RpcContext { get; private set; }
 
-        public CenterRepo(RpcContext rpcContext)
+        public CenterRepo(RpcContext rpcContext, IRepository repository) : base(rpcContext.ShardId, repository)
         {
             RpcContext = rpcContext;
         }
@@ -17,13 +20,7 @@ namespace WebStudyServer.Repo
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            Schedule = new ScheduleComponent(this, _dbFactory);
-        }
-
-        public static CenterRepo CreateInstance(RpcContext rpcContext)
-        {
-            var centerRepo = new CenterRepo(rpcContext);
-            return centerRepo;
+            Schedule = new ScheduleComponent(this, _repository);
         }
     }
 }

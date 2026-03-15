@@ -1,5 +1,5 @@
-using System.Security.Cryptography;
 using Proto;
+using Server.Repo.Database;
 using WebStudyServer.Base;
 using WebStudyServer.Extension;
 using WebStudyServer.GAME;
@@ -7,26 +7,26 @@ using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class ScheduleComponent : CenterComponentBase
     {
-        public ScheduleComponent(CenterRepo centerRepo, IDbSession dbFactory) : base(centerRepo, dbFactory)
+        public static class Key
+        {
+            public static CacheKey Single(int num) => CacheKey.For<ScheduleModel>(num);
+        }
+
+        public ScheduleComponent(CenterRepo centerRepo, IRepository repository) : base(centerRepo, repository)
         {
         }
 
         public List<ScheduleManager> GetList()
         {
-            var mdlList = new List<ScheduleModel>();
-
-            // TODO: 자주 바뀌지 않으므로 Mgr 캐싱
-            // 전부 로드
-            _dbFactory.Execute(db =>
-            {
-                mdlList = [.. db.SelectListByConditions<ScheduleModel>(null)];
-            });
+            // 전체 조회 — 캐시 -> DB조회 일반화가 어려운 부분이라 DbSession 직접 사용
+            var mdlList = DbSession.Execute(db => db.SelectListByConditions<ScheduleModel>(null).ToList());
 
             var prts = APP.Prt.GetSchedulePrts();
             var mgrList = new List<ScheduleManager>();
@@ -37,7 +37,6 @@ namespace WebStudyServer.Component
                 mgrList.Add(mgr);
             }
 
-
             return mgrList;
         }
 
@@ -47,13 +46,13 @@ namespace WebStudyServer.Component
             switch (validTimeType)
             {
                 case EScheduleTimeType.TOTAL:
-                    ReqHelper.ValidContext(mgrSchedule.IsActivePeriod(_centerRepo.RpcContext.ServerTime), "NOT_ACTIVE_TOTAL_TIME_SCHEDULE", () => new { Num = num });
+                    ReqHelper.ValidContext(mgrSchedule.IsActivePeriod(RpcCtx.ServerTime), "NOT_ACTIVE_TOTAL_TIME_SCHEDULE", () => new { Num = num });
                     break;
                 case EScheduleTimeType.REWARD:
-                    ReqHelper.ValidContext(mgrSchedule.IsRewardPeriod(_centerRepo.RpcContext.ServerTime), "NOT_ACTIVE_REWARD_TIME_SCHEDULE", () => new { Num = num });
+                    ReqHelper.ValidContext(mgrSchedule.IsRewardPeriod(RpcCtx.ServerTime), "NOT_ACTIVE_REWARD_TIME_SCHEDULE", () => new { Num = num });
                     break;
                 case EScheduleTimeType.CONTENT:
-                    ReqHelper.ValidContext(mgrSchedule.IsContentPeriod(_centerRepo.RpcContext.ServerTime), "NOT_ACTIVE_CONTENT_TIME_SCHEDULE", () => new { Num = num });
+                    ReqHelper.ValidContext(mgrSchedule.IsContentPeriod(RpcCtx.ServerTime), "NOT_ACTIVE_CONTENT_TIME_SCHEDULE", () => new { Num = num });
                     break;
             }
             return mgrSchedule;
@@ -62,15 +61,9 @@ namespace WebStudyServer.Component
         public bool TryGet(int num, out ScheduleManager outSchedule)
         {
             var prt = APP.Prt.GetSchedulePrt(num);
-            ScheduleModel mdlSchedule = null;
-
-            _dbFactory.Execute(db =>
-            {
-                mdlSchedule = db.SelectByPk<ScheduleModel>(new { Num = num });
-            });
-
+            var mdlSchedule = GetMdl(Key.Single(num), db => db.SelectByPk<ScheduleModel>(new { Num = num }));
             outSchedule = new ScheduleManager(_centerRepo, prt, mdlSchedule);
-            return outSchedule != null;
+            return mdlSchedule != null;
         }
     }
 }

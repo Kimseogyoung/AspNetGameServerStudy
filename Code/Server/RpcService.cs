@@ -15,7 +15,7 @@ namespace Server
 
             foreach (var method in methodList)
             {
-                NameToMethodDict.Add(method.Name, method);
+                _nameToMethodDict.Add(method.Name, method);
             }
         }
 
@@ -78,7 +78,7 @@ namespace Server
         private async Task<object> HandleMethodAsync(RpcContext rpcCtx, HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj)
         {
             var userLockSvc = httpCtx.RequestServices.GetRequiredService<UserLockService>();
-            var dbRepo = httpCtx.RequestServices.GetRequiredService<DbRepo>();
+            var dbRepo = httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>();
             object rpcResObj = null;
             try
             {
@@ -106,7 +106,8 @@ namespace Server
             return methodName;
         }
 
-        public Dictionary<string, IRpcMethod> NameToMethodDict { get; } = [];
+        public IReadOnlyDictionary<string, IRpcMethod> NameToMethodDict => _nameToMethodDict;
+        private readonly Dictionary<string, IRpcMethod> _nameToMethodDict = [];
 
         private readonly ILogger<RpcService> _logger;
 

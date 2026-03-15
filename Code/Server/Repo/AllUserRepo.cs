@@ -7,6 +7,7 @@ namespace WebStudyServer.Repo
     {
         private readonly List<IDbSession> _factories;
 
+        // 우선 DB전용.. Repo로 구현하였으나 개선 필요.
         public AllUserRepo(List<IDbSession> factories)
         {
             _factories = factories;

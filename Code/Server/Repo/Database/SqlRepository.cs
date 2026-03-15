@@ -4,15 +4,15 @@ using WebStudyServer.Repo.Database;
 
 namespace Server.Repo.Database
 {
-    public class DbLayer : IDbLayer
+    public class SqlRepository : IRepository
     {
-        public ICacheLayer Cache { get; }
-        public IDbSession DbFactory { get; }
+        public ICacheSession Cache { get; }
+        public IDbSession Db { get; }
 
-        public DbLayer(ICacheLayer cache, IDbSession dbFactory)
+        public SqlRepository(ICacheSession cache, IDbSession dbFactory)
         {
             Cache = cache;
-            DbFactory = dbFactory;
+            Db = dbFactory;
         }
 
         // ── Select: Cache → DB fallback → Cache Set ───────────
@@ -24,7 +24,7 @@ namespace Server.Repo.Database
                 return hit;
             }
 
-            var result = DbFactory.Execute(db => dbFetch(db));
+            var result = Db.Execute(db => dbFetch(db));
 
             if (result != null)
             {
@@ -34,8 +34,8 @@ namespace Server.Repo.Database
             return result;
         }
 
-        // ── SelectList by PlayerId: Cache → DB → Cache SetList ─
-        public List<T> GetListByPlayerId<T>(CacheKey listKey, ulong playerId, Func<T, CacheKey> keySelector) where T : ModelBase
+        // ── SelectList: Cache → DB(dbFetch 위임) → BulkSet ────
+        public List<T> GetList<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch, Func<T, CacheKey> keySelector) where T : ModelBase
         {
             var cached = Cache.GetList<T>(listKey);
             if (cached != null)
@@ -43,38 +43,36 @@ namespace Server.Repo.Database
                 return [.. cached];
             }
 
-            var result = DbFactory.Execute(db => db.SelectListByPlayerId<T>(playerId).ToList());
+            var result = Db.Execute(db => dbFetch(db));
             Cache.BulkSet(result, keySelector);
-            return result;
+            return [.. result];
         }
 
-        public List<T> GetListByPlayerIdAndPredicate<T>(CacheKey key, ulong playerId, Func<T, bool> predicate) where T : ModelBase
+        // ── SelectList + predicate: Cache → filter / DB → filter (캐시 Set 안함) ─
+        public List<T> GetListFiltered<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch, Func<T, bool> predicate) where T : ModelBase
         {
-            var cached = Cache.GetList<T>(key);
+            var cached = Cache.GetList<T>(listKey);
             if (cached != null)
             {
-                // 캐시값 있으면 쓰고
                 return [.. cached.Where(predicate)];
             }
 
-            // DB에서 읽어와도 캐시 갱신은 따로 안함.
-            // KeySelector가 들어가야해서 그냥 명시적으로 한번에 해주기 위함인데.. 나중에 마음 바뀌면 개선 검토
-            var result = DbFactory.Execute(db => db.SelectListByPlayerId<T>(playerId).ToList());
+            var result = Db.Execute(db => dbFetch(db));
             return [.. result.Where(predicate)];
         }
 
         // ── Insert: DB → Cache ─────────────────────────────────
-        public T Insert<T>(T entity, CacheKey key) where T : ModelBase
+        public T Insert<T>(T entity, Func<T, CacheKey> keyFactory) where T : ModelBase
         {
-            entity = DbFactory.Execute(db => db.Insert<T>(entity));
-            Cache.Set(key, entity);
+            entity = Db.Execute(db => db.Insert<T>(entity));
+            Cache.Set(keyFactory(entity), entity);
             return entity;
         }
 
         // ── Update: DB → Cache ─────────────────────────────────
         public void Update<T>(T entity, CacheKey key) where T : ModelBase
         {
-            DbFactory.Execute(db => db.Update<T>(entity));
+            Db.Execute(db => db.Update<T>(entity));
             Cache.Set(key, entity);
         }
     }

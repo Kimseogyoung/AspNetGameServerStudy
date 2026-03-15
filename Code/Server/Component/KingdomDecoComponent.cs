@@ -17,7 +17,7 @@ namespace WebStudyServer.Component
             public static CacheKey List(ulong playerId) => CacheKey.For<KingdomDecoModel>(playerId);
         }
 
-        public KingdomDecoComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+        public KingdomDecoComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
         protected override CacheKey KeyFor(KingdomDecoModel model) => Key.Single(model.PlayerId, model.Num);
         protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);

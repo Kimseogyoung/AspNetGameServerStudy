@@ -13,7 +13,7 @@ namespace Server.Service
 {
     public class CheatService : ServiceBase
     {
-        public CheatService(DbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<CheatService> logger) : base(rpcContext, logger)
+        public CheatService(GlobalDbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<CheatService> logger) : base(rpcContext, logger)
         {
             _dbRepo = dbRepo;
             _mapper = mapper;
@@ -29,7 +29,7 @@ namespace Server.Service
             };
         }
 
-        private readonly DbRepo _dbRepo;
+        private readonly GlobalDbRepo _dbRepo;
         private readonly IMapper _mapper;
     }
 }

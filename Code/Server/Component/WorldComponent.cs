@@ -16,7 +16,7 @@ namespace WebStudyServer.Component
             public static CacheKey List(ulong playerId) => CacheKey.For<WorldModel>(playerId);
         }
 
-        public WorldComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+        public WorldComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
         protected override CacheKey KeyFor(WorldModel model) => Key.Single(model.PlayerId, model.Num);
         protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);

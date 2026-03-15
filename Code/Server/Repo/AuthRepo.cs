@@ -1,11 +1,11 @@
-using System.Numerics;
-using System.Threading.Channels;
-using Dapper;
+using Server.Repo.Database;
 using WebStudyServer.Base;
 using WebStudyServer.Component;
 using WebStudyServer.Extension;
 using WebStudyServer.GAME;
 using WebStudyServer.Model;
+using WebStudyServer.Repo.Cache;
+using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Repo
 {
@@ -18,7 +18,7 @@ namespace WebStudyServer.Repo
         public PlayerMapComponent PlayerMap { get; private set; }
 
         public RpcContext RpcContext { get; private set; }
-        public AuthRepo(RpcContext rpcContext)
+        public AuthRepo(RpcContext rpcContext, IRepository repository) : base(rpcContext.ShardId, repository)
         {
             RpcContext = rpcContext;
         }
@@ -26,16 +26,12 @@ namespace WebStudyServer.Repo
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            Account = new AccountComponent(this, _dbFactory);
-            Session = new SessionComponent(this, _dbFactory);
-            Device = new DeviceComponent(this, _dbFactory);
-            Channel = new ChannelComponent(this, _dbFactory);
-            PlayerMap = new PlayerMapComponent(this, _dbFactory);
+            Account = new AccountComponent(this, _repository);
+            Session = new SessionComponent(this, _repository);
+            Device = new DeviceComponent(this, _repository);
+            Channel = new ChannelComponent(this, _repository);
+            PlayerMap = new PlayerMapComponent(this, _repository);
         }
-
-        #region PLAYER_MAP
-
-        #endregion
 
     }
 }

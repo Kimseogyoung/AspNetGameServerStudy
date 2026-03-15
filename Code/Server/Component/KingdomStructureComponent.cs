@@ -18,7 +18,7 @@ namespace WebStudyServer.Component
             public static CacheKey List(ulong playerId) => CacheKey.For<KingdomStructureModel>(playerId);
         }
 
-        public KingdomStructureComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+        public KingdomStructureComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
         protected override CacheKey KeyFor(KingdomStructureModel model) => Key.Single(model.PlayerId, model.SfId);
         protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);

@@ -16,7 +16,7 @@ namespace WebStudyServer.Component
             public static CacheKey List(ulong playerId) => CacheKey.For<PointModel>(playerId);
         }
 
-        public PointComponent(UserRepo userRepo, IDbLayer db) : base(userRepo, db) { }
+        public PointComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
         protected override CacheKey KeyFor(PointModel model) => Key.Single(model.PlayerId, model.Num);
         protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);

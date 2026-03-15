@@ -1,0 +1,188 @@
+using Server.Repo.Database;
+using WebStudyServer;
+using WebStudyServer.GAME;
+using WebStudyServer.Repo;
+using WebStudyServer.Repo.Cache;
+using WebStudyServer.Repo.Database;
+
+namespace Server.Repo
+{
+    public class GlobalDbRepo
+    {
+        public UserRepo OwnUser { get; private set; } = null;
+
+        // Lazy Loading
+        public AuthRepo Auth => _lazyAuthRepo?.Value ?? throw new ObjectDisposedException(nameof(GlobalDbRepo));
+        public CenterRepo Center => _lazyCenterRepo?.Value ?? throw new ObjectDisposedException(nameof(GlobalDbRepo));
+        public AllUserRepo AllUser => _lazyAllUserRepo?.Value ?? throw new ObjectDisposedException(nameof(GlobalDbRepo));
+
+        // TODO: 추후 cacheSession도 CacheSessionManager통해서 만들도록
+        public GlobalDbRepo(RpcContext rpcContext, ICacheSession cacheSession, DbSessionManager dbScope, ILogger<GlobalDbRepo> logger)
+        {
+            _rpcContext = rpcContext;
+            _cacheSession = cacheSession;
+            _dbSessionManager = dbScope;
+            _logger = logger;
+
+            _lazyAuthRepo = new Lazy<AuthRepo>(BeginAuthRepo);
+            _lazyCenterRepo = new Lazy<CenterRepo>(BeginCenterRepo);
+            _lazyAllUserRepo = new Lazy<AllUserRepo>(BeginAllUserRepo);
+        }
+
+        public void BeginOwnUserRepo()
+        {
+            if (OwnUser != null)
+            {
+                return;
+            }
+
+            var connStr = GetUserDbConnectionStr(_rpcContext.ShardId);
+            var repository = CreateRepository(connStr);
+            var userRepo = new UserRepo(_rpcContext, repository);
+            OwnUser = userRepo;
+        }
+
+        private AuthRepo BeginAuthRepo()
+        {
+            var connStr = APP.Cfg.AuthDbConnectionStrList.Count > 0 ? APP.Cfg.AuthDbConnectionStrList[0] : InMemoryConnectionKey;
+            var repository = CreateRepository(connStr);
+            var authRepo = new AuthRepo(_rpcContext, repository);
+            return authRepo;
+        }
+
+        private CenterRepo BeginCenterRepo()
+        {
+            var connStr = APP.Cfg.CenterDbConnectionStrList.Count > 0 ? APP.Cfg.CenterDbConnectionStrList[0] : InMemoryConnectionKey;
+            var repository = CreateRepository(connStr);
+            var centerRepo = new CenterRepo(_rpcContext, repository);
+            return centerRepo;
+        }
+
+        private AllUserRepo BeginAllUserRepo()
+        {
+            var factories = APP.Cfg.UserDbConnectionStrList
+                .Select(connStr => _dbSessionManager.Open(connStr))
+                .ToList();
+
+            return new AllUserRepo(factories);
+        }
+
+        public void Commit()
+        {
+            try
+            {
+                _dbSessionManager.Commit();
+                _cacheSession.FlushPendingWrites();
+            }
+            catch (Exception e)
+            {
+                // TODO: 오류 종류 파악 후 세분화하기
+                _logger.LogError(e, "Commit 중 오류 발생");
+                Rollback();
+                throw;
+            }
+        }
+
+        public void Rollback()
+        {
+            try
+            {
+                _dbSessionManager.Rollback();
+                _cacheSession.DiscardPendingWrites();
+            }
+            catch (Exception e)
+            {
+                // TODO: 오류 종류 파악 후 세분화하기
+                _logger.LogError(e, "Rollback 중 오류 발생");
+                Close();
+                throw;
+            }
+        }
+
+        public void Close()
+        {
+            try
+            {
+                _dbSessionManager.Close();
+
+                _lazyAuthRepo = null;
+                _lazyCenterRepo = null;
+                _lazyAllUserRepo = null;
+
+                OwnUser = null;
+            }
+            catch (Exception e)
+            {
+                // TODO: 오류 종류 파악 후 세분화하기
+                _logger.LogError(e, "Close 중 오류 발생");
+                throw;
+            }
+        }
+
+        private string GetUserDbConnectionStr(int shardId)
+        {
+            var connList = APP.Cfg.UserDbConnectionStrList;
+            if (connList.Count == 0)
+            {
+                return InMemoryConnectionKey;
+            }
+
+            if (MaxShardCount <= shardId)
+            {
+                throw new ArgumentOutOfRangeException(nameof(shardId),
+                    $"ShardId({shardId})가 최대값({MaxShardCount})을 초과합니다.");
+            }
+
+            var shardIdx = _shardMap[shardId];
+            if (shardIdx >= connList.Count)
+            {
+                shardIdx %= connList.Count;
+            }
+
+            return connList[shardIdx];
+        }
+
+
+        private IRepository CreateRepository(string dbConnectionString)
+        {
+            var dbSession = _dbSessionManager.Open(dbConnectionString);
+
+            IRepository repo;
+            switch (APP.Cfg.DbType)
+            {
+                case DbType.InMemory:
+                    repo = new InMemoryRepository(_cacheSession, dbSession);
+                    break;
+                case DbType.MySql:
+                    repo = new SqlRepository(_cacheSession, dbSession);
+                    break;
+                default:
+                    throw new NotSupportedException($"NotSupportDbType({APP.Cfg.DbType})");
+            }
+
+            return repo;
+        }
+
+        // InMemory 모드에서 모든 Repo가 단일 세션을 공유하도록 동일한 키를 사용한다.
+        private const string InMemoryConnectionKey = "__inmemory__";
+        private const int MaxShardCount = 64;
+
+        private readonly int[] _shardMap =
+        [   0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
+            0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
+            0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
+            0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
+            0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
+            0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
+            0, 1, 2, 4 ];
+
+        private Lazy<AuthRepo>? _lazyAuthRepo;
+        private Lazy<CenterRepo>? _lazyCenterRepo;
+        private Lazy<AllUserRepo>? _lazyAllUserRepo;
+
+        private readonly RpcContext _rpcContext;
+        private readonly ICacheSession _cacheSession;
+        private readonly DbSessionManager _dbSessionManager;
+        private readonly ILogger _logger;
+    }
+}

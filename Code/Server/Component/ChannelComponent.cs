@@ -1,33 +1,40 @@
-using System.Threading.Channels;
 using Proto;
+using Server.Repo.Database;
 using WebStudyServer.Base;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class ChannelComponent : AuthComponentBase
     {
-        public ChannelComponent(AuthRepo authRepo, IDbSession dbFactory) : base(authRepo, dbFactory)
+        public static class Key
         {
+            // point lookup 전용 (TryGet/Get 핫패스)
+            public static CacheKey Single(string channelKey) => CacheKey.For<ChannelModel>(channelKey);
+
+            // GetList 전용 — ICacheSession prefix 계약 준수:
+            //   ListItem이 List의 prefix를 포함하도록 accountId를 앞에 둔다.
+            //   List(456)             → "ChannelModel:456"
+            //   ListItem(456, "abc")  → "ChannelModel:456:abc"  StartsWith("ChannelModel:456") ✅
+            public static CacheKey List(ulong accountId) => CacheKey.For<ChannelModel>(accountId);
+            public static CacheKey ListItem(ulong accountId, string channelKey) => CacheKey.For<ChannelModel>(accountId, channelKey);
         }
 
+        public ChannelComponent(AuthRepo authRepo, IRepository repository) : base(authRepo, repository)
+        {
+        }
 
         public bool TryGetActive(ulong accountId, out ChannelManager mgrChannel)
         {
             mgrChannel = null;
-
-            var mdlChannelList = GetList(accountId);
-            var mdlActiveChannel = mdlChannelList.Where(x => x.State == EChannelState.ACTIVE).FirstOrDefault();
-            if (mdlActiveChannel == null)
-            {
-                return false;
-            }
-
+            var mdlActiveChannel = GetList(accountId).Where(x => x.State == EChannelState.ACTIVE).FirstOrDefault();
+            if (mdlActiveChannel == null) return false;
             mgrChannel = new ChannelManager(_authRepo, mdlActiveChannel);
             return true;
         }
@@ -41,15 +48,10 @@ namespace WebStudyServer.Component
         public bool TryGet(string key, out ChannelManager mgrChannel)
         {
             mgrChannel = null;
-            ChannelModel mdlChannel = null;
-
-            _dbFactory.Execute(db =>
-            {
-                mdlChannel = db.SelectByPk<ChannelModel>(new { Key = key });
-            });
-
+            var mdlChannel = GetMdl(Key.Single(key), db => db.SelectByPk<ChannelModel>(new { Key = key }));
+            if (mdlChannel == null) return false;
             mgrChannel = new ChannelManager(_authRepo, mdlChannel);
-            return mdlChannel != null;
+            return true;
         }
 
         public ChannelManager Create(ulong accountId, EChannelType type, string channelKey = "")
@@ -61,41 +63,24 @@ namespace WebStudyServer.Component
                     break;
             }
 
-            var newChannel = new ChannelModel
+            var repoChannel = CreateMdl(new ChannelModel
             {
                 Key = channelKey,
                 AccountId = accountId,
                 Type = type,
                 State = EChannelState.ACTIVE,
                 Token = ""
-            };
+            }, e => Key.Single(e.Key));
 
-            ChannelModel repoChannel = null;
-            // 데이터베이스에 삽입
-            _dbFactory.Execute(db =>
-            {
-                repoChannel = db.Insert(newChannel);
-            });
-
-            var mgrChannel = new ChannelManager(_authRepo, repoChannel);
-            return mgrChannel;
+            return new ChannelManager(_authRepo, repoChannel);
         }
 
         public List<ChannelModel> GetList(ulong accountId)
-        {
-            var mdlChannelList = new List<ChannelModel>();
-
-            _dbFactory.Execute(db =>
-            {
-                mdlChannelList = [.. db.SelectListByConditions<ChannelModel>(new { AccountId = accountId })];
-            });
-
-            return mdlChannelList;
-        }
+            => GetMdlListByAccountId<ChannelModel>(Key.List(accountId), accountId, e => Key.ListItem(accountId, e.Key));
 
         public void Update(ChannelModel mdlChannel)
         {
-            _dbFactory.Execute(db => db.Update(mdlChannel));
+            UpdateMdl(mdlChannel, Key.Single(mdlChannel.Key));
         }
     }
 }

@@ -1,35 +1,38 @@
 using Proto;
+using Server.Repo.Database;
 using WebStudyServer.Base;
 using WebStudyServer.Extension;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class DeviceComponent : AuthComponentBase
     {
-        public DeviceComponent(AuthRepo authRepo, IDbSession dbFactory) : base(authRepo, dbFactory)
+        public static class Key
+        {
+            public static CacheKey Single(string deviceKey) => CacheKey.For<DeviceModel>(deviceKey);
+        }
+
+        public DeviceComponent(AuthRepo authRepo, IRepository repository) : base(authRepo, repository)
         {
         }
 
         public bool TryGet(string idfv, out DeviceManager mgrDevice)
         {
             mgrDevice = null;
-
-            if (!TryGetInternal(idfv, out var mdlDevice))
-            {
-                return false;
-            }
-
+            var mdlDevice = GetMdl(Key.Single(idfv), db => db.SelectByPk<DeviceModel>(new { Key = idfv }));
+            if (mdlDevice == null) return false;
             mgrDevice = new DeviceManager(_authRepo, mdlDevice);
             return true;
         }
 
         public DeviceManager Create(string idfv)
         {
-            var newDevice = new DeviceModel
+            var repoDevice = CreateMdl(new DeviceModel
             {
                 Key = idfv,
                 Idfa = "",
@@ -38,40 +41,14 @@ namespace WebStudyServer.Component
                 Country = "",
                 GeoIpCountry = "",
                 Language = ""
-            };
+            }, e => Key.Single(e.Key));
 
-            var repoDevice = CreateInternal(newDevice);
-            var mgrDevice = new DeviceManager(_authRepo, repoDevice);
-            return mgrDevice;
+            return new DeviceManager(_authRepo, repoDevice);
         }
 
         public void Update(DeviceModel mdlDevice)
         {
-            _dbFactory.Execute(db => db.Update(mdlDevice));
-        }
-
-        private DeviceModel CreateInternal(DeviceModel inChannel)
-        {
-            DeviceModel newDevice = null;
-            // 데이터베이스에 삽입
-            _dbFactory.Execute(db =>
-            {
-                newDevice = db.Insert(inChannel);
-            });
-
-            return newDevice; // 새로 생성된 계정 모델 반환
-        }
-
-        private bool TryGetInternal(string deviceKey, out DeviceModel outDevice)
-        {
-            DeviceModel mdlDevice = null;
-
-            _dbFactory.Execute(db =>
-            {
-                mdlDevice = db.SelectByPk<DeviceModel>(new { Key = deviceKey });
-            });
-            outDevice = mdlDevice;
-            return outDevice != null;
+            UpdateMdl(mdlDevice, Key.Single(mdlDevice.Key));
         }
     }
 }

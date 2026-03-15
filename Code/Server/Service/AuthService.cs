@@ -10,7 +10,7 @@ namespace WebStudyServer.Service
 {
     public class AuthService : ServiceBase
     {
-        public AuthService(DbRepo dbRepo, RpcContext rpcContext, ILogger<AuthService> logger) : base(rpcContext, logger)
+        public AuthService(GlobalDbRepo dbRepo, RpcContext rpcContext, ILogger<AuthService> logger) : base(rpcContext, logger)
         {
             _dbRepo = dbRepo;
         }
@@ -96,7 +96,7 @@ namespace WebStudyServer.Service
             };
         }
 
-        private readonly DbRepo _dbRepo;
+        private readonly GlobalDbRepo _dbRepo;
         private AuthRepo Auth => _dbRepo.Auth;
     }
 }

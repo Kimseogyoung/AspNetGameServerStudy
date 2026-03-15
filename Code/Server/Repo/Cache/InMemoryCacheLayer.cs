@@ -5,7 +5,7 @@ namespace WebStudyServer.Repo.Cache
     // 요청 스코프(Scoped) InMemory 캐시.
     // TTL 미지원 (요청 종료 시 인스턴스 자체가 소멸).
     // GetList: listKey.Value를 prefix로 StartsWith 스캔 — BulkSet으로 저장된 개별 키 대상.
-    public class InMemoryCacheLayer : ICacheLayer
+    public class InMemoryCacheLayer : ICacheSession
     {
         private readonly Dictionary<string, object> _store = [];
 
@@ -19,6 +19,9 @@ namespace WebStudyServer.Repo.Cache
             return null;
         }
 
+        // listKey.Value를 prefix로 갖는 모든 키를 반환한다.
+        // ICacheSession의 BulkSet+GetList prefix 계약에 의존하므로,
+        // BulkSet 호출 시 keySelector가 listKey prefix를 준수해야만 캐시가 동작한다.
         public IReadOnlyList<T> GetList<T>(CacheKey listKey) where T : ModelBase
         {
             var items = _store

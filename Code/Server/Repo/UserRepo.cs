@@ -3,6 +3,7 @@ using WebStudyServer.Base;
 using WebStudyServer.Component;
 using WebStudyServer.GAME;
 using WebStudyServer.Repo.Cache;
+using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Repo
 {
@@ -21,37 +22,25 @@ namespace WebStudyServer.Repo
         public WorldStageComponent WorldStage { get; private set; }
         public RpcContext RpcContext { get; private set; }
 
-        public UserRepo(RpcContext rpcContext, ICacheLayer cacheLayer)
+        public UserRepo(RpcContext rpcContext, IRepository repository): base(rpcContext.ShardId, repository)
         {
             RpcContext = rpcContext;
-            _cacheLayer = cacheLayer;
         }
 
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            IDbLayer dbLayer;
-            if (APP.Cfg.DbType == DbType.InMemory)
-            {
-                dbLayer = new InMemoryDbLayer(_dbFactory, _cacheLayer);
-            }
-            else
-            {
-                dbLayer = new DbLayer(_cacheLayer, _dbFactory);
-            }
-            Player = new PlayerComponent(this, dbLayer);
-            PlayerDetail = new PlayerDetailComponent(this, dbLayer);
-            Point = new PointComponent(this, dbLayer);
-            Ticket = new TicketComponent(this, dbLayer);
-            Cookie = new CookieComponent(this, dbLayer);
-            KingdomStructure = new KingdomStructureComponent(this, dbLayer);
-            KingdomDeco = new KingdomDecoComponent(this, dbLayer);
-            KingdomMap = new KingdomMapComponent(this, dbLayer);
-            Item = new ItemComponent(this, dbLayer);
-            World = new WorldComponent(this, dbLayer);
-            WorldStage = new WorldStageComponent(this, dbLayer);
+            Player = new PlayerComponent(this, _repository);
+            PlayerDetail = new PlayerDetailComponent(this, _repository);
+            Point = new PointComponent(this, _repository);
+            Ticket = new TicketComponent(this, _repository);
+            Cookie = new CookieComponent(this, _repository);
+            KingdomStructure = new KingdomStructureComponent(this, _repository);
+            KingdomDeco = new KingdomDecoComponent(this, _repository);
+            KingdomMap = new KingdomMapComponent(this, _repository);
+            Item = new ItemComponent(this, _repository);
+            World = new WorldComponent(this, _repository);
+            WorldStage = new WorldStageComponent(this, _repository);
         }
-
-        private readonly ICacheLayer _cacheLayer;
     }
 }
