@@ -1,24 +1,20 @@
-using MySqlConnector;
-using Server.Repo;
 using WebStudyServer.Extension;
 using WebStudyServer.GAME;
-using WebStudyServer.Repo;
 
 namespace WebStudyServer
 {
     public class UserLockService
     {
-        public UserLockService(RpcContext rpcContext, ILogger<UserLockService> logger)
+        public UserLockService(ILockService lockService, ILogger<UserLockService> logger)
         {
-            _rpcContext = rpcContext;
+            _lockService = lockService;
             _logger = logger;
             _useDbLock = APP.Cfg.UseUserLock;
         }
 
-        public async Task RunAtomicAsync(ulong accountId, GlobalDbRepo dbRepo, Func<Task> action)
+        public async Task RunAtomicAsync(ulong accountId, Func<Task> action)
         {
-            if (!_useDbLock
-                || accountId == 0) // 익명 요청은 유저 락을 사용하지 않음
+            if (!_useDbLock || accountId == 0) // 익명 요청은 유저 락을 사용하지 않음
             {
                 _logger.Debug("SkipUserLock");
                 await action();
@@ -27,13 +23,9 @@ namespace WebStudyServer
 
             _logger.Debug("WaitUserLock AccountId({AccountId})", accountId);
 
-            var idParam = new MySqlParameter("@id", $"acnt:{accountId}");
-            var timeOutParam = new MySqlParameter("@timeout", APP.Cfg.UserLockTimeoutSpan);
-            var getLockResult = dbRepo.Auth.RunCommand<long>("SELECT GET_LOCK(@id, @timeout)", [idParam, timeOutParam]);
-
-            if (getLockResult <= 0) // NOTE: result가 0이면 GetLock에 실패
+            if (!_lockService.Enter(accountId))
             {
-                _logger.Error("FAILED_GET_USER_LOCK AccountId({AccountId}) Result({Result})", accountId, getLockResult);
+                _logger.Error("FAILED_GET_USER_LOCK AccountId({AccountId})", accountId);
                 throw new UserLockException(accountId, "USER_LOCK_DB_TIME_OUT");
             }
 
@@ -49,16 +41,15 @@ namespace WebStudyServer
             finally
             {
                 _logger.Debug("ExitUserLock AccountId({AccountId})", accountId);
-                var releaseLockResult = dbRepo.Auth.RunCommand<long>("SELECT RELEASE_LOCK(@id)", [idParam]);
-                if (releaseLockResult <= 0) // NOTE: result가 0이면 ReleaseLock에 실패
+                if (!_lockService.Exit(accountId))
                 {
-                    _logger.Error("FAILED_RELEASE_USER_LOCK AccountId({AccountId}) Result({Result})", accountId, releaseLockResult);
+                    _logger.Error("FAILED_RELEASE_USER_LOCK AccountId({AccountId})", accountId);
                     throw new UserLockException(accountId, "FAILED_RELEASE_USER_LOCK");
                 }
             }
         }
 
-        private readonly RpcContext _rpcContext;
+        private readonly ILockService _lockService;
         private readonly bool _useDbLock;
         private readonly ILogger _logger;
     }

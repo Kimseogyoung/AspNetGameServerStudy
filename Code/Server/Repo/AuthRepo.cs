@@ -26,11 +26,11 @@ namespace WebStudyServer.Repo
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            Account = new AccountComponent(this, _repository);
-            Session = new SessionComponent(this, _repository);
-            Device = new DeviceComponent(this, _repository);
-            Channel = new ChannelComponent(this, _repository);
-            PlayerMap = new PlayerMapComponent(this, _repository);
+            Account = new AccountComponent(this, Repository);
+            Session = new SessionComponent(this, Repository);
+            Device = new DeviceComponent(this, Repository);
+            Channel = new ChannelComponent(this, Repository);
+            PlayerMap = new PlayerMapComponent(this, Repository);
         }
 
     }

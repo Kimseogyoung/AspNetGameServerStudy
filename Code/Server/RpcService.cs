@@ -82,7 +82,7 @@ namespace Server
             object rpcResObj = null;
             try
             {
-                await userLockSvc.RunAtomicAsync(rpcCtx.AccountId, dbRepo, async () =>
+                await userLockSvc.RunAtomicAsync(rpcCtx.AccountId, async () =>
                 {
                     rpcResObj = await rpcMethod.RunAsync(rpcCtx, httpCtx, rpcReqObj);
                     await ResWriteHelper.WriteResponseBodyAsync(httpCtx, rpcResObj, rpcMethod.Res);

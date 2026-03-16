@@ -3,6 +3,7 @@ using Server.Repo;
 using WebStudyServer.Extension;
 using WebStudyServer.GAME;
 using WebStudyServer.Model;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.Repo.Database;
 
 // Init<T> 한 줄로 DapperExtension + InMemoryPkRegistry 동시 등록
@@ -21,16 +22,22 @@ namespace WebStudyServer
     {
         public void Resource(IServiceCollection services)
         {
-            services.AddMemoryCache();
-            services.AddSingleton<InMemoryStore>();
+            services.AddScoped<UserLockService>();;
             if (APP.Cfg.DbType == DbType.InMemory)
             {
+                services.AddScoped<ILockService, InMemoryLockService>();
                 services.AddSingleton<IDbSessionFactory, InMemoryDbSessionFactory>();
             }
             else
             {
+                services.AddScoped<ILockService, MySqlLockService>();
                 services.AddSingleton<IDbSessionFactory, MySqlDbSessionFactory>();
             }
+
+            // Cache
+            services.AddScoped<ICacheSession, InMemoryCacheLayer>();
+            services.AddMemoryCache();
+            services.AddSingleton<InMemoryStore>();
 
             services.AddScoped<DbSessionManager>();
             services.AddScoped<GlobalDbRepo>();

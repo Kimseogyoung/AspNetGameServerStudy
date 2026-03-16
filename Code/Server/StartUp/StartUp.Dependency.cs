@@ -2,6 +2,7 @@ using Microsoft.OpenApi.Models;
 using Server.Service;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WebStudyServer.Filter;
+using WebStudyServer.GAME;
 using WebStudyServer.Repo.Cache;
 using WebStudyServer.Service;
 
@@ -34,15 +35,12 @@ namespace WebStudyServer
             services.AddAutoMapper(typeof(AutoMapperProfile));
 
             services.AddScoped<ErrorHandler>();
-            services.AddScoped<UserLockService>();
-
             services.AddScoped<CommonService>();
             services.AddScoped<AuthService>();
             services.AddScoped<GameService>();
             services.AddScoped<CheatService>();
 
             services.AddScoped<RpcContext>();
-            services.AddScoped<ICacheSession, InMemoryCacheLayer>();
         }
 
         private void AddController(IServiceCollection services)

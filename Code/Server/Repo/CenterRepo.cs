@@ -20,7 +20,7 @@ namespace WebStudyServer.Repo
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            Schedule = new ScheduleComponent(this, _repository);
+            Schedule = new ScheduleComponent(this, Repository);
         }
     }
 }
