@@ -10,16 +10,10 @@ namespace WebStudyServer.Component
 {
     public class ItemComponent : UserComponentBase<ItemModel>
     {
-        public static class Key
-        {
-            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<ItemModel>(playerId, num);
-            public static CacheKey List(ulong playerId) => CacheKey.For<ItemModel>(playerId);
-        }
-
         public ItemComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(ItemModel model) => Key.Single(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
+        protected override CacheKey KeyFor(ItemModel model) => CacheKey.For<ItemModel>(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<ItemModel>(playerId);
 
         public ItemManager Touch(int itemNum)
         {
@@ -39,9 +33,7 @@ namespace WebStudyServer.Component
 
         public bool TryGetInternal(int num, out ItemModel outItem)
         {
-            outItem = GetMdl(
-                Key.Single(RpcCtx.PlayerId, num),
-                db => db.SelectByPk<ItemModel>(new { RpcCtx.PlayerId, Num = num }));
+            outItem = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
             return outItem != null;
         }
     }

@@ -10,16 +10,10 @@ namespace WebStudyServer.Component
 {
     public class KingdomMapComponent : UserComponentBase<KingdomMapModel>
     {
-        public static class Key
-        {
-            public static CacheKey Single(ulong playerId) => CacheKey.For<KingdomMapModel>(playerId);
-            public static CacheKey List(ulong playerId) => CacheKey.For<KingdomMapModel>(playerId);
-        }
-
         public KingdomMapComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(KingdomMapModel model) => Key.Single(model.PlayerId);
-        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
+        protected override CacheKey KeyFor(KingdomMapModel model) => CacheKey.For<KingdomMapModel>(model.PlayerId);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<KingdomMapModel>(playerId);
 
         public KingdomMapManager Touch()
         {
@@ -38,9 +32,7 @@ namespace WebStudyServer.Component
 
         private bool TryGetInternal(out KingdomMapModel outKingdomMap)
         {
-            outKingdomMap = GetMdl(
-                Key.Single(RpcCtx.PlayerId),
-                db => db.SelectByPk<KingdomMapModel>(new { RpcCtx.PlayerId }));
+            outKingdomMap = GetMdl(x => x.PlayerId == RpcCtx.PlayerId);
             return outKingdomMap != null;
         }
     }

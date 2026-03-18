@@ -10,16 +10,10 @@ namespace WebStudyServer.Component
 {
     public class PointComponent : UserComponentBase<PointModel>
     {
-        public static class Key
-        {
-            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<PointModel>(playerId, num);
-            public static CacheKey List(ulong playerId) => CacheKey.For<PointModel>(playerId);
-        }
-
         public PointComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(PointModel model) => Key.Single(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
+        protected override CacheKey KeyFor(PointModel model) => CacheKey.For<PointModel>(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<PointModel>(playerId);
 
         public PointManager Touch(EObjType objType)
         {
@@ -39,9 +33,7 @@ namespace WebStudyServer.Component
 
         public bool TryGetInternal(int num, out PointModel outPoint)
         {
-            outPoint = GetMdl(
-                Key.Single(RpcCtx.PlayerId, num),
-                db => db.SelectByPk<PointModel>(new { RpcCtx.PlayerId, Num = num }));
+            outPoint = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
             return outPoint != null;
         }
     }

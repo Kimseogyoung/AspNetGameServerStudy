@@ -11,16 +11,10 @@ namespace WebStudyServer.Component
 {
     public class KingdomDecoComponent : UserComponentBase<KingdomDecoModel>
     {
-        public static class Key
-        {
-            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<KingdomDecoModel>(playerId, num);
-            public static CacheKey List(ulong playerId) => CacheKey.For<KingdomDecoModel>(playerId);
-        }
-
         public KingdomDecoComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(KingdomDecoModel model) => Key.Single(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
+        protected override CacheKey KeyFor(KingdomDecoModel model) => CacheKey.For<KingdomDecoModel>(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<KingdomDecoModel>(playerId);
 
         public KingdomDecoManager Touch(int itemNum)
         {
@@ -63,9 +57,7 @@ namespace WebStudyServer.Component
 
         private bool TryGetInternal(int num, out KingdomDecoModel outKingdomDeco)
         {
-            outKingdomDeco = GetMdl(
-                Key.Single(RpcCtx.PlayerId, num),
-                db => db.SelectByPk<KingdomDecoModel>(new { RpcCtx.PlayerId, Num = num }));
+            outKingdomDeco = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
             return outKingdomDeco != null;
         }
     }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Server.Repo;
+using StackExchange.Redis;
 using WebStudyServer.Extension;
 using WebStudyServer.GAME;
 using WebStudyServer.Model;
@@ -35,7 +36,19 @@ namespace WebStudyServer
             }
 
             // Cache
-            services.AddScoped<ICacheSession, InMemoryCacheLayer>();
+            var hasRedis = !string.IsNullOrEmpty(APP.Cfg.RedisConnectionString);
+            if (APP.Cfg.DbType == DbType.InMemory || !hasRedis)
+            {
+                services.AddScoped<ICacheSession, InMemoryCacheLayer>();
+            }
+            else
+            {
+                services.AddSingleton<IConnectionMultiplexer>(
+                    _ => ConnectionMultiplexer.Connect(APP.Cfg.RedisConnectionString));
+                services.AddScoped<InMemoryCacheLayer>();
+                services.AddScoped<RedisCacheLayer>();
+                services.AddScoped<ICacheSession, CompositeCacheLayer>();
+            }
             services.AddMemoryCache();
             services.AddSingleton<InMemoryStore>();
 

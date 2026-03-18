@@ -6,26 +6,11 @@ using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
-using WebStudyServer.Repo.Cache;
-using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class ChannelComponent : AuthComponentBase
     {
-        public static class Key
-        {
-            // point lookup 전용 (TryGet/Get 핫패스)
-            public static CacheKey Single(string channelKey) => CacheKey.For<ChannelModel>(channelKey);
-
-            // GetList 전용 — ICacheSession prefix 계약 준수:
-            //   ListItem이 List의 prefix를 포함하도록 accountId를 앞에 둔다.
-            //   List(456)             → "ChannelModel:456"
-            //   ListItem(456, "abc")  → "ChannelModel:456:abc"  StartsWith("ChannelModel:456") ✅
-            public static CacheKey List(ulong accountId) => CacheKey.For<ChannelModel>(accountId);
-            public static CacheKey ListItem(ulong accountId, string channelKey) => CacheKey.For<ChannelModel>(accountId, channelKey);
-        }
-
         public ChannelComponent(AuthRepo authRepo, IRepository repository) : base(authRepo, repository)
         {
         }
@@ -33,7 +18,7 @@ namespace WebStudyServer.Component
         public bool TryGetActive(ulong accountId, out ChannelManager mgrChannel)
         {
             mgrChannel = null;
-            var mdlActiveChannel = GetList(accountId).Where(x => x.State == EChannelState.ACTIVE).FirstOrDefault();
+            var mdlActiveChannel = GetList(accountId).FirstOrDefault(x => x.State == EChannelState.ACTIVE);
             if (mdlActiveChannel == null) return false;
             mgrChannel = new ChannelManager(_authRepo, mdlActiveChannel);
             return true;
@@ -48,7 +33,7 @@ namespace WebStudyServer.Component
         public bool TryGet(string key, out ChannelManager mgrChannel)
         {
             mgrChannel = null;
-            var mdlChannel = GetMdl(Key.Single(key), db => db.SelectByPk<ChannelModel>(new { Key = key }));
+            var mdlChannel = GetMdl(db => db.SelectByPk<ChannelModel>(new { Key = key }));
             if (mdlChannel == null) return false;
             mgrChannel = new ChannelManager(_authRepo, mdlChannel);
             return true;
@@ -70,17 +55,19 @@ namespace WebStudyServer.Component
                 Type = type,
                 State = EChannelState.ACTIVE,
                 Token = ""
-            }, e => Key.Single(e.Key));
+            });
 
             return new ChannelManager(_authRepo, repoChannel);
         }
 
         public List<ChannelModel> GetList(ulong accountId)
-            => GetMdlListByAccountId<ChannelModel>(Key.List(accountId), accountId, e => Key.ListItem(accountId, e.Key));
+        {
+            return GetMdlList(db => db.SelectListByConditions<ChannelModel>(new { AccountId = accountId }).ToList());
+        }
 
         public void Update(ChannelModel mdlChannel)
         {
-            UpdateMdl(mdlChannel, Key.Single(mdlChannel.Key));
+            UpdateMdl(mdlChannel);
         }
     }
 }

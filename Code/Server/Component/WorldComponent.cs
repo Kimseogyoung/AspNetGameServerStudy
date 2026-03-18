@@ -10,16 +10,10 @@ namespace WebStudyServer.Component
 {
     public class WorldComponent : UserComponentBase<WorldModel>
     {
-        public static class Key
-        {
-            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<WorldModel>(playerId, num);
-            public static CacheKey List(ulong playerId) => CacheKey.For<WorldModel>(playerId);
-        }
-
         public WorldComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(WorldModel model) => Key.Single(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
+        protected override CacheKey KeyFor(WorldModel model) => CacheKey.For<WorldModel>(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<WorldModel>(playerId);
 
         public WorldManager Touch(int worldNum)
         {
@@ -37,9 +31,7 @@ namespace WebStudyServer.Component
 
         public bool TryGetInternal(int num, out WorldModel outWorld)
         {
-            outWorld = GetMdl(
-                Key.Single(RpcCtx.PlayerId, num),
-                db => db.SelectByPk<WorldModel>(new { RpcCtx.PlayerId, Num = num }));
+            outWorld = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
             return outWorld != null;
         }
     }

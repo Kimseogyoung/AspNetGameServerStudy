@@ -7,18 +7,11 @@ using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
-using WebStudyServer.Repo.Cache;
-using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class ScheduleComponent : CenterComponentBase
     {
-        public static class Key
-        {
-            public static CacheKey Single(int num) => CacheKey.For<ScheduleModel>(num);
-        }
-
         public ScheduleComponent(CenterRepo centerRepo, IRepository repository) : base(centerRepo, repository)
         {
         }
@@ -61,7 +54,7 @@ namespace WebStudyServer.Component
         public bool TryGet(int num, out ScheduleManager outSchedule)
         {
             var prt = APP.Prt.GetSchedulePrt(num);
-            var mdlSchedule = GetMdl(Key.Single(num), db => db.SelectByPk<ScheduleModel>(new { Num = num }));
+            var mdlSchedule = GetMdl(db => db.SelectByPk<ScheduleModel>(new { Num = num }));
             outSchedule = new ScheduleManager(_centerRepo, prt, mdlSchedule);
             return mdlSchedule != null;
         }

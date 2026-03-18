@@ -7,6 +7,7 @@ namespace WebStudyServer.Repo.Database
     public class InMemoryStore
     {
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, object>> _buckets = new();
+        private readonly ConcurrentDictionary<Type, ulong> _autoIncrementCounters = new();
 
         private ConcurrentDictionary<string, object> Bucket(Type type)
         {
@@ -21,6 +22,11 @@ namespace WebStudyServer.Repo.Database
         public IEnumerable<object> GetAll(Type type)
         {
             return Bucket(type).Values;
+        }
+
+        public ulong NextAutoId(Type type)
+        {
+            return _autoIncrementCounters.AddOrUpdate(type, 1UL, (_, prev) => prev + 1UL);
         }
     }
 }

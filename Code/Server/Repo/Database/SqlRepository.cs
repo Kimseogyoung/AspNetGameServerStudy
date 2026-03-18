@@ -15,65 +15,32 @@ namespace Server.Repo.Database
             Db = dbFactory;
         }
 
-        // ── Select: Cache → DB fallback → Cache Set ───────────
-        public T? Get<T>(CacheKey key, Func<IDbExecutor, T?> dbFetch) where T : ModelBase
-        {
-            var hit = Cache.Get<T>(key);
-            if (hit != null)
-            {
-                return hit;
-            }
-
-            var result = Db.Execute(db => dbFetch(db));
-
-            if (result != null)
-            {
-                Cache.Set(key, result);
-            }
-
-            return result;
-        }
-
-        // ── SelectList: Cache → DB(dbFetch 위임) → BulkSet ────
-        public List<T> GetList<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch, Func<T, CacheKey> keySelector) where T : ModelBase
+        // ── SelectList: Cache → DB(dbFetch 위임) → BulkSet ────────────────
+        public List<T> GetList<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase
         {
             var cached = Cache.GetList<T>(listKey);
             if (cached != null)
             {
                 return [.. cached];
             }
-
-            var result = Db.Execute(db => dbFetch(db));
-            Cache.BulkSet(result, keySelector);
-            return [.. result];
+            var result = Db.Execute(dbFetch);
+            Cache.BulkSet(listKey, result);
+            return result;
         }
 
-        // ── SelectList + predicate: Cache → filter / DB → filter (캐시 Set 안함) ─
-        public List<T> GetListFiltered<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch, Func<T, bool> predicate) where T : ModelBase
-        {
-            var cached = Cache.GetList<T>(listKey);
-            if (cached != null)
-            {
-                return [.. cached.Where(predicate)];
-            }
-
-            var result = Db.Execute(db => dbFetch(db));
-            return [.. result.Where(predicate)];
-        }
-
-        // ── Insert: DB → Cache ─────────────────────────────────
-        public T Insert<T>(T entity, Func<T, CacheKey> keyFactory) where T : ModelBase
+        // ── Insert: DB → Cache.Set(listKey, entity, match=none → list.Add) ─
+        public T Insert<T>(T entity, CacheKey listKey) where T : ModelBase
         {
             entity = Db.Execute(db => db.Insert<T>(entity));
-            Cache.Set(keyFactory(entity), entity);
+            Cache.Set<T>(listKey, entity, _ => false);
             return entity;
         }
 
-        // ── Update: DB → Cache ─────────────────────────────────
-        public void Update<T>(T entity, CacheKey key) where T : ModelBase
+        // ── Update: DB → Cache.Set(listKey, entity, match) ────────────────
+        public void Update<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
         {
             Db.Execute(db => db.Update<T>(entity));
-            Cache.Set(key, entity);
+            Cache.Set(listKey, entity, match);
         }
     }
 }

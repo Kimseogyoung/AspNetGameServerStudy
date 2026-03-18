@@ -1,5 +1,6 @@
 using Server.Repo.Database;
 using WebStudyServer.Base;
+using WebStudyServer.Repo.Database;
 using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
@@ -10,17 +11,16 @@ namespace WebStudyServer.Component
 {
     public class PlayerComponent : UserComponentBase<PlayerModel>
     {
-        public static class Key
-        {
-            public static CacheKey Single(ulong playerId) => CacheKey.For<PlayerModel>(playerId);
-            public static CacheKey ByAccount(ulong accountId) => CacheKey.For<PlayerModel>("AccountId", accountId);
-            public static CacheKey List(ulong playerId) => CacheKey.For<PlayerModel>(playerId);
-        }
-
         public PlayerComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(PlayerModel model) => Key.Single(model.Id);
-        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
+        protected override CacheKey KeyFor(PlayerModel model) => CacheKey.For<PlayerModel>(model.Id);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<PlayerModel>(playerId);
+
+        // PlayerModel의 PK는 Id (PlayerId 컬럼 없음)
+        protected override List<PlayerModel> LoadFromDb(IDbExecutor db)
+        {
+            return db.SelectListByConditions<PlayerModel>(new { Id = RpcCtx.PlayerId }).ToList();
+        }
 
         public PlayerManager Touch()
         {
@@ -29,20 +29,14 @@ namespace WebStudyServer.Component
 
             if (playerId == 0)
             {
+                _userRepo.RpcContext.SetPlayerId(accountId * 10);
                 var mdlPlayer = CreateMdl(new PlayerModel
                 {
-                    Id = accountId * 10,
+                    Id = _userRepo.RpcContext.PlayerId,
                     AccountId = accountId,
                     SfId = IdHelper.GenerateSfId(),
                     ProfileName = "",
                 });
-                _userRepo.RpcContext.SetPlayerId(mdlPlayer.Id);
-
-                if (mdlPlayer == null)
-                {
-                    throw new Exception("NOT_FOUND_PLAYER");
-                }
-
                 return new PlayerManager(_userRepo, mdlPlayer);
             }
 
@@ -59,17 +53,14 @@ namespace WebStudyServer.Component
 
         public bool TryGet(ulong id, out PlayerModel outPlayer)
         {
-            outPlayer = GetMdl(
-                Key.Single(id),
-                db => db.SelectByPk<PlayerModel>(new { Id = id }));
+            outPlayer = GetMdl(x => x.Id == id);
             return outPlayer != null;
         }
 
         public bool TryGetByAccountId(ulong accountId, out PlayerModel outPlayer)
         {
-            outPlayer = GetMdl(
-                Key.ByAccount(accountId),
-                db => db.SelectByPk<PlayerModel>(new { AccountId = accountId }));
+            // AccountId는 ListKey(PlayerId) 기준 컬렉션 밖의 조회 → DB 직접 접근
+            outPlayer = DbSession.Execute(db => db.SelectByConditions<PlayerModel>(new { AccountId = accountId }));
             return outPlayer != null;
         }
     }

@@ -12,16 +12,10 @@ namespace WebStudyServer.Component
 {
     public class KingdomStructureComponent : UserComponentBase<KingdomStructureModel>
     {
-        public static class Key
-        {
-            public static CacheKey Single(ulong playerId, ulong sfId) => CacheKey.For<KingdomStructureModel>(playerId, sfId);
-            public static CacheKey List(ulong playerId) => CacheKey.For<KingdomStructureModel>(playerId);
-        }
-
         public KingdomStructureComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(KingdomStructureModel model) => Key.Single(model.PlayerId, model.SfId);
-        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
+        protected override CacheKey KeyFor(KingdomStructureModel model) => CacheKey.For<KingdomStructureModel>(model.PlayerId, model.SfId);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<KingdomStructureModel>(playerId);
 
         public int GetKingdomStructureCnt(int num)
         {
@@ -64,9 +58,7 @@ namespace WebStudyServer.Component
 
         private bool TryGetInternal(ulong sfId, out KingdomStructureModel outKingdomStructure)
         {
-            var kingdomStructure = GetMdl(Key.Single(RpcCtx.PlayerId, sfId), db => db.SelectByPk<KingdomStructureModel>(new { SfId = sfId }));
-
-            outKingdomStructure = kingdomStructure;
+            outKingdomStructure = GetMdl(x => x.SfId == sfId);
             return outKingdomStructure != null;
         }
     }

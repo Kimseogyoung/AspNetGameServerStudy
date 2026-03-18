@@ -1,15 +1,14 @@
 using Server.Repo.Database;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
-using WebStudyServer.Repo.Cache;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Base
 {
     public class CenterComponentBase
     {
-        protected IRepository _repository;
-        protected CenterRepo _centerRepo;
+        protected readonly IRepository _repository;
+        protected readonly CenterRepo _centerRepo;
         protected RpcContext RpcCtx => _centerRepo.RpcContext;
 
         public CenterComponentBase(CenterRepo centerRepo, IRepository repository)
@@ -18,19 +17,26 @@ namespace WebStudyServer.Base
             _repository = repository;
         }
 
-        protected T GetMdl<T>(CacheKey key, Func<IDbExecutor, T> dbFetch) where T : ModelBase
-            => _repository.Get<T>(key, dbFetch);
-
-        protected T CreateMdl<T>(T entity, Func<T, CacheKey> keyFactory) where T : ModelBase
+        protected T? GetMdl<T>(Func<IDbExecutor, T?> dbFetch) where T : ModelBase
         {
-            entity.UpdateTime = entity.CreateTime = DateTime.UtcNow;
-            return _repository.Insert<T>(entity, keyFactory);
+            return _repository.Db.Execute(dbFetch);
         }
 
-        protected void UpdateMdl<T>(T entity, CacheKey key) where T : ModelBase
+        protected List<T> GetMdlList<T>(Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase
+        {
+            return _repository.Db.Execute(dbFetch);
+        }
+
+        protected T CreateMdl<T>(T entity) where T : ModelBase
+        {
+            entity.UpdateTime = entity.CreateTime = DateTime.UtcNow;
+            return _repository.Db.Execute(db => db.Insert<T>(entity));
+        }
+
+        protected void UpdateMdl<T>(T entity) where T : ModelBase
         {
             entity.UpdateTime = DateTime.UtcNow;
-            _repository.Update<T>(entity, key);
+            _repository.Db.Execute(db => db.Update<T>(entity));
         }
 
         // IDbExecutor 범위 밖 특수 쿼리 전용 (SelectListByConditions, 집계 SQL 등)

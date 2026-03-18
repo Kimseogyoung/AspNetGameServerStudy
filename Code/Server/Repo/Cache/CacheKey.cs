@@ -20,5 +20,8 @@ namespace WebStudyServer.Repo.Cache
         {
             return new CacheKey($"{typeof(T).Name}:{string.Join(":", ids)}");
         }
+
+        // 캐시 계층 내부 전용 — Redis 백필 시 이미 완성된 키 문자열을 그대로 래핑
+        internal static CacheKey FromRaw(string key) => new(key);
     }
 }

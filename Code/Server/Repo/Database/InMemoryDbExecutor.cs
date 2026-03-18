@@ -37,7 +37,17 @@ namespace WebStudyServer.Repo.Database
 
         public T Insert<T>(T entity) where T : class
         {
-            _store.Set(typeof(T), InMemoryPkRegistry.ComputePkKey(entity), entity);
+            // SQL의 AUTO_INCREMENT 동작 모방:
+            // Id 프로퍼티가 있고 값이 0이면 스토어에서 다음 ID를 발급한다.
+            // Id를 호출부가 직접 지정한 경우(예: PlayerModel)는 0이 아니므로 건너뜀.
+            var type = typeof(T);
+            var idProp = type.GetProperty("Id");
+            if (idProp != null && Convert.ToUInt64(idProp.GetValue(entity)) == 0UL)
+            {
+                idProp.SetValue(entity, _store.NextAutoId(type));
+            }
+
+            _store.Set(type, InMemoryPkRegistry.ComputePkKey(entity), entity);
             return entity;
         }
 
@@ -81,14 +91,35 @@ namespace WebStudyServer.Repo.Database
                     continue;
                 }
 
-                var entityVal = entityType.GetProperty(prop.Name)?.GetValue(entity);
-                if (!Equals(condVal, entityVal))
+                var entityProp = entityType.GetProperty(prop.Name);
+                if (entityProp == null)
+                {
+                    return false;
+                }
+
+                var entityVal = entityProp.GetValue(entity);
+                // 타입이 다를 수 있으므로(예: int vs ulong, enum vs int) 엔티티 프로퍼티 타입으로 변환 후 비교
+                if (!ValuesEqual(condVal, entityVal, entityProp.PropertyType))
                 {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        private static bool ValuesEqual(object condVal, object entityVal, Type targetType)
+        {
+            try
+            {
+                var underlying = Nullable.GetUnderlyingType(targetType) ?? targetType;
+                var converted = Convert.ChangeType(condVal, underlying);
+                return Equals(converted, entityVal);
+            }
+            catch
+            {
+                return Equals(condVal, entityVal);
+            }
         }
 
     }

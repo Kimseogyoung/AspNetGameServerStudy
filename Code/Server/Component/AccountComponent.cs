@@ -6,18 +6,11 @@ using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
-using WebStudyServer.Repo.Cache;
-using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Component
 {
     public class AccountComponent : AuthComponentBase
     {
-        public static class Key
-        {
-            public static CacheKey Single(ulong id) => CacheKey.For<AccountModel>(id);
-        }
-
         public AccountComponent(AuthRepo authRepo, IRepository repository) : base(authRepo, repository)
         {
         }
@@ -31,7 +24,7 @@ namespace WebStudyServer.Component
 
         public bool TryGet(ulong id, out AccountManager outAccount)
         {
-            var mdlAccount = GetMdl(Key.Single(id), db => db.SelectByPk<AccountModel>(new { Id = id }));
+            var mdlAccount = GetMdl(db => db.SelectByPk<AccountModel>(new { Id = id }));
             outAccount = new AccountManager(_authRepo, mdlAccount);
             return mdlAccount != null;
         }
@@ -46,7 +39,7 @@ namespace WebStudyServer.Component
                 ClientSecret = ""
             };
 
-            var repoAccount = CreateMdl(newAccount, e => Key.Single(e.Id));
+            var repoAccount = CreateMdl(newAccount);
             var mgrAccount = new AccountManager(_authRepo, repoAccount);
 
             _authRepo.RpcContext.SetAccountId(mgrAccount.Id);
@@ -56,7 +49,7 @@ namespace WebStudyServer.Component
 
         public void UpdateAccount(AccountModel mdlAccount)
         {
-            UpdateMdl(mdlAccount, Key.Single(mdlAccount.Id));
+            UpdateMdl(mdlAccount);
         }
     }
 }

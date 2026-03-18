@@ -4,54 +4,54 @@ namespace WebStudyServer.Repo.Cache
 {
     // 요청 스코프(Scoped) InMemory 캐시.
     // TTL 미지원 (요청 종료 시 인스턴스 자체가 소멸).
-    // GetList: listKey.Value를 prefix로 StartsWith 스캔 — BulkSet으로 저장된 개별 키 대상.
+    //
+    // 컬렉션 단위 저장:
+    //   _store[listKey] = List<T> — 리스트 전체를 단일 키로 저장.
+    //   GetList: _store 직접 조회, null = 미로드.
+    //   Set: match predicate로 대상 찾아 교체, 없으면 추가.
+    //   BulkSet: _store[listKey] = values — 전체 교체.
     public class InMemoryCacheLayer : ICacheSession
     {
         private readonly Dictionary<string, object> _store = [];
 
-        public T Get<T>(CacheKey key) where T : ModelBase
-        {
-            if (_store.TryGetValue(key.Value, out var value))
-            {
-                return value as T;
-            }
-
-            return null;
-        }
-
-        // listKey.Value를 prefix로 갖는 모든 키를 반환한다.
-        // ICacheSession의 BulkSet+GetList prefix 계약에 의존하므로,
-        // BulkSet 호출 시 keySelector가 listKey prefix를 준수해야만 캐시가 동작한다.
+        // null = 미로드, [] = 빈 컬렉션(로드됨)
         public IReadOnlyList<T> GetList<T>(CacheKey listKey) where T : ModelBase
         {
-            var items = _store
-                .Where(kv => kv.Key.StartsWith(listKey.Value))
-                .Select(kv => kv.Value as T)
-                .Where(v => v != null)
-                .ToList();
-            return items.Count > 0 ? items : null;
+            return _store.TryGetValue(listKey.Value, out var v) ? (List<T>)v : null;
         }
 
-        public void Set<T>(CacheKey key, T value, TimeSpan? ttl = null) where T : ModelBase
+        public void BulkSet<T>(CacheKey listKey, IEnumerable<T> values, TimeSpan? ttl = null) where T : ModelBase
         {
-            _store[key.Value] = value;
+            _store[listKey.Value] = values.ToList();
         }
 
-        public void BulkSet<T>(IEnumerable<T> values, Func<T, CacheKey> keySelector, TimeSpan? ttl = null) where T : ModelBase
+        // 컬렉션이 로드된 경우에만 반영 — 부분 적재 방지
+        public void Set<T>(CacheKey listKey, T value, Func<T, bool> match, TimeSpan? ttl = null) where T : ModelBase
         {
-            foreach (var v in values)
+            if (!_store.TryGetValue(listKey.Value, out var existing))
             {
-                _store[keySelector(v).Value] = v;
+                return;
+            }
+            var list = (List<T>)existing;
+            var idx = list.FindIndex(x => match(x));
+            if (idx >= 0)
+            {
+                list[idx] = value;
+            }
+            else
+            {
+                list.Add(value);
             }
         }
 
-        public void Invalidate(CacheKey key)
+        public void Invalidate(CacheKey listKey)
         {
-            _store.Remove(key.Value);
+            _store.Remove(listKey.Value);
         }
 
         // Scoped이므로 요청 종료 시 인스턴스 자체가 소멸 → flush/discard 불필요
         public void FlushPendingWrites() { }
+
         public void DiscardPendingWrites() { }
     }
 }

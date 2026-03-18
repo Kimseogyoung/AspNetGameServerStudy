@@ -20,10 +20,12 @@ Logging:
         Microsoft.AspNetCore.Mvc.ModelBinding.ModelBinderFactory: Warning
 Db:
     Version: 8.0.21
-    Type: InMemory
+    Type: MySql
+    Redis:
+        ConnectionString: ""
     UserDb:
         ConnectionStrList:
-            - Server=localhost;Port=3306;Database=UserDb;Uid=root;Pwd=tjrudwlq!;Pooling=True; #�׽�Ʈ���̶� �׳� �ø�. �߿� X
+            - Server=localhost;Port=3306;Database=UserDb;Uid=root;Pwd=tjrudwlq!;Pooling=True;
     AuthDb:
         ConnectionStrList:
             - Server=localhost;Port=3306;Database=AuthDb;Uid=root;Pwd=tjrudwlq!;Pooling=True;

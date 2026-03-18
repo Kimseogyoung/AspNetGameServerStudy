@@ -9,16 +9,10 @@ namespace WebStudyServer.Component
 {
     public class PlayerDetailComponent : UserComponentBase<PlayerDetailModel>
     {
-        public static class Key
-        {
-            public static CacheKey Single(ulong playerId) => CacheKey.For<PlayerDetailModel>(playerId);
-            public static CacheKey List(ulong playerId) => CacheKey.For<PlayerDetailModel>(playerId);
-        }
-
         public PlayerDetailComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(PlayerDetailModel model) => Key.Single(model.PlayerId);
-        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
+        protected override CacheKey KeyFor(PlayerDetailModel model) => CacheKey.For<PlayerDetailModel>(model.PlayerId);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<PlayerDetailModel>(playerId);
 
         public PlayerDetailManager Touch()
         {
@@ -37,9 +31,7 @@ namespace WebStudyServer.Component
 
         public bool TryGet(ulong id, out PlayerDetailModel outPlayer)
         {
-            outPlayer = GetMdl(
-                Key.Single(id),
-                db => db.SelectByPk<PlayerDetailModel>(new { PlayerId = id }));
+            outPlayer = GetMdl(x => x.PlayerId == id);
             return outPlayer != null;
         }
     }

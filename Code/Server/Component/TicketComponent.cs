@@ -10,16 +10,10 @@ namespace WebStudyServer.Component
 {
     public class TicketComponent : UserComponentBase<TicketModel>
     {
-        public static class Key
-        {
-            public static CacheKey Single(ulong playerId, int num) => CacheKey.For<TicketModel>(playerId, num);
-            public static CacheKey List(ulong playerId) => CacheKey.For<TicketModel>(playerId);
-        }
-
         public TicketComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(TicketModel model) => Key.Single(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => Key.List(playerId);
+        protected override CacheKey KeyFor(TicketModel model) => CacheKey.For<TicketModel>(model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<TicketModel>(playerId);
 
         public TicketManager Touch(EObjType objType)
         {
@@ -39,9 +33,7 @@ namespace WebStudyServer.Component
 
         public bool TryGetInternal(int num, out TicketModel outTicket)
         {
-            outTicket = GetMdl(
-                Key.Single(RpcCtx.PlayerId, num),
-                db => db.SelectByPk<TicketModel>(new { RpcCtx.PlayerId, Num = num }));
+            outTicket = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
             return outTicket != null;
         }
     }
