@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Reflection;
 
 namespace WebStudyServer.Repo.Database
 {
@@ -9,9 +10,14 @@ namespace WebStudyServer.Repo.Database
     {
         private static readonly ConcurrentDictionary<Type, string[]> KeyFields = new();
 
+        // PK 필드명 → PropertyInfo 캐시 (ComputePkKey에서 GetProperty 반복 호출 제거)
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> PkProps = new();
+
         public static void Init<T>(params string[] keyFields)
         {
-            KeyFields[typeof(T)] = keyFields;
+            var type = typeof(T);
+            KeyFields[type] = keyFields;
+            PkProps[type] = keyFields.Select(f => type.GetProperty(f)).ToArray();
         }
 
         public static string[] GetKeyFields(Type type)
@@ -29,9 +35,8 @@ namespace WebStudyServer.Repo.Database
         public static string ComputePkKey(object entity)
         {
             var type = entity.GetType();
-            var fields = GetKeyFields(type);
-            return string.Join(":", fields.Select(f =>
-                type.GetProperty(f)?.GetValue(entity)?.ToString() ?? "null"));
+            var props = PkProps[type];
+            return string.Join(":", props.Select(p => p?.GetValue(entity)?.ToString() ?? "null"));
         }
     }
 }

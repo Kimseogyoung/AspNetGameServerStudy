@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace WebStudyServer.Repo.Database
@@ -9,6 +11,15 @@ namespace WebStudyServer.Repo.Database
     public class InMemoryDbExecutor : IDbExecutor
     {
         private readonly InMemoryStore _store;
+
+        // 조건 타입 → PropertyInfo[] 캐시 (ScanFirst / ScanAll 공용)
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> CondPropsCache = new();
+
+        // (엔티티 타입, 프로퍼티명) → PropertyInfo 캐시
+        private static readonly ConcurrentDictionary<(Type, string), PropertyInfo> EntityPropCache = new();
+
+        // 타입 → Id PropertyInfo 캐시 (Insert 자동증가 판단용)
+        private static readonly ConcurrentDictionary<Type, PropertyInfo> IdPropCache = new();
 
         public InMemoryDbExecutor(InMemoryStore store)
         {
@@ -41,7 +52,7 @@ namespace WebStudyServer.Repo.Database
             // Id 프로퍼티가 있고 값이 0이면 스토어에서 다음 ID를 발급한다.
             // Id를 호출부가 직접 지정한 경우(예: PlayerModel)는 0이 아니므로 건너뜀.
             var type = typeof(T);
-            var idProp = type.GetProperty("Id");
+            var idProp = IdPropCache.GetOrAdd(type, t => t.GetProperty("Id"));
             if (idProp != null && Convert.ToUInt64(idProp.GetValue(entity)) == 0UL)
             {
                 idProp.SetValue(entity, _store.NextAutoId(type));
@@ -69,39 +80,57 @@ namespace WebStudyServer.Repo.Database
                 return null;
             }
 
-            var condType = conditions.GetType();
-            return _store.GetAll(typeof(T)).Cast<T>().FirstOrDefault(e => MatchAll(e, conditions, condType));
+            var condProps = CondPropsCache.GetOrAdd(
+                conditions.GetType(),
+                t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance));
+            return _store.GetAll(typeof(T)).Cast<T>().FirstOrDefault(e => MatchAll(e, conditions, condProps));
         }
 
         private IEnumerable<T> ScanAll<T>(object conditions) where T : class
         {
-            var condType = conditions.GetType();
-            return _store.GetAll(typeof(T)).Cast<T>().Where(e => MatchAll(e, conditions, condType));
+            var condProps = CondPropsCache.GetOrAdd(
+                conditions.GetType(),
+                t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance));
+            return _store.GetAll(typeof(T)).Cast<T>().Where(e => MatchAll(e, conditions, condProps));
         }
 
         // conditions의 모든 non-null 프로퍼티가 entity와 일치하면 true
-        private static bool MatchAll(object entity, object conditions, Type condType)
+        private bool MatchAll(object entity, object conditions, PropertyInfo[] condProps)
         {
             var entityType = entity.GetType();
-            foreach (var prop in condType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach (var condProp in condProps)
             {
-                var condVal = prop.GetValue(conditions);
+                var condVal = condProp.GetValue(conditions);
                 if (condVal == null)
                 {
                     continue;
                 }
 
-                var entityProp = entityType.GetProperty(prop.Name);
+                var entityProp = EntityPropCache.GetOrAdd(
+                    (entityType, condProp.Name),
+                    k => k.Item1.GetProperty(k.Item2));
                 if (entityProp == null)
                 {
                     return false;
                 }
 
                 var entityVal = entityProp.GetValue(entity);
-                // 타입이 다를 수 있으므로(예: int vs ulong, enum vs int) 엔티티 프로퍼티 타입으로 변환 후 비교
-                if (!ValuesEqual(condVal, entityVal, entityProp.PropertyType))
+
+                // IList 조건이면 Contains, 스칼라면 값 비교
+                if (condVal is IList list)
                 {
-                    return false;
+                    if (!list.Cast<object>().Any(v => ValuesEqual(v, entityVal, entityProp.PropertyType)))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    // 타입이 다를 수 있으므로(예: int vs ulong, enum vs int) 엔티티 프로퍼티 타입으로 변환 후 비교
+                    if (!ValuesEqual(condVal, entityVal, entityProp.PropertyType))
+                    {
+                        return false;
+                    }
                 }
             }
 

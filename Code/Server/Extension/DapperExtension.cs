@@ -15,6 +15,13 @@ namespace WebStudyServer.Extension
         private static readonly ConcurrentDictionary<Type, QueryParam> QueryParamDict = new();
         private static readonly ConcurrentDictionary<Type, string> PkWhereClauseDict = new();
 
+        // 조건 타입 기준 SQL 캐시 — GetProperties() + SQL 빌딩을 최초 1회만 실행
+        private static readonly ConcurrentDictionary<(Type entity, Type cond), string> CondSingleSqlCache = new();
+        private static readonly ConcurrentDictionary<(Type entity, Type cond), string> CondListSqlCache = new();
+
+        // Insert 시 Id 자동증가 여부 판단용 PropertyInfo 캐시
+        private static readonly ConcurrentDictionary<Type, PropertyInfo> IdPropCache = new();
+
         // 여러 필드를 기본 키로 설정하는 메서드
 
 
@@ -36,8 +43,9 @@ namespace WebStudyServer.Extension
             var queryParam = GetQueryParameter<T>();
 
             var tableName = GetTableName<T>();
-            // `Id` 속성 존재 여부 확인
-            var hasAutoIncreaseProperty = tableName != "Player" && typeof(T).GetProperty("Id") != null;
+            // `Id` 속성 존재 여부 확인 (PropertyInfo 캐싱)
+            var idProp = IdPropCache.GetOrAdd(typeof(T), t => t.GetProperty("Id"));
+            var hasAutoIncreaseProperty = tableName != "Player" && idProp != null;
 
             var insertSql = $@"
                 INSERT INTO {queryParam.TableName} ({queryParam.Fields}) 
@@ -89,88 +97,45 @@ namespace WebStudyServer.Extension
 
         public static T SelectByConditions<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
         {
-            var tableName = GetTableName<T>();
-
-            _ = GetQueryParameter<T>();
-            var queryBuilder = new StringBuilder();
-
-            // 기본 쿼리
-            queryBuilder.Append($"SELECT * FROM {tableName}");
-
-            // 조건이 있을 경우 WHERE 절 추가
-            if (keyValues != null)
+            if (keyValues == null)
             {
-                var whereClauses = new List<string>();
-                var properties = keyValues.GetType().GetProperties();
-
-                foreach (var property in properties)
-                {
-                    var key = property.Name;
-                    var value = property.GetValue(keyValues);
-
-                    // 조건이 null이 아니면 WHERE 절에 추가
-                    if (value != null)
-                    {
-                        whereClauses.Add($"`{key}` = @{key}");
-                    }
-                }
-
-                if (whereClauses.Any())
-                {
-                    queryBuilder.Append(" WHERE ");
-                    queryBuilder.Append(string.Join(" AND ", whereClauses));
-                }
+                return connection.QuerySingleOrDefault<T>(
+                    $"SELECT * FROM {GetTableName<T>()}", transaction: transaction);
             }
 
-            return connection.QuerySingleOrDefault<T>(queryBuilder.ToString(), keyValues, transaction);
+            var sql = CondSingleSqlCache.GetOrAdd(
+                (typeof(T), keyValues.GetType()),
+                k =>
+                {
+                    var props = k.cond.GetProperties();
+                    var where = string.Join(" AND ", props.Select(p => $"`{p.Name}` = @{p.Name}"));
+                    return $"SELECT * FROM {GetTableName<T>()} WHERE {where}";
+                });
+
+            return connection.QuerySingleOrDefault<T>(sql, keyValues, transaction);
         }
 
         public static IEnumerable<T> SelectListByConditions<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
         {
-            var tableName = GetTableName<T>();
-            var queryBuilder = new StringBuilder();
-
-            // 기본 쿼리
-            queryBuilder.Append($"SELECT * FROM {tableName}");
-
-            // 조건이 있을 경우 WHERE 절 추가
-            if (keyValues != null)
+            if (keyValues == null)
             {
-                var whereClauses = new List<string>();
-                var properties = keyValues.GetType().GetProperties();
-
-                foreach (var property in properties)
-                {
-                    var key = property.Name;
-                    var value = property.GetValue(keyValues);
-
-                    // 조건이 null이 아니면 WHERE 절에 추가
-                    if (value != null)
-                    {
-                        if (value is IList valueList && valueList.Count > 0)
-                        {
-                            // IN 절 처리
-                            var inClause = string.Join(", ", valueList.Cast<object>().Select((v, i) => $"@{key}_{i}"));
-                            whereClauses.Add($"{key} IN ({inClause})");
-                        }
-                        else
-                        {
-                            whereClauses.Add($"{key} = @{key}");
-                        }
-                    }
-                }
-
-                if (whereClauses.Any())
-                {
-                    queryBuilder.Append(" WHERE ");
-                    queryBuilder.Append(string.Join(" AND ", whereClauses));
-                }
+                return connection.Query<T>(
+                    $"SELECT * FROM {GetTableName<T>()}", transaction: transaction);
             }
 
-            var selectSql = queryBuilder.ToString();
+            var sql = CondListSqlCache.GetOrAdd(
+                (typeof(T), keyValues.GetType()),
+                k =>
+                {
+                    var props = k.cond.GetProperties();
+                    var where = string.Join(" AND ", props.Select(p =>
+                        typeof(IList).IsAssignableFrom(p.PropertyType)
+                            ? $"`{p.Name}` IN @{p.Name}"   // Dapper가 IEnumerable 파라미터를 자동 확장
+                            : $"`{p.Name}` = @{p.Name}"));
+                    return $"SELECT * FROM {GetTableName<T>()} WHERE {where}";
+                });
 
-            // Dapper 실행
-            return connection.Query<T>(selectSql, keyValues, transaction);
+            return connection.Query<T>(sql, keyValues, transaction);
         }
 
         private static void SetPKWhereClause<T>(params string[] keyFields)
