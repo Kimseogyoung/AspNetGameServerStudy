@@ -24,31 +24,39 @@ namespace WebStudyServer
         public void Resource(IServiceCollection services)
         {
             services.AddScoped<UserLockService>();;
-            if (APP.Cfg.DbType == DbType.InMemory)
+
+            // Db
+            switch (APP.Cfg.DbType)
             {
-                services.AddScoped<ILockService, InMemoryLockService>();
-                services.AddSingleton<IDbSessionFactory, InMemoryDbSessionFactory>();
-            }
-            else
-            {
-                services.AddScoped<ILockService, MySqlLockService>();
-                services.AddSingleton<IDbSessionFactory, MySqlDbSessionFactory>();
+                case DbType.MySql:
+                    services.AddScoped<ILockService, MySqlLockService>();
+                    services.AddSingleton<IDbSessionFactory, MySqlDbSessionFactory>();
+                    break;
+                case DbType.InMemory:
+                    services.AddScoped<ILockService, InMemoryLockService>();
+                    services.AddSingleton<IDbSessionFactory, InMemoryDbSessionFactory>();
+                    break;
+                default:
+                    throw new Exception($"No handling DbType({APP.Cfg.DbType})");
             }
 
             // Cache
-            var hasRedis = !string.IsNullOrEmpty(APP.Cfg.RedisConnectionString);
-            if (APP.Cfg.DbType == DbType.InMemory || !hasRedis)
+            switch (APP.Cfg.CacheType)
             {
-                services.AddScoped<ICacheSession, InMemoryCacheLayer>();
-            }
-            else
-            {
-                services.AddSingleton<IConnectionMultiplexer>(
+                case CacheType.Redis:
+                    services.AddSingleton<IConnectionMultiplexer>(
                     _ => ConnectionMultiplexer.Connect(APP.Cfg.RedisConnectionString));
-                services.AddScoped<InMemoryCacheLayer>();
-                services.AddScoped<RedisCacheLayer>();
-                services.AddScoped<ICacheSession, CompositeCacheLayer>();
+                    services.AddScoped<InMemoryCacheLayer>();
+                    services.AddScoped<RedisCacheLayer>();
+                    services.AddScoped<ICacheSession, RedisCompositeCacheLayer>();
+                    break;
+                case CacheType.InMemory:
+                    services.AddScoped<ICacheSession, InMemoryCacheLayer>();
+                    break;
+                default:
+                    throw new Exception($"No handling DbType({APP.Cfg.DbType})");
             }
+
             services.AddMemoryCache();
             services.AddSingleton<InMemoryStore>();
 

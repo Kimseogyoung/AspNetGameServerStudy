@@ -1,6 +1,7 @@
 using Server.Repo.Database;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
+using WebStudyServer.Repo.Cache;
 using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Base
@@ -20,6 +21,22 @@ namespace WebStudyServer.Base
         protected T? GetMdl<T>(Func<IDbExecutor, T?> dbFetch) where T : ModelBase
         {
             return _repository.Db.Execute(dbFetch);
+        }
+
+        // 단건 캐시 → DB fallback (Auth/Session 전용)
+        protected T? GetMdlWithCache<T>(CacheKey cacheKey, Func<IDbExecutor, T?> dbFetch) where T : ModelBase
+        {
+            if (_repository.Cache.TryGet<T>(cacheKey, out var cached))
+            {
+                return cached;
+            }
+            
+            var result = _repository.Db.Execute(dbFetch);
+            if (result != null)
+            {
+                _repository.Cache.Set(cacheKey, result, TimeSpan.FromMinutes(30));
+            }
+            return result;
         }
 
         protected List<T> GetMdlList<T>(Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase

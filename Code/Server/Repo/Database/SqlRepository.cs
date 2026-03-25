@@ -15,32 +15,54 @@ namespace Server.Repo.Database
             Db = dbFactory;
         }
 
-        // ── SelectList: Cache → DB(dbFetch 위임) → BulkSet ────────────────
+        // ── SelectList: Cache → DB(dbFetch 위임) → Set ───────────────────
         public List<T> GetList<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase
         {
-            var cached = Cache.GetList<T>(listKey);
-            if (cached != null)
+            if (Cache.TryGet<List<T>>(listKey, out var cached))
             {
                 return [.. cached];
             }
+
             var result = Db.Execute(dbFetch);
-            Cache.BulkSet(listKey, result);
+            Cache.Set(listKey, result);
             return result;
         }
 
-        // ── Insert: DB → Cache.Set(listKey, entity, match=none → list.Add) ─
+        // ── Insert: DB → 캐시 로드 중이면 항목 추가 ─────────────────────
         public T Insert<T>(T entity, CacheKey listKey) where T : ModelBase
         {
             entity = Db.Execute(db => db.Insert<T>(entity));
-            Cache.Set<T>(listKey, entity, _ => false);
+
+            if (Cache.TryGet<List<T>>(listKey, out var cached))
+            {
+                var newCached = new List<T>(cached) { entity };
+                Cache.Set(listKey, newCached);
+            }
+
             return entity;
         }
 
-        // ── Update: DB → Cache.Set(listKey, entity, match) ────────────────
+        // ── Update: DB → 캐시 로드 중이면 match 항목 교체 ────────────────
         public void Update<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
         {
             Db.Execute(db => db.Update<T>(entity));
-            Cache.Set(listKey, entity, match);
+
+            if (!Cache.TryGet<List<T>>(listKey, out var cached))
+            {
+                return;
+            }
+
+            var newList = cached.ToList();
+            var idx = newList.FindIndex(x => match(x));
+            if (idx >= 0)
+            {
+                newList[idx] = entity;
+            }
+            else
+            {
+                newList.Add(entity);
+            }
+            Cache.Set(listKey, newList);
         }
     }
 }

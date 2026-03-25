@@ -14,6 +14,11 @@ namespace WebStudyServer
     {
         MySql,
         InMemory,
+    }
+
+    public enum CacheType
+    {
+        InMemory,
         Redis,
     }
 
@@ -36,6 +41,7 @@ namespace WebStudyServer
         public PlayerPacket PakDefaultPlayer { get; private set; } = new();
 
         public DbType DbType { get; private set; } = DbType.MySql;
+        public CacheType CacheType { get; private set; } = CacheType.InMemory;
         public string RedisConnectionString { get; private set; } = string.Empty;
 
         public bool IsShowErrorDetail { get; private set; }
@@ -55,7 +61,8 @@ namespace WebStudyServer
 
 
             DbType = config.GetValue("Db:Type", DbType.MySql);
-            RedisConnectionString = config.GetValue("Db:Redis:ConnectionString", string.Empty);
+            CacheType = config.GetValue("Cache:Type", CacheType.InMemory);
+            RedisConnectionString = config.GetValue("Cache:ConnectionString", string.Empty);
             DbVersion = new MySqlServerVersion(config.GetValue("Db:Version", "0.0.0"));
             UserDbConnectionStrList = config.GetValueStringList("Db:UserDb:ConnectionStrList");
             AuthDbConnectionStrList = config.GetValueStringList("Db:AuthDb:ConnectionStrList");

@@ -18,14 +18,15 @@ Logging:
         Sentry.ISentryClient: Warning
         DbLoggerCategory.Database.Command: Warning
         Microsoft.AspNetCore.Mvc.ModelBinding.ModelBinderFactory: Warning
+Cache:
+    Type: Redis
+    ConnectionString: "localhost:6379"
 Db:
     Version: 8.0.21
     Type: MySql
-    Redis:
-        ConnectionString: ""
     UserDb:
         ConnectionStrList:
-            - Server=localhost;Port=3306;Database=UserDb;Uid=root;Pwd=tjrudwlq!;Pooling=True;
+            - Server=localhost;Port=3306;Database=UserDb;Uid=root;Pwd=tjrudwlq!;Pooling=True; # 비번 노출 개선 필요. 로컬이라 일단 냅두는데 솔루션 필요함.
     AuthDb:
         ConnectionStrList:
             - Server=localhost;Port=3306;Database=AuthDb;Uid=root;Pwd=tjrudwlq!;Pooling=True;

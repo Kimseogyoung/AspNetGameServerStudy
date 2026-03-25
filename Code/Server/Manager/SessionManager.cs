@@ -15,8 +15,9 @@ namespace WebStudyServer.Manager
         {
             // 세션 시작
             var expireTime = _authRepo.RpcContext.ServerTime + APP.Cfg.SessionExpireSpan;
-            var sessionKey = IdHelper.GenerateGuidKey();
-            Model.Key = sessionKey;
+            var befSessionKey = Model.Key;
+            var aftSessionKey = IdHelper.GenerateGuidKey();
+            Model.Key = aftSessionKey;
             Model.State = ESessionState.ACTIVE;
             Model.ExpireTimestamp = TimeHelper.DateTimeToTimeStamp(expireTime);
             Model.PublicIp = _authRepo.RpcContext.Ip;
@@ -24,9 +25,9 @@ namespace WebStudyServer.Manager
             Model.DeviceKey = _authRepo.RpcContext.DeviceKey;
             Model.EncryptIV = "";
             Model.EncryptSecret = "";
-            _authRepo.Session.Update(Model);
+            _authRepo.Session.Update(befSessionKey, Model);
 
-            _authRepo.RpcContext.SetSessionKey(sessionKey);
+            _authRepo.RpcContext.SetSessionKey(aftSessionKey);
         }
 
         public void SetPlayerId(ulong playerId)
@@ -37,7 +38,7 @@ namespace WebStudyServer.Manager
             }
 
             Model.PlayerId = playerId;
-            _authRepo.Session.Update(Model);
+            _authRepo.Session.Update(Model.Key, Model);
         }
 
         public bool IsExpire()
