@@ -35,18 +35,15 @@ namespace WebStudyServer.Component
             if (!_repository.Cache.TryGet<ulong>(accountIdBySessionKey, out var cachedAccountId))
             {
                 var dbSession = GetMdl<SessionModel>(db => db.SelectByConditions<SessionModel>(new { Key = key }));
-                if (dbSession != null)
+                if (dbSession == null)
                 {
-                    // 원본 키
-                    var sessionByAccountIdKey = Key.SessionByAccountId(dbSession.AccountId);
-                    _repository.Cache.Set(sessionByAccountIdKey, dbSession, Key.Ttl);
-
-                    // 포인터 업데이트
-                    _repository.Cache.Set(accountIdBySessionKey, dbSession.AccountId, Key.Ttl);
+                    return false;
                 }
 
+                _repository.Cache.Set(Key.SessionByAccountId(dbSession.AccountId), dbSession, Key.Ttl);
+                _repository.Cache.Set(accountIdBySessionKey, dbSession.AccountId, Key.Ttl);
                 mgrSession = new SessionManager(_authRepo, dbSession);
-                return dbSession != null;
+                return true;
             }
 
             return TryGetByAccountId(cachedAccountId, out mgrSession);
@@ -108,18 +105,16 @@ namespace WebStudyServer.Component
             return new SessionManager(_authRepo, mdlSession);
         }
 
-        // primary 캐시만 갱신 — 포인터(AccountId→Key)는 불변
+        // primary 캐시 갱신. 키 로테이션 시 이전 포인터 제거 + 새 포인터 등록.
         public void Update(string befSessionKey, SessionModel mdlSession)
         {
-            // 기존 Key delete 시켜줌.
             if (befSessionKey != mdlSession.Key)
             {
                 _repository.Cache.Invalidate(Key.AccountIdBySessionKey(befSessionKey));
+                _repository.Cache.Set(Key.AccountIdBySessionKey(mdlSession.Key), mdlSession.AccountId, Key.Ttl);
             }
 
             UpdateMdl(mdlSession);
-
-            // 원본만 업데이트/
             _repository.Cache.Set(Key.SessionByAccountId(mdlSession.AccountId), mdlSession, Key.Ttl);
         }
 

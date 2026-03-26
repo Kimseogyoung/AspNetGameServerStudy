@@ -26,7 +26,7 @@ namespace WebStudyServer.Repo.Cache
         // string → raw StringGet/Set, 나머지 → JSON 직렬화
         public bool TryGet<T>(CacheKey key, out T outValue)
         {
-            outValue = default(T);
+            outValue = default;
             var redisValue = _db.StringGet(key.Value);
             if (!redisValue.HasValue)
             {

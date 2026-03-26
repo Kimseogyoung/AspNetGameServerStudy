@@ -33,7 +33,7 @@ namespace WebStudyServer.Repo.Cache
                 return true;
             }
 
-            outValue = default(T);
+            outValue = default;
             return false;
         }
 
@@ -47,9 +47,9 @@ namespace WebStudyServer.Repo.Cache
         public void Invalidate(CacheKey key)
         {
             _memory.Invalidate(key);
+            // 즉시: 롤백 여부와 무관하게 즉시 무효화 (예: Logout)
             _redis.Invalidate(key);
-
-            // 애매함... 고민 필요
+            // pending: 이 Invalidate 이전에 Set이 pending된 경우 flush 시 순서 보장 (Set → Invalidate → 최종 삭제)
             _pending.Add(() => _redis.Invalidate(key));
         }
 

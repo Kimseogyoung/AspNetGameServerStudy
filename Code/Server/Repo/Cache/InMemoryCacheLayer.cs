@@ -9,7 +9,7 @@ namespace WebStudyServer.Repo.Cache
 
         public bool TryGet<T>(CacheKey key, out T outValue)
         {
-            outValue = default(T);
+            outValue = default;
             if (!_store.TryGetValue(key.Value, out var value))
             {
                 return false;
