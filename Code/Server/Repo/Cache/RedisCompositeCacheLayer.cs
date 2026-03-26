@@ -18,7 +18,8 @@ namespace WebStudyServer.Repo.Cache
         }
 
         // InMemory 히트 → 반환. 미스 → Redis 조회 → InMemory 백필
-        public bool TryGet<T>(CacheKey key, out T outValue)
+        // slidingTtl: Redis hit 시 TTL 갱신 (Sliding Expiration)
+        public bool TryGet<T>(CacheKey key, out T outValue, TimeSpan? slidingTtl = null)
         {
             if (_memory.TryGet<T>(key, out var memoryHit))
             {
@@ -26,7 +27,7 @@ namespace WebStudyServer.Repo.Cache
                 return true;
             }
 
-            if (_redis.TryGet<T>(key, out var redisHit))
+            if (_redis.TryGet<T>(key, out var redisHit, slidingTtl))
             {
                 _memory.Set(key, redisHit);
                 outValue = redisHit;
@@ -38,10 +39,12 @@ namespace WebStudyServer.Repo.Cache
         }
 
         // InMemory 즉시 반영 + Redis pending (DB 커밋 후 flush)
+        // ttl null → DefaultTtl, CacheTtl.Permanent → 영구. 람다 캡처 전에 resolve.
         public void Set<T>(CacheKey key, T value, TimeSpan? ttl = null)
         {
+            var resolved = ttl ?? APP.Cfg.CacheDefaultTtl;
             _memory.Set(key, value);
-            _pending.Add(() => _redis.Set(key, value, ttl));
+            _pending.Add(() => _redis.Set(key, value, resolved));
         }
 
         public void Invalidate(CacheKey key)

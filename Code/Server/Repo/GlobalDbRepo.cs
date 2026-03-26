@@ -72,14 +72,23 @@ namespace Server.Repo
             try
             {
                 _dbSessionManager.Commit();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "DB Commit 오류");
+                Rollback();
+                throw;
+            }
+
+            try
+            {
                 _cacheSession.FlushPendingWrites();
             }
             catch (Exception e)
             {
-                // TODO: 오류 종류 파악 후 세분화하기
-                _logger.LogError(e, "Commit 중 오류 발생");
-                Rollback();
-                throw;
+                // DB는 이미 커밋됨 — Rollback 불가. pending을 버리고 stale 상태로 남긴다.
+                _logger.LogError(e, "Redis flush 오류 — stale cache 상태");
+                _cacheSession.DiscardPendingWrites();
             }
         }
 

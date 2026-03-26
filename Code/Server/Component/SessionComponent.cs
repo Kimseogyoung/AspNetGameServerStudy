@@ -13,7 +13,7 @@ namespace WebStudyServer.Component
     {
         public static class Key
         {
-            internal static readonly TimeSpan Ttl = TimeSpan.FromMinutes(30);
+            internal static TimeSpan Ttl => APP.Cfg.CacheDefaultTtl;
 
             public static CacheKey AccountIdBySessionKey(string key)
                 => CacheKey.For<SessionModel>("AccountBySessionKey", key); // 제네릭 T떼기
@@ -32,7 +32,7 @@ namespace WebStudyServer.Component
 
             var accountIdBySessionKey = Key.AccountIdBySessionKey(key);
 
-            if (!_repository.Cache.TryGet<ulong>(accountIdBySessionKey, out var cachedAccountId))
+            if (!_repository.Cache.TryGet<ulong>(accountIdBySessionKey, out var cachedAccountId, Key.Ttl))
             {
                 var dbSession = GetMdl<SessionModel>(db => db.SelectByConditions<SessionModel>(new { Key = key }));
                 if (dbSession == null)
@@ -66,7 +66,8 @@ namespace WebStudyServer.Component
             var sessionByAccountIdKey = Key.SessionByAccountId(accountId);
             var session = GetMdlWithCache<SessionModel>(
                     sessionByAccountIdKey,
-                    db => db.SelectByConditions<SessionModel>(new { AccountId = accountId }));
+                    db => db.SelectByConditions<SessionModel>(new { AccountId = accountId }),
+                    Key.Ttl);
 
             if (session != null)
             {

@@ -43,6 +43,8 @@ namespace WebStudyServer
         public DbType DbType { get; private set; } = DbType.MySql;
         public CacheType CacheType { get; private set; } = CacheType.InMemory;
         public string RedisConnectionString { get; private set; } = string.Empty;
+        // 캐시 기본 TTL. 나중에 캐시 종류별로 별도 항목 추가 가능 (예: Cache:SessionTtl, Cache:UserDataTtl).
+        public TimeSpan CacheDefaultTtl { get; private set; } = TimeSpan.FromMinutes(30);
 
         public bool IsShowErrorDetail { get; private set; }
         public bool UseStrictValidation { get; private set; }
@@ -63,6 +65,7 @@ namespace WebStudyServer
             DbType = config.GetValue("Db:Type", DbType.MySql);
             CacheType = config.GetValue("Cache:Type", CacheType.InMemory);
             RedisConnectionString = config.GetValue("Cache:ConnectionString", string.Empty);
+            CacheDefaultTtl = config.GetValue("Cache:DefaultTtl", TimeSpan.FromMinutes(30));
             DbVersion = new MySqlServerVersion(config.GetValue("Db:Version", "0.0.0"));
             UserDbConnectionStrList = config.GetValueStringList("Db:UserDb:ConnectionStrList");
             AuthDbConnectionStrList = config.GetValueStringList("Db:AuthDb:ConnectionStrList");

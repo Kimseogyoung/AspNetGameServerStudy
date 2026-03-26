@@ -7,7 +7,7 @@ namespace WebStudyServer.Repo.Cache
     {
         private readonly Dictionary<string, object> _store = [];
 
-        public bool TryGet<T>(CacheKey key, out T outValue)
+        public bool TryGet<T>(CacheKey key, out T outValue, TimeSpan? slidingTtl = null)
         {
             outValue = default;
             if (!_store.TryGetValue(key.Value, out var value))

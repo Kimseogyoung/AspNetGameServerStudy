@@ -18,13 +18,13 @@ namespace Server.Repo.Database
         // ── SelectList: Cache → DB(dbFetch 위임) → Set ───────────────────
         public List<T> GetList<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase
         {
-            if (Cache.TryGet<List<T>>(listKey, out var cached))
+            if (Cache.TryGet<List<T>>(listKey, out var cached, CacheTtl))
             {
                 return [.. cached];
             }
 
             var result = Db.Execute(dbFetch);
-            Cache.Set(listKey, result);
+            Cache.Set(listKey, result, CacheTtl);
             return result;
         }
 
@@ -35,8 +35,7 @@ namespace Server.Repo.Database
 
             if (Cache.TryGet<List<T>>(listKey, out var cached))
             {
-                var newCached = new List<T>(cached) { entity };
-                Cache.Set(listKey, newCached);
+                Cache.Set(listKey, new List<T>(cached) { entity }, CacheTtl);
             }
 
             return entity;
@@ -62,7 +61,9 @@ namespace Server.Repo.Database
             {
                 newList.Add(entity);
             }
-            Cache.Set(listKey, newList);
+            Cache.Set(listKey, newList, CacheTtl);
         }
+
+        private static TimeSpan CacheTtl => APP.Cfg.CacheDefaultTtl;
     }
 }

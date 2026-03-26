@@ -85,7 +85,6 @@ namespace Server
                 await userLockSvc.RunAtomicAsync(rpcCtx.AccountId, async () =>
                 {
                     rpcResObj = await rpcMethod.RunAsync(rpcCtx, httpCtx, rpcReqObj);
-                    await ResWriteHelper.WriteResponseBodyAsync(httpCtx, rpcResObj, rpcMethod.Res);
                 });
 
                 dbRepo.Commit();
@@ -96,6 +95,7 @@ namespace Server
                 throw; // 오류 발생 시 ErrorHandler에서 처리
             }
 
+            await ResWriteHelper.WriteResponseBodyAsync(httpCtx, rpcResObj, rpcMethod.Res);
             return rpcResObj;
         }
 
