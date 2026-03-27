@@ -1,5 +1,6 @@
 using System.Text.Json;
 using StackExchange.Redis;
+using WebStudyServer.GAME;
 
 namespace WebStudyServer.Repo.Cache
 {

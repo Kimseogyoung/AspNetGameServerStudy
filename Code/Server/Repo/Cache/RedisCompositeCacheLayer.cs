@@ -1,3 +1,5 @@
+using WebStudyServer.GAME;
+
 namespace WebStudyServer.Repo.Cache
 {
     // InMemory → Redis 체인 캐시.

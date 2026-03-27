@@ -1,5 +1,6 @@
 using Proto;
 using Server.Repo.Database;
+using WebStudyServer.GAME;
 using WebStudyServer.Base;
 using WebStudyServer.Helper;
 using WebStudyServer.Manager;

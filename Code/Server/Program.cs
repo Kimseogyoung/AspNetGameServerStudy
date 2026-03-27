@@ -15,3 +15,5 @@ var app = builder.Build();
 startup.AppConfigure(app, app.Environment);
 app.Run();
 
+// WebApplicationFactory<Program> 사용을 위해 필요
+public partial class Program { }

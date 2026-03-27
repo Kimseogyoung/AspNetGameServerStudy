@@ -1,0 +1,37 @@
+# 테스트 전용 appsettings
+# 테스트 바이너리 출력 경로 기준: Code/ServerTest/bin/Debug/net8.0/
+
+UseSwagger: false
+UseUserLock: false
+SessionExpireSpan: 01:00:00
+IsShowErrorDetail: true
+UseStrictValidation: true
+
+# 테스트 출력 디렉토리(Code/ServerTest/bin/Debug/net8.0/) 기준 상대경로
+DefaultPlayerPath: ../../../../Server/Data/DefaultPlayer.json
+
+Proto:
+    CsvPath: ../../../../../Data/Csv/Proto
+
+Protocol:
+    ForceContentType: application/json
+
+Logging:
+    LogFolder: logs
+    LogLevel:
+        Default: Warning
+        Microsoft.AspNetCore: Warning
+
+Cache:
+    Type: InMemory
+    DefaultTtl: 01:00:00
+
+Db:
+    Type: InMemory
+    Version: 8.0.21
+    UserDb:
+        ConnectionStrList: []
+    AuthDb:
+        ConnectionStrList: []
+    CenterDb:
+        ConnectionStrList: []
