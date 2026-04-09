@@ -51,17 +51,17 @@ namespace Server
                     break;
                 case ERpcMethodType.AUTHORIZED:
                     {
-                        ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { rpcCtx.SessionKey, rpcCtx.SessionLoadState });
-                        ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { rpcCtx.SessionKey });
+                        ValidateSession(rpcCtx);
+                        ReqHelper.Valid(rpcCtx.AccountId != 0, EErrorCode.CONTEXT_ACCOUNT, () => new { rpcCtx.SessionKey });
                         var dbRepo = httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>();
                         dbRepo.BeginOwnUserRepo();
                         break;
                     }
                 case ERpcMethodType.AUTHORIZED_PLAYER:
                     {
-                        ReqHelper.ValidContext(rpcCtx.SessionLoadState == RpcContext.ESessionLoadState.LOADED, "FAILED_SESSION_LOAD", () => new { rpcCtx.SessionKey, rpcCtx.SessionLoadState });
-                        ReqHelper.ValidContext(rpcCtx.AccountId != 0, "NOT_FOUND_ACCOUNT_IN_RPC_METHOD_RUN", () => new { rpcCtx.SessionKey });
-                        ReqHelper.ValidContext(rpcCtx.PlayerId != 0, "NOT_FOUND_PLAYER_IN_RPC_METHOD_RUN", () => new { rpcCtx.SessionKey, rpcCtx.AccountId });
+                        ValidateSession(rpcCtx);
+                        ReqHelper.Valid(rpcCtx.AccountId != 0, EErrorCode.CONTEXT_ACCOUNT, () => new { rpcCtx.SessionKey });
+                        ReqHelper.Valid(rpcCtx.PlayerId != 0, EErrorCode.CONTEXT_PLAYER, () => new { rpcCtx.SessionKey, rpcCtx.AccountId });
                         var dbRepo = httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>();
                         dbRepo.BeginOwnUserRepo();
                         break;
@@ -109,6 +109,24 @@ namespace Server
             return OpenApiHelper.CreateResponse(typeof(TRes));
         }
 
+
+        private static void ValidateSession(RpcContext rpcCtx)
+        {
+            switch (rpcCtx.SessionLoadState)
+            {
+                case RpcContext.ESessionLoadState.LOADED:
+                    return;
+                case RpcContext.ESessionLoadState.NOT_FOUND:
+                    throw new GameException(EErrorCode.SESSION_NOT_FOUND, "SESSION_NOT_FOUND",
+                        new { rpcCtx.SessionKey });
+                case RpcContext.ESessionLoadState.EXPIRED:
+                    throw new GameException(EErrorCode.SESSION_EXPIRED, "SESSION_EXPIRED",
+                        new { rpcCtx.SessionKey });
+                default:
+                    throw new GameException(EErrorCode.CONTEXT, "FAILED_SESSION_LOAD",
+                        new { rpcCtx.SessionKey, rpcCtx.SessionLoadState });
+            }
+        }
 
         private readonly ERpcMethodType _type;
         private readonly RunAsyncDelegate _runAsync;

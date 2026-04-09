@@ -26,12 +26,14 @@ namespace WebStudyServer
             Code = code;
         }
 
+        [Obsolete("에러코드를 명시하는 생성자를 사용하세요. 예: GameException(EErrorCode.NO_HANDLING_ERROR, message, args)")]
         public GameException(string message, dynamic args) : base(message)
         {
             Code = -1;
             Args = args;
         }
 
+        [Obsolete("에러코드를 명시하는 생성자를 사용하세요. 예: GameException(EErrorCode.NO_HANDLING_ERROR, message)")]
         public GameException(string message) : base(message)
         {
             Code = -1;

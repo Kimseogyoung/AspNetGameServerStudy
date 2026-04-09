@@ -341,7 +341,7 @@ namespace Server.Service
                         };
                         break;
                     default:
-                        throw new GameException("NO_HANDLING_GACHA_RESULT", new { ObjType = resultObjValue.Key.Type });
+                        throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NO_HANDLING_GACHA_RESULT", new { ObjType = resultObjValue.Key.Type });
                 }
                 gachaResultList.Add(gachaResult);
             }

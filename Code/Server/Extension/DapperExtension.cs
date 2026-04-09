@@ -4,6 +4,7 @@ using System.Data;
 using System.Reflection;
 using System.Text;
 using Dapper;
+using Proto;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 
@@ -177,7 +178,7 @@ namespace WebStudyServer.Extension
             var tableName = GetTableName<T>();
             if (!PkWhereClauseDict.TryGetValue(typeof(T), out var outWhereClause))
             {
-                throw new GameException($"NOT_FOUND_WHERE_CLAUSE", new { TableName = tableName });
+                throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NOT_FOUND_WHERE_CLAUSE", new { TableName = tableName });
             }
 
             return outWhereClause;
@@ -188,7 +189,7 @@ namespace WebStudyServer.Extension
             var tableName = GetTableName<T>();
             if (!QueryParamDict.TryGetValue(typeof(T), out var outQueryParam))
             {
-                throw new GameException($"NOT_FOUND_QUERY_PARAM", new { TableName = tableName });
+                throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NOT_FOUND_QUERY_PARAM", new { TableName = tableName });
             }
 
             return outQueryParam;
@@ -199,7 +200,7 @@ namespace WebStudyServer.Extension
             var typeName = typeof(T).Name;
             if (!ModelNameDict.TryGetValue(typeof(T), out var name))
             {
-                throw new GameException($"NOT_FOUND_QUERY_PARAM", new { TableName = typeName });
+                throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NOT_FOUND_QUERY_PARAM", new { TableName = typeName });
             }
 
             return name;

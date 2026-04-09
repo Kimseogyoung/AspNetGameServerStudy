@@ -195,8 +195,8 @@ namespace Proto
 		CHANGED_NAME_FIRST = 2, //
 	}
 
-	public enum EErrorCode 
-	{ 
+	public enum EErrorCode
+	{
 		NO_HANDLING_ERROR = -1, //
 		OK = 1, //
 		TIMEOUT = 101, //
@@ -208,6 +208,10 @@ namespace Proto
 		PARAM = 10000, //
 		PROTO = 20000, //
 		CONTEXT = 30000, //
+		SESSION_NOT_FOUND = 30001, // 세션 키가 DB에 없음
+		SESSION_EXPIRED = 30002, // 세션은 있으나 만료됨
+		CONTEXT_ACCOUNT = 30010, // 계정 컨텍스트 로드 실패
+		CONTEXT_PLAYER = 30020, // 플레이어 컨텍스트 로드 실패
 	}
 
 

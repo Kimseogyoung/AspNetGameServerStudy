@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+using Proto;
 using Protocol;
 using Server.Repo;
 using Server.Serializer;
@@ -39,7 +40,7 @@ namespace Server
                 var methodName = GetMethodNameFromPath(httpCtx, pattern);
                 if (!NameToMethodDict.TryGetValue(methodName, out var rpcMethod))
                 {
-                    throw new GameException("NOT_FOUND_METHOD", new { MethodName = methodName });
+                    throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NOT_FOUND_METHOD", new { MethodName = methodName });
                 }
 
                 var httpReqStream = httpCtx.Request.Body;
