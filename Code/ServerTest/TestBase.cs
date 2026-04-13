@@ -29,6 +29,7 @@ namespace ServerTest
         protected async Task<string> CreateDummyPlayerAsync(string deviceKey = null)
         {
             deviceKey ??= Guid.NewGuid().ToString();
+            Api.SetDeviceKey(deviceKey);
 
             var signUpRes = await Api.PostAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(
                 new AuthSignUpReqPacket(deviceKey));
@@ -55,6 +56,7 @@ namespace ServerTest
     {
         private readonly HttpClient _httpClient;
         private string _sessionKey = string.Empty;
+        private string _deviceKey = string.Empty;
 
         private static readonly JsonSerializerOptions JsonOpts = new()
         {
@@ -68,6 +70,7 @@ namespace ServerTest
 
         public void SetSession(string key) => _sessionKey = key;
         public void ClearSession() => _sessionKey = string.Empty;
+        public void SetDeviceKey(string key) { _deviceKey = key; }
 
         public async Task<TRes> PostAsync<TReq, TRes>(TReq req, string sessionKey = null)
             where TReq : IReqPacket, new()
@@ -78,7 +81,7 @@ namespace ServerTest
             var key = sessionKey ?? _sessionKey;
             var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var protocolName = req.GetProtocolName();
-            var url = $"/rpc/{protocolName}?sessionkey={key}&timestamp={ts}";
+            var url = $"/rpc/{protocolName}?sessionkey={key}&devicekey={_deviceKey}&timestamp={ts}";
 
             var json = JsonSerializer.Serialize(req, req.GetType(), JsonOpts);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");

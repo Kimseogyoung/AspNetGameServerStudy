@@ -15,6 +15,7 @@ namespace ClientCore
     public class RpcSystem
     {
         public string SessionId => _sessionKey;
+        public string DeviceKey => _deviceKey;
         public string Host => _host;
 
         public void Init(string host, string contentType, TimeSpan timeoutSpan)
@@ -27,16 +28,22 @@ namespace ClientCore
         public void Clear()
         {
             _seq = 0;
-            _sessionKey = "";
+            _sessionKey = string.Empty;
+            _deviceKey = string.Empty;
             _prevTimestamp = 0;
-            _host = "";
-            _contentType = "";
+            _host = string.Empty;
+            _contentType = string.Empty;
             _httpClient = null;
         }
 
         public void SetSessionKey(string key)
         {
             _sessionKey = key;
+        }
+
+        public void SetDeviceKey(string key)
+        {
+            _deviceKey = key;
         }
 
 
@@ -195,7 +202,7 @@ namespace ClientCore
         private string MakeQueryString(string url)
         {
             var timestamp = GetTimestamp();
-            var fullUrl = $"{url}?sessionkey={_sessionKey}&timestamp={timestamp}";
+            var fullUrl = $"{url}?sessionkey={_sessionKey}&devicekey={_deviceKey}&timestamp={timestamp}";
             return fullUrl;
         }
 
@@ -215,6 +222,7 @@ namespace ClientCore
         private long _prevTimestamp = 0;
         private long _seq = 0;
         private string _sessionKey = string.Empty;
+        private string _deviceKey = string.Empty;
 
         private string _host = string.Empty;
         private string _contentType = string.Empty;

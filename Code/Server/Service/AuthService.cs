@@ -28,6 +28,7 @@ namespace WebStudyServer.Service
                     if (Auth.Channel.TryGetActive(originMgrAccount.Id, out var originMgrChannel))
                     {
                         var originMgrSession = Auth.Session.Touch(originMgrAccount.Id);
+                        originMgrSession.Expire(); // 기존 세션 무효화
                         originMgrSession.Start();
 
                         return new AuthSignUpResPacket
@@ -82,6 +83,7 @@ namespace WebStudyServer.Service
 
             // 세션 갱신 및 리턴
             var mgrSession = Auth.Session.Touch(mgrAccount.Id);
+            mgrSession.Expire(); // 기존 세션 무효화
             mgrSession.Start();
             return new AuthSignInResPacket
             {

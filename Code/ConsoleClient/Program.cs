@@ -5,13 +5,28 @@ var initPath = args.Length > 0 ? args[0] : "../../Data/Csv/Proto";
 APP.Init(Path.Join(APP.GetProjPath(), initPath), "http://localhost:5157", TimeSpan.FromSeconds(5));
 APP.Prt.Bind();
 
+var deviceKeyPath = Path.Combine(APP.GetProjPath(), "devicekey.dat");
+var deviceKey = DeviceKeyHelper.LoadOrCreateKey(deviceKeyPath);
+APP.Ctx.RpcSystem.SetDeviceKey(deviceKey);
+Console.WriteLine($"DeviceKey: {APP.Ctx.RpcSystem.DeviceKey}");
+
 var funcDict = new Dictionary<int, ApiFunc>()
 {
+    { -2, new ApiFunc(){ ApiPath = "DeviceKey Reset", Desc = "DeviceKey 재발급",
+        Action = (valueArr) =>
+        {
+            var dkPath = Path.Combine(APP.GetProjPath(), "devicekey.dat");
+            var newKey = DeviceKeyHelper.RegenerateKey(dkPath);
+            APP.Ctx.RpcSystem.SetDeviceKey(newKey);
+            Console.WriteLine($"새 DeviceKey: {newKey}");
+            return Task.CompletedTask;
+        }
+    } },
     { -1, new ApiFunc(){ ApiPath = HealthCheckReqPacket.NAME, Desc = "HealthCheck",
         Action = async (valueArr) =>  await APP.Ctx.RequestHealthCheckAsync()} },
 
     { 1, new ApiFunc(){ ApiPath = AuthSignUpReqPacket.NAME, Desc = "회원 가입",
-        Action = async (valueArr) =>  await APP.Ctx.RequestSignUpAsync(Guid.NewGuid().ToString())} },
+        Action = async (valueArr) =>  await APP.Ctx.RequestSignUpAsync(APP.Ctx.RpcSystem.DeviceKey)} },
     { 2, new ApiFunc(){ ApiPath = AuthSignInReqPacket.NAME, Desc = "기존 계정 로그인 (ChannelKey)",
         Action = async (valueArr) =>  await APP.Ctx.RequestSignInAsync(valueArr[0])} },
 
@@ -71,7 +86,7 @@ var funcDict = new Dictionary<int, ApiFunc>()
 var isRunning = true;
 while (isRunning)
 {
-    Console.WriteLine($"\n--- 명령 선택 --- (현재 세션: {APP.Ctx.RpcSystem.SessionId})");
+    Console.WriteLine($"\n--- 명령 선택 --- (세션: {APP.Ctx.RpcSystem.SessionId} | DeviceKey: {APP.Ctx.RpcSystem.DeviceKey})");
     foreach (var num in funcDict.Keys.OrderBy(x => x))
     {
         var apiPath = funcDict[num].ApiPath;

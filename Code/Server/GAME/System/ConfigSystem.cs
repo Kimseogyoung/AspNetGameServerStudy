@@ -37,6 +37,7 @@ namespace WebStudyServer
         public List<string> UserDbConnectionStrList { get; private set; } = [];
         public List<string> AuthDbConnectionStrList { get; private set; } = [];
         public TimeSpan SessionExpireSpan { get; private set; } = new();
+        public TimeSpan SessionGracePeriodSpan { get; private set; } = TimeSpan.FromDays(30);
         public string DefaultPlayerPath { get; private set; } = string.Empty;
         public PlayerPacket PakDefaultPlayer { get; private set; } = new();
 
@@ -60,6 +61,7 @@ namespace WebStudyServer
             UserLockTimeoutSpan = config.GetValue("UserLockTimeoutSpan", TimeSpan.FromMinutes(20));
 
             SessionExpireSpan = config.GetValue("SessionExpireSpan", TimeSpan.FromMinutes(20));
+            SessionGracePeriodSpan = config.GetValue("SessionGracePeriodSpan", TimeSpan.FromDays(30));
 
 
             DbType = config.GetValue("Db:Type", DbType.MySql);

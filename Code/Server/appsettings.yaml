@@ -2,6 +2,7 @@ UseSwagger: true
 UseUserLock: true
 UserLockTimeoutSpan: 00:10:00
 SessionExpireSpan: 00:20:00
+SessionGracePeriodSpan: 30.00:00:00
 IsShowErrorDetail: true
 UseStrictValidation: true
 DefaultPlayerPath: Data/DefaultPlayer.json

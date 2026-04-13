@@ -138,7 +138,7 @@ namespace WebStudyServer
 
         private void SetDeviceKey(HttpContext httpContext)
         {
-            var deviceKey = "";
+            var deviceKey = GetQueryValue(httpContext, MsgProtocol.Query_DeviceKey);
             DeviceKey = deviceKey;
         }
 

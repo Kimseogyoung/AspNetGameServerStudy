@@ -26,5 +26,6 @@ namespace Protocol
         public const string Query_SessionKey = "sessionKey";
         public const string Query_Timestamp = "timestamp";
         public const string Query_Seq = "seq";
+        public const string Query_DeviceKey = "devicekey";
     }
 }

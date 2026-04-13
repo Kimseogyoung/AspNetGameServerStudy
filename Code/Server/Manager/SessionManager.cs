@@ -48,42 +48,71 @@ namespace WebStudyServer.Manager
 
         public bool Extend()
         {
-            if (Model.State == ESessionState.EXPIRED)
-            {
-                return false;
-            }
-
-            var expireTime = TimeHelper.TimeStampToDateTime(Model.ExpireTimestamp);
             var serverTime = _authRepo.RpcContext.ServerTime;
+            var expireTime = TimeHelper.TimeStampToDateTime(Model.ExpireTimestamp);
 
-            var isExpire = serverTime > expireTime;
-            if (!isExpire)
+            // 만료 시간 경과 → Revival 먼저 시도 (ACTIVE/EXPIRED 모두 동일 처리)
+            // Revival을 먼저 시도해야 첫 만료 요청에서 1 round-trip으로 처리됨
+            if (Model.State == ESessionState.EXPIRED || serverTime >= expireTime)
+            {
+                if (TryReviveByDeviceKey(serverTime, expireTime))
+                {
+                    return true;
+                }
+
+                if (Model.State != ESessionState.EXPIRED)
+                {
+                    Model.State = ESessionState.EXPIRED;
+                    _authRepo.Session.Update(Model.Key, Model);
+                }
+
+                return false;
+            }
+
+            // Half-life: 남은 시간이 절반 초과 → 갱신 불필요 (DB 부하 최적화)
+            var remaining = expireTime - serverTime;
+            if (remaining > APP.Cfg.SessionExpireSpan / 2)
             {
                 return false;
             }
 
-            // TODO: 연장
-            //
-
+            // 연장: ExpireTimestamp 갱신 → DB + 캐시 TTL 동시 갱신
+            Model.ExpireTimestamp = TimeHelper.DateTimeToTimeStamp(serverTime + APP.Cfg.SessionExpireSpan);
+            _authRepo.Session.Update(Model.Key, Model);
             return true;
         }
-        /*
-                private void RefreshState()
-                {
-                    var expireTime = TimeHelper.TimeStampToDateTime(Model.ExpireTimestamp);
-                    var serverTime = _authRepo.RpcContext.ServerTime;
 
-                    var isExpire = serverTime > expireTime;
-                    var aftState = isExpire ? ESessionState.EXPIRED : ESessionState.ACTIVE;
+        public void Expire()
+        {
+            if (Model.State == ESessionState.EXPIRED)
+            {
+                return;
+            }
 
-                    if (Model.State == aftState)
-                    {
-                        return;
-                    }
+            Model.State = ESessionState.EXPIRED;
+            _authRepo.Session.Update(Model.Key, Model);
+        }
 
-                    Model.State = aftState;
-                    _authRepo.UpdateSession(Model);
-                }*/
+        private bool TryReviveByDeviceKey(DateTime serverTime, DateTime expireTime)
+        {
+            var reqDeviceKey = _authRepo.RpcContext.DeviceKey;
+            if (string.IsNullOrEmpty(reqDeviceKey) || reqDeviceKey != Model.DeviceKey)
+            {
+                return false;
+            }
+
+            // Grace period 초과 여부 확인
+            if (serverTime > expireTime + APP.Cfg.SessionGracePeriodSpan)
+            {
+                return false;
+            }
+
+            // 세션 부활: State + ExpireTimestamp 갱신
+            Model.State = ESessionState.ACTIVE;
+            Model.ExpireTimestamp = TimeHelper.DateTimeToTimeStamp(serverTime + APP.Cfg.SessionExpireSpan);
+            _authRepo.Session.Update(Model.Key, Model);
+            return true;
+        }
 
     }
 }
