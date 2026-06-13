@@ -3,3 +3,4 @@ obj/
 .vs/
 logs
 __*
+devicekey.dat

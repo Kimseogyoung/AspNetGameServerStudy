@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
+using Protocol.Raid;
 
 namespace RaidServer.Network
 { 

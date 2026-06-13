@@ -70,6 +70,24 @@ var funcDict = new Dictionary<int, ApiFunc>()
     { 603, new ApiFunc(){ ApiPath = WorldFinishStageRepeatReqPacket.NAME, Desc = "(WorldNum, OrderNum, Star)", Action = async (valueArr) =>  await APP.Ctx.RequestWorldFinishRepeatStage(int.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) }},
     { 604, new ApiFunc(){ ApiPath = WorldRewardStarReqPacket.NAME, Desc = "(WorldNum, Star)", Action = async (valueArr) =>  await APP.Ctx.RequestWorldRewardStar(int.Parse(valueArr[0]), int.Parse(valueArr[1])) }},
 
+    { 700, new ApiFunc(){ ApiPath = "Raid Connect", Desc = "Raid 서버 접속 (Host Port, 기본 127.0.0.1 5000)",
+        Action = async (valueArr) =>  {
+            var host = valueArr.Length > 0 ? valueArr[0] : "127.0.0.1";
+            var port = valueArr.Length > 1 ? int.Parse(valueArr[1]) : 5000;
+            await APP.Ctx.RequestRaidConnectAsync(host, port);
+            }
+        }
+    },
+    { 701, new ApiFunc(){ ApiPath = "Raid Echo", Desc = "Raid Echo 전송 (Message)",
+        Action = async (valueArr) =>  {
+            var message = valueArr.Length > 0 ? string.Join(" ", valueArr) : "Hello Raid";
+            await APP.Ctx.RequestRaidEchoAsync(message);
+            }
+        }
+    },
+    { 702, new ApiFunc(){ ApiPath = "Raid Disconnect", Desc = "Raid 서버 접속 종료",
+        Action = async (valueArr) =>  await APP.Ctx.RequestRaidDisconnectAsync() } },
+
     { 9001, new ApiFunc(){ ApiPath = CheatRewardReqPacket.NAME, Desc = "Chaet 보상 획득 (ObjType, ObjNum, ObjAmount)",
         Action = async (valueArr) =>  {
             var objType = valueArr.Length > 0 ? valueArr[0] : "";
@@ -105,6 +123,7 @@ while (isRunning)
         if (inputNum == 0)
         {
             isRunning = false;
+            continue;
         }
 
         if (!funcDict.TryGetValue(inputNum, out var outApiFund))

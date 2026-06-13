@@ -1,6 +1,6 @@
 using ProtoBuf;
 
-namespace RaidServer.Network
+namespace Protocol.Raid
 {
     [ProtoContract]
     public class EchoReqPacket

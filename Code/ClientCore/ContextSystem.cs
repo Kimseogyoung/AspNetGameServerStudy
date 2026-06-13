@@ -21,6 +21,7 @@ namespace ClientCore
         {
             Player = null;
             RpcSystem.Clear();
+            RaidSystem.Close();
         }
 
         public bool IsErrorRes(IResPacket res)

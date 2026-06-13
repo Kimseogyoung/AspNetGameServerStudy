@@ -1,4 +1,4 @@
-using ServerCore.Serializer;
+using Protocol.Raid;
 
 namespace RaidServer.Network
 {

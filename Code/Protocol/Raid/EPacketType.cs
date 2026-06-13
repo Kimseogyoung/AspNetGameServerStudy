@@ -1,4 +1,4 @@
-namespace RaidServer.Network
+namespace Protocol.Raid
 {
     public enum EPacketType : ushort
     {

@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Protocol.Raid;
 
 namespace RaidServer.Network
 {
@@ -43,19 +44,19 @@ namespace RaidServer.Network
         {
             await foreach (var envelope in _receiveChannel.Reader.ReadAllAsync(cancellationToken))
             {
-                var packet = PacketCodec.Parse(envelope.SessionId, envelope.Bytes);
+                var (opcode, protocolType, payload) = PacketCodec.Parse(envelope.Bytes);
 
-                if (!_opcodeToHandlerDict.TryGetValue(packet.Opcode, out var handler))
+                if (!_opcodeToHandlerDict.TryGetValue(opcode, out var handler))
                 {
-                    _logger.LogError($"NOT_FOUND_HANDLER Opcode({packet.Opcode})");
+                    _logger.LogError($"NOT_FOUND_HANDLER Opcode({opcode})");
                     envelope.Tcs.SetResult();
                     continue;
                 }
 
-                var serializer = _serializerProvider.Get(packet.ProtocolType);
-                var req = await serializer.DeserializeAsync(handler.Req, new MemoryStream(packet.Payload));
+                var serializer = _serializerProvider.Get(protocolType);
+                var req = await serializer.DeserializeAsync(handler.Req, new MemoryStream(payload));
 
-                await handler.RunAsync(packet.SessionId, req);
+                await handler.RunAsync(envelope.SessionId, req);
                 envelope.Tcs.SetResult();
             }
         }
