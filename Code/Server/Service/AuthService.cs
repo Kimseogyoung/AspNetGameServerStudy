@@ -1,6 +1,7 @@
 using Proto;
 using Protocol;
 using Server.Repo;
+using ServerCore;
 using WebStudyServer;
 using WebStudyServer.Base;
 using WebStudyServer.GAME;
@@ -38,7 +39,7 @@ namespace WebStudyServer.Service
                                 SessionKey = originMgrSession.Model.Key,
                                 ChannelKey = originMgrChannel.Model.Key,
                                 AccountState = originMgrAccount.Model.State,
-                                AccountEnv = APP.Cfg.EnvName,
+                                AccountEnv = Core.Cfg.EnvName,
                                 ClientSecret = ""
                             }
                         };
@@ -67,7 +68,7 @@ namespace WebStudyServer.Service
                     SessionKey = mgrSession.Model.Key,
                     ChannelKey = mgrChannel.Model.Key,
                     AccountState = mgrAccount.Model.State,
-                    AccountEnv = APP.Cfg.EnvName,
+                    AccountEnv = Core.Cfg.EnvName,
                     ClientSecret = ""
                 }
             };
@@ -92,7 +93,7 @@ namespace WebStudyServer.Service
                     SessionKey = mgrSession.Model.Key,
                     ChannelKey = mgrChannel.Model.Key,
                     AccountState = mgrAccount.Model.State,
-                    AccountEnv = APP.Cfg.EnvName,
+                    AccountEnv = Core.Cfg.EnvName,
                     ClientSecret = ""
                 }
             };

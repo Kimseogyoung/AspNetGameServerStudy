@@ -4,6 +4,7 @@ using Protocol;
 using Server.Extension;
 using Server.Helper;
 using Server.Repo;
+using ServerCore;
 using WebStudyServer;
 using WebStudyServer.GAME;
 using WebStudyServer.Helper;

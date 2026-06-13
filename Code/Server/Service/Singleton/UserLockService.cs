@@ -1,3 +1,4 @@
+using ServerCore;
 using WebStudyServer.Extension;
 using WebStudyServer.GAME;
 
@@ -9,7 +10,7 @@ namespace WebStudyServer
         {
             _lockService = lockService;
             _logger = logger;
-            _useDbLock = APP.Cfg.UseUserLock;
+            _useDbLock = Core.Cfg.UseUserLock;
         }
 
         public async Task RunAtomicAsync(ulong accountId, Func<Task> action)

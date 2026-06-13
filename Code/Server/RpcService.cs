@@ -3,6 +3,7 @@ using Proto;
 using Protocol;
 using Server.Repo;
 using Server.Serializer;
+using ServerCore;
 using WebStudyServer;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;

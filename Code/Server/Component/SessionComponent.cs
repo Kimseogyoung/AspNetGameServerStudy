@@ -1,12 +1,13 @@
 using Proto;
-using Server.Repo.Database;
+using ServerCore.Repo.Database;
+using ServerCore;
 using WebStudyServer.GAME;
 using WebStudyServer.Base;
-using WebStudyServer.Helper;
+using ServerCore.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
-using WebStudyServer.Repo.Cache;
+using ServerCore.Repo.Cache;
 
 namespace WebStudyServer.Component
 {
@@ -14,7 +15,7 @@ namespace WebStudyServer.Component
     {
         public static class Key
         {
-            internal static TimeSpan Ttl => APP.Cfg.CacheDefaultTtl;
+            internal static TimeSpan Ttl => Core.Cfg.CacheDefaultTtl;
 
             public static CacheKey AccountIdBySessionKey(string key)
                 => CacheKey.For<SessionModel>("AccountBySessionKey", key); // 제네릭 T떼기

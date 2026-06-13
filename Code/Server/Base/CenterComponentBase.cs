@@ -1,7 +1,6 @@
-using Server.Repo.Database;
-using WebStudyServer.Model;
+using ServerCore.Repo.Database;
+using ServerCore.Model;
 using WebStudyServer.Repo;
-using WebStudyServer.Repo.Database;
 
 namespace WebStudyServer.Base
 {

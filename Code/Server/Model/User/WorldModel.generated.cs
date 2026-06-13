@@ -1,5 +1,6 @@
 using ProtoBuf;
 using Proto;
+using ServerCore.Model;
 
 namespace WebStudyServer.Model
 {

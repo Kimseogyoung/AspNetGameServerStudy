@@ -5,6 +5,7 @@ using NLog;
 using NLog.Config;
 using NLog.Extensions.Logging;
 using NLog.Targets;
+using ServerCore;
 using WebStudyServer.GAME;
 
 namespace WebStudyServer
@@ -13,7 +14,7 @@ namespace WebStudyServer
     {
         public void Logging(WebApplicationBuilder builder)
         {
-            var logLevel = APP.Cfg.LogLevel;
+            var logLevel = Core.Cfg.LogLevel;
 
             builder.Logging.ClearProviders(); // 기본 로깅 제공자 제거
             builder.Logging.AddNLog(); // NLog 사용 설정

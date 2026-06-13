@@ -1,9 +1,9 @@
-using Server.Repo.Database;
+using ServerCore.Repo.Database;
+using ServerCore;
+using ServerCore.Model;
 using WebStudyServer.GAME;
-using WebStudyServer.Model;
 using WebStudyServer.Repo;
-using WebStudyServer.Repo.Cache;
-using WebStudyServer.Repo.Database;
+using ServerCore.Repo.Cache;
 
 namespace WebStudyServer.Base
 {
@@ -36,7 +36,7 @@ namespace WebStudyServer.Base
             var result = _repository.Db.Execute(dbFetch);
             if (result != null)
             {
-                _repository.Cache.Set(cacheKey, result, slidingTtl ?? APP.Cfg.CacheDefaultTtl);
+                _repository.Cache.Set(cacheKey, result, slidingTtl ?? Core.Cfg.CacheDefaultTtl);
             }
             return result;
         }

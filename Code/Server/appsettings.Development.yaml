@@ -1,4 +1,5 @@
-UseSwagger: false
+Game:
+    UseSwagger: false
 Test: true
 Db:
     Version: 8.0.21

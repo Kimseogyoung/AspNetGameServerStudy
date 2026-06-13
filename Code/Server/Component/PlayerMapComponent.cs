@@ -1,5 +1,5 @@
 using Proto;
-using Server.Repo.Database;
+using ServerCore.Repo.Database;
 using WebStudyServer.Base;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;

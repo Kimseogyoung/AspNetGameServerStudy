@@ -1,5 +1,5 @@
 using System.Numerics;
-using WebStudyServer.Model;
+using ServerCore.Model;
 
 namespace WebStudyServer
 {

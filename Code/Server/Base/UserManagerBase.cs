@@ -1,4 +1,4 @@
-using WebStudyServer.Model;
+using ServerCore.Model;
 using WebStudyServer.Repo;
 
 namespace WebStudyServer

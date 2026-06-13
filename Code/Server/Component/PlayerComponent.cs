@@ -1,11 +1,11 @@
-using Server.Repo.Database;
+using ServerCore.Helper;
+using ServerCore.Repo.Database;
 using WebStudyServer.Base;
-using WebStudyServer.Repo.Database;
 using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
-using WebStudyServer.Repo.Cache;
+using ServerCore.Repo.Cache;
 
 namespace WebStudyServer.Component
 {

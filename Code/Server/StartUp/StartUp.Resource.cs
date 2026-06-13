@@ -1,21 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Server.Repo;
+using ServerCore;
+using ServerCore.Extension;
 using StackExchange.Redis;
-using WebStudyServer.Extension;
-using WebStudyServer.GAME;
 using WebStudyServer.Model;
-using WebStudyServer.Repo.Cache;
-using WebStudyServer.Repo.Database;
-
-// Init<T> 한 줄로 DapperExtension + InMemoryPkRegistry 동시 등록
-static class ModelRegistration
-{
-    public static void Init<T>(params string[] keyFields)
-    {
-        DapperExtension.Init<T>(keyFields);
-        InMemoryPkRegistry.Init<T>(keyFields);
-    }
-}
+using ServerCore.Repo.Cache;
+using ServerCore.Repo.Database;
 
 namespace WebStudyServer
 {
@@ -26,7 +16,7 @@ namespace WebStudyServer
             services.AddScoped<UserLockService>();;
 
             // Db
-            switch (APP.Cfg.DbType)
+            switch (Core.Cfg.DbType)
             {
                 case DbType.MySql:
                     services.AddScoped<ILockService, MySqlLockService>();
@@ -37,15 +27,15 @@ namespace WebStudyServer
                     services.AddSingleton<IDbSessionFactory, InMemoryDbSessionFactory>();
                     break;
                 default:
-                    throw new Exception($"No handling DbType({APP.Cfg.DbType})");
+                    throw new Exception($"No handling DbType({Core.Cfg.DbType})");
             }
 
             // Cache
-            switch (APP.Cfg.CacheType)
+            switch (Core.Cfg.CacheType)
             {
                 case CacheType.Redis:
                     services.AddSingleton<IConnectionMultiplexer>(
-                    _ => ConnectionMultiplexer.Connect(APP.Cfg.RedisConnectionString));
+                    _ => ConnectionMultiplexer.Connect(Core.Cfg.RedisConnectionString));
                     services.AddScoped<InMemoryCacheLayer>();
                     services.AddScoped<RedisCacheLayer>();
                     services.AddScoped<ICacheSession, RedisCompositeCacheLayer>();
@@ -54,7 +44,7 @@ namespace WebStudyServer
                     services.AddScoped<ICacheSession, InMemoryCacheLayer>();
                     break;
                 default:
-                    throw new Exception($"No handling DbType({APP.Cfg.DbType})");
+                    throw new Exception($"No handling DbType({Core.Cfg.DbType})");
             }
 
             services.AddMemoryCache();
@@ -89,7 +79,7 @@ namespace WebStudyServer
             // Center
             ModelRegistration.Init<ScheduleModel>("Num");
 
-            if (APP.Cfg.DbType != DbType.InMemory)
+            if (Core.Cfg.DbType != DbType.InMemory)
             {
                 ConnectionTest();
             }
@@ -97,19 +87,19 @@ namespace WebStudyServer
 
         private void ConnectionTest()
         {
-            foreach (var connectionStr in APP.Cfg.UserDbConnectionStrList)
+            foreach (var connectionStr in Core.Cfg.UserDbConnectionStrList)
             {
                 var excutor = DBSqlExecutor.StartTransaction(connectionStr, System.Data.IsolationLevel.ReadCommitted);
                 excutor.Commit();
             }
 
-            foreach (var connectionStr in APP.Cfg.AuthDbConnectionStrList)
+            foreach (var connectionStr in Core.Cfg.AuthDbConnectionStrList)
             {
                 var excutor = DBSqlExecutor.StartTransaction(connectionStr, System.Data.IsolationLevel.ReadCommitted);
                 excutor.Commit();
             }
 
-            foreach (var connectionStr in APP.Cfg.CenterDbConnectionStrList)
+            foreach (var connectionStr in Core.Cfg.CenterDbConnectionStrList)
             {
                 var excutor = DBSqlExecutor.StartTransaction(connectionStr, System.Data.IsolationLevel.ReadCommitted);
                 excutor.Commit();

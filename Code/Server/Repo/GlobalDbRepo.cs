@@ -1,9 +1,9 @@
-using Server.Repo.Database;
+using ServerCore.Repo.Database;
+using ServerCore;
 using WebStudyServer;
 using WebStudyServer.GAME;
 using WebStudyServer.Repo;
-using WebStudyServer.Repo.Cache;
-using WebStudyServer.Repo.Database;
+using ServerCore.Repo.Cache;
 
 namespace Server.Repo
 {
@@ -44,7 +44,7 @@ namespace Server.Repo
 
         private AuthRepo BeginAuthRepo()
         {
-            var connStr = APP.Cfg.AuthDbConnectionStrList.Count > 0 ? APP.Cfg.AuthDbConnectionStrList[0] : InMemoryConnectionKey;
+            var connStr = Core.Cfg.AuthDbConnectionStrList.Count > 0 ? Core.Cfg.AuthDbConnectionStrList[0] : InMemoryConnectionKey;
             var repository = CreateRepository(connStr);
             var authRepo = new AuthRepo(_rpcContext, repository);
             return authRepo;
@@ -52,7 +52,7 @@ namespace Server.Repo
 
         private CenterRepo BeginCenterRepo()
         {
-            var connStr = APP.Cfg.CenterDbConnectionStrList.Count > 0 ? APP.Cfg.CenterDbConnectionStrList[0] : InMemoryConnectionKey;
+            var connStr = Core.Cfg.CenterDbConnectionStrList.Count > 0 ? Core.Cfg.CenterDbConnectionStrList[0] : InMemoryConnectionKey;
             var repository = CreateRepository(connStr);
             var centerRepo = new CenterRepo(_rpcContext, repository);
             return centerRepo;
@@ -60,7 +60,7 @@ namespace Server.Repo
 
         private AllUserRepo BeginAllUserRepo()
         {
-            var factories = APP.Cfg.UserDbConnectionStrList
+            var factories = Core.Cfg.UserDbConnectionStrList
                 .Select(connStr => _dbSessionManager.Open(connStr))
                 .ToList();
 
@@ -130,7 +130,7 @@ namespace Server.Repo
 
         private string GetUserDbConnectionStr(int shardId)
         {
-            var connList = APP.Cfg.UserDbConnectionStrList;
+            var connList = Core.Cfg.UserDbConnectionStrList;
             if (connList.Count == 0)
             {
                 return InMemoryConnectionKey;
@@ -157,7 +157,7 @@ namespace Server.Repo
             var dbSession = _dbSessionManager.Open(dbConnectionString);
 
             IRepository repo;
-            switch (APP.Cfg.DbType)
+            switch (Core.Cfg.DbType)
             {
                 case DbType.InMemory:
                     repo = new InMemoryRepository(_cacheSession, dbSession);
@@ -166,7 +166,7 @@ namespace Server.Repo
                     repo = new SqlRepository(_cacheSession, dbSession);
                     break;
                 default:
-                    throw new NotSupportedException($"NotSupportDbType({APP.Cfg.DbType})");
+                    throw new NotSupportedException($"NotSupportDbType({Core.Cfg.DbType})");
             }
 
             return repo;

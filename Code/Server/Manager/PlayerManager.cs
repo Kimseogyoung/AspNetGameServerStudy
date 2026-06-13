@@ -2,6 +2,7 @@ using AutoMapper;
 using Proto;
 using Protocol;
 using Protocol.Packet.Custom;
+using ServerCore.Helper;
 using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;

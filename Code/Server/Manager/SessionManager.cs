@@ -1,6 +1,6 @@
 using Proto;
+using ServerCore.Helper;
 using WebStudyServer.GAME;
-using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
 namespace WebStudyServer.Manager

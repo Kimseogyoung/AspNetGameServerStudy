@@ -44,6 +44,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Protocol\Protocol.csproj" />
     <ProjectReference Include="..\Proto\Proto.csproj" />
+    <ProjectReference Include="..\ServerCore\ServerCore.csproj" />
     <ProjectReference Include="..\ServerFramework\ServerFramework.csproj" />
   </ItemGroup>
 

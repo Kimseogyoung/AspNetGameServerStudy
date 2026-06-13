@@ -1,5 +1,4 @@
-using Server.Repo.Database;
-using WebStudyServer.Repo.Database;
+using ServerCore.Repo.Database;
 
 namespace WebStudyServer.Base
 {
