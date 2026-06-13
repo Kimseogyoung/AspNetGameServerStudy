@@ -1,0 +1,6 @@
+Cache:
+    Type: InMemory
+Db:
+    Type: InMemory
+Raid:
+    Port: 5000
