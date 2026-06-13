@@ -55,36 +55,43 @@ namespace RaidServer.Network
             var stream = session.Stream;
             var messageBuffer = new MemoryStream();
 
-            // 서버 종료 / 세션 종료 확인
-            while (session.IsConnected)
+            try
             {
-                var lengthBuffer = new byte[4];
-                // 메시지 길이 4바이트 읽기
-                int read = await ReadExactAsync(lengthBuffer, 4, session.Cts.Token);
-                if (read == 0)
+                // 서버 종료 / 세션 종료 확인
+                while (session.IsConnected)
                 {
-                    // 연결 종료
-                    break;
-                }
+                    var lengthBuffer = new byte[4];
+                    // 메시지 길이 4바이트 읽기
+                    int read = await ReadExactAsync(lengthBuffer, 4, session.Cts.Token);
+                    if (read == 0)
+                    {
+                        // 연결 종료
+                        break;
+                    }
 
-                int readMessageCnt = BitConverter.ToInt32(lengthBuffer.Reverse().ToArray(), 0);  // Big endian 처리
-                if (readMessageCnt <= 0)
-                {
-                    _logger.LogError($"잘못된 메시지 길이 ({readMessageCnt})");
-                    break;
-                }
+                    int readMessageCnt = BitConverter.ToInt32(lengthBuffer.Reverse().ToArray(), 0);  // Big endian 처리
+                    if (readMessageCnt <= 0)
+                    {
+                        _logger.LogError($"잘못된 메시지 길이 ({readMessageCnt})");
+                        break;
+                    }
 
-                // 메시지 본문 (동적으로 할당)
-                var messageBytes = new byte[readMessageCnt];
-                read = await ReadExactAsync(messageBytes, readMessageCnt, session.Cts.Token);
-                if (read == 0)
-                {
-                    // 연결 종료
-                    break;
-                }
+                    // 메시지 본문 (동적으로 할당)
+                    var messageBytes = new byte[readMessageCnt];
+                    read = await ReadExactAsync(messageBytes, readMessageCnt, session.Cts.Token);
+                    if (read == 0)
+                    {
+                        // 연결 종료
+                        break;
+                    }
 
-                // 파싱/비즈니스는 Dispatcher에 위임
-                _ = _handler!.Invoke(session.Id, messageBytes); // TODO: FireAndForget
+                    // 파싱/비즈니스는 Dispatcher에 위임
+                    _ = _handler!.Invoke(session.Id, messageBytes); // TODO: FireAndForget
+                }
+            }
+            catch (Exception e) when (e is OperationCanceledException or IOException or ObjectDisposedException)
+            {
+                _logger.LogInformation($"RECEIVE_LOOP_CLOSED SessionId({session.Id}) Reason({e.GetType().Name})");
             }
 
             async Task<int> ReadExactAsync(byte[] buffer, int length, CancellationToken token)
@@ -107,10 +114,17 @@ namespace RaidServer.Network
         {
             var stream = session.Stream;
 
-            while (session.IsConnected)
+            try
             {
-                var bytes = await session.WaitSendBytesAsync();
-                await stream.WriteAsync(bytes);
+                while (session.IsConnected)
+                {
+                    var bytes = await session.WaitSendBytesAsync();
+                    await stream.WriteAsync(bytes);
+                }
+            }
+            catch (Exception e) when (e is OperationCanceledException or IOException or ObjectDisposedException)
+            {
+                _logger.LogInformation($"WRITE_LOOP_CLOSED SessionId({session.Id}) Reason({e.GetType().Name})");
             }
         }
 

@@ -87,6 +87,13 @@ var funcDict = new Dictionary<int, ApiFunc>()
     },
     { 702, new ApiFunc(){ ApiPath = "Raid Disconnect", Desc = "Raid 서버 접속 종료",
         Action = async (valueArr) =>  await APP.Ctx.RequestRaidDisconnectAsync() } },
+    { 703, new ApiFunc(){ ApiPath = "Raid Echo (Auth)", Desc = "인증 게이트 Echo 전송 (Message)",
+        Action = async (valueArr) =>  {
+            var message = valueArr.Length > 0 ? string.Join(" ", valueArr) : "Hello Raid";
+            await APP.Ctx.RequestRaidEchoAuthAsync(message);
+            }
+        }
+    },
 
     { 9001, new ApiFunc(){ ApiPath = CheatRewardReqPacket.NAME, Desc = "Chaet 보상 획득 (ObjType, ObjNum, ObjAmount)",
         Action = async (valueArr) =>  {

@@ -5,10 +5,14 @@ namespace RaidServer
     public class RaidConfig
     {
         public int Port { get; }
+        public int PingIntervalSec { get; }
+        public int SessionTimeoutSec { get; }
 
         public RaidConfig(IConfiguration config)
         {
             Port = config.GetValue("Raid:Port", 5000);
+            PingIntervalSec = config.GetValue("Raid:PingIntervalSec", 10);
+            SessionTimeoutSec = config.GetValue("Raid:SessionTimeoutSec", 30);
         }
     }
 }

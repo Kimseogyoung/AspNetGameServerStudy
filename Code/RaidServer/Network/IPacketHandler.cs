@@ -4,6 +4,7 @@ namespace RaidServer.Network
     {
         ushort Opcode { get; }
         Type Req { get; }
+        bool RequireAuth => false;
         Task RunAsync(string sessionId, object req);
     }
 }

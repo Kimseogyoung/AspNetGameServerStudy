@@ -1,8 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using RaidServer.Context;
+using Server.Repo;
 using ServerCore;
+using ServerCore.Extension;
 using ServerCore.Repo.Cache;
 using ServerCore.Repo.Database;
 using StackExchange.Redis;
+using WebStudyServer.Model;
 
 namespace RaidServer
 {
@@ -39,6 +43,16 @@ namespace RaidServer
                 default:
                     throw new Exception($"No handling CacheType({Core.Cfg.CacheType})");
             }
+
+            services.AddSingleton<InMemoryStore>();
+
+            services.AddScoped<DbSessionManager>();
+            services.AddScoped<GlobalDbRepo>();
+
+            services.AddScoped<RaidGameContext>();
+            services.AddScoped<IGameContext>(sp => sp.GetRequiredService<RaidGameContext>());
+
+            ModelRegistration.Init<SessionModel>("AccountId");
         }
     }
 }

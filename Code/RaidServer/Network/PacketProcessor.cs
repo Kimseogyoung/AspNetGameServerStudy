@@ -14,9 +14,10 @@ namespace RaidServer.Network
             public TaskCompletionSource Tcs { get; init; } = new TaskCompletionSource();
         }
 
-        public PacketProcessor(IEnumerable<IPacketHandler> packetHandlerList, PacketSerializerProvider serializerProvider, ILogger<PacketProcessor> logger)
+        public PacketProcessor(IEnumerable<IPacketHandler> packetHandlerList, PacketSerializerProvider serializerProvider, SessionService sessionService, ILogger<PacketProcessor> logger)
         {
             _serializerProvider = serializerProvider;
+            _sessionService = sessionService;
             _logger = logger;
 
             foreach (var packetHandler in packetHandlerList)
@@ -53,6 +54,17 @@ namespace RaidServer.Network
                     continue;
                 }
 
+                if (handler.RequireAuth)
+                {
+                    if (!_sessionService.TryGetNetworkSession(envelope.SessionId, out var session)
+                        || session.State != ESessionState.AUTHENTICATED)
+                    {
+                        _logger.LogWarning($"UNAUTHORIZED Opcode({opcode}) SessionId({envelope.SessionId})");
+                        envelope.Tcs.SetResult();
+                        continue;
+                    }
+                }
+
                 var serializer = _serializerProvider.Get(protocolType);
                 var req = await serializer.DeserializeAsync(handler.Req, new MemoryStream(payload));
 
@@ -64,6 +76,7 @@ namespace RaidServer.Network
         private readonly Dictionary<ushort, IPacketHandler> _opcodeToHandlerDict = [];
         private readonly Channel<PacketEnvelope> _receiveChannel = Channel.CreateUnbounded<PacketEnvelope>();
         private readonly PacketSerializerProvider _serializerProvider;
+        private readonly SessionService _sessionService;
         private readonly ILogger<PacketProcessor> _logger;
     }
 }

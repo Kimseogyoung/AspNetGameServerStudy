@@ -1,6 +1,13 @@
 Cache:
-    Type: InMemory
+    Type: Redis
+    ConnectionString: "localhost:6379"
+    DefaultTtl: 00:30:00
 Db:
-    Type: InMemory
+    Type: MySql
+    AuthDb:
+        ConnectionStrList:
+            - Server=localhost;Port=3306;Database=AuthDb;Uid=root;Pwd=tjrudwlq!;Pooling=True;
 Raid:
     Port: 5000
+    PingIntervalSec: 10
+    SessionTimeoutSec: 30

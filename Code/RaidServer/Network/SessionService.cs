@@ -35,15 +35,25 @@ namespace RaidServer.Network
             return NetworkSessionCtx;
         }
 
-        public NetworkSession GetNetworkSessionByUserId(ulong userId)
+        public bool TryGetNetworkSession(string guid, out NetworkSession session)
         {
-            var NetworkSessionCtx = _NetworkSessionDict.FirstOrDefault(x => x.Value.UserId == userId).Value;
+            return _NetworkSessionDict.TryGetValue(guid, out session);
+        }
+
+        public NetworkSession GetNetworkSessionByAccountId(ulong accountId)
+        {
+            var NetworkSessionCtx = _NetworkSessionDict.FirstOrDefault(x => x.Value.AccountId == accountId).Value;
             if (NetworkSessionCtx == null)
             {
-                throw new Exception($"NOT_FOUND_NetworkSession UserId({userId})");
+                throw new Exception($"NOT_FOUND_NetworkSession AccountId({accountId})");
             }
 
             return NetworkSessionCtx;
+        }
+
+        public IEnumerable<NetworkSession> GetAllNetworkSessions()
+        {
+            return _NetworkSessionDict.Values;
         }
 
         public void CloseAllNetworkSession()
@@ -76,12 +86,6 @@ namespace RaidServer.Network
             {
                 _logger.LogError($"FAILED_CLOSE_NetworkSession_CLIENT Guid({guid}) Error({e})");
             }
-        }
-
-        public void AuthenticateNetworkSession(string NetworkSessionGuid, ulong userId)
-        {
-            var ctx = GetNetworkSession(NetworkSessionGuid);
-            ctx.Authenticate(userId);
         }
 
         public void Send(string sessionId, MessagePacket packet)

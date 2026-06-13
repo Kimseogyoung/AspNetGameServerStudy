@@ -9,6 +9,7 @@ namespace RaidServer
         public void Dependency(IServiceCollection services)
         {
             services.AddHostedService<SocketClientListener>();
+            services.AddHostedService<SessionTimeoutChecker>();
 
             services.AddSingleton<RaidConfig>();
             services.AddSingleton<SessionService>();

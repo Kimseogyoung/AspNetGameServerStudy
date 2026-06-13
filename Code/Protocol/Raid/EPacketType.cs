@@ -4,5 +4,11 @@ namespace Protocol.Raid
     {
         EchoReq,
         EchoRes,
+        AuthReq,
+        AuthRes,
+        PingReq,
+        PongRes,
+        EchoAuthReq,
+        EchoAuthRes,
     }
 }
