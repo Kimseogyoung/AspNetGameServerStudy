@@ -4,7 +4,7 @@ using Proto;
 using Proto.Helper;
 using Protocol;
 using Protocol.Packet.Custom;
-using Server.Serializer;
+using ServerCore.Serializer;
 using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;

@@ -1,17 +1,13 @@
 
-using System;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using Protocol;
 
-namespace Server.Serializer
+namespace ServerCore.Serializer
 {
     public class JsonDataSerializer : IDataSerializer
     {
-        public string ContentType => MsgProtocol.JsonContentType;
+        public EProtocolType ProtocolType => EProtocolType.Json;
 
         public byte[] Serialize<T>(T inObj)
         {

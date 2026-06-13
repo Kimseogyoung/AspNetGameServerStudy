@@ -1,6 +1,6 @@
 using NLog;
 using Protocol;
-using Server.Serializer;
+using ServerCore.Serializer;
 using WebStudyServer.GAME;
 
 namespace WebStudyServer.Helper

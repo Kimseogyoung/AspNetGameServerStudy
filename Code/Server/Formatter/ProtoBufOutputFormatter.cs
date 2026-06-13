@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using ProtoBuf;
 using Protocol;
-using Server.Serializer;
+using ServerCore.Serializer;
 
 namespace WebStudyServer
 {

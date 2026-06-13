@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using NLog;
 using NLog.Targets;
 using Protocol;
-using Server.Serializer;
+using ServerCore.Serializer;
 using WebStudyServer.Extension;
 using WebStudyServer.Helper;
 

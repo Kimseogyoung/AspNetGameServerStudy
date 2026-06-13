@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Protocol;
-using Server.Serializer;
+using ServerCore.Serializer;
 
 namespace WebStudyServer
 {

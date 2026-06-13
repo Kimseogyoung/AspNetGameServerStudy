@@ -1,13 +1,9 @@
 
-using System;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using Protocol;
-
-namespace Server.Serializer
+namespace ServerCore.Serializer
 {
     public class ProtoBufDataSerializer : IDataSerializer
     {
-        public string ContentType => MsgProtocol.ProtoBufContentType;
+        public EProtocolType ProtocolType => EProtocolType.Protobuf;
 
         public async Task<T> DeserializeAsync<T>(Stream inStream)
         {

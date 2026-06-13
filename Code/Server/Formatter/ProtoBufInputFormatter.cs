@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Protocol;
-using Server.Serializer;
+using ServerCore.Serializer;
 
 namespace WebStudyServer
 {

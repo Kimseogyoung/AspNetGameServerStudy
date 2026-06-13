@@ -1,4 +1,4 @@
-namespace Server.Serializer
+namespace ServerCore.Serializer
 {
     public interface IDataSerializer
     {
@@ -10,7 +10,7 @@ namespace Server.Serializer
 
         Task<object> DeserializeAsync(Type type, Stream inStream);
 
-        string ContentType { get; }
+        EProtocolType ProtocolType { get; }
     }
 
 }
