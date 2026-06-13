@@ -1,3 +1,4 @@
+using ServerCore;
 using ServerCore.Repo.Database;
 using ServerCore.Model;
 using WebStudyServer.Repo;
@@ -8,7 +9,7 @@ namespace WebStudyServer.Base
     {
         protected readonly IRepository _repository;
         protected readonly CenterRepo _centerRepo;
-        protected RpcContext RpcCtx => _centerRepo.RpcContext;
+        protected IGameContext RpcCtx => _centerRepo.RpcContext;
 
         public CenterComponentBase(CenterRepo centerRepo, IRepository repository)
         {

@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DbModel\DbModel.csproj" />
     <ProjectReference Include="..\Protocol\Protocol.csproj" />
     <ProjectReference Include="..\ServerCore\ServerCore.csproj" />
     <ProjectReference Include="..\ServerFramework\ServerFramework.csproj" />

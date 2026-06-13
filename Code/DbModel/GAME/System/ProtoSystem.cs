@@ -6,7 +6,6 @@ using Microsoft.VisualBasic;
 using Proto;
 using Protocol;
 using WebStudyServer.GAME;
-using WebStudyServer.StartUp;
 
 namespace WebStudyServer
 {

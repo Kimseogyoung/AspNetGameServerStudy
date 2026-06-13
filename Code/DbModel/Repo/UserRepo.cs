@@ -1,3 +1,4 @@
+using ServerCore;
 using ServerCore.Repo.Database;
 using WebStudyServer.Base;
 using WebStudyServer.Component;
@@ -18,9 +19,9 @@ namespace WebStudyServer.Repo
         public KingdomMapComponent KingdomMap { get; private set; }
         public WorldComponent World { get; private set; }
         public WorldStageComponent WorldStage { get; private set; }
-        public RpcContext RpcContext { get; private set; }
+        public IGameContext RpcContext { get; private set; }
 
-        public UserRepo(RpcContext rpcContext, IRepository repository): base(rpcContext.ShardId, repository)
+        public UserRepo(IGameContext rpcContext, IRepository repository): base(rpcContext.ShardId, repository)
         {
             RpcContext = rpcContext;
         }

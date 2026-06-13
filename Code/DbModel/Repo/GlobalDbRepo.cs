@@ -17,7 +17,7 @@ namespace Server.Repo
         public AllUserRepo AllUser => _lazyAllUserRepo?.Value ?? throw new ObjectDisposedException(nameof(GlobalDbRepo));
 
         // TODO: 추후 cacheSession도 CacheSessionManager통해서 만들도록
-        public GlobalDbRepo(RpcContext rpcContext, ICacheSession cacheSession, DbSessionManager dbScope, ILogger<GlobalDbRepo> logger)
+        public GlobalDbRepo(IGameContext rpcContext, ICacheSession cacheSession, DbSessionManager dbScope, ILogger<GlobalDbRepo> logger)
         {
             _rpcContext = rpcContext;
             _cacheSession = cacheSession;
@@ -189,7 +189,7 @@ namespace Server.Repo
         private Lazy<CenterRepo>? _lazyCenterRepo;
         private Lazy<AllUserRepo>? _lazyAllUserRepo;
 
-        private readonly RpcContext _rpcContext;
+        private readonly IGameContext _rpcContext;
         private readonly ICacheSession _cacheSession;
         private readonly DbSessionManager _dbSessionManager;
         private readonly ILogger _logger;

@@ -1,5 +1,6 @@
 using Microsoft.OpenApi.Models;
 using Server.Service;
+using ServerCore;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WebStudyServer.Filter;
 using WebStudyServer.GAME;
@@ -43,6 +44,7 @@ namespace WebStudyServer
             services.AddScoped<CheatService>();
 
             services.AddScoped<RpcContext>();
+            services.AddScoped<IGameContext>(sp => sp.GetRequiredService<RpcContext>());
         }
 
         private void AddController(IServiceCollection services)

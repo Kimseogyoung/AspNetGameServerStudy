@@ -11,7 +11,7 @@ namespace WebStudyServer.Base
     {
         protected readonly IRepository _repository;
         protected readonly AuthRepo _authRepo;
-        protected RpcContext RpcCtx => _authRepo.RpcContext;
+        protected IGameContext RpcCtx => _authRepo.RpcContext;
 
         public AuthComponentBase(AuthRepo authRepo, IRepository repository)
         {

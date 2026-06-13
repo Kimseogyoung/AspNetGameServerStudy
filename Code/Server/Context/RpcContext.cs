@@ -3,6 +3,7 @@ using System.Net.Http;
 using Microsoft.AspNetCore.Http;
 using Proto;
 using Protocol;
+using ServerCore;
 using Server.Repo;
 using WebStudyServer.Component;
 using WebStudyServer.Extension;
@@ -11,7 +12,7 @@ using WebStudyServer.Repo;
 
 namespace WebStudyServer
 {
-    public class RpcContext
+    public class RpcContext : IGameContext
     {
         public string SessionKey { get; private set; } = string.Empty;
         public ESessionLoadState SessionLoadState { get; private set; } = ESessionLoadState.INITIALIZED;

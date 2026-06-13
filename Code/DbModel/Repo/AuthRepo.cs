@@ -1,3 +1,4 @@
+using ServerCore;
 using ServerCore.Repo.Database;
 using WebStudyServer.Base;
 using WebStudyServer.Component;
@@ -15,8 +16,8 @@ namespace WebStudyServer.Repo
         public ChannelComponent Channel { get; private set; }
         public PlayerMapComponent PlayerMap { get; private set; }
 
-        public RpcContext RpcContext { get; private set; }
-        public AuthRepo(RpcContext rpcContext, IRepository repository) : base(rpcContext.ShardId, repository)
+        public IGameContext RpcContext { get; private set; }
+        public AuthRepo(IGameContext rpcContext, IRepository repository) : base(rpcContext.ShardId, repository)
         {
             RpcContext = rpcContext;
         }
