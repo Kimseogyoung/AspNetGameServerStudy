@@ -32,7 +32,10 @@ namespace WebStudyServer
 
         private void AddServices(IServiceCollection services)
         {
-            services.AddAutoMapper(typeof(AutoMapperProfile));
+            services.AddAutoMapper((config) =>
+            {
+                config.AddProfile(typeof(AutoMapperProfile));
+            });
 
             services.AddScoped<ErrorHandler>();
             services.AddScoped<CommonService>();
