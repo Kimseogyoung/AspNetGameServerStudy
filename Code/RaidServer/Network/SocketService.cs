@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
+using ServerCore.Extension;
 
 namespace RaidServer.Network
 {
@@ -23,7 +24,7 @@ namespace RaidServer.Network
             while (!_cancelToken.IsCancellationRequested)
             {
                 var client = await listener.AcceptTcpClientAsync(_cancelToken);
-                _ = HandleClientAsync(client); // TODO: await 안하는 경우 FireAndForgot
+                HandleClientAsync(client).FireAndForget();
             }
 
             _sessionService.CloseAllNetworkSession();
@@ -86,7 +87,7 @@ namespace RaidServer.Network
                     }
 
                     // 파싱/비즈니스는 Dispatcher에 위임
-                    _ = _handler!.Invoke(session.Id, messageBytes); // TODO: FireAndForget
+                    _handler!.Invoke(session.Id, messageBytes).FireAndForget();
                 }
             }
             catch (Exception e) when (e is OperationCanceledException or IOException or ObjectDisposedException)

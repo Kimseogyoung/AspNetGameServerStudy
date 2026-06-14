@@ -9,15 +9,16 @@ namespace RaidServer.Network
 
     public class SessionService
     {
-        public SessionService(PacketSerializerProvider serializerProvider, ILogger<SessionService> logger)
+        public SessionService(PacketSerializerProvider serializerProvider, ILoggerFactory loggerFactory, ILogger<SessionService> logger)
         {
             _serializerProvider = serializerProvider;
+            _loggerFactory = loggerFactory;
             _logger = logger;
         }
 
         public NetworkSession CreateNetworkSession(TcpClient client)
         {
-            var NetworkSession = new NetworkSession(client);
+            var NetworkSession = new NetworkSession(client, _loggerFactory.CreateLogger<NetworkSession>());
             if (!_NetworkSessionDict.TryAdd(NetworkSession.Id, NetworkSession))
             {
                 throw new Exception($"FAILED_ADD_NetworkSession Guid({NetworkSession.Id})");
@@ -111,6 +112,7 @@ namespace RaidServer.Network
         }
 
         private readonly PacketSerializerProvider _serializerProvider;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         private readonly ConcurrentDictionary<string, NetworkSession> _NetworkSessionDict = new();
     }

@@ -36,7 +36,7 @@ namespace RaidServer.Network
 
             if (!_receiveChannel.Writer.TryWrite(envelope))
             {
-                // TODO: 로그
+                _logger.LogError($"FAILED_ADD_PACKET SessionId({sessionId})");
             }
             return envelope.Tcs.Task;
         }
