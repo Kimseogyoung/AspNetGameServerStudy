@@ -43,7 +43,7 @@ namespace RaidServer.Network
 
         public NetworkSession GetNetworkSessionByAccountId(ulong accountId)
         {
-            var NetworkSessionCtx = _NetworkSessionDict.FirstOrDefault(x => x.Value.AccountId == accountId).Value;
+            var NetworkSessionCtx = _NetworkSessionDict.FirstOrDefault(x => x.Value.Player?.AccountId == accountId).Value;
             if (NetworkSessionCtx == null)
             {
                 throw new Exception($"NOT_FOUND_NetworkSession AccountId({accountId})");
@@ -79,6 +79,11 @@ namespace RaidServer.Network
                 return;
             }
 
+            foreach (var listener in _closeListeners)
+            {
+                listener(networkSession);
+            }
+
             try
             {
                 networkSession.Close();
@@ -87,6 +92,12 @@ namespace RaidServer.Network
             {
                 _logger.LogError($"FAILED_CLOSE_NetworkSession_CLIENT Guid({guid}) Error({e})");
             }
+        }
+
+        // 연결 종료 시 정리할 작업을 등록한다 (예: PlayerService의 레지스트리 해제).
+        public void RegisterCloseListener(Action<NetworkSession> listener)
+        {
+            _closeListeners.Add(listener);
         }
 
         public void Send(string sessionId, MessagePacket packet)
@@ -115,5 +126,6 @@ namespace RaidServer.Network
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         private readonly ConcurrentDictionary<string, NetworkSession> _NetworkSessionDict = new();
+        private readonly List<Action<NetworkSession>> _closeListeners = new();
     }
 }

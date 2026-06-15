@@ -6,7 +6,7 @@ using ServerCore.Extension;
 namespace RaidServer.Network
 {
     public class SocketService
-    {     
+    {
         public SocketService(SessionService sessionService, ILogger<SocketService> logger)
         {
             _sessionService = sessionService;

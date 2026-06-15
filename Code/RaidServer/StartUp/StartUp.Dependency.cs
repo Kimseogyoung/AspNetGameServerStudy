@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RaidServer.Network;
+using RaidServer.Services;
 
 namespace RaidServer
 {
@@ -13,8 +14,10 @@ namespace RaidServer
 
             services.AddSingleton<RaidConfig>();
             services.AddSingleton<SessionService>();
+            services.AddSingleton<PlayerService>();
             services.AddSingleton<SocketService>();
             services.AddSingleton<PacketSerializerProvider>();
+            services.AddSingleton<MatchingService>();
 
             AddPacketHandler(services);
 

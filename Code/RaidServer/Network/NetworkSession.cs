@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
+using RaidServer.Context;
 
 namespace RaidServer.Network
 {
@@ -18,9 +19,7 @@ namespace RaidServer.Network
         public NetworkStream Stream { get; private set; }
         public DateTime ConnectTime { get; private set; }
         public DateTime LastActivityTime { get; set; }
-        public ulong AccountId { get; private set; }
-        public ulong PlayerId { get; private set; }
-        public int ShardId { get; private set; }
+        public Player? Player { get; private set; }
         public ESessionState State { get; private set; }
         public CancellationTokenSource Cts { get; private set; } = new CancellationTokenSource();
         public bool IsConnected => State != ESessionState.CLOSED;
@@ -39,11 +38,9 @@ namespace RaidServer.Network
             State = ESessionState.PENDING;
         }
 
-        public void Authenticate(ulong accountId, ulong playerId, int shardId)
+        public void Authenticate(Player player)
         {
-            AccountId = accountId;
-            PlayerId = playerId;
-            ShardId = shardId;
+            Player = player;
             State = ESessionState.AUTHENTICATED;
         }
 

@@ -1,13 +1,13 @@
 using ServerCore.Repo.Database;
 using ServerCore;
-using WebStudyServer;
-using WebStudyServer.GAME;
 using WebStudyServer.Repo;
 using ServerCore.Repo.Cache;
+using System.Data;
+using DbType = ServerCore.DbType;
 
 namespace Server.Repo
 {
-    public class GlobalDbRepo
+    public class GlobalDbRepo : IDisposable
     {
         public UserRepo OwnUser { get; private set; } = null;
 
@@ -170,6 +170,12 @@ namespace Server.Repo
             }
 
             return repo;
+        }
+
+        public void Dispose()
+        {
+            // 아무 처리 없이 Close
+            Close();
         }
 
         // InMemory 모드에서 모든 Repo가 단일 세션을 공유하도록 동일한 키를 사용한다.
