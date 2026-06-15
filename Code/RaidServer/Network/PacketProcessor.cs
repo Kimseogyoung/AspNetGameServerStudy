@@ -18,31 +18,31 @@ namespace RaidServer.Network
             }
         }
 
-        public Task AddPacket(string sessionId, byte[] bytes)
+        public async Task AddPacket(string sessionId, byte[] bytes)
         {
-            return _gameQueue.Post(async () =>
-            {
-                var (opcode, protocolType, payload) = PacketCodec.Parse(bytes);
+            var (opcode, protocolType, payload) = PacketCodec.Parse(bytes);
 
-                if (!_opcodeToHandlerDict.TryGetValue(opcode, out var handler))
+            if (!_opcodeToHandlerDict.TryGetValue(opcode, out var handler))
+            {
+                _logger.LogError($"NOT_FOUND_HANDLER Opcode({opcode})");
+                return ;
+            }
+
+            if (handler.RequireAuth)
+            {
+                if (!_sessionService.TryGetNetworkSession(sessionId, out var session)
+                    || session.State != ESessionState.AUTHENTICATED)
                 {
-                    _logger.LogError($"NOT_FOUND_HANDLER Opcode({opcode})");
+                    _logger.LogWarning($"UNAUTHORIZED Opcode({opcode}) SessionId({sessionId})");
                     return;
                 }
+            }
 
-                if (handler.RequireAuth)
-                {
-                    if (!_sessionService.TryGetNetworkSession(sessionId, out var session)
-                        || session.State != ESessionState.AUTHENTICATED)
-                    {
-                        _logger.LogWarning($"UNAUTHORIZED Opcode({opcode}) SessionId({sessionId})");
-                        return;
-                    }
-                }
+            var serializer = _serializerProvider.Get(protocolType);
+            var req = await serializer.DeserializeAsync(handler.Req, new MemoryStream(payload));
 
-                var serializer = _serializerProvider.Get(protocolType);
-                var req = await serializer.DeserializeAsync(handler.Req, new MemoryStream(payload));
-
+            await _gameQueue.Post(async () =>
+            {
                 await handler.RunAsync(sessionId, req);
             });
         }
