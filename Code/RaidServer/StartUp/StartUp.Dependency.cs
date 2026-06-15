@@ -11,18 +11,19 @@ namespace RaidServer
         {
             services.AddHostedService<SocketClientListener>();
             services.AddHostedService<SessionTimeoutChecker>();
+            services.AddHostedService<TickService>();
 
             services.AddSingleton<RaidConfig>();
             services.AddSingleton<SessionService>();
             services.AddSingleton<PlayerService>();
             services.AddSingleton<SocketService>();
             services.AddSingleton<PacketSerializerProvider>();
+            services.AddSingleton<GameQueue>();
             services.AddSingleton<MatchingService>();
 
             AddPacketHandler(services);
 
             services.AddSingleton<PacketProcessor>();
-            services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<PacketProcessor>());
         }
     }
 }
