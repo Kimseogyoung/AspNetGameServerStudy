@@ -15,7 +15,7 @@ namespace RaidServer
 
             services.AddSingleton<RaidConfig>();
             services.AddSingleton<SessionService>();
-            services.AddSingleton<PlayerService>();
+            services.AddSingleton<PlayerRaidSessionService>();
             services.AddSingleton<SocketService>();
             services.AddSingleton<PacketSerializerProvider>();
             services.AddSingleton<GameQueue>();

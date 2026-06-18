@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
@@ -39,17 +38,6 @@ namespace RaidServer.Network
         public bool TryGetNetworkSession(string guid, out NetworkSession session)
         {
             return _NetworkSessionDict.TryGetValue(guid, out session);
-        }
-
-        public NetworkSession GetNetworkSessionByAccountId(ulong accountId)
-        {
-            var NetworkSessionCtx = _NetworkSessionDict.FirstOrDefault(x => x.Value.Player?.AccountId == accountId).Value;
-            if (NetworkSessionCtx == null)
-            {
-                throw new Exception($"NOT_FOUND_NetworkSession AccountId({accountId})");
-            }
-
-            return NetworkSessionCtx;
         }
 
         public IEnumerable<NetworkSession> GetAllNetworkSessions()
@@ -111,7 +99,8 @@ namespace RaidServer.Network
             var bytes = Encode(packet); // 1회만 직렬화/인코딩 후 byte[]를 재사용 (중복 직렬화 방지)
             foreach (var sessionId in sessionIds)
             {
-                GetNetworkSession(sessionId).Send(bytes);
+                if (TryGetNetworkSession(sessionId, out var session))
+                    session.Send(bytes);
             }
         }
 

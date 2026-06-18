@@ -7,20 +7,20 @@ namespace RaidServer.Network
     {
         public override ushort Opcode => (ushort)EPacketType.AuthReq;
 
-        public AuthPacketHandler(SessionService sessionService, PlayerService playerService)
+        public AuthPacketHandler(SessionService sessionService, PlayerRaidSessionService playerRaidSessionService)
         {
             _sessionService = sessionService;
-            _playerService = playerService;
+            _playerRaidSessionService = playerRaidSessionService;
         }
 
         protected override Task RunAsync(string sessionId, AuthReqPacket req)
         {
-            var res = _playerService.Authenticate(sessionId, req);
+            var res = _playerRaidSessionService.Authenticate(sessionId, req);
 
             _sessionService.Send(sessionId, new MessagePacket
             {
-                Opcode = (ushort)EPacketType.AuthRes, // TODO: 이런거 컨텐츠 단에서 넘기지않도록
-                ProtocolType = EProtocolType.Json, // TODO: 이런거 컨텐츠 단에서 넘기지않도록
+                Opcode = (ushort)EPacketType.AuthRes,
+                ProtocolType = EProtocolType.Json,
                 Payload = res,
             });
 
@@ -28,6 +28,6 @@ namespace RaidServer.Network
         }
 
         private readonly SessionService _sessionService;
-        private readonly PlayerService _playerService;
+        private readonly PlayerRaidSessionService _playerRaidSessionService;
     }
 }

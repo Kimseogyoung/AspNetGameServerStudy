@@ -1,14 +1,13 @@
 using System.Net.Sockets;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
-using RaidServer.Context;
 
 namespace RaidServer.Network
 {
     public enum ESessionState
     {
-        PENDING,    // 아직 인증/로그인 전
-        AUTHENTICATED, // 인증/로그인 완료
+        PENDING,
+        AUTHENTICATED,
         CLOSED
     }
 
@@ -19,7 +18,6 @@ namespace RaidServer.Network
         public NetworkStream Stream { get; private set; }
         public DateTime ConnectTime { get; private set; }
         public DateTime LastActivityTime { get; set; }
-        public Player? Player { get; private set; }
         public ESessionState State { get; private set; }
         public CancellationTokenSource Cts { get; private set; } = new CancellationTokenSource();
         public bool IsConnected => State != ESessionState.CLOSED;
@@ -38,9 +36,8 @@ namespace RaidServer.Network
             State = ESessionState.PENDING;
         }
 
-        public void Authenticate(Player player)
+        public void Authenticate()
         {
-            Player = player;
             State = ESessionState.AUTHENTICATED;
         }
 
@@ -51,7 +48,6 @@ namespace RaidServer.Network
             State = ESessionState.CLOSED;
 
             // 종료 시점에 큐에 남은 미전송 데이터는 연결이 끊긴 클라이언트로 보낼 수 없으므로 의도적으로 폐기한다.
-            // Writer를 완료시켜 이후 Send() 호출은 TryWrite 실패로 안전하게 무시되고 로그만 남긴다.
             _sendQueue.Writer.TryComplete();
         }
 
@@ -66,9 +62,7 @@ namespace RaidServer.Network
 
         public async Task<byte[]> WaitSendBytesAsync()
         {
-            var bytes = await _sendQueue.Reader.ReadAsync(Cts.Token);
-            return bytes;
+            return await _sendQueue.Reader.ReadAsync(Cts.Token);
         }
     }
-
 }

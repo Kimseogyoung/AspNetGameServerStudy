@@ -1,0 +1,34 @@
+using Protocol.Raid;
+using RaidServer.Services;
+
+namespace RaidServer.Network
+{
+    public class MatchingCancelReqHandler : PacketHandlerBase<MatchingCancelReqPacket>
+    {
+        public override ushort Opcode => (ushort)EPacketType.MatchingCancelReq;
+        public override bool RequireAuth => true;
+
+        public MatchingCancelReqHandler(SessionService sessionService, MatchingService matchingService)
+        {
+            _sessionService = sessionService;
+            _matchingService = matchingService;
+        }
+
+        protected override Task RunAsync(string sessionId, MatchingCancelReqPacket req)
+        {
+            var res = _matchingService.CancelMatching(sessionId);
+
+            _sessionService.Send(sessionId, new MessagePacket
+            {
+                Opcode = (ushort)EPacketType.MatchingCancelRes,
+                ProtocolType = EProtocolType.Json,
+                Payload = res,
+            });
+
+            return Task.CompletedTask;
+        }
+
+        private readonly SessionService _sessionService;
+        private readonly MatchingService _matchingService;
+    }
+}

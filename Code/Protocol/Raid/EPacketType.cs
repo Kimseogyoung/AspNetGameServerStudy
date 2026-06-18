@@ -10,5 +10,12 @@ namespace Protocol.Raid
         PongRes,
         EchoAuthReq,
         EchoAuthRes,
+
+        // --- Matching ---
+        MatchingStartReq,
+        MatchingStartRes,
+        MatchingCancelReq,
+        MatchingCancelRes,
+        MatchingCompleteNotify,   // S -> C, 매칭 성립 알림
     }
 }
