@@ -35,9 +35,23 @@ var funcDict = new Dictionary<int, ApiFunc>()
         Action = async (valueArr) =>  await APP.Ctx.RequestHealthCheckAsync()} },
 
     { 1, new ApiFunc(){ ApiPath = AuthSignUpRequestPacket.NAME, Desc = "회원 가입",
-        Action = async (valueArr) =>  await APP.Ctx.RequestSignUpAsync(APP.Ctx.RpcSystem.DeviceKey)} },
+        Action = async (valueArr) =>
+        {
+            var res = await APP.Ctx.RequestSignUpAsync(APP.Ctx.RpcSystem.DeviceKey);
+            Console.WriteLine($"ChannelKey: {res.Result.ChannelKey} (로그인 시 2번 명령에 이 값을 넘기세요)");
+        }
+    } },
     { 2, new ApiFunc(){ ApiPath = AuthSignInRequestPacket.NAME, Desc = "기존 계정 로그인 (ChannelKey)",
-        Action = async (valueArr) =>  await APP.Ctx.RequestSignInAsync(valueArr[0])} },
+        Action = async (valueArr) =>
+        {
+            if (valueArr.Length == 0)
+            {
+                Console.WriteLine("ChannelKey를 입력하세요. 예) 2 <ChannelKey>");
+                return;
+            }
+            await APP.Ctx.RequestSignInAsync(valueArr[0]);
+        }
+    } },
 
 
     { 100, new ApiFunc(){ ApiPath = GameEnterRequestPacket.NAME, Desc = "플레이어 로드",

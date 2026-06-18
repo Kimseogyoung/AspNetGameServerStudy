@@ -41,6 +41,7 @@ namespace ClientCore
             _ = PingLoopAsync(interval, _pingCts.Token);
         }
 
+        // TODO: 서버가 Pong을 보내도 클라이언트가 못 받는 이슈 조사 중 (RaidServer WriteLoopAsync에 WRITE_LOOP_UNEXPECTED_ERROR 로그 추가해둠, 재현 후 로그 확인 필요)
         private async Task PingLoopAsync(TimeSpan interval, CancellationToken token)
         {
             try
@@ -53,7 +54,9 @@ namespace ClientCore
                         break;
                     }
 
-                    await RequestAsync<PingRequestPacket, PongResponsePacket>((ushort)EPacketType.PingRequest, EProtocolType.Json, new PingRequestPacket());
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] PING_SEND");
+                    await RequestWithWaitAsync<PingRequestPacket, PongResponsePacket>((ushort)EPacketType.PingRequest, (ushort)EPacketType.PongResponse, EProtocolType.Json, new PingRequestPacket());
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] PING_RECV");
                 }
             }
             catch (OperationCanceledException)
@@ -70,22 +73,52 @@ namespace ClientCore
             _pushHandlers[opcode] = handler;
         }
 
-        // 한 번에 하나의 요청만 처리 (테스트 클라이언트 용도, 동시 요청은 지원하지 않음)
-        public async Task<TRes> RequestAsync<TReq, TRes>(ushort opcode, EProtocolType protocolType, TReq req)
+        // 응답을 기다리지 않고 보내기만 한다 (전송 자체는 세마포어로 직렬화).
+        public async Task RequestAsync<TReq>(ushort opcode, EProtocolType protocolType, TReq req)
         {
             if (_stream == null)
             {
                 throw new Exception("RAID_NOT_CONNECTED");
             }
 
-            var payloadBytes = Serialize(protocolType, req);
-            var frame = PacketCodec.Encode(opcode, protocolType, payloadBytes);
+            await _sendLock.WaitAsync();
+            try
+            {
+                var payloadBytes = Serialize(protocolType, req);
+                var frame = PacketCodec.Encode(opcode, protocolType, payloadBytes);
+                await _stream.WriteAsync(frame);
+            }
+            finally
+            {
+                _sendLock.Release();
+            }
+        }
 
-            _pendingTcs = new TaskCompletionSource<(ushort Opcode, EProtocolType ProtocolType, byte[] Payload)>();
-            await _stream.WriteAsync(frame);
+        // 보낸 뒤 waitOpcode로 들어오는 응답만 받아들여 기다린다 (한 번에 하나의 요청만 처리).
+        public async Task<TRes> RequestWithWaitAsync<TReq, TRes>(ushort opcode, ushort waitOpcode, EProtocolType protocolType, TReq req)
+        {
+            if (_stream == null)
+            {
+                throw new Exception("RAID_NOT_CONNECTED");
+            }
 
-            var (_, resProtocolType, payload) = await _pendingTcs.Task;
-            return Deserialize<TRes>(resProtocolType, payload);
+            await _sendLock.WaitAsync();
+            try
+            {
+                var payloadBytes = Serialize(protocolType, req);
+                var frame = PacketCodec.Encode(opcode, protocolType, payloadBytes);
+
+                _pendingResponseOpcode = waitOpcode;
+                _pendingTcs = new TaskCompletionSource<(ushort Opcode, EProtocolType ProtocolType, byte[] Payload)>();
+                await _stream.WriteAsync(frame);
+
+                var (_, resProtocolType, payload) = await _pendingTcs.Task;
+                return Deserialize<TRes>(resProtocolType, payload);
+            }
+            finally
+            {
+                _sendLock.Release();
+            }
         }
 
         private async Task ReceiveLoopAsync()
@@ -106,9 +139,13 @@ namespace ClientCore
                     {
                         handler(protocolType, payload);
                     }
+                    else if (_pendingTcs != null && opcode == _pendingResponseOpcode)
+                    {
+                        _pendingTcs.TrySetResult((opcode, protocolType, payload));
+                    }
                     else
                     {
-                        _pendingTcs?.TrySetResult((opcode, protocolType, payload));
+                        Console.WriteLine($"UNEXPECTED_RESPONSE Opcode({opcode}) Expected({_pendingResponseOpcode})");
                     }
                 }
             }
@@ -167,9 +204,11 @@ namespace ClientCore
         }
 
         private readonly Dictionary<ushort, Action<EProtocolType, byte[]>> _pushHandlers = new Dictionary<ushort, Action<EProtocolType, byte[]>>();
+        private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private TcpClient? _client;
         private NetworkStream? _stream;
         private TaskCompletionSource<(ushort Opcode, EProtocolType ProtocolType, byte[] Payload)>? _pendingTcs;
+        private ushort _pendingResponseOpcode;
         private CancellationTokenSource? _pingCts;
     }
 }

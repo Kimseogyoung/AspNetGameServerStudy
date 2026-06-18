@@ -41,6 +41,8 @@ namespace RaidServer.Network
             var serializer = _serializerProvider.Get(protocolType);
             var req = await serializer.DeserializeAsync(handler.Req, new MemoryStream(payload));
 
+            _logger.LogInformation($"Request Opcode({opcode}) SessionId({sessionId})");
+
             await _gameQueue.Post(async () =>
             {
                 await handler.RunAsync(sessionId, req);

@@ -53,6 +53,7 @@ namespace RaidServer
             services.AddScoped<IGameContext>(sp => sp.GetRequiredService<RaidGameContext>());
 
             ModelRegistration.Init<SessionModel>("AccountId");
+            ModelRegistration.Init<PlayerModel>("Id");
         }
     }
 }

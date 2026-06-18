@@ -26,12 +26,12 @@ namespace ClientCore
                 });
 
             var req = new AuthRequestPacket { SessionKey = RpcSystem.SessionId, DeviceKey = RpcSystem.DeviceKey };
-            var res = await RaidSystem.RequestAsync<AuthRequestPacket, AuthResponsePacket>((ushort)EPacketType.AuthRequest, EProtocolType.Json, req);
+            var res = await RaidSystem.RequestWithWaitAsync<AuthRequestPacket, AuthResponsePacket>((ushort)EPacketType.AuthRequest, (ushort)EPacketType.AuthResponse, EProtocolType.Json, req);
             Console.WriteLine($"Raid 인증 응답: Result({res.Result}) AccountId({res.AccountId}) PlayerId({res.PlayerId}) ShardId({res.ShardId})");
 
             if (res.Result == EAuthResult.Success)
             {
-                RaidSystem.StartPingLoop(TimeSpan.FromSeconds(10));
+                RaidSystem.StartPingLoop(TimeSpan.FromSeconds(res.PingIntervalSec));
             }
             else
             {
@@ -42,14 +42,14 @@ namespace ClientCore
         public async Task RequestRaidMatchingStartAsync(int bossNum)
         {
             var req = new MatchingStartRequestPacket { BossNum = bossNum };
-            var res = await RaidSystem.RequestAsync<MatchingStartRequestPacket, MatchingStartResponsePacket>((ushort)EPacketType.MatchingStartRequest, EProtocolType.Json, req);
+            var res = await RaidSystem.RequestWithWaitAsync<MatchingStartRequestPacket, MatchingStartResponsePacket>((ushort)EPacketType.MatchingStartRequest, (ushort)EPacketType.MatchingStartResponse, EProtocolType.Json, req);
             Console.WriteLine($"매칭 시작 응답: Result({res.Result})");
         }
 
         public async Task RequestRaidMatchingCancelAsync()
         {
             var req = new MatchingCancelRequestPacket();
-            var res = await RaidSystem.RequestAsync<MatchingCancelRequestPacket, MatchingCancelResponsePacket>((ushort)EPacketType.MatchingCancelRequest, EProtocolType.Json, req);
+            var res = await RaidSystem.RequestWithWaitAsync<MatchingCancelRequestPacket, MatchingCancelResponsePacket>((ushort)EPacketType.MatchingCancelRequest, (ushort)EPacketType.MatchingCancelResponse, EProtocolType.Json, req);
             Console.WriteLine($"매칭 취소 응답: Result({res.Result})");
         }
 
@@ -63,7 +63,7 @@ namespace ClientCore
         public async Task<EchoResponsePacket> RequestRaidEchoAsync(string message)
         {
             var req = new EchoRequestPacket { Message = message };
-            var res = await RaidSystem.RequestAsync<EchoRequestPacket, EchoResponsePacket>((ushort)EPacketType.EchoRequest, EProtocolType.Json, req);
+            var res = await RaidSystem.RequestWithWaitAsync<EchoRequestPacket, EchoResponsePacket>((ushort)EPacketType.EchoRequest, (ushort)EPacketType.EchoResponse, EProtocolType.Json, req);
             Console.WriteLine($"Echo 응답: {res.Message}");
             return res;
         }
@@ -71,7 +71,7 @@ namespace ClientCore
         public async Task<EchoResponsePacket> RequestRaidEchoAuthAsync(string message)
         {
             var req = new EchoRequestPacket { Message = message };
-            var res = await RaidSystem.RequestAsync<EchoRequestPacket, EchoResponsePacket>((ushort)EPacketType.EchoAuthRequest, EProtocolType.Json, req);
+            var res = await RaidSystem.RequestWithWaitAsync<EchoRequestPacket, EchoResponsePacket>((ushort)EPacketType.EchoAuthRequest, (ushort)EPacketType.EchoAuthResponse, EProtocolType.Json, req);
             Console.WriteLine($"Echo(Auth) 응답: {res.Message}");
             return res;
         }

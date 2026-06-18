@@ -34,5 +34,8 @@ namespace Protocol.Raid
 
         [ProtoMember(4)]
         public int ShardId { get; set; }
+
+        [ProtoMember(5)]
+        public int PingIntervalSec { get; set; }
     }
 }

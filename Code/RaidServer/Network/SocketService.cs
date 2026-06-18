@@ -33,6 +33,8 @@ namespace RaidServer.Network
         private async Task HandleClientAsync(TcpClient client)
         {
             var session = _sessionService.CreateNetworkSession(client);
+            _logger.LogInformation($"ConnectSuccess SessionId({session.Id}) RemoteEndPoint({client.Client.RemoteEndPoint})");
+
             var receiveTask = ReceiveLoopAsync(session);
             var sendTask = WriteLoopAsync(session);
 
@@ -94,6 +96,10 @@ namespace RaidServer.Network
             {
                 _logger.LogInformation($"RECEIVE_LOOP_CLOSED SessionId({session.Id}) Reason({e.GetType().Name})");
             }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"RECEIVE_LOOP_UNEXPECTED_ERROR SessionId({session.Id})");
+            }
 
             async Task<int> ReadExactAsync(byte[] buffer, int length, CancellationToken token)
             {
@@ -126,6 +132,10 @@ namespace RaidServer.Network
             catch (Exception e) when (e is OperationCanceledException or IOException or ObjectDisposedException)
             {
                 _logger.LogInformation($"WRITE_LOOP_CLOSED SessionId({session.Id}) Reason({e.GetType().Name})");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"WRITE_LOOP_UNEXPECTED_ERROR SessionId({session.Id})");
             }
         }
 

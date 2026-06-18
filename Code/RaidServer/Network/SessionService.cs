@@ -67,6 +67,8 @@ namespace RaidServer.Network
                 return;
             }
 
+            _logger.LogInformation($"Disconnect SessionId({guid})");
+
             foreach (var listener in _closeListeners)
             {
                 listener(networkSession);
