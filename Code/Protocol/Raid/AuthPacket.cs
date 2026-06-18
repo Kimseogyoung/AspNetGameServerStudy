@@ -11,7 +11,7 @@ namespace Protocol.Raid
     }
 
     [ProtoContract]
-    public class AuthReqPacket
+    public class AuthRequestPacket
     {
         [ProtoMember(1)]
         public string SessionKey { get; set; } = string.Empty;
@@ -21,7 +21,7 @@ namespace Protocol.Raid
     }
 
     [ProtoContract]
-    public class AuthResPacket
+    public class AuthResponsePacket
     {
         [ProtoMember(1)]
         public EAuthResult Result { get; set; }

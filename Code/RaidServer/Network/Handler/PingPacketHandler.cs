@@ -2,16 +2,16 @@ using Protocol.Raid;
 
 namespace RaidServer.Network
 {
-    public class PingPacketHandler : PacketHandlerBase<PingReqPacket>
+    public class PingPacketHandler : PacketHandlerBase<PingRequestPacket>
     {
-        public override ushort Opcode => (ushort)EPacketType.PingReq;
+        public override ushort Opcode => (ushort)EPacketType.PingRequest;
 
         public PingPacketHandler(SessionService sessionService)
         {
             _sessionService = sessionService;
         }
 
-        protected override Task RunAsync(string sessionId, PingReqPacket req)
+        protected override Task RunAsync(string sessionId, PingRequestPacket req)
         {
             if (_sessionService.TryGetNetworkSession(sessionId, out var session))
             {
@@ -20,9 +20,9 @@ namespace RaidServer.Network
 
             _sessionService.Send(sessionId, new MessagePacket
             {
-                Opcode = (ushort)EPacketType.PongRes,
+                Opcode = (ushort)EPacketType.PongResponse,
                 ProtocolType = EProtocolType.Json,
-                Payload = new PongResPacket { ServerTime = DateTime.UtcNow },
+                Payload = new PongResponsePacket { ServerTime = DateTime.UtcNow },
             });
 
             return Task.CompletedTask;

@@ -34,26 +34,26 @@ namespace RaidServer.Services
             sessionService.RegisterCloseListener(OnSessionClosed);
         }
 
-        public MatchingStartResPacket StartMatching(string sessionId, int bossNum)
+        public MatchingStartResponsePacket StartMatching(string sessionId, int bossNum)
         {
             if (!_playerRaidSessionService.TryGetBySessionId(sessionId, out var raidSession))
             {
-                return new MatchingStartResPacket { Result = EMatchingResult.InvalidBoss };
+                return new MatchingStartResponsePacket { Result = EMatchingResult.InvalidBoss };
             }
 
             if (raidSession!.State == EPlayerRaidState.MATCHING)
             {
-                return new MatchingStartResPacket { Result = EMatchingResult.AlreadyMatching };
+                return new MatchingStartResponsePacket { Result = EMatchingResult.AlreadyMatching };
             }
 
             if (raidSession.State == EPlayerRaidState.IN_ROOM)
             {
-                return new MatchingStartResPacket { Result = EMatchingResult.AlreadyInRoom };
+                return new MatchingStartResponsePacket { Result = EMatchingResult.AlreadyInRoom };
             }
 
             if (bossNum <= 0)
             {
-                return new MatchingStartResPacket { Result = EMatchingResult.InvalidBoss };
+                return new MatchingStartResponsePacket { Result = EMatchingResult.InvalidBoss };
             }
 
             if (!_queueByBoss.TryGetValue(bossNum, out var queue))
@@ -74,22 +74,22 @@ namespace RaidServer.Services
             raidSession.State = EPlayerRaidState.MATCHING;
 
             _logger.LogInformation($"MATCHING_START SessionId({sessionId}) BossNum({bossNum})");
-            return new MatchingStartResPacket { Result = EMatchingResult.Success };
+            return new MatchingStartResponsePacket { Result = EMatchingResult.Success };
         }
 
-        public MatchingCancelResPacket CancelMatching(string sessionId)
+        public MatchingCancelResponsePacket CancelMatching(string sessionId)
         {
             if (!_playerRaidSessionService.TryGetBySessionId(sessionId, out var raidSession)
                 || raidSession!.State != EPlayerRaidState.MATCHING)
             {
-                return new MatchingCancelResPacket { Result = EMatchingResult.NotMatching };
+                return new MatchingCancelResponsePacket { Result = EMatchingResult.NotMatching };
             }
 
             RemoveFromQueue(sessionId);
             raidSession.State = EPlayerRaidState.IDLE;
 
             _logger.LogInformation($"MATCHING_CANCEL SessionId({sessionId})");
-            return new MatchingCancelResPacket { Result = EMatchingResult.Success };
+            return new MatchingCancelResponsePacket { Result = EMatchingResult.Success };
         }
 
         private Task OnTick()

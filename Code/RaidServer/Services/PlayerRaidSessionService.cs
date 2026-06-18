@@ -20,16 +20,16 @@ namespace RaidServer.Services
             sessionService.RegisterCloseListener(OnSessionClosed);
         }
 
-        public AuthResPacket Authenticate(string sessionId, AuthReqPacket req)
+        public AuthResponsePacket Authenticate(string sessionId, AuthRequestPacket req)
         {
             if (string.IsNullOrEmpty(req.SessionKey))
             {
-                return new AuthResPacket { Result = EAuthResult.InvalidRequest };
+                return new AuthResponsePacket { Result = EAuthResult.InvalidRequest };
             }
 
             if (!_sessionService.TryGetNetworkSession(sessionId, out var session))
             {
-                return new AuthResPacket { Result = EAuthResult.InvalidRequest };
+                return new AuthResponsePacket { Result = EAuthResult.InvalidRequest };
             }
 
             using var scope = _scopeFactory.CreateScope();
@@ -41,12 +41,12 @@ namespace RaidServer.Services
             {
                 if (!dbRepo.Auth.Session.TryGetByKey(req.SessionKey, out var mgrSession))
                 {
-                    return new AuthResPacket { Result = EAuthResult.SessionNotFound };
+                    return new AuthResponsePacket { Result = EAuthResult.SessionNotFound };
                 }
 
                 if (mgrSession.IsExpire())
                 {
-                    return new AuthResPacket { Result = EAuthResult.SessionExpired };
+                    return new AuthResponsePacket { Result = EAuthResult.SessionExpired };
                 }
 
                 raidContext.SetAccountId(mgrSession.Model.AccountId);
@@ -73,7 +73,7 @@ namespace RaidServer.Services
                 _byPlayerId[playerModel.Id] = raidSession;
                 session.Authenticate();
 
-                return new AuthResPacket
+                return new AuthResponsePacket
                 {
                     Result = EAuthResult.Success,
                     AccountId = raidSession.Player.AccountId,

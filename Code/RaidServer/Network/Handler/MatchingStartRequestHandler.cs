@@ -3,24 +3,24 @@ using RaidServer.Services;
 
 namespace RaidServer.Network
 {
-    public class MatchingCancelReqHandler : PacketHandlerBase<MatchingCancelReqPacket>
+    public class MatchingStartRequestHandler : PacketHandlerBase<MatchingStartRequestPacket>
     {
-        public override ushort Opcode => (ushort)EPacketType.MatchingCancelReq;
+        public override ushort Opcode => (ushort)EPacketType.MatchingStartRequest;
         public override bool RequireAuth => true;
 
-        public MatchingCancelReqHandler(SessionService sessionService, MatchingService matchingService)
+        public MatchingStartRequestHandler(SessionService sessionService, MatchingService matchingService)
         {
             _sessionService = sessionService;
             _matchingService = matchingService;
         }
 
-        protected override Task RunAsync(string sessionId, MatchingCancelReqPacket req)
+        protected override Task RunAsync(string sessionId, MatchingStartRequestPacket req)
         {
-            var res = _matchingService.CancelMatching(sessionId);
+            var res = _matchingService.StartMatching(sessionId, req.BossNum);
 
             _sessionService.Send(sessionId, new MessagePacket
             {
-                Opcode = (ushort)EPacketType.MatchingCancelRes,
+                Opcode = (ushort)EPacketType.MatchingStartResponse,
                 ProtocolType = EProtocolType.Json,
                 Payload = res,
             });

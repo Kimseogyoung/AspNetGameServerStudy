@@ -2,20 +2,20 @@ namespace Protocol.Raid
 {
     public enum EPacketType : ushort
     {
-        EchoReq,
-        EchoRes,
-        AuthReq,
-        AuthRes,
-        PingReq,
-        PongRes,
-        EchoAuthReq,
-        EchoAuthRes,
+        EchoRequest,
+        EchoResponse,
+        AuthRequest,
+        AuthResponse,
+        PingRequest,
+        PongResponse,
+        EchoAuthRequest,
+        EchoAuthResponse,
 
         // --- Matching ---
-        MatchingStartReq,
-        MatchingStartRes,
-        MatchingCancelReq,
-        MatchingCancelRes,
+        MatchingStartRequest,
+        MatchingStartResponse,
+        MatchingCancelRequest,
+        MatchingCancelResponse,
         MatchingCompleteNotify,   // S -> C, 매칭 성립 알림
     }
 }

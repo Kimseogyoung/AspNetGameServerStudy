@@ -19,22 +19,22 @@ namespace Protocol.Raid
     }
 
     [ProtoContract]
-    public class MatchingStartReqPacket
+    public class MatchingStartRequestPacket
     {
         [ProtoMember(1)] public int BossNum { get; set; }
     }
 
     [ProtoContract]
-    public class MatchingStartResPacket
+    public class MatchingStartResponsePacket
     {
         [ProtoMember(1)] public EMatchingResult Result { get; set; }
     }
 
     [ProtoContract]
-    public class MatchingCancelReqPacket { }
+    public class MatchingCancelRequestPacket { }
 
     [ProtoContract]
-    public class MatchingCancelResPacket
+    public class MatchingCancelResponsePacket
     {
         [ProtoMember(1)] public EMatchingResult Result { get; set; }
     }
