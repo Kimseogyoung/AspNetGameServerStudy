@@ -12,6 +12,15 @@ Console.WriteLine($"DeviceKey: {APP.Ctx.RpcSystem.DeviceKey}");
 
 var funcDict = new Dictionary<int, ApiFunc>()
 {
+    { -3, new ApiFunc(){ ApiPath = "DeviceKey Reset (Memory)", Desc = "DeviceKey 메모리만 재발급 (파일 유지)",
+        Action = (valueArr) =>
+        {
+            var newKey = DeviceKeyHelper.GenerateKey();
+            APP.Ctx.RpcSystem.SetDeviceKey(newKey);
+            Console.WriteLine($"새 DeviceKey (메모리): {newKey}");
+            return Task.CompletedTask;
+        }
+    } },
     { -2, new ApiFunc(){ ApiPath = "DeviceKey Reset", Desc = "DeviceKey 재발급",
         Action = (valueArr) =>
         {
@@ -94,6 +103,15 @@ var funcDict = new Dictionary<int, ApiFunc>()
             }
         }
     },
+    { 704, new ApiFunc(){ ApiPath = "Raid Matching Start", Desc = "매칭 시작 (BossNum)",
+        Action = async (valueArr) => {
+            var bossNum = valueArr.Length > 0 ? int.Parse(valueArr[0]) : 1;
+            await APP.Ctx.RequestRaidMatchingStartAsync(bossNum);
+            }
+        }
+    },
+    { 705, new ApiFunc(){ ApiPath = "Raid Matching Cancel", Desc = "매칭 취소",
+        Action = async (valueArr) => await APP.Ctx.RequestRaidMatchingCancelAsync() } },
 
     { 9001, new ApiFunc(){ ApiPath = CheatRewardRequestPacket.NAME, Desc = "Chaet 보상 획득 (ObjType, ObjNum, ObjAmount)",
         Action = async (valueArr) =>  {

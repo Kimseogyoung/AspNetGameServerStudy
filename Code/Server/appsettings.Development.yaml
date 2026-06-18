@@ -1,3 +1,5 @@
+RaidServer:
+    Enabled: true
 Game:
     UseSwagger: false
 Test: true

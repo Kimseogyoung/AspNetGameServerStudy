@@ -11,7 +11,8 @@ namespace RaidServer
         {
             services.AddHostedService<SocketClientListener>();
             services.AddHostedService<SessionTimeoutChecker>();
-            services.AddHostedService<TickService>();
+            services.AddSingleton<TickService>();
+            services.AddHostedService(sp => sp.GetRequiredService<TickService>());
 
             services.AddSingleton<RaidConfig>();
             services.AddSingleton<SessionService>();

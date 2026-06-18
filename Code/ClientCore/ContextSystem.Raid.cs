@@ -13,6 +13,18 @@ namespace ClientCore
             await RaidSystem.ConnectAsync(host, port);
             Console.WriteLine($"Raid 서버 접속: {host}:{port}");
 
+            RaidSystem.RegisterPushHandler(
+                (ushort)EPacketType.MatchingCompleteNotify,
+                (protocolType, payload) =>
+                {
+                    var notify = RaidSystem.Deserialize<MatchingCompleteNotifyPacket>(protocolType, payload);
+                    Console.WriteLine($"[매칭 완료] RoomId({notify.RoomId}) BossNum({notify.BossNum}) Members({notify.Members.Count})");
+                    foreach (var m in notify.Members)
+                    {
+                        Console.WriteLine($"  - SfId({m.SfId}) Name({m.ProfileName})");
+                    }
+                });
+
             var req = new AuthRequestPacket { SessionKey = RpcSystem.SessionId, DeviceKey = RpcSystem.DeviceKey };
             var res = await RaidSystem.RequestAsync<AuthRequestPacket, AuthResponsePacket>((ushort)EPacketType.AuthRequest, EProtocolType.Json, req);
             Console.WriteLine($"Raid 인증 응답: Result({res.Result}) AccountId({res.AccountId}) PlayerId({res.PlayerId}) ShardId({res.ShardId})");
@@ -25,6 +37,20 @@ namespace ClientCore
             {
                 RaidSystem.Close();
             }
+        }
+
+        public async Task RequestRaidMatchingStartAsync(int bossNum)
+        {
+            var req = new MatchingStartRequestPacket { BossNum = bossNum };
+            var res = await RaidSystem.RequestAsync<MatchingStartRequestPacket, MatchingStartResponsePacket>((ushort)EPacketType.MatchingStartRequest, EProtocolType.Json, req);
+            Console.WriteLine($"매칭 시작 응답: Result({res.Result})");
+        }
+
+        public async Task RequestRaidMatchingCancelAsync()
+        {
+            var req = new MatchingCancelRequestPacket();
+            var res = await RaidSystem.RequestAsync<MatchingCancelRequestPacket, MatchingCancelResponsePacket>((ushort)EPacketType.MatchingCancelRequest, EProtocolType.Json, req);
+            Console.WriteLine($"매칭 취소 응답: Result({res.Result})");
         }
 
         public Task RequestRaidDisconnectAsync()

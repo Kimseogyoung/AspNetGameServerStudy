@@ -16,6 +16,7 @@ namespace WebStudyServer
             AddMiddlewares(services);
             AddFilters(services);
             AddServices(services);
+            AddRaidServerLauncher(services);
 
             AddController(services);
             AddSwagger(services);
@@ -28,6 +29,14 @@ namespace WebStudyServer
         private void AddFilters(IServiceCollection services)
         {
             services.AddScoped<LogFilter>();
+        }
+
+        private void AddRaidServerLauncher(IServiceCollection services)
+        {
+            if (Configuration.GetValue<bool>("RaidServer:Enabled"))
+            {
+                services.AddHostedService<RaidServerLauncher>();
+            }
         }
 
         private void AddServices(IServiceCollection services)

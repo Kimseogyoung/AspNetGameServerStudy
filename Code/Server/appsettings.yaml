@@ -27,6 +27,9 @@ Db:
     CenterDb:
         ConnectionStrList:
             - Server=localhost;Port=3306;Database=CenterDb;Uid=root;Pwd=tjrudwlq!;Pooling=True;
+RaidServer:
+    Enabled: false
+    WorkingDir: ../RaidServer
 Game:
     UseSwagger: true
     SessionExpireSpan: 00:20:00

@@ -1,5 +1,6 @@
 using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
@@ -64,6 +65,11 @@ namespace ClientCore
             }
         }
 
+        public void RegisterPushHandler(ushort opcode, Action<EProtocolType, byte[]> handler)
+        {
+            _pushHandlers[opcode] = handler;
+        }
+
         // 한 번에 하나의 요청만 처리 (테스트 클라이언트 용도, 동시 요청은 지원하지 않음)
         public async Task<TRes> RequestAsync<TReq, TRes>(ushort opcode, EProtocolType protocolType, TReq req)
         {
@@ -96,7 +102,14 @@ namespace ClientCore
                     await ReadExactAsync(bodyBytes);
 
                     var (opcode, protocolType, payload) = PacketCodec.Parse(bodyBytes);
-                    _pendingTcs?.TrySetResult((opcode, protocolType, payload));
+                    if (_pushHandlers.TryGetValue(opcode, out var handler))
+                    {
+                        handler(protocolType, payload);
+                    }
+                    else
+                    {
+                        _pendingTcs?.TrySetResult((opcode, protocolType, payload));
+                    }
                 }
             }
             catch (Exception e)
@@ -137,7 +150,7 @@ namespace ClientCore
             }
         }
 
-        private static T Deserialize<T>(EProtocolType protocolType, byte[] bytes)
+        public static T Deserialize<T>(EProtocolType protocolType, byte[] bytes)
         {
             switch (protocolType)
             {
@@ -153,6 +166,7 @@ namespace ClientCore
             }
         }
 
+        private readonly Dictionary<ushort, Action<EProtocolType, byte[]>> _pushHandlers = new Dictionary<ushort, Action<EProtocolType, byte[]>>();
         private TcpClient? _client;
         private NetworkStream? _stream;
         private TaskCompletionSource<(ushort Opcode, EProtocolType ProtocolType, byte[] Payload)>? _pendingTcs;
