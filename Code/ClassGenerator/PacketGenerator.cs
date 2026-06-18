@@ -70,8 +70,8 @@ namespace ClassGenerator
         {
             var projectPath = GetProjPath();
             string templatePath = Path.Join(projectPath, "Template");
-            string reqTemplatePath = Path.Join(templatePath, "ReqPacketTemplate.txt");
-            string resTemplatePath = Path.Join(templatePath, "ResPacketTemplate.txt");
+            string reqTemplatePath = Path.Join(templatePath, "RequestPacketTemplate.txt");
+            string resTemplatePath = Path.Join(templatePath, "ResponsePacketTemplate.txt");
             string commonTemplatePath = Path.Join(templatePath, "CommonPacketTemplate.txt");
             _reqPakTemplate = File.ReadAllText(reqTemplatePath);
             _resPakTemplate = File.ReadAllText(resTemplatePath);
@@ -105,12 +105,12 @@ namespace ClassGenerator
                         template = _reqPakTemplate;
                         classAttribute = "[ProtoContract]";
                         protocolName = firstDef.ProtocolName;
-                        defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ReqInfoPacket", Idx = 1, FieldValue = "" });
+                        defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "RequestInfoPacket", Idx = 1, FieldValue = "" });
                         break;
                     case "res":
                         template = _resPakTemplate;
                         classAttribute = "[ProtoContract]";
-                        defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ResInfoPacket", Idx = 1, FieldValue = "= new ResInfoPacket();" });
+                        defList.Insert(0, new ClassDefinition { FieldName = "Info", FieldType = "ResponseInfoPacket", Idx = 1, FieldValue = "= new ResponseInfoPacket();" });
                         break;
                     default:
                         template = _commonPakTemplate;

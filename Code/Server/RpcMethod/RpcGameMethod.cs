@@ -4,7 +4,7 @@ using Server.Helper;
 
 namespace Server
 {
-    public class RpcGameMethod<TSvc, TReq, TRes> : RpcMethod<TSvc, TReq, TRes> where TSvc : class where TRes : IResPacket where TReq : IReqPacket, new()
+    public class RpcGameMethod<TSvc, TReq, TRes> : RpcMethod<TSvc, TReq, TRes> where TSvc : class where TRes : IResponsePacket where TReq : IRequestPacket, new()
     {
         public RpcGameMethod(string name, RunAsyncDelegate runAsync, bool includePlayer = true)
             : base(name, runAsync, includePlayer ? ERpcMethodType.AUTHORIZED_PLAYER : ERpcMethodType.AUTHORIZED) { }

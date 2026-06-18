@@ -4,11 +4,11 @@ using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class KingdomConstructDecoResPacket : IResPacket
+	public partial class KingdomConstructDecoResPacket : IResponsePacket
 	{
     
         [ProtoMember(1)]
-        public ResInfoPacket Info { get; set; } = new ResInfoPacket();
+        public ResponseInfoPacket Info { get; set; } = new ResponseInfoPacket();
         
         [ProtoMember(2)]
         public KingdomDecoPacket KingdomDeco { get; set; } = new KingdomDecoPacket();

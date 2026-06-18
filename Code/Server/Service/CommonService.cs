@@ -10,9 +10,9 @@ namespace WebStudyServer.Service
         {
         }
 
-        public HealthCheckResPacket HealthCheck()
+        public HealthCheckResponsePacket HealthCheck()
         {
-            return new HealthCheckResPacket
+            return new HealthCheckResponsePacket
             {
                 Msg = "OK"
             };

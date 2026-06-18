@@ -48,10 +48,10 @@ namespace ClientCore
 
 
         public async Task<RES> RequestAsync<REQ, RES>(REQ req)
-            where REQ : IReqPacket, new()
-            where RES : IResPacket, new()
+            where REQ : IRequestPacket, new()
+            where RES : IResponsePacket, new()
         {
-            req.Info = new ReqInfoPacket
+            req.Info = new RequestInfoPacket
             {
                 Seq = 0
             };
@@ -170,7 +170,7 @@ namespace ClientCore
             return null;
         }
 
-        private RES Deserialize<RES>(string contentType, byte[] byteArr) where RES : IResPacket, new()
+        private RES Deserialize<RES>(string contentType, byte[] byteArr) where RES : IResponsePacket, new()
         {
             var res = new RES();
             res.Info.ResultCode = (int)EErrorCode.NO_HANDLING_ERROR;

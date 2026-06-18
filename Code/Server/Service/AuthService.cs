@@ -16,7 +16,7 @@ namespace WebStudyServer.Service
             _dbRepo = dbRepo;
         }
 
-        public AuthSignUpResPacket SignUp(string idfv)
+        public AuthSignUpResponsePacket SignUp(string idfv)
         {
             // idfv 찾기.           
             if (Auth.Device.TryGet(idfv, out var mgrDevice))
@@ -32,7 +32,7 @@ namespace WebStudyServer.Service
                         originMgrSession.Expire(); // 기존 세션 무효화
                         originMgrSession.Start();
 
-                        return new AuthSignUpResPacket
+                        return new AuthSignUpResponsePacket
                         {
                             Result = new SignInResultPacket
                             {
@@ -61,7 +61,7 @@ namespace WebStudyServer.Service
             // 세션 갱신 및 리턴
             mgrSession.Start();
 
-            return new AuthSignUpResPacket
+            return new AuthSignUpResponsePacket
             {
                 Result = new SignInResultPacket
                 {
@@ -74,7 +74,7 @@ namespace WebStudyServer.Service
             };
         }
 
-        public AuthSignInResPacket SignIn(string channelId)
+        public AuthSignInResponsePacket SignIn(string channelId)
         {
             // 채널 찾기
             var mgrChannel = Auth.Channel.Get(channelId);
@@ -86,7 +86,7 @@ namespace WebStudyServer.Service
             var mgrSession = Auth.Session.Touch(mgrAccount.Id);
             mgrSession.Expire(); // 기존 세션 무효화
             mgrSession.Start();
-            return new AuthSignInResPacket
+            return new AuthSignInResponsePacket
             {
                 Result = new SignInResultPacket
                 {

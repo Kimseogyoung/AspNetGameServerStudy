@@ -52,7 +52,7 @@ namespace ClientCore
                         break;
                     }
 
-                    await RequestAsync<PingReqPacket, PongResPacket>((ushort)EPacketType.PingReq, EProtocolType.Json, new PingReqPacket());
+                    await RequestAsync<PingRequestPacket, PongResponsePacket>((ushort)EPacketType.PingRequest, EProtocolType.Json, new PingRequestPacket());
                 }
             }
             catch (OperationCanceledException)

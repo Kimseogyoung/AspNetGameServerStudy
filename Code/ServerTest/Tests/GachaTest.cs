@@ -27,8 +27,8 @@ namespace ServerTest.Tests
 
             // [성공] 스케줄 목록 로드
             {
-                var res = await Api.PostAsync<ScheduleLoadReqPacket, ScheduleLoadResPacket>(
-                    new ScheduleLoadReqPacket());
+                var res = await Api.PostAsync<ScheduleLoadRequestPacket, ScheduleLoadResponsePacket>(
+                    new ScheduleLoadRequestPacket());
 
                 Assert.Equal((int)EErrorCode.OK, res.Info.ResultCode);
                 Assert.NotNull(res.ScheduleList);
@@ -37,8 +37,8 @@ namespace ServerTest.Tests
 
             // [실패] 세션 없이 요청
             {
-                var res = await Api.PostAsync<ScheduleLoadReqPacket, ScheduleLoadResPacket>(
-                    new ScheduleLoadReqPacket(), sessionKey: "");
+                var res = await Api.PostAsync<ScheduleLoadRequestPacket, ScheduleLoadResponsePacket>(
+                    new ScheduleLoadRequestPacket(), sessionKey: "");
 
                 Assert.NotEqual((int)EErrorCode.OK, res.Info.ResultCode);
             }
@@ -50,8 +50,8 @@ namespace ServerTest.Tests
             await CreateDummyPlayerAsync();
 
             // 가챠 포인트 지급 (TOTAL_CASH는 감소 전용 복합타입이므로 FREE_CASH로 지급)
-            var cheatRes = await Api.PostAsync<CheatRewardReqPacket, CheatRewardResPacket>(
-                new CheatRewardReqPacket(new List<ObjValue>
+            var cheatRes = await Api.PostAsync<CheatRewardRequestPacket, CheatRewardResponsePacket>(
+                new CheatRewardRequestPacket(new List<ObjValue>
                 {
                     new ObjValue(EObjType.POINT_C_GACHA_NORMAL, 0, 100000),
                     new ObjValue(EObjType.FREE_CASH, 0, 100000)
@@ -60,8 +60,8 @@ namespace ServerTest.Tests
 
             // [실패] 존재하지 않는 스케줄 번호
             {
-                var res = await Api.PostAsync<GachaNormalReqPacket, GachaNormalResPacket>(
-                    new GachaNormalReqPacket(
+                var res = await Api.PostAsync<GachaNormalRequestPacket, GachaNormalResponsePacket>(
+                    new GachaNormalRequestPacket(
                         schedulenum: 9999999,
                         cnt: 1,
                         costobj: new CostObjPacket { Type = EObjType.POINT_C_GACHA_NORMAL, Num = 0, Amount = 1 }
@@ -73,8 +73,8 @@ namespace ServerTest.Tests
             // [실패] 만료된 스케줄로 요청 (Schedule.csv ContentEndTime이 과거임)
             // NOTE: Schedule.csv를 업데이트하면 이 케이스는 성공 케이스로 변경 필요
             {
-                var res = await Api.PostAsync<GachaNormalReqPacket, GachaNormalResPacket>(
-                    new GachaNormalReqPacket(
+                var res = await Api.PostAsync<GachaNormalRequestPacket, GachaNormalResponsePacket>(
+                    new GachaNormalRequestPacket(
                         schedulenum: ActiveScheduleNum,
                         cnt: 1,
                         costobj: new CostObjPacket { Type = EObjType.POINT_C_GACHA_NORMAL, Num = 0, Amount = 1 }
@@ -87,8 +87,8 @@ namespace ServerTest.Tests
 
             // [실패] 세션 없이 요청
             {
-                var res = await Api.PostAsync<GachaNormalReqPacket, GachaNormalResPacket>(
-                    new GachaNormalReqPacket(
+                var res = await Api.PostAsync<GachaNormalRequestPacket, GachaNormalResponsePacket>(
+                    new GachaNormalRequestPacket(
                         schedulenum: ActiveScheduleNum,
                         cnt: 1,
                         costobj: new CostObjPacket { Type = EObjType.POINT_C_GACHA_NORMAL, Num = 0, Amount = 1 }
@@ -100,8 +100,8 @@ namespace ServerTest.Tests
             // TODO: Schedule.csv의 ContentEndTime을 미래 날짜로 업데이트 후 아래 케이스 활성화
             // [성공] 1회 가챠 (POINT_C_GACHA_NORMAL 1개 소모)
             // {
-            //     var res = await Api.PostAsync<GachaNormalReqPacket, GachaNormalResPacket>(
-            //         new GachaNormalReqPacket(
+            //     var res = await Api.PostAsync<GachaNormalRequestPacket, GachaNormalResponsePacket>(
+            //         new GachaNormalRequestPacket(
             //             schedulenum: ActiveScheduleNum,
             //             cnt: 1,
             //             costobj: new CostObjPacket { Type = EObjType.POINT_C_GACHA_NORMAL, Num = 0, Amount = 1 }

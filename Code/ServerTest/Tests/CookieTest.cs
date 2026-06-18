@@ -25,8 +25,8 @@ namespace ServerTest.Tests
             await CreateDummyPlayerAsync();
 
             // 소울스톤 지급
-            var cheatRes = await Api.PostAsync<CheatRewardReqPacket, CheatRewardResPacket>(
-                new CheatRewardReqPacket(new List<ObjValue>
+            var cheatRes = await Api.PostAsync<CheatRewardRequestPacket, CheatRewardResponsePacket>(
+                new CheatRewardRequestPacket(new List<ObjValue>
                 {
                     new ObjValue(EObjType.SOUL_STONE, SoulStoneNum, 1000)
                 }));
@@ -34,8 +34,8 @@ namespace ServerTest.Tests
 
             // [성공] Star 0 → 1 (소울스톤 20개 소모)
             {
-                var res = await Api.PostAsync<CookieEnhanceStarReqPacket, CookieEnhanceStarResPacket>(
-                    new CookieEnhanceStarReqPacket(
+                var res = await Api.PostAsync<CookieEnhanceStarRequestPacket, CookieEnhanceStarResponsePacket>(
+                    new CookieEnhanceStarRequestPacket(
                         cookienum: CookieNum,
                         befstar: 0,
                         aftstar: 1,
@@ -49,8 +49,8 @@ namespace ServerTest.Tests
 
             // [실패] BefStar 불일치 (현재 Star=1인데 BefStar=0으로 요청)
             {
-                var res = await Api.PostAsync<CookieEnhanceStarReqPacket, CookieEnhanceStarResPacket>(
-                    new CookieEnhanceStarReqPacket(
+                var res = await Api.PostAsync<CookieEnhanceStarRequestPacket, CookieEnhanceStarResponsePacket>(
+                    new CookieEnhanceStarRequestPacket(
                         cookienum: CookieNum,
                         befstar: 0,  // 실제는 1
                         aftstar: 1,
@@ -62,8 +62,8 @@ namespace ServerTest.Tests
 
             // [실패] UsedSoulStone 불일치
             {
-                var res = await Api.PostAsync<CookieEnhanceStarReqPacket, CookieEnhanceStarResPacket>(
-                    new CookieEnhanceStarReqPacket(
+                var res = await Api.PostAsync<CookieEnhanceStarRequestPacket, CookieEnhanceStarResponsePacket>(
+                    new CookieEnhanceStarRequestPacket(
                         cookienum: CookieNum,
                         befstar: 1,
                         aftstar: 2,
@@ -75,8 +75,8 @@ namespace ServerTest.Tests
 
             // [실패] AftStar < BefStar (감소 요청)
             {
-                var res = await Api.PostAsync<CookieEnhanceStarReqPacket, CookieEnhanceStarResPacket>(
-                    new CookieEnhanceStarReqPacket(
+                var res = await Api.PostAsync<CookieEnhanceStarRequestPacket, CookieEnhanceStarResponsePacket>(
+                    new CookieEnhanceStarRequestPacket(
                         cookienum: CookieNum,
                         befstar: 1,
                         aftstar: 0,  // 감소
@@ -88,8 +88,8 @@ namespace ServerTest.Tests
 
             // [실패] 존재하지 않는 쿠키 번호
             {
-                var res = await Api.PostAsync<CookieEnhanceStarReqPacket, CookieEnhanceStarResPacket>(
-                    new CookieEnhanceStarReqPacket(
+                var res = await Api.PostAsync<CookieEnhanceStarRequestPacket, CookieEnhanceStarResponsePacket>(
+                    new CookieEnhanceStarRequestPacket(
                         cookienum: 99999,
                         befstar: 0,
                         aftstar: 1,
@@ -106,8 +106,8 @@ namespace ServerTest.Tests
             await CreateDummyPlayerAsync();
 
             // Lv 포인트 지급 (cfgLvCost=10 per lv)
-            var cheatRes = await Api.PostAsync<CheatRewardReqPacket, CheatRewardResPacket>(
-                new CheatRewardReqPacket(new List<ObjValue>
+            var cheatRes = await Api.PostAsync<CheatRewardRequestPacket, CheatRewardResponsePacket>(
+                new CheatRewardRequestPacket(new List<ObjValue>
                 {
                     new ObjValue(EObjType.POINT_COOKIE_LV, 0, 100000)
                 }));
@@ -115,8 +115,8 @@ namespace ServerTest.Tests
 
             // [성공] Lv 1 → 2 (비용 10 POINT_COOKIE_LV)
             {
-                var res = await Api.PostAsync<CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(
-                    new CookieEnhanceLvReqPacket(
+                var res = await Api.PostAsync<CookieEnhanceLvRequestPacket, CookieEnhanceLvResponsePacket>(
+                    new CookieEnhanceLvRequestPacket(
                         cookienum: CookieNum,
                         beflv: 1,
                         aftlv: 2,
@@ -130,8 +130,8 @@ namespace ServerTest.Tests
 
             // [성공] Lv 2 → 5 (비용 30 POINT_COOKIE_LV)
             {
-                var res = await Api.PostAsync<CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(
-                    new CookieEnhanceLvReqPacket(
+                var res = await Api.PostAsync<CookieEnhanceLvRequestPacket, CookieEnhanceLvResponsePacket>(
+                    new CookieEnhanceLvRequestPacket(
                         cookienum: CookieNum,
                         beflv: 2,
                         aftlv: 5,
@@ -144,8 +144,8 @@ namespace ServerTest.Tests
 
             // [실패] BefLv 불일치 (현재 Lv=5인데 BefLv=1로 요청)
             {
-                var res = await Api.PostAsync<CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(
-                    new CookieEnhanceLvReqPacket(
+                var res = await Api.PostAsync<CookieEnhanceLvRequestPacket, CookieEnhanceLvResponsePacket>(
+                    new CookieEnhanceLvRequestPacket(
                         cookienum: CookieNum,
                         beflv: 1,
                         aftlv: 2,
@@ -157,8 +157,8 @@ namespace ServerTest.Tests
 
             // [실패] 비용 Amount 불일치
             {
-                var res = await Api.PostAsync<CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(
-                    new CookieEnhanceLvReqPacket(
+                var res = await Api.PostAsync<CookieEnhanceLvRequestPacket, CookieEnhanceLvResponsePacket>(
+                    new CookieEnhanceLvRequestPacket(
                         cookienum: CookieNum,
                         beflv: 5,
                         aftlv: 6,
@@ -170,8 +170,8 @@ namespace ServerTest.Tests
 
             // [실패] AftLv < BefLv (감소 요청)
             {
-                var res = await Api.PostAsync<CookieEnhanceLvReqPacket, CookieEnhanceLvResPacket>(
-                    new CookieEnhanceLvReqPacket(
+                var res = await Api.PostAsync<CookieEnhanceLvRequestPacket, CookieEnhanceLvResponsePacket>(
+                    new CookieEnhanceLvRequestPacket(
                         cookienum: CookieNum,
                         beflv: 5,
                         aftlv: 3,

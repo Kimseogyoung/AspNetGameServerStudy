@@ -4,11 +4,11 @@ using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class AuthSignUpReqPacket : IReqPacket
+	public partial class AuthSignUpReqPacket : IRequestPacket
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } = new ReqInfoPacket();
+        public RequestInfoPacket Info { get; set; } = new RequestInfoPacket();
         
         [ProtoMember(2)]
         public string DeviceKey { get; set; } = default;

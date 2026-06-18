@@ -9,7 +9,7 @@ using WebStudyServer.Helper;
 
 namespace Server
 {
-    public class RpcMethod<TSvc, TReq, TRes> : IRpcMethod where TSvc : class where TRes : IResPacket where TReq : IReqPacket, new()
+    public class RpcMethod<TSvc, TReq, TRes> : IRpcMethod where TSvc : class where TRes : IResponsePacket where TReq : IRequestPacket, new()
     {
         public delegate Task<TRes> RunAsyncDelegate(TSvc svc, TReq req);
         public delegate TRes RunDelegate(TSvc svc, TReq req);
@@ -83,14 +83,14 @@ namespace Server
                 else
                 {
                     var res = await Task.Run(() => _run!(rpcSvc, (TReq)rpcReq));
-                    res.Info = new ResInfoPacket { ResultCode = (int)EErrorCode.OK };
+                    res.Info = new ResponseInfoPacket { ResultCode = (int)EErrorCode.OK };
                     return res;
                 }
             }
             else
             {
                 var res = await _runAsync(rpcSvc, (TReq)rpcReq);
-                res.Info = new ResInfoPacket { ResultCode = (int)EErrorCode.OK };
+                res.Info = new ResponseInfoPacket { ResultCode = (int)EErrorCode.OK };
                 return res;
             }
         }

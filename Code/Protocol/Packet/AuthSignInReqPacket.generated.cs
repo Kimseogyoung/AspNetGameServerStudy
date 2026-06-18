@@ -4,11 +4,11 @@ using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class AuthSignInReqPacket : IReqPacket
+	public partial class AuthSignInReqPacket : IRequestPacket
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } = new ReqInfoPacket();
+        public RequestInfoPacket Info { get; set; } = new RequestInfoPacket();
         
         [ProtoMember(2)]
         public string ChannelId { get; set; } = default;

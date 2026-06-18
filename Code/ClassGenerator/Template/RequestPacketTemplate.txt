@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Protocol
 {
 	{{ClassAttribute}}
-	public partial class {{ClassName}} : IReqPacket
+	public partial class {{ClassName}} : IRequestPacket
 	{
     {{ for field in Fields }}
     {{field.Attribute}}

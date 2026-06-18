@@ -4,11 +4,11 @@ using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class KingdomConstructStructureReqPacket : IReqPacket
+	public partial class KingdomConstructStructureReqPacket : IRequestPacket
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } = new ReqInfoPacket();
+        public RequestInfoPacket Info { get; set; } = new RequestInfoPacket();
         
         [ProtoMember(2)]
         public ulong KingdomStructureId { get; set; } = default;

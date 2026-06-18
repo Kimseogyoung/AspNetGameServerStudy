@@ -19,11 +19,11 @@ namespace Server.Service
             _mapper = mapper;
         }
 
-        public CheatRewardResPacket Reward(CheatRewardReqPacket req)
+        public CheatRewardResponsePacket Reward(CheatRewardRequestPacket req)
         {
             var mgrPlayerDetail = _dbRepo.OwnUser.PlayerDetail.Touch();
             var chgObjList = mgrPlayerDetail.IncRewardList(req.RewardList, "CHEAT");
-            return new CheatRewardResPacket
+            return new CheatRewardResponsePacket
             {
                 ChgObjList = chgObjList
             };

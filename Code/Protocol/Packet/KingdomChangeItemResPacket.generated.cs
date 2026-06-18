@@ -4,11 +4,11 @@ using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class KingdomChangeItemResPacket : IResPacket
+	public partial class KingdomChangeItemResPacket : IResponsePacket
 	{
     
         [ProtoMember(1)]
-        public ResInfoPacket Info { get; set; } = new ResInfoPacket();
+        public ResponseInfoPacket Info { get; set; } = new ResponseInfoPacket();
         
         [ProtoMember(2)]
         public List<PlacedKingdomItemPacket> PlacedKingdomItemList { get; set; } = new List<PlacedKingdomItemPacket>();

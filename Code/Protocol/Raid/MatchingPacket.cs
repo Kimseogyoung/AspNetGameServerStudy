@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ProtoBuf;
 
 namespace Protocol.Raid
@@ -44,6 +45,6 @@ namespace Protocol.Raid
     {
         [ProtoMember(1)] public string RoomId { get; set; } = string.Empty;
         [ProtoMember(2)] public int BossNum { get; set; }
-        [ProtoMember(3)] public List<RoomMemberInfo> Members { get; set; } = new();
+        [ProtoMember(3)] public List<RoomMemberInfo> Members { get; set; } = new List<RoomMemberInfo>();
     }
 }

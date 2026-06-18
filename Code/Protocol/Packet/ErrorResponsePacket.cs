@@ -2,9 +2,9 @@ using ProtoBuf;
 namespace Protocol
 {
     [ProtoContract]
-    public class ErrorResponsePacket : IResPacket
+    public class ErrorResponsePacket : IResponsePacket
     {
         [ProtoMember(1)]
-        public ResInfoPacket Info { get; set; } = new ResInfoPacket();
+        public ResponseInfoPacket Info { get; set; } = new ResponseInfoPacket();
     }
 }

@@ -4,11 +4,11 @@ using System.Collections.Generic;
 namespace Protocol
 {
 	[ProtoContract]
-	public partial class HealthCheckReqPacket : IReqPacket
+	public partial class HealthCheckReqPacket : IRequestPacket
 	{
     
         [ProtoMember(1)]
-        public ReqInfoPacket Info { get; set; } = new ReqInfoPacket();
+        public RequestInfoPacket Info { get; set; } = new RequestInfoPacket();
         
 
         public const string NAME = "health-check";

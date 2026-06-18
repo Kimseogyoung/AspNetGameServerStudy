@@ -22,53 +22,53 @@ var funcDict = new Dictionary<int, ApiFunc>()
             return Task.CompletedTask;
         }
     } },
-    { -1, new ApiFunc(){ ApiPath = HealthCheckReqPacket.NAME, Desc = "HealthCheck",
+    { -1, new ApiFunc(){ ApiPath = HealthCheckRequestPacket.NAME, Desc = "HealthCheck",
         Action = async (valueArr) =>  await APP.Ctx.RequestHealthCheckAsync()} },
 
-    { 1, new ApiFunc(){ ApiPath = AuthSignUpReqPacket.NAME, Desc = "회원 가입",
+    { 1, new ApiFunc(){ ApiPath = AuthSignUpRequestPacket.NAME, Desc = "회원 가입",
         Action = async (valueArr) =>  await APP.Ctx.RequestSignUpAsync(APP.Ctx.RpcSystem.DeviceKey)} },
-    { 2, new ApiFunc(){ ApiPath = AuthSignInReqPacket.NAME, Desc = "기존 계정 로그인 (ChannelKey)",
+    { 2, new ApiFunc(){ ApiPath = AuthSignInRequestPacket.NAME, Desc = "기존 계정 로그인 (ChannelKey)",
         Action = async (valueArr) =>  await APP.Ctx.RequestSignInAsync(valueArr[0])} },
 
 
-    { 100, new ApiFunc(){ ApiPath = GameEnterReqPacket.NAME, Desc = "플레이어 로드",
+    { 100, new ApiFunc(){ ApiPath = GameEnterRequestPacket.NAME, Desc = "플레이어 로드",
         Action = async (valueArr) =>  await APP.Ctx.RequestEnterAsync()} },
-    { 101, new ApiFunc(){ ApiPath = GameChangeNameReqPacket.NAME, Desc = "닉네임 초기 설정 (Name)",
+    { 101, new ApiFunc(){ ApiPath = GameChangeNameRequestPacket.NAME, Desc = "닉네임 초기 설정 (Name)",
         Action = async (valueArr) =>  await APP.Ctx.RequestChangeNameAsync(valueArr[0])} },
 
     { 200, new ApiFunc(){ ApiPath = "Kingdom Print", Desc = "",
         Action = (valueArr) => { APP.Ctx.PrintKingdom(); return Task.CompletedTask; } } },
-    { 201, new ApiFunc(){ ApiPath = KingdomBuyStructureReqPacket.NAME, Desc = "KingdomStructure 구매 (Num)",
+    { 201, new ApiFunc(){ ApiPath = KingdomBuyStructureRequestPacket.NAME, Desc = "KingdomStructure 구매 (Num)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomBuyStructure((int.Parse(valueArr[0]))) } },
-    { 202, new ApiFunc(){ ApiPath = KingdomConstructStructureReqPacket.NAME, Desc = "KingdomStructure 건설 (StructureId, X, Y)",
+    { 202, new ApiFunc(){ ApiPath = KingdomConstructStructureRequestPacket.NAME, Desc = "KingdomStructure 건설 (StructureId, X, Y)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomConstructureStructure(ulong.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) } },
-    { 203, new ApiFunc(){ ApiPath = KingdomFinishConstructStructureReqPacket.NAME, Desc = "KingdomStructure 건설 종료 (StructureId, Num)",
+    { 203, new ApiFunc(){ ApiPath = KingdomFinishConstructStructureRequestPacket.NAME, Desc = "KingdomStructure 건설 종료 (StructureId, Num)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomFinishConstructStructure(ulong.Parse(valueArr[0]), int.Parse(valueArr[1]))} },
-    { 204, new ApiFunc(){ ApiPath = KingdomBuyDecoReqPacket.NAME, Desc = "KingdomDeco 구매 (Num)",
+    { 204, new ApiFunc(){ ApiPath = KingdomBuyDecoRequestPacket.NAME, Desc = "KingdomDeco 구매 (Num)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomBuyDeco((int.Parse(valueArr[0]))) } },
-    { 205, new ApiFunc(){ ApiPath = KingdomConstructDecoReqPacket.NAME, Desc = "KingdomDeco 건설 (Num , X, Y)",
+    { 205, new ApiFunc(){ ApiPath = KingdomConstructDecoRequestPacket.NAME, Desc = "KingdomDeco 건설 (Num , X, Y)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomConstructDeco(int.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) } },
-    { 206, new ApiFunc(){ ApiPath = KingdomFinishCraftStructureReqPacket.NAME, Desc = "KingdomStructure 생산 물품 받기 (StructureId)",
+    { 206, new ApiFunc(){ ApiPath = KingdomFinishCraftStructureRequestPacket.NAME, Desc = "KingdomStructure 생산 물품 받기 (StructureId)",
         Action = async (valueArr) =>  await APP.Ctx.RequestKingdomFinishCraftStructure(ulong.Parse(valueArr[0]))} },
 
     { 300, new ApiFunc(){ ApiPath = "CookieList Print", Desc = "", Action = (valueArr) => { APP.Ctx.PrintCookieList(); return Task.CompletedTask; } } },
-    { 301, new ApiFunc(){ ApiPath = CookieEnhanceStarReqPacket.NAME, Desc = "Cookie Enhance Star (CookieNum, Star)",
+    { 301, new ApiFunc(){ ApiPath = CookieEnhanceStarRequestPacket.NAME, Desc = "Cookie Enhance Star (CookieNum, Star)",
         Action = async (valueArr) =>  await APP.Ctx.RequestCookieEnhanceStar(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
-    { 302, new ApiFunc(){ ApiPath = CookieEnhanceLvReqPacket.NAME, Desc = "Cookie Enhance Lv (CookieNum, Lv)",
+    { 302, new ApiFunc(){ ApiPath = CookieEnhanceLvRequestPacket.NAME, Desc = "Cookie Enhance Lv (CookieNum, Lv)",
         Action = async (valueArr) =>  await APP.Ctx.RequestCookieEnhanceLv(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
 
 
-    { 400, new ApiFunc(){ ApiPath = GachaNormalReqPacket.NAME, Desc = "GachaNormal (ScheduleNum, Cnt)",
+    { 400, new ApiFunc(){ ApiPath = GachaNormalRequestPacket.NAME, Desc = "GachaNormal (ScheduleNum, Cnt)",
         Action = async (valueArr) =>  await APP.Ctx.RequestGachaNormal(int.Parse(valueArr[0]), int.Parse(valueArr[1])) } },
 
-    { 500, new ApiFunc(){ ApiPath = ScheduleLoadReqPacket.NAME, Desc = "ScheduleLoad ",
+    { 500, new ApiFunc(){ ApiPath = ScheduleLoadRequestPacket.NAME, Desc = "ScheduleLoad ",
         Action = async (valueArr) =>  await APP.Ctx.RequestLoadSchedule() }},
 
     { 600, new ApiFunc(){ ApiPath = "World Print", Desc = "", Action = (valueArr) => { APP.Ctx.PrintWorldList(); return Task.CompletedTask; } } },
     { 601, new ApiFunc(){ ApiPath = "WorldStage Print", Desc = "", Action = (valueArr) => { APP.Ctx.PrintWorldStageList(); return Task.CompletedTask; } } },
-    { 602, new ApiFunc(){ ApiPath = WorldFinishStageFirstReqPacket.NAME, Desc = "(WorldNum, OrderNum, Star)", Action = async (valueArr) =>  await APP.Ctx.RequestWorldFinishFirstStage(int.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) }},
-    { 603, new ApiFunc(){ ApiPath = WorldFinishStageRepeatReqPacket.NAME, Desc = "(WorldNum, OrderNum, Star)", Action = async (valueArr) =>  await APP.Ctx.RequestWorldFinishRepeatStage(int.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) }},
-    { 604, new ApiFunc(){ ApiPath = WorldRewardStarReqPacket.NAME, Desc = "(WorldNum, Star)", Action = async (valueArr) =>  await APP.Ctx.RequestWorldRewardStar(int.Parse(valueArr[0]), int.Parse(valueArr[1])) }},
+    { 602, new ApiFunc(){ ApiPath = WorldFinishStageFirstRequestPacket.NAME, Desc = "(WorldNum, OrderNum, Star)", Action = async (valueArr) =>  await APP.Ctx.RequestWorldFinishFirstStage(int.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) }},
+    { 603, new ApiFunc(){ ApiPath = WorldFinishStageRepeatRequestPacket.NAME, Desc = "(WorldNum, OrderNum, Star)", Action = async (valueArr) =>  await APP.Ctx.RequestWorldFinishRepeatStage(int.Parse(valueArr[0]), int.Parse(valueArr[1]), int.Parse(valueArr[2])) }},
+    { 604, new ApiFunc(){ ApiPath = WorldRewardStarRequestPacket.NAME, Desc = "(WorldNum, Star)", Action = async (valueArr) =>  await APP.Ctx.RequestWorldRewardStar(int.Parse(valueArr[0]), int.Parse(valueArr[1])) }},
 
     { 700, new ApiFunc(){ ApiPath = "Raid Connect", Desc = "Raid 서버 접속 (Host Port, 기본 127.0.0.1 5000)",
         Action = async (valueArr) =>  {
@@ -95,7 +95,7 @@ var funcDict = new Dictionary<int, ApiFunc>()
         }
     },
 
-    { 9001, new ApiFunc(){ ApiPath = CheatRewardReqPacket.NAME, Desc = "Chaet 보상 획득 (ObjType, ObjNum, ObjAmount)",
+    { 9001, new ApiFunc(){ ApiPath = CheatRewardRequestPacket.NAME, Desc = "Chaet 보상 획득 (ObjType, ObjNum, ObjAmount)",
         Action = async (valueArr) =>  {
             var objType = valueArr.Length > 0 ? valueArr[0] : "";
             var objNum = valueArr.Length > 1 ? int.Parse(valueArr[1]) : 0;

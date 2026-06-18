@@ -31,22 +31,22 @@ namespace ServerTest
             deviceKey ??= Guid.NewGuid().ToString();
             Api.SetDeviceKey(deviceKey);
 
-            var signUpRes = await Api.PostAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(
-                new AuthSignUpReqPacket(deviceKey));
+            var signUpRes = await Api.PostAsync<AuthSignUpRequestPacket, AuthSignUpResponsePacket>(
+                new AuthSignUpRequestPacket(deviceKey));
             Assert.Equal((int)EErrorCode.OK, signUpRes.Info.ResultCode);
 
             var sessionKey = signUpRes.Result.SessionKey;
             Api.SetSession(sessionKey);
 
-            var enterRes = await Api.PostAsync<GameEnterReqPacket, GameEnterResPacket>(
-                new GameEnterReqPacket());
+            var enterRes = await Api.PostAsync<GameEnterRequestPacket, GameEnterResponsePacket>(
+                new GameEnterRequestPacket());
             Assert.Equal((int)EErrorCode.OK, enterRes.Info.ResultCode);
 
             return sessionKey;
         }
 
-        protected bool IsOk(IResPacket res) => res.Info.ResultCode == (int)EErrorCode.OK;
-        protected bool IsError(IResPacket res) => res.Info.ResultCode != (int)EErrorCode.OK;
+        protected bool IsOk(IResponsePacket res) => res.Info.ResultCode == (int)EErrorCode.OK;
+        protected bool IsError(IResponsePacket res) => res.Info.ResultCode != (int)EErrorCode.OK;
     }
 
     /// <summary>
@@ -73,10 +73,10 @@ namespace ServerTest
         public void SetDeviceKey(string key) { _deviceKey = key; }
 
         public async Task<TRes> PostAsync<TReq, TRes>(TReq req, string sessionKey = null)
-            where TReq : IReqPacket, new()
-            where TRes : IResPacket, new()
+            where TReq : IRequestPacket, new()
+            where TRes : IResponsePacket, new()
         {
-            req.Info ??= new ReqInfoPacket { Seq = 0 };
+            req.Info ??= new RequestInfoPacket { Seq = 0 };
 
             var key = sessionKey ?? _sessionKey;
             var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -100,7 +100,7 @@ namespace ServerTest
             // 에러 응답: ErrorResponsePacket에서 Info를 꺼내서 TRes에 세팅
             var errorRes = JsonSerializer.Deserialize<ErrorResponsePacket>(resJson, JsonOpts);
             var res = new TRes();
-            res.Info = errorRes?.Info ?? new ResInfoPacket { ResultCode = (int)EErrorCode.NO_HANDLING_ERROR, ResultMsg = resJson };
+            res.Info = errorRes?.Info ?? new ResponseInfoPacket { ResultCode = (int)EErrorCode.NO_HANDLING_ERROR, ResultMsg = resJson };
             return res;
         }
     }

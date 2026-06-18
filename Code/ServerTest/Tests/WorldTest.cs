@@ -15,7 +15,7 @@ namespace ServerTest.Tests
     ///     StarReward[3]: FREE_CASH=100 (star3)
     ///   World RewardStar: [10star=300cash, 20star=500cash, 30star=700cash]
     ///
-    /// WorldRewardStarReqPacket 생성자: (worldnum, befRewardStar, aftRewardStar, totalStar, rewardValue)
+    /// WorldRewardStarRequestPacket 생성자: (worldnum, befRewardStar, aftRewardStar, totalStar, rewardValue)
     /// </summary>
     public class WorldTest : TestBase
     {
@@ -31,8 +31,8 @@ namespace ServerTest.Tests
 
             // [성공] 첫 스테이지 클리어 (0스타, 기본보상 FREE_CASH=20)
             {
-                var res = await Api.PostAsync<WorldFinishStageFirstReqPacket, WorldFinishStageFirstResPacket>(
-                    new WorldFinishStageFirstReqPacket(
+                var res = await Api.PostAsync<WorldFinishStageFirstRequestPacket, WorldFinishStageFirstResponsePacket>(
+                    new WorldFinishStageFirstRequestPacket(
                         worldnum: WorldNum,
                         stagenum: FirstStageNum,
                         star: 0,
@@ -49,8 +49,8 @@ namespace ServerTest.Tests
 
             // [실패] 이미 클리어한 스테이지를 다시 FirstFinish 요청
             {
-                var res = await Api.PostAsync<WorldFinishStageFirstReqPacket, WorldFinishStageFirstResPacket>(
-                    new WorldFinishStageFirstReqPacket(
+                var res = await Api.PostAsync<WorldFinishStageFirstRequestPacket, WorldFinishStageFirstResponsePacket>(
+                    new WorldFinishStageFirstRequestPacket(
                         worldnum: WorldNum,
                         stagenum: FirstStageNum,
                         star: 0,
@@ -67,8 +67,8 @@ namespace ServerTest.Tests
             {
                 await CreateDummyPlayerAsync(); // 새 플레이어
 
-                var res = await Api.PostAsync<WorldFinishStageFirstReqPacket, WorldFinishStageFirstResPacket>(
-                    new WorldFinishStageFirstReqPacket(
+                var res = await Api.PostAsync<WorldFinishStageFirstRequestPacket, WorldFinishStageFirstResponsePacket>(
+                    new WorldFinishStageFirstRequestPacket(
                         worldnum: WorldNum,
                         stagenum: FirstStageNum,
                         star: 0,
@@ -83,8 +83,8 @@ namespace ServerTest.Tests
 
             // [실패] 세션 없이 요청
             {
-                var res = await Api.PostAsync<WorldFinishStageFirstReqPacket, WorldFinishStageFirstResPacket>(
-                    new WorldFinishStageFirstReqPacket(
+                var res = await Api.PostAsync<WorldFinishStageFirstRequestPacket, WorldFinishStageFirstResponsePacket>(
+                    new WorldFinishStageFirstRequestPacket(
                         worldnum: WorldNum,
                         stagenum: FirstStageNum,
                         star: 0,
@@ -104,8 +104,8 @@ namespace ServerTest.Tests
             await CreateDummyPlayerAsync();
 
             // 먼저 첫 클리어
-            var firstRes = await Api.PostAsync<WorldFinishStageFirstReqPacket, WorldFinishStageFirstResPacket>(
-                new WorldFinishStageFirstReqPacket(
+            var firstRes = await Api.PostAsync<WorldFinishStageFirstRequestPacket, WorldFinishStageFirstResponsePacket>(
+                new WorldFinishStageFirstRequestPacket(
                     worldnum: WorldNum,
                     stagenum: FirstStageNum,
                     star: 0,
@@ -118,8 +118,8 @@ namespace ServerTest.Tests
 
             // [성공] 반복 클리어 (0스타, 추가 보상 없음)
             {
-                var res = await Api.PostAsync<WorldFinishStageRepeatReqPacket, WorldFinishStageRepeatResPacket>(
-                    new WorldFinishStageRepeatReqPacket(
+                var res = await Api.PostAsync<WorldFinishStageRepeatRequestPacket, WorldFinishStageRepeatResponsePacket>(
+                    new WorldFinishStageRepeatRequestPacket(
                         worldnum: WorldNum,
                         stagenum: FirstStageNum,
                         star: 0,
@@ -132,8 +132,8 @@ namespace ServerTest.Tests
 
             // [성공] 반복 클리어에서 스타 업그레이드 (0→2스타, star2 추가 보상 FREE_CASH=50)
             {
-                var res = await Api.PostAsync<WorldFinishStageRepeatReqPacket, WorldFinishStageRepeatResPacket>(
-                    new WorldFinishStageRepeatReqPacket(
+                var res = await Api.PostAsync<WorldFinishStageRepeatRequestPacket, WorldFinishStageRepeatResponsePacket>(
+                    new WorldFinishStageRepeatRequestPacket(
                         worldnum: WorldNum,
                         stagenum: FirstStageNum,
                         star: 2,
@@ -150,8 +150,8 @@ namespace ServerTest.Tests
             // [실패] 미클리어 스테이지에 Repeat 요청
             {
                 var nextStageNum = 11010020;
-                var res = await Api.PostAsync<WorldFinishStageRepeatReqPacket, WorldFinishStageRepeatResPacket>(
-                    new WorldFinishStageRepeatReqPacket(
+                var res = await Api.PostAsync<WorldFinishStageRepeatRequestPacket, WorldFinishStageRepeatResponsePacket>(
+                    new WorldFinishStageRepeatRequestPacket(
                         worldnum: WorldNum,
                         stagenum: nextStageNum,
                         star: 0,
@@ -168,10 +168,10 @@ namespace ServerTest.Tests
             await CreateDummyPlayerAsync();
 
             // [실패] 스타가 부족한 상태에서 별 보상 요청
-            // WorldRewardStarReqPacket 생성자: (worldnum, befRewardStar, aftRewardStar, totalStar, rewardValue)
+            // WorldRewardStarRequestPacket 생성자: (worldnum, befRewardStar, aftRewardStar, totalStar, rewardValue)
             {
-                var res = await Api.PostAsync<WorldRewardStarReqPacket, WorldRewardStarResPacket>(
-                    new WorldRewardStarReqPacket(
+                var res = await Api.PostAsync<WorldRewardStarRequestPacket, WorldRewardStarResponsePacket>(
+                    new WorldRewardStarRequestPacket(
                         worldnum: WorldNum,
                         befrewardstar: 0,
                         aftrewardstar: 1,
@@ -184,8 +184,8 @@ namespace ServerTest.Tests
 
             // [실패] 잘못된 보상값 (FREE_CASH 금액 틀림)
             {
-                var res = await Api.PostAsync<WorldRewardStarReqPacket, WorldRewardStarResPacket>(
-                    new WorldRewardStarReqPacket(
+                var res = await Api.PostAsync<WorldRewardStarRequestPacket, WorldRewardStarResponsePacket>(
+                    new WorldRewardStarRequestPacket(
                         worldnum: WorldNum,
                         befrewardstar: 0,
                         aftrewardstar: 1,
@@ -198,8 +198,8 @@ namespace ServerTest.Tests
 
             // [실패] 세션 없이 요청
             {
-                var res = await Api.PostAsync<WorldRewardStarReqPacket, WorldRewardStarResPacket>(
-                    new WorldRewardStarReqPacket(
+                var res = await Api.PostAsync<WorldRewardStarRequestPacket, WorldRewardStarResponsePacket>(
+                    new WorldRewardStarRequestPacket(
                         worldnum: WorldNum,
                         befrewardstar: 0,
                         aftrewardstar: 1,

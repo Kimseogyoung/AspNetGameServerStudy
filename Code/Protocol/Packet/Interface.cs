@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace Protocol
 {
-    public interface IReqPacket
+    public interface IRequestPacket
     {
-        public ReqInfoPacket Info { get; set; }
+        public RequestInfoPacket Info { get; set; }
         public string GetProtocolName();
     }
 
-    public interface IResPacket
+    public interface IResponsePacket
     {
-        public ResInfoPacket Info { get; set; }
+        public ResponseInfoPacket Info { get; set; }
     }
 }

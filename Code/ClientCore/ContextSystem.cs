@@ -9,7 +9,7 @@ namespace ClientCore
         public PlayerPacket Player { get; private set; }
         public RpcSystem RpcSystem { get; private set; }
 
-        public readonly ResInfoPacket _errorRes = new ResInfoPacket { ResultCode = (int)EErrorCode.NO_HANDLING_ERROR };
+        public readonly ResponseInfoPacket _errorRes = new ResponseInfoPacket { ResultCode = (int)EErrorCode.NO_HANDLING_ERROR };
 
         public void Init(string serverUrl, TimeSpan timeoutSpan)
         {
@@ -24,7 +24,7 @@ namespace ClientCore
             RaidSystem.Close();
         }
 
-        public bool IsErrorRes(IResPacket res)
+        public bool IsErrorRes(IResponsePacket res)
         {
             return res.Info.ResultCode != (int)EErrorCode.OK;
         }
@@ -41,34 +41,34 @@ namespace ClientCore
             return true;
         }
 
-        public async Task<HealthCheckResPacket> RequestHealthCheckAsync()
+        public async Task<HealthCheckResponsePacket> RequestHealthCheckAsync()
         {
-            var req = new HealthCheckReqPacket();
-            var res = await RpcSystem.RequestAsync<HealthCheckReqPacket, HealthCheckResPacket>(req);
+            var req = new HealthCheckRequestPacket();
+            var res = await RpcSystem.RequestAsync<HealthCheckRequestPacket, HealthCheckResponsePacket>(req);
             return res;
         }
 
-        public async Task<AuthSignUpResPacket> RequestSignUpAsync(string deviceKey)
+        public async Task<AuthSignUpResponsePacket> RequestSignUpAsync(string deviceKey)
         {
-            var req = new AuthSignUpReqPacket(deviceKey);
+            var req = new AuthSignUpRequestPacket(deviceKey);
 
-            var res = await RpcSystem.RequestAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(req);
+            var res = await RpcSystem.RequestAsync<AuthSignUpRequestPacket, AuthSignUpResponsePacket>(req);
             RpcSystem.SetSessionKey(res.Result.SessionKey);
             return res;
         }
 
-        public async Task<AuthSignInResPacket> RequestSignInAsync(string channelId)
+        public async Task<AuthSignInResponsePacket> RequestSignInAsync(string channelId)
         {
-            var req = new AuthSignInReqPacket(channelId);
-            var res = await RpcSystem.RequestAsync<AuthSignInReqPacket, AuthSignInResPacket>(req);
+            var req = new AuthSignInRequestPacket(channelId);
+            var res = await RpcSystem.RequestAsync<AuthSignInRequestPacket, AuthSignInResponsePacket>(req);
             RpcSystem.SetSessionKey(res.Result.SessionKey);
             return res;
         }
 
-        public async Task<GameEnterResPacket> RequestEnterAsync()
+        public async Task<GameEnterResponsePacket> RequestEnterAsync()
         {
-            var req = new GameEnterReqPacket();
-            var res = await RpcSystem.RequestAsync<GameEnterReqPacket, GameEnterResPacket>(req);
+            var req = new GameEnterRequestPacket();
+            var res = await RpcSystem.RequestAsync<GameEnterRequestPacket, GameEnterResponsePacket>(req);
 
             Player = res.Player;
 
@@ -76,11 +76,11 @@ namespace ClientCore
             return res;
         }
 
-        public async Task<GameChangeNameResPacket> RequestChangeNameAsync(string name)
+        public async Task<GameChangeNameResponsePacket> RequestChangeNameAsync(string name)
         {
             var befName = Player.ProfileName;
-            var req = new GameChangeNameReqPacket(name);
-            var res = await RpcSystem.RequestAsync<GameChangeNameReqPacket, GameChangeNameResPacket>(req);
+            var req = new GameChangeNameRequestPacket(name);
+            var res = await RpcSystem.RequestAsync<GameChangeNameRequestPacket, GameChangeNameResponsePacket>(req);
             Console.WriteLine($"Name  {befName} -> {res.PlayerName}");
             Player.ProfileName = res.PlayerName;
             return res;

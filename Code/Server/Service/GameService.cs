@@ -23,7 +23,7 @@ namespace Server.Service
         }
 
         #region GAME
-        public GameEnterResPacket Enter(GameEnterReqPacket req)
+        public GameEnterResponsePacket Enter(GameEnterRequestPacket req)
         {
             var mgrPlayer = OwnUser.Player.Touch();
 
@@ -31,7 +31,7 @@ namespace Server.Service
             {
                 // Prepare 이후 접속시마다 처리해줘야할 것이 있으면 여기서 처리
                 var pakPlayer = mgrPlayer.LoadPlayer(_mapper);
-                return new GameEnterResPacket
+                return new GameEnterResponsePacket
                 {
                     Player = pakPlayer,
                 };
@@ -55,14 +55,14 @@ namespace Server.Service
                 }
 
 
-                return new GameEnterResPacket
+                return new GameEnterResponsePacket
                 {
                     Player = pakPlayer,
                 };
             }
         }
 
-        public GameChangeNameResPacket ChangeNameFirst(GameChangeNameReqPacket req)
+        public GameChangeNameResponsePacket ChangeNameFirst(GameChangeNameRequestPacket req)
         {
             var reqName = req.PlayerName;
             var mgrPlayer = OwnUser.Player.Touch();
@@ -75,7 +75,7 @@ namespace Server.Service
             // 변경
             mgrPlayer.ChangeName(reqName);
 
-            return new GameChangeNameResPacket
+            return new GameChangeNameResponsePacket
             {
                 PlayerName = mgrPlayer.Model.ProfileName,
             };
@@ -83,7 +83,7 @@ namespace Server.Service
         #endregion
 
         #region KINGDOM
-        public KingdomBuyStructureResPacket KingdomStructureBuy(KingdomBuyStructureReqPacket req)
+        public KingdomBuyStructureResponsePacket KingdomStructureBuy(KingdomBuyStructureRequestPacket req)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
 
@@ -100,14 +100,14 @@ namespace Server.Service
             var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
 
             var mgrKingdomStructure = OwnUser.KingdomStructure.Create(prtKingdomItem);
-            return new KingdomBuyStructureResPacket
+            return new KingdomBuyStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
                 ChgObj = resultCostObj,
             };
         }
 
-        public KingdomBuyDecoResPacket KingdomDecoBuy(KingdomBuyDecoReqPacket req)
+        public KingdomBuyDecoResponsePacket KingdomDecoBuy(KingdomBuyDecoRequestPacket req)
         {
             var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
 
@@ -123,14 +123,14 @@ namespace Server.Service
 
             var chgCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
             mgrKingdomDeco.Inc(1, reason);
-            return new KingdomBuyDecoResPacket
+            return new KingdomBuyDecoResponsePacket
             {
                 KingdomDeco = _mapper.Map<KingdomDecoPacket>(mgrKingdomDeco.Model),
                 ChgObj = chgCostObj,
             };
         }
 
-        public KingdomConstructStructureResPacket KingdomConstructStructure(KingdomConstructStructureReqPacket req)
+        public KingdomConstructStructureResponsePacket KingdomConstructStructure(KingdomConstructStructureRequestPacket req)
         {
             var mgrKingdomStructure = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
             var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
@@ -154,7 +154,7 @@ namespace Server.Service
             // 처리: 건설 시작(상태 변경)
             mgrKingdomMap.ConstructStructure(mgrKingdomStructure, valTileStartPos);
             mgrKingdomStructure.Construct();
-            return new KingdomConstructStructureResPacket
+            return new KingdomConstructStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
                 PlacedKingdomItemList = [.. mgrKingdomMap.Snapshot.PlacedObjDict.Values],
@@ -162,7 +162,7 @@ namespace Server.Service
             };
         }
 
-        public KingdomConstructDecoResPacket KingdomConstructDeco(KingdomConstructDecoReqPacket req)
+        public KingdomConstructDecoResponsePacket KingdomConstructDeco(KingdomConstructDecoRequestPacket req)
         {
             var mgrKingdomDeco = OwnUser.KingdomDeco.Touch(req.KingdomItemNum);
 
@@ -179,24 +179,24 @@ namespace Server.Service
             mgrKingdomMap.ConstructDeco(mgrKingdomDeco, valTileStartPos);
             mgrKingdomDeco.Place();
 
-            return new KingdomConstructDecoResPacket
+            return new KingdomConstructDecoResponsePacket
             {
                 KingdomDeco = _mapper.Map<KingdomDecoPacket>(mgrKingdomDeco.Model),
                 PlacedKingdomItemList = [.. mgrKingdomMap.Snapshot.PlacedObjDict.Values],
             };
         }
 
-        public KingdomFinishConstructStructureResPacket KingdomFinishConstructStructure(KingdomFinishConstructStructureReqPacket req)
+        public KingdomFinishConstructStructureResponsePacket KingdomFinishConstructStructure(KingdomFinishConstructStructureRequestPacket req)
         {
             var mgrKingdomItem = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
             mgrKingdomItem.SetReady(EKingdomItemState.CONSTRUCTING);
-            return new KingdomFinishConstructStructureResPacket
+            return new KingdomFinishConstructStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
             };
         }
 
-        public KingdomChangeItemResPacket KingdomItemChange(KingdomChangeItemReqPacket req)
+        public KingdomChangeItemResponsePacket KingdomItemChange(KingdomChangeItemRequestPacket req)
         {
             var mgrKingdomMap = OwnUser.KingdomMap.Touch();
 
@@ -251,7 +251,7 @@ namespace Server.Service
 
             // 로그
 
-            return new KingdomChangeItemResPacket
+            return new KingdomChangeItemResponsePacket
             {
                 KingdomStructureList = _mapper.Map<List<KingdomStructurePacket>>(mgrKingdomStructureList),
                 KingdomDecoList = _mapper.Map<List<KingdomDecoPacket>>(mgrKingdomDecoList),
@@ -259,7 +259,7 @@ namespace Server.Service
             };
         }
 
-        public KingdomDecTimeStructureResPacket KingdomStructureDecTime(KingdomDecTimeStructureReqPacket req)
+        public KingdomDecTimeStructureResponsePacket KingdomStructureDecTime(KingdomDecTimeStructureRequestPacket req)
         {
             var mgrKingdomItem = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
             var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
@@ -270,18 +270,18 @@ namespace Server.Service
 
             _ = mgrPlayerDetail.DecCash(req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
             mgrKingdomItem.DecTime();
-            return new KingdomDecTimeStructureResPacket
+            return new KingdomDecTimeStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
                 Cash = mgrPlayerDetail.GetCashPacket(),
             };
         }
 
-        public KingdomFinishCraftStructureResPacket KingdomFinishCraftStructure(KingdomFinishCraftStructureReqPacket req)
+        public KingdomFinishCraftStructureResponsePacket KingdomFinishCraftStructure(KingdomFinishCraftStructureRequestPacket req)
         {
             var mgrKingdomItem = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
             mgrKingdomItem.SetReady(EKingdomItemState.CRAFTING);
-            return new KingdomFinishCraftStructureResPacket
+            return new KingdomFinishCraftStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
                 ChgObjList = [], // TODO: Creft 결과
@@ -290,17 +290,17 @@ namespace Server.Service
         #endregion
 
         #region GACHA
-        public ScheduleLoadResPacket LoadSchedule(ScheduleLoadReqPacket req)
+        public ScheduleLoadResponsePacket LoadSchedule(ScheduleLoadRequestPacket req)
         {
             var centerRepo = _dbRepo.Center;
             var mgrScheduleList = centerRepo.Schedule.GetList();
-            return new ScheduleLoadResPacket
+            return new ScheduleLoadResponsePacket
             {
                 ScheduleList = _mapper.Map<List<SchedulePacket>>(mgrScheduleList),
             };
         }
 
-        public GachaNormalResPacket GachaNormal(GachaNormalReqPacket req)
+        public GachaNormalResponsePacket GachaNormal(GachaNormalRequestPacket req)
         {
             var centerRepo = _dbRepo.Center;
             var scheduleMgr = centerRepo.Schedule.Get(req.ScheduleNum, EScheduleTimeType.TOTAL);
@@ -350,7 +350,7 @@ namespace Server.Service
             // TODO: 가챠 전용 Inc로 ㄱㄱ
             var chgObjList = mgrPlayerDetail.IncRewardList(rewardObjValList, scheduleMgr.MakeGachaReason(valCnt));
 
-            return new GachaNormalResPacket
+            return new GachaNormalResponsePacket
             {
                 CostChgObj = resultCostObj,
                 GachaResultChgObjList = chgObjList,
@@ -360,7 +360,7 @@ namespace Server.Service
         #endregion
 
         #region COOKIE
-        public CookieEnhanceStarResPacket EnhanceCookieStar(CookieEnhanceStarReqPacket req)
+        public CookieEnhanceStarResponsePacket EnhanceCookieStar(CookieEnhanceStarRequestPacket req)
         {
             var mgrCookie = OwnUser.Cookie.Touch(req.CookieNum);
             ReqHelper.ValidContext(req.BefStar == mgrCookie.Model.Star, "NOT_EQUAL_COOKIE_STAR", () => new { CookieNum = mgrCookie.Model.Num, req.BefStar, CookieStar = mgrCookie.Model.Star });
@@ -372,13 +372,13 @@ namespace Server.Service
 
             mgrCookie.EnhanceStar(req.AftStar, valUsedSoulStone);
 
-            return new CookieEnhanceStarResPacket
+            return new CookieEnhanceStarResponsePacket
             {
                 Cookie = _mapper.Map<CookiePacket>(mgrCookie.Model),
             };
         }
 
-        public CookieEnhanceLvResPacket EnhanceCookieLv(CookieEnhanceLvReqPacket req)
+        public CookieEnhanceLvResponsePacket EnhanceCookieLv(CookieEnhanceLvRequestPacket req)
         {
             var mgrCookie = OwnUser.Cookie.Touch(req.CookieNum);
             var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
@@ -393,7 +393,7 @@ namespace Server.Service
             var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
             mgrCookie.EnhanceLv(req.AftLv);
 
-            return new CookieEnhanceLvResPacket
+            return new CookieEnhanceLvResponsePacket
             {
                 Cookie = _mapper.Map<CookiePacket>(mgrCookie.Model),
                 ChgObj = resultCostObj,
@@ -402,7 +402,7 @@ namespace Server.Service
         #endregion
 
         #region WORLD
-        public WorldFinishStageFirstResPacket WorldFinishStageFirst(WorldFinishStageFirstReqPacket req)
+        public WorldFinishStageFirstResponsePacket WorldFinishStageFirst(WorldFinishStageFirstRequestPacket req)
         {
             var mgrWorld = OwnUser.World.Touch(req.WorldNum);
             var mgrWorldStage = OwnUser.WorldStage.Touch(req.StageNum);
@@ -434,7 +434,7 @@ namespace Server.Service
             mgrWorld.FinishStage(mgrWorldStage.Prt);
             mgrWorldStage.SetStar(valStar);
 
-            return new WorldFinishStageFirstResPacket
+            return new WorldFinishStageFirstResponsePacket
             {
                 World = _mapper.Map<WorldPacket>(mgrWorld.Model),
                 WorldStage = _mapper.Map<WorldStagePacket>(mgrWorldStage.Model),
@@ -442,7 +442,7 @@ namespace Server.Service
             };
         }
 
-        public WorldFinishStageRepeatResPacket WorldFinishStageRepeat(WorldFinishStageRepeatReqPacket req)
+        public WorldFinishStageRepeatResponsePacket WorldFinishStageRepeat(WorldFinishStageRepeatRequestPacket req)
         {
             var mgrWorld = OwnUser.World.Touch(req.WorldNum);
             var mgrWorldStage = OwnUser.WorldStage.Touch(req.StageNum);
@@ -473,7 +473,7 @@ namespace Server.Service
             mgrWorld.FinishStage(mgrWorldStage.Prt);
             mgrWorldStage.SetStar(valStar);
 
-            return new WorldFinishStageRepeatResPacket
+            return new WorldFinishStageRepeatResponsePacket
             {
                 World = _mapper.Map<WorldPacket>(mgrWorld.Model),
                 WorldStage = _mapper.Map<WorldStagePacket>(mgrWorldStage.Model),
@@ -481,7 +481,7 @@ namespace Server.Service
             };
         }
 
-        public WorldRewardStarResPacket WorldRewardStar(WorldRewardStarReqPacket req)
+        public WorldRewardStarResponsePacket WorldRewardStar(WorldRewardStarRequestPacket req)
         {
             var mgrWorld = OwnUser.World.Touch(req.WorldNum);
 
@@ -505,7 +505,7 @@ namespace Server.Service
             mgrWorld.RewardStar(req.AftRewardStar, valTotalStar);
             var chgObj = mgrPlayerDetail.IncReward(valReward, reason);
 
-            return new WorldRewardStarResPacket
+            return new WorldRewardStarResponsePacket
             {
                 World = _mapper.Map<WorldPacket>(mgrWorld.Model),
                 ChgObj = chgObj

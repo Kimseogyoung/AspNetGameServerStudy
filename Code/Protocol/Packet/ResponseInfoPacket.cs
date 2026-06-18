@@ -3,7 +3,7 @@ using ProtoBuf;
 namespace Protocol
 {
     [ProtoContract]
-    public partial class ResInfoPacket
+    public partial class ResponseInfoPacket
     {
 
         [ProtoMember(1)]

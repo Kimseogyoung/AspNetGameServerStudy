@@ -17,8 +17,8 @@ namespace ServerTest.Tests
             // [성공] 새 디바이스로 회원가입
             {
                 var deviceKey = Guid.NewGuid().ToString();
-                var res = await Api.PostAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(
-                    new AuthSignUpReqPacket(deviceKey));
+                var res = await Api.PostAsync<AuthSignUpRequestPacket, AuthSignUpResponsePacket>(
+                    new AuthSignUpRequestPacket(deviceKey));
 
                 Assert.Equal((int)EErrorCode.OK, res.Info.ResultCode);
                 Assert.NotNull(res.Result);
@@ -30,10 +30,10 @@ namespace ServerTest.Tests
             {
                 var deviceKey = Guid.NewGuid().ToString();
 
-                var res1 = await Api.PostAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(
-                    new AuthSignUpReqPacket(deviceKey));
-                var res2 = await Api.PostAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(
-                    new AuthSignUpReqPacket(deviceKey));
+                var res1 = await Api.PostAsync<AuthSignUpRequestPacket, AuthSignUpResponsePacket>(
+                    new AuthSignUpRequestPacket(deviceKey));
+                var res2 = await Api.PostAsync<AuthSignUpRequestPacket, AuthSignUpResponsePacket>(
+                    new AuthSignUpRequestPacket(deviceKey));
 
                 Assert.Equal((int)EErrorCode.OK, res1.Info.ResultCode);
                 Assert.Equal((int)EErrorCode.OK, res2.Info.ResultCode);
@@ -43,8 +43,8 @@ namespace ServerTest.Tests
 
             // [성공] 응답에 환경 정보 포함
             {
-                var res = await Api.PostAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(
-                    new AuthSignUpReqPacket(Guid.NewGuid().ToString()));
+                var res = await Api.PostAsync<AuthSignUpRequestPacket, AuthSignUpResponsePacket>(
+                    new AuthSignUpRequestPacket(Guid.NewGuid().ToString()));
 
                 Assert.Equal((int)EErrorCode.OK, res.Info.ResultCode);
                 Assert.False(string.IsNullOrEmpty(res.Result.AccountEnv));
@@ -56,15 +56,15 @@ namespace ServerTest.Tests
         {
             // 미리 계정 생성
             var deviceKey = Guid.NewGuid().ToString();
-            var signUpRes = await Api.PostAsync<AuthSignUpReqPacket, AuthSignUpResPacket>(
-                new AuthSignUpReqPacket(deviceKey));
+            var signUpRes = await Api.PostAsync<AuthSignUpRequestPacket, AuthSignUpResponsePacket>(
+                new AuthSignUpRequestPacket(deviceKey));
             Assert.Equal((int)EErrorCode.OK, signUpRes.Info.ResultCode);
             var channelKey = signUpRes.Result.ChannelKey;
 
             // [성공] 유효한 채널키로 로그인
             {
-                var res = await Api.PostAsync<AuthSignInReqPacket, AuthSignInResPacket>(
-                    new AuthSignInReqPacket(channelKey));
+                var res = await Api.PostAsync<AuthSignInRequestPacket, AuthSignInResponsePacket>(
+                    new AuthSignInRequestPacket(channelKey));
 
                 Assert.Equal((int)EErrorCode.OK, res.Info.ResultCode);
                 Assert.NotNull(res.Result);
@@ -74,16 +74,16 @@ namespace ServerTest.Tests
 
             // [실패] 존재하지 않는 채널키
             {
-                var res = await Api.PostAsync<AuthSignInReqPacket, AuthSignInResPacket>(
-                    new AuthSignInReqPacket("INVALID_CHANNEL_KEY_XXXX"));
+                var res = await Api.PostAsync<AuthSignInRequestPacket, AuthSignInResponsePacket>(
+                    new AuthSignInRequestPacket("INVALID_CHANNEL_KEY_XXXX"));
 
                 Assert.NotEqual((int)EErrorCode.OK, res.Info.ResultCode);
             }
 
             // [실패] 빈 채널키
             {
-                var res = await Api.PostAsync<AuthSignInReqPacket, AuthSignInResPacket>(
-                    new AuthSignInReqPacket(""));
+                var res = await Api.PostAsync<AuthSignInRequestPacket, AuthSignInResponsePacket>(
+                    new AuthSignInRequestPacket(""));
 
                 Assert.NotEqual((int)EErrorCode.OK, res.Info.ResultCode);
             }

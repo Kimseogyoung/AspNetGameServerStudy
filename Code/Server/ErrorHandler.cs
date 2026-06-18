@@ -69,7 +69,7 @@ namespace WebStudyServer
 
             var res = new ErrorResponsePacket
             {
-                Info = new ResInfoPacket
+                Info = new ResponseInfoPacket
                 {
                     ResultCode = errorCode,
                     ResultMsg = errorMsg,

@@ -8,7 +8,7 @@ namespace ClientCore
 {
     public partial class ContextSystem
     {
-        public async Task<WorldFinishStageFirstResPacket> RequestWorldFinishFirstStage(int worldNum, int order, int star)
+        public async Task<WorldFinishStageFirstResponsePacket> RequestWorldFinishFirstStage(int worldNum, int order, int star)
         {
             var prtStage = APP.Prt.GetWorldStagePrtListByMk(worldNum).Where(x => x.Order == order).First();
             var prtRewardList = new List<ObjValue>();
@@ -17,8 +17,8 @@ namespace ClientCore
                 prtRewardList.AddOrInc(new ObjValue(prtStage.FirstRewardTypeList[i], prtStage.FirstRewardNumList[i], prtStage.FirstRewardAmountList[i]));
             }
 
-            var req = new WorldFinishStageFirstReqPacket(prtStage.WorldNum, prtStage.Num, star, prtRewardList);
-            var res = await RpcSystem.RequestAsync<WorldFinishStageFirstReqPacket, WorldFinishStageFirstResPacket>(req);
+            var req = new WorldFinishStageFirstRequestPacket(prtStage.WorldNum, prtStage.Num, star, prtRewardList);
+            var res = await RpcSystem.RequestAsync<WorldFinishStageFirstRequestPacket, WorldFinishStageFirstResponsePacket>(req);
 
             SyncWorld(res.World);
             SyncWorldStage(res.WorldStage);
@@ -26,7 +26,7 @@ namespace ClientCore
             return res;
         }
 
-        public async Task<WorldFinishStageRepeatResPacket> RequestWorldFinishRepeatStage(int worldNum, int order, int star)
+        public async Task<WorldFinishStageRepeatResponsePacket> RequestWorldFinishRepeatStage(int worldNum, int order, int star)
         {
             var prtStage = APP.Prt.GetWorldStagePrtListByMk(worldNum).Where(x => x.Order == order).First();
             var pakStage = GetWorldStageForce(prtStage.Num);
@@ -36,8 +36,8 @@ namespace ClientCore
                 prtRewardList.AddOrInc(new ObjValue(prtStage.FirstRewardTypeList[i], prtStage.FirstRewardNumList[i], prtStage.FirstRewardAmountList[i]));
             }
 
-            var req = new WorldFinishStageRepeatReqPacket(prtStage.WorldNum, prtStage.Num, star, prtRewardList);
-            var res = await RpcSystem.RequestAsync<WorldFinishStageRepeatReqPacket, WorldFinishStageRepeatResPacket>(req);
+            var req = new WorldFinishStageRepeatRequestPacket(prtStage.WorldNum, prtStage.Num, star, prtRewardList);
+            var res = await RpcSystem.RequestAsync<WorldFinishStageRepeatRequestPacket, WorldFinishStageRepeatResponsePacket>(req);
 
             SyncWorld(res.World);
             SyncWorldStage(res.WorldStage);
@@ -45,7 +45,7 @@ namespace ClientCore
             return res;
         }
 
-        public async Task<WorldRewardStarResPacket> RequestWorldRewardStar(int worldNum, int star)
+        public async Task<WorldRewardStarResponsePacket> RequestWorldRewardStar(int worldNum, int star)
         {
             var pakWorld = GetWorldForce(worldNum);
             var prtWorld = APP.Prt.GetWorldPrt(worldNum);
@@ -56,8 +56,8 @@ namespace ClientCore
                 prtReward.Value += prtWorld.RewardStarCashList[i];
             }
 
-            var req = new WorldRewardStarReqPacket(worldNum, pakWorld.RecvStarReward, star, valTotalStar, prtReward);
-            var res = await RpcSystem.RequestAsync<WorldRewardStarReqPacket, WorldRewardStarResPacket>(req);
+            var req = new WorldRewardStarRequestPacket(worldNum, pakWorld.RecvStarReward, star, valTotalStar, prtReward);
+            var res = await RpcSystem.RequestAsync<WorldRewardStarRequestPacket, WorldRewardStarResponsePacket>(req);
 
             SyncWorld(res.World);
             SyncChgObj(res.ChgObj);
