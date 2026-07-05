@@ -1,20 +1,35 @@
-using ProtoBuf;
 using System.Collections.Generic;
 using System;
 namespace Proto
 {
-	[ProtoContract]
 	public partial class CookieStarEnhanceProto : ProtoBase
 	{
     
-    		[ProtoMember(2)]
     		public EGradeType Type { get; set; }
         
-    		[ProtoMember(3)]
     		public int Star { get; set; }
         
-    		[ProtoMember(4)]
     		public int SoulStone { get; set; }
         
+
+		protected internal override void SetField(string name, string value)
+		{
+			switch (name)
+			{
+    
+        
+    				case "Type": Type = Enum.Parse<EGradeType>(value); break;
+        
+        
+        
+    				case "Star": Star = int.Parse(value); break;
+        
+        
+        
+    				case "SoulStone": SoulStone = int.Parse(value); break;
+        
+        
+			}
+		}
 	}
 }

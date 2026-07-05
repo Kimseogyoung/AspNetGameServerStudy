@@ -3,7 +3,7 @@ using ClientCore;
 using Protocol;
 var initPath = args.Length > 0 ? args[0] : "../../Data/Csv/Proto";
 APP.Init(Path.Join(APP.GetProjPath(), initPath), "http://localhost:5157", TimeSpan.FromSeconds(5));
-APP.Prt.Bind();
+await APP.Prt.LoadAsync();
 
 var deviceKeyPath = Path.Combine(APP.GetProjPath(), "devicekey.dat");
 var deviceKey = DeviceKeyHelper.LoadOrCreateKey(deviceKeyPath);

@@ -1,47 +1,97 @@
-using ProtoBuf;
 using System.Collections.Generic;
 using System;
 namespace Proto
 {
-	[ProtoContract]
 	public partial class GachaScheduleProto : ProtoBase
 	{
     
-    		[ProtoMember(2)]
     		public int Num { get; set; }
         
-    		[ProtoMember(3)]
     		public string Tag { get; set; }
         
-    		[ProtoMember(4)]
     		public int DisplayOrder { get; set; }
         
-    		[ProtoMember(5)]
     		public int Seq { get; set; }
         
-    		[ProtoMember(6)]
     		public string NameKey { get; set; }
         
-    		[ProtoMember(7)]
     		public string Name { get; set; }
         
-    		[ProtoMember(8)]
     		public int GachaProbNum { get; set; }
         
-    		[ProtoMember(9)]
     		public List<int> PickupCookieNumList { get; set; }
         
-    		[ProtoMember(14)]
     		public List<EObjType> CostTypeList { get; set; }
         
-    		[ProtoMember(15)]
     		public List<int> CostAmountList { get; set; }
         
-    		[ProtoMember(18)]
     		public List<int> CntList { get; set; }
         
-    		[ProtoMember(20)]
     		public string BGSprite { get; set; }
         
+
+		protected internal override void SetField(string name, string value)
+		{
+			switch (name)
+			{
+    
+        
+    				case "Num": Num = int.Parse(value); break;
+        
+        
+        
+    				case "Tag": Tag = value; break;
+        
+        
+        
+    				case "DisplayOrder": DisplayOrder = int.Parse(value); break;
+        
+        
+        
+    				case "Seq": Seq = int.Parse(value); break;
+        
+        
+        
+    				case "NameKey": NameKey = value; break;
+        
+        
+        
+    				case "Name": Name = value; break;
+        
+        
+        
+    				case "GachaProbNum": GachaProbNum = int.Parse(value); break;
+        
+        
+        
+    				case "PickupCookieNumList":
+    					if (PickupCookieNumList == null) PickupCookieNumList = new List<int>();
+    					PickupCookieNumList.Add(int.Parse(value)); break;
+        
+        
+        
+    				case "CostTypeList":
+    					if (CostTypeList == null) CostTypeList = new List<EObjType>();
+    					CostTypeList.Add(Enum.Parse<EObjType>(value)); break;
+        
+        
+        
+    				case "CostAmountList":
+    					if (CostAmountList == null) CostAmountList = new List<int>();
+    					CostAmountList.Add(int.Parse(value)); break;
+        
+        
+        
+    				case "CntList":
+    					if (CntList == null) CntList = new List<int>();
+    					CntList.Add(int.Parse(value)); break;
+        
+        
+        
+    				case "BGSprite": BGSprite = value; break;
+        
+        
+			}
+		}
 	}
 }

@@ -1,23 +1,41 @@
-using ProtoBuf;
 using System.Collections.Generic;
 using System;
 namespace Proto
 {
-	[ProtoContract]
 	public partial class GachaItemProto : ProtoBase
 	{
     
-    		[ProtoMember(2)]
     		public int Num { get; set; }
         
-    		[ProtoMember(3)]
     		public EGachaItemType Type { get; set; }
         
-    		[ProtoMember(4)]
     		public string Tag { get; set; }
         
-    		[ProtoMember(5)]
     		public int Seq { get; set; }
         
+
+		protected internal override void SetField(string name, string value)
+		{
+			switch (name)
+			{
+    
+        
+    				case "Num": Num = int.Parse(value); break;
+        
+        
+        
+    				case "Type": Type = Enum.Parse<EGachaItemType>(value); break;
+        
+        
+        
+    				case "Tag": Tag = value; break;
+        
+        
+        
+    				case "Seq": Seq = int.Parse(value); break;
+        
+        
+			}
+		}
 	}
 }

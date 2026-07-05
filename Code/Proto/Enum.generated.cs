@@ -1,10 +1,7 @@
-using ProtoBuf;
-using System;
-using System.Collections.Generic;
 namespace Proto
 {
 
-	public enum EKingdomItemType 
+	public enum EKingdomItemType
 	{ 
 		NONE = 0, //
 		STRUCTURE = 1, //
@@ -12,7 +9,7 @@ namespace Proto
 		TRASH = 3, //
 	}
 
-	public enum EKingdomItemState 
+	public enum EKingdomItemState
 	{ 
 		NONE = 0, //
 		CONSTRUCTING = 1, //
@@ -21,42 +18,42 @@ namespace Proto
 		STORED = 4, //
 	}
 
-	public enum EKingdomItemSpecialType 
+	public enum EKingdomItemSpecialType
 	{ 
 		NONE = 0, //
 		FORGE = 0, //
 	}
 
-	public enum ECookieState 
+	public enum ECookieState
 	{ 
 		NONE = 0, //
 		AVAILABLE = 1, //
 	}
 
-	public enum ECookieSoulStoneType 
+	public enum ECookieSoulStoneType
 	{ 
 		COOKIE = 0, //
 		SOUL_STONE = 1, //
 	}
 
-	public enum EKingdomTileMapState 
+	public enum EKingdomTileMapState
 	{ 
 		NONE = 0, //
 	}
 
-	public enum EPlacedKingdomItemState 
+	public enum EPlacedKingdomItemState
 	{ 
 		NONE = 0, //
 		DELETED = -1, //
 	}
 
-	public enum EKingdomStructureFlagType 
+	public enum EKingdomStructureFlagType
 	{ 
 		NONE = 0, //
 		BUILD = 1, //
 	}
 
-	public enum EItemType 
+	public enum EItemType
 	{ 
 		NONE = 0, //
 		CONSUMABLE = 1, //
@@ -65,7 +62,7 @@ namespace Proto
 		CRAFTING = 4, //
 	}
 
-	public enum EGradeType 
+	public enum EGradeType
 	{ 
 		NONE = 0, //
 		COMMON = 1, //
@@ -76,7 +73,7 @@ namespace Proto
 		LEGENDARY = 6, //
 	}
 
-	public enum ECookieRollType 
+	public enum ECookieRollType
 	{ 
 		NONE = 0, //
 		DEFENDER = 1, //
@@ -89,7 +86,7 @@ namespace Proto
 		SNIPER = 8, //
 	}
 
-	public enum EFormationPositionType 
+	public enum EFormationPositionType
 	{ 
 		NONE = 0, //
 		FRONT = 1, //
@@ -97,14 +94,14 @@ namespace Proto
 		REAR = 3, //
 	}
 
-	public enum EScheduleType 
+	public enum EScheduleType
 	{ 
 		NONE = 0, //
 		GACHA = 10, //
 		ATTENDANCE = 20, //
 	}
 
-	public enum EScheduleTimeType 
+	public enum EScheduleTimeType
 	{ 
 		NONE = 0, //
 		TOTAL = 1, //
@@ -112,28 +109,28 @@ namespace Proto
 		REWARD = 3, //
 	}
 
-	public enum EGachaItemType 
+	public enum EGachaItemType
 	{ 
 		NONE = 0, //
 		ORIGINAL = 1, //
 		SPECIAL = 2, //
 	}
 
-	public enum EWorldType 
+	public enum EWorldType
 	{ 
 		NORMAL = 0, //
 		DARK = 1, //
 		MASTER = 2, //
 	}
 
-	public enum EWorldStageType 
+	public enum EWorldStageType
 	{ 
 		STAGE = 0, //
 		REWARD = 1, //
 		VILLAGE = 2, //
 	}
 
-	public enum EObjType 
+	public enum EObjType
 	{ 
 		NONE = 0, //
 		EXP = 1, //
@@ -157,45 +154,45 @@ namespace Proto
 		KINGDOM_ITEM = 100000, //
 	}
 
-	public enum ESessionState 
+	public enum ESessionState
 	{ 
 		NONE = 0, //
 		ACTIVE = 1, //
 		EXPIRED = 2, //
 	}
 
-	public enum EAccountState 
+	public enum EAccountState
 	{ 
 		NONE = 0, //
 		ACTIVE = 1, //
 	}
 
-	public enum EChannelState 
+	public enum EChannelState
 	{ 
 		NONE = 0, //
 		ACTIVE = 1, //
 	}
 
-	public enum EChannelType 
+	public enum EChannelType
 	{ 
 		NONE = 0, //
 		GUEST = 1, //
 	}
 
-	public enum EDeviceState 
+	public enum EDeviceState
 	{ 
 		NONE = 0, //
 		ACTIVE = 1, //
 	}
 
-	public enum EPlayerState 
+	public enum EPlayerState
 	{ 
 		NONE = 0, //
 		PREPARED = 1, //
 		CHANGED_NAME_FIRST = 2, //
 	}
 
-	public enum EErrorCode 
+	public enum EErrorCode
 	{ 
 		NO_HANDLING_ERROR = -1, //
 		OK = 1, //
@@ -214,40 +211,4 @@ namespace Proto
 		CONTEXT_PLAYER = 30002, //
 	}
 
-
-	public class PrtEnum
-	{
-		public static IEnumerable<Type> GetEnums()
-		{
-			var list = new List<Type>();
-		
-			list.Add(typeof(EKingdomItemType)); 
-			list.Add(typeof(EKingdomItemState)); 
-			list.Add(typeof(EKingdomItemSpecialType)); 
-			list.Add(typeof(ECookieState)); 
-			list.Add(typeof(ECookieSoulStoneType)); 
-			list.Add(typeof(EKingdomTileMapState)); 
-			list.Add(typeof(EPlacedKingdomItemState)); 
-			list.Add(typeof(EKingdomStructureFlagType)); 
-			list.Add(typeof(EItemType)); 
-			list.Add(typeof(EGradeType)); 
-			list.Add(typeof(ECookieRollType)); 
-			list.Add(typeof(EFormationPositionType)); 
-			list.Add(typeof(EScheduleType)); 
-			list.Add(typeof(EScheduleTimeType)); 
-			list.Add(typeof(EGachaItemType)); 
-			list.Add(typeof(EWorldType)); 
-			list.Add(typeof(EWorldStageType)); 
-			list.Add(typeof(EObjType)); 
-			list.Add(typeof(ESessionState)); 
-			list.Add(typeof(EAccountState)); 
-			list.Add(typeof(EChannelState)); 
-			list.Add(typeof(EChannelType)); 
-			list.Add(typeof(EDeviceState)); 
-			list.Add(typeof(EPlayerState)); 
-			list.Add(typeof(EErrorCode)); 
-			return list;
-		}
-
-	}
 }

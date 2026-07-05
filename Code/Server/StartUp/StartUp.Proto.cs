@@ -1,6 +1,3 @@
-using System.Net;
-using Microsoft.OpenApi.Models;
-using Proto;
 using Server.Helper;
 using WebStudyServer.GAME;
 
@@ -8,9 +5,9 @@ namespace WebStudyServer
 {
     public partial class Startup
     {
-        public void Proto(IServiceCollection services)
+        public async Task ProtoAsync(IServiceCollection services)
         {
-            APP.Prt.Bind();
+            await APP.Prt.LoadAsync();
 
             GachaConstant.Init([.. APP.Prt.GetSchedulePrts()], [.. APP.Prt.GetGachaSchedulePrts()],
                 [.. APP.Prt.GetGachaProbPrts()], [.. APP.Prt.GetGachaItemPrts()],

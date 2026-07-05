@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
 using Proto;
 
 namespace ClientCore
@@ -10,54 +10,57 @@ namespace ClientCore
         public void Init(string inCsvPath)
         {
             var csvPath = Path.GetFullPath(inCsvPath);
-            _prt.Init(csvPath);
+            ProtoDb.Initialize(new CsvProtoLoader(csvPath));
         }
 
-        public void Bind()
+        public Task<IReadOnlyList<ValidateResult>> LoadAsync()
         {
-            _prt.Bind<KingdomItemProto>();
-            _prt.Bind<ItemProto>();
-            _prt.Bind<PointProto>();
-            _prt.Bind<TicketProto>();
-            _prt.Bind<CookieProto>();
-            _prt.Bind<CookieSoulStoneProto>();
-            _prt.Bind<CookieStarEnhanceProto>();
-            _prt.Bind<ScheduleProto>();
-            _prt.Bind<GachaScheduleProto>();
-            _prt.Bind<GachaProbProto>();
-            _prt.Bind<WorldProto>();
-            _prt.Bind<WorldStageProto>();
-            _prt.Bind<LocalizationProto>();
+            var builder = ProtoDb.CreateBuilder()
+                .Add(new ParallelLoadDescriptor<KingdomItemProto>())
+                .Add(new ParallelLoadDescriptor<ItemProto>())
+                .Add(new ParallelLoadDescriptor<PointProto>())
+                .Add(new ParallelLoadDescriptor<TicketProto>())
+                .Add(new ParallelLoadDescriptor<CookieProto>())
+                .Add(new ParallelLoadDescriptor<CookieSoulStoneProto>())
+                .Add(new ParallelLoadDescriptor<CookieStarEnhanceProto>())
+                .Add(new ParallelLoadDescriptor<ScheduleProto>())
+                .Add(new ParallelLoadDescriptor<WorldProto>())
+                .Add(new ParallelLoadDescriptor<WorldStageProto>())
+                .Add(new ParallelLoadDescriptor<LocalizationProto>())
+                .Add(new ParallelLoadDescriptor<GachaItemProto>())
+                .Add(new OrderedLoadDescriptor(
+                    new ParallelLoadDescriptor<GachaScheduleProto>(),
+                    new ParallelLoadDescriptor<GachaProbProto>()
+                ));
+            return builder.LoadAllAsync();
         }
 
         // PK
-        public ScheduleProto GetSchedulePrt(int scheduleNum) => _prt.Get<ScheduleProto>(scheduleNum);
-        public GachaScheduleProto GetGachaSchedulePrt(int scheduleNum) => _prt.Get<GachaScheduleProto>(scheduleNum);
-        public CookieProto GetCookiePrt(int cookieNum) => _prt.Get<CookieProto>(cookieNum);
-        public CookieStarEnhanceProto GetCookieStarEnhancePrt(EGradeType gradeType, int star) => _prt.Get<CookieStarEnhanceProto>((gradeType, star));
-        public CookieSoulStoneProto GetCookieSoulStonePrt(int soulStoneNum) => _prt.Get<CookieSoulStoneProto>(soulStoneNum);
-        public KingdomItemProto GetKingdomItemPrt(int kingdomObjNum) => _prt.Get<KingdomItemProto>(kingdomObjNum);
-        public ItemProto GetItemPrt(int itemNum) => _prt.Get<ItemProto>(itemNum);
-        public PointProto GetPointPrt(EObjType objType) => _prt.Get<PointProto>(objType);
+        public ScheduleProto GetSchedulePrt(int scheduleNum) => ProtoDb.Get<ScheduleProto>(scheduleNum);
+        public GachaScheduleProto GetGachaSchedulePrt(int scheduleNum) => ProtoDb.Get<GachaScheduleProto>(scheduleNum);
+        public CookieProto GetCookiePrt(int cookieNum) => ProtoDb.Get<CookieProto>(cookieNum);
+        public CookieStarEnhanceProto GetCookieStarEnhancePrt(EGradeType gradeType, int star) => ProtoDb.Get<CookieStarEnhanceProto>((gradeType, star));
+        public CookieSoulStoneProto GetCookieSoulStonePrt(int soulStoneNum) => ProtoDb.Get<CookieSoulStoneProto>(soulStoneNum);
+        public KingdomItemProto GetKingdomItemPrt(int kingdomObjNum) => ProtoDb.Get<KingdomItemProto>(kingdomObjNum);
+        public ItemProto GetItemPrt(int itemNum) => ProtoDb.Get<ItemProto>(itemNum);
+        public PointProto GetPointPrt(EObjType objType) => ProtoDb.Get<PointProto>(objType);
         public PointProto GetPointPrt(int pointNum) => GetPointPrt((EObjType)pointNum);
-        public TicketProto GetTicketPrt(EObjType objType) => _prt.Get<TicketProto>(objType);
+        public TicketProto GetTicketPrt(EObjType objType) => ProtoDb.Get<TicketProto>(objType);
         public TicketProto GetTicketPrt(int ticketNum) => GetTicketPrt((EObjType)ticketNum);
-        public WorldProto GetWorldPrt(int worldNum) => _prt.Get<WorldProto>(worldNum);
-        public WorldStageProto GetWorldStagePrt(int worldStageNum) => _prt.Get<WorldStageProto>(worldStageNum);
-        public LocalizationProto GetLocalizationPrt(string key) => _prt.Get<LocalizationProto>(key);
-        public bool TryGetLocalizationPrt(string key, out LocalizationProto prt) => _prt.TryGet(key, out prt);
+        public WorldProto GetWorldPrt(int worldNum) => ProtoDb.Get<WorldProto>(worldNum);
+        public WorldStageProto GetWorldStagePrt(int worldStageNum) => ProtoDb.Get<WorldStageProto>(worldStageNum);
+        public LocalizationProto GetLocalizationPrt(string key) => ProtoDb.Get<LocalizationProto>(key);
+        public bool TryGetLocalizationPrt(string key, out LocalizationProto? prt) => ProtoDb.TryGet(key, out prt);
 
         // MK
-        public List<WorldStageProto> GetWorldStagePrtListByMk(int worldNum) => _prt.GetByMk<WorldStageProto>(worldNum);
+        public List<WorldStageProto> GetWorldStagePrtListByMk(int worldNum) => ProtoDb.GetByMk<WorldStageProto>(worldNum);
 
-
-        public IEnumerable<CookieProto> GetCookiePrts() => _prt.GetAll<CookieProto>();
-        public IEnumerable<KingdomItemProto> GetKingdomItemPrts() => _prt.GetAll<KingdomItemProto>();
-        public IEnumerable<ItemProto> GetItemPrts() => _prt.GetAll<ItemProto>();
-        public IEnumerable<PointProto> GetPointPrts() => _prt.GetAll<PointProto>();
-        public IEnumerable<TicketProto> GetTicketPrts() => _prt.GetAll<TicketProto>();
-        public IEnumerable<LocalizationProto> GetLocalizationPrts() => _prt.GetAll<LocalizationProto>();
-
-        private static ProtoHelper _prt = new ProtoHelper();
+        // All
+        public IEnumerable<CookieProto> GetCookiePrts() => ProtoDb.GetAll<CookieProto>();
+        public IEnumerable<KingdomItemProto> GetKingdomItemPrts() => ProtoDb.GetAll<KingdomItemProto>();
+        public IEnumerable<ItemProto> GetItemPrts() => ProtoDb.GetAll<ItemProto>();
+        public IEnumerable<PointProto> GetPointPrts() => ProtoDb.GetAll<PointProto>();
+        public IEnumerable<TicketProto> GetTicketPrts() => ProtoDb.GetAll<TicketProto>();
+        public IEnumerable<LocalizationProto> GetLocalizationPrts() => ProtoDb.GetAll<LocalizationProto>();
     }
 }

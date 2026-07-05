@@ -1,29 +1,57 @@
-using ProtoBuf;
 using System.Collections.Generic;
 using System;
 namespace Proto
 {
-	[ProtoContract]
 	public partial class WorldProto : ProtoBase
 	{
     
-    		[ProtoMember(2)]
     		public int Num { get; set; }
         
-    		[ProtoMember(3)]
     		public EWorldType Type { get; set; }
         
-    		[ProtoMember(4)]
     		public int Order { get; set; }
         
-    		[ProtoMember(5)]
     		public string Name { get; set; }
         
-    		[ProtoMember(6)]
     		public List<int> RewardStarList { get; set; }
         
-    		[ProtoMember(7)]
     		public List<int> RewardStarCashList { get; set; }
         
+
+		protected internal override void SetField(string name, string value)
+		{
+			switch (name)
+			{
+    
+        
+    				case "Num": Num = int.Parse(value); break;
+        
+        
+        
+    				case "Type": Type = Enum.Parse<EWorldType>(value); break;
+        
+        
+        
+    				case "Order": Order = int.Parse(value); break;
+        
+        
+        
+    				case "Name": Name = value; break;
+        
+        
+        
+    				case "RewardStarList":
+    					if (RewardStarList == null) RewardStarList = new List<int>();
+    					RewardStarList.Add(int.Parse(value)); break;
+        
+        
+        
+    				case "RewardStarCashList":
+    					if (RewardStarCashList == null) RewardStarCashList = new List<int>();
+    					RewardStarCashList.Add(int.Parse(value)); break;
+        
+        
+			}
+		}
 	}
 }

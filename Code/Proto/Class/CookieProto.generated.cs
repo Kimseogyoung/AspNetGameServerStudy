@@ -1,53 +1,101 @@
-using ProtoBuf;
 using System.Collections.Generic;
 using System;
 namespace Proto
 {
-	[ProtoContract]
 	public partial class CookieProto : ProtoBase
 	{
     
-    		[ProtoMember(2)]
     		public int Num { get; set; }
         
-    		[ProtoMember(3)]
     		public string NameKey { get; set; }
         
-    		[ProtoMember(4)]
     		public string Name { get; set; }
         
-    		[ProtoMember(5)]
     		public EGradeType GradeType { get; set; }
         
-    		[ProtoMember(6)]
     		public ECookieRollType RollType { get; set; }
         
-    		[ProtoMember(7)]
     		public EFormationPositionType FormationPosType { get; set; }
         
-    		[ProtoMember(8)]
     		public int SoulStoneNum { get; set; }
         
-    		[ProtoMember(9)]
     		public int InitSoulStone { get; set; }
         
-    		[ProtoMember(10)]
     		public int Hp { get; set; }
         
-    		[ProtoMember(11)]
     		public int Atk { get; set; }
         
-    		[ProtoMember(12)]
     		public int Def { get; set; }
         
-    		[ProtoMember(13)]
     		public int Cri { get; set; }
         
-    		[ProtoMember(14)]
     		public string Sprite { get; set; }
         
-    		[ProtoMember(15)]
     		public string IconSprite { get; set; }
         
+
+		protected internal override void SetField(string name, string value)
+		{
+			switch (name)
+			{
+    
+        
+    				case "Num": Num = int.Parse(value); break;
+        
+        
+        
+    				case "NameKey": NameKey = value; break;
+        
+        
+        
+    				case "Name": Name = value; break;
+        
+        
+        
+    				case "GradeType": GradeType = Enum.Parse<EGradeType>(value); break;
+        
+        
+        
+    				case "RollType": RollType = Enum.Parse<ECookieRollType>(value); break;
+        
+        
+        
+    				case "FormationPosType": FormationPosType = Enum.Parse<EFormationPositionType>(value); break;
+        
+        
+        
+    				case "SoulStoneNum": SoulStoneNum = int.Parse(value); break;
+        
+        
+        
+    				case "InitSoulStone": InitSoulStone = int.Parse(value); break;
+        
+        
+        
+    				case "Hp": Hp = int.Parse(value); break;
+        
+        
+        
+    				case "Atk": Atk = int.Parse(value); break;
+        
+        
+        
+    				case "Def": Def = int.Parse(value); break;
+        
+        
+        
+    				case "Cri": Cri = int.Parse(value); break;
+        
+        
+        
+    				case "Sprite": Sprite = value; break;
+        
+        
+        
+    				case "IconSprite": IconSprite = value; break;
+        
+        
+			}
+		}
 	}
 }

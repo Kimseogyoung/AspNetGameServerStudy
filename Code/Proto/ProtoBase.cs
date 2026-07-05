@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ProtoBuf;
-
 namespace Proto
 {
-    [ProtoContract]
     public class ProtoBase
     {
-        [ProtoMember(1)]
-        public int Idx { get; set; }
+        public int Idx { get; internal set; }
+        protected internal virtual void OnLoaded() { }
+        protected internal virtual ValidateResult OnValidate() => ValidateResult.Ok;
+        protected internal virtual void SetField(string name, string value) { }
     }
 }

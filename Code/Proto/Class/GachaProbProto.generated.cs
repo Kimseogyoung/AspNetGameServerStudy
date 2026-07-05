@@ -1,29 +1,59 @@
-using ProtoBuf;
 using System.Collections.Generic;
 using System;
 namespace Proto
 {
-	[ProtoContract]
 	public partial class GachaProbProto : ProtoBase
 	{
     
-    		[ProtoMember(2)]
     		public int Num { get; set; }
         
-    		[ProtoMember(3)]
     		public List<int> GradeWeightList { get; set; }
         
-    		[ProtoMember(9)]
     		public List<int> PickupWeightList { get; set; }
         
-    		[ProtoMember(14)]
     		public int WeightSum { get; set; }
         
-    		[ProtoMember(15)]
     		public List<int> DetailWeightList { get; set; }
         
-    		[ProtoMember(19)]
     		public int DetailWeightSum { get; set; }
         
+
+		protected internal override void SetField(string name, string value)
+		{
+			switch (name)
+			{
+    
+        
+    				case "Num": Num = int.Parse(value); break;
+        
+        
+        
+    				case "GradeWeightList":
+    					if (GradeWeightList == null) GradeWeightList = new List<int>();
+    					GradeWeightList.Add(int.Parse(value)); break;
+        
+        
+        
+    				case "PickupWeightList":
+    					if (PickupWeightList == null) PickupWeightList = new List<int>();
+    					PickupWeightList.Add(int.Parse(value)); break;
+        
+        
+        
+    				case "WeightSum": WeightSum = int.Parse(value); break;
+        
+        
+        
+    				case "DetailWeightList":
+    					if (DetailWeightList == null) DetailWeightList = new List<int>();
+    					DetailWeightList.Add(int.Parse(value)); break;
+        
+        
+        
+    				case "DetailWeightSum": DetailWeightSum = int.Parse(value); break;
+        
+        
+			}
+		}
 	}
 }

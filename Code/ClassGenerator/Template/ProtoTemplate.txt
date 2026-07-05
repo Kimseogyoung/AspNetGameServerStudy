@@ -1,14 +1,27 @@
-using ProtoBuf;
 using System.Collections.Generic;
 using System;
 namespace Proto
 {
-	{{ClassAttribute}}
 	public partial class {{ClassName}} : ProtoBase
 	{
     {{ for field in Fields }}
-		{{field.Attribute}}
 		public {{field.Type}} {{field.Name}} { get; set; }
     {{ end }}
+
+		protected internal override void SetField(string name, string value)
+		{
+			switch (name)
+			{
+    {{ for field in Fields }}
+    {{ if field.is_list }}
+				case "{{field.Name}}":
+					if ({{field.Name}} == null) {{field.Name}} = new {{field.Type}}();
+					{{field.Name}}.Add({{field.parse_expr}}); break;
+    {{ else }}
+				case "{{field.Name}}": {{field.Name}} = {{field.parse_expr}}; break;
+    {{ end }}
+    {{ end }}
+			}
+		}
 	}
 }

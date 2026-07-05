@@ -106,7 +106,7 @@ namespace ClassGenerator
                         }
 
                         // CSV 파일 읽기
-                        ProtoGenerater.Run(csvPath, outputPath);
+                        ProtoGenerator.Run(csvPath, outputPath);
                         break;
                     }
                 case "Enum":

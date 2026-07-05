@@ -65,9 +65,8 @@ namespace ClassGenerator
 
         private static void GenerateEnum(List<EnumDefinition> enumDefList, string argOutputPath)
         {
-            var projectPath = GetProjPath();
-            string templatePath = Path.Join(projectPath, "Template");
-            string enumTemplatePath = Path.Join(templatePath, "EnumTemplate.txt");
+            string templatePath = Path.Combine(AppContext.BaseDirectory, "Template");
+            string enumTemplatePath = Path.Combine(templatePath, "EnumTemplate.txt");
 
             _template = File.ReadAllText(enumTemplatePath);
             var parsedTemplate = Template.Parse(_template);
@@ -124,15 +123,6 @@ namespace ClassGenerator
 
             File.WriteAllText(outputFilePath, result);
             Console.WriteLine($"Generate Enum {outputFilePath} done");
-        }
-
-        private static string GetProjPath()
-        {
-            var exeCfgDirNetPath = Path.GetDirectoryName(AppContext.BaseDirectory);
-            var exeCfgDirPath = Path.GetDirectoryName(exeCfgDirNetPath);
-            var binDirPath = Path.GetDirectoryName(exeCfgDirPath);
-            var projectPath = Path.GetDirectoryName(binDirPath);
-            return projectPath == null ? string.Empty : projectPath;
         }
 
         private static string _template = string.Empty;

@@ -6,7 +6,7 @@ var startup = new Startup(builder.Configuration);
 startup.Config(builder);
 startup.Logging(builder);
 
-startup.Proto(builder.Services);
+await startup.ProtoAsync(builder.Services);
 startup.Dependency(builder.Services);
 startup.Resource(builder.Services);
 startup.AddRpcMethod(builder.Services);
