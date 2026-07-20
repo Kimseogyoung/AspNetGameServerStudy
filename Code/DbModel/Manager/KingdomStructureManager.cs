@@ -1,6 +1,5 @@
 using Proto;
 using Protocol;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -18,7 +17,7 @@ namespace WebStudyServer.Manager
 
         public KingdomStructureManager(UserRepo userRepo, KingdomStructureModel model) : base(userRepo, model)
         {
-            Prt = APP.Prt.GetKingdomItemPrt(model.Num);
+            Prt = ProtoDb.Get<KingdomItemProto>(model.Num);
         }
 
         public void ValidChgAction(int cnt)

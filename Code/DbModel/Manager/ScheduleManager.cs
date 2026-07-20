@@ -1,7 +1,6 @@
 using Proto;
 using Protocol;
 using ServerCore.Helper;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -27,7 +26,7 @@ namespace WebStudyServer.Manager
             switch (_prt.Type)
             {
                 case EScheduleType.GACHA:
-                    GachaPrt = APP.Prt.GetGachaSchedulePrt(_prt.Num); // <-------이거 변하지 않는 값이므로 Schedule관련 정보채로 캐싱해두는것 좋음
+                    GachaPrt = ProtoDb.Get<GachaScheduleProto>(_prt.Num); // <-------이거 변하지 않는 값이므로 Schedule관련 정보채로 캐싱해두는것 좋음
                     break;
             }
 

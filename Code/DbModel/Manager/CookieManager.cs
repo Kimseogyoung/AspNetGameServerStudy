@@ -1,5 +1,4 @@
 using Proto;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -10,7 +9,7 @@ namespace WebStudyServer.Manager
     {
         public CookieManager(UserRepo userRepo, CookieModel model) : base(userRepo, model)
         {
-            _prt = APP.Prt.GetCookiePrt(model.Num);
+            _prt = ProtoDb.Get<CookieProto>(model.Num);
         }
 
         public int GetSoulStoneByEnhanceStar(int befStar, int aftStar)
@@ -18,7 +17,7 @@ namespace WebStudyServer.Manager
             var needSoulStone = 0;
             for (var star = befStar; star < aftStar; star++)
             {
-                var prtCookieStarEnhance = APP.Prt.GetCookieStarEnhancePrt(_prt.GradeType, star);
+                var prtCookieStarEnhance = ProtoDb.Get<CookieStarEnhanceProto>((_prt.GradeType, star));
                 needSoulStone += prtCookieStarEnhance.SoulStone;
             }
 

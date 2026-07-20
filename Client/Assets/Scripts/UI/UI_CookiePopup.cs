@@ -33,7 +33,7 @@ public class UI_CookiePopup : UI_Popup
         UTIL.DestoryChildren(_cookieSelectGroupGO);
 
         var cookieSelectSlotPrefab = UTIL.LoadRes<GameObject>(AppPath.GetPrefabPath(UI.CookieSelectSlot.ToString()));
-        foreach (var cookiePrt in APP.Prt.GetCookiePrts())
+        foreach (var cookiePrt in ProtoDb.GetAll<CookieProto>())
         {
             var cookieSelectSlot = UTIL.Instantiate(cookieSelectSlotPrefab, _cookieSelectGroupGO);
             cookieSelectSlot.transform.localScale = Vector3.one;
@@ -80,7 +80,7 @@ public class UI_CookiePopup : UI_Popup
         _cookieMainExitButton = Bind<UI_Button>(UI.CookieMainExitButton.ToString());
         _cookieMainExitButton.SetEvent(() => { DownMainCookiePanel(); });
 
-        _cookieStarGroup.SetMaxStarCnt(5); // TODO: Prt ±â¹ÝÀ¸·Î Ã£±â
+        _cookieStarGroup.SetMaxStarCnt(5); // TODO: Prt ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½
     }
 
     protected override void OnClose()
@@ -110,10 +110,10 @@ public class UI_CookiePopup : UI_Popup
 
         _cookieMainImage.sprite = UTIL.LoadSprite(cookiePrt.Sprite);
         _cookieMainNameTxt.text = L10n.GetText(cookiePrt.NameKey);
-        _cookieMainLvTxt.text = $"Lv {cookieCtx.Lv} / 100";// TODO: MaxLv, Lv ·¹º§¾÷ µ¥ÀÌÅÍ ¼¼ÆÃ
+        _cookieMainLvTxt.text = $"Lv {cookieCtx.Lv} / 100";// TODO: MaxLv, Lv ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         _cookieStarGroup.SetStarCnt(cookieCtx.Star);
         _cookieMainSoulStoneImage.sprite = IconHelper.GetFullImage(new Protocol.ObjKey { Type = EObjType.SOUL_STONE, Num = cookiePrt.SoulStoneNum });
-        _cookieMainSoulStoneTxt.text = $"{cookieCtx.SoulStone} / {APP.Prt.GetCookieStarEnhancePrt(cookiePrt.GradeType, cookieCtx.Star).SoulStone}";
+        _cookieMainSoulStoneTxt.text = $"{cookieCtx.SoulStone} / {ProtoDb.Get<CookieStarEnhanceProto>((cookiePrt.GradeType, cookieCtx.Star)).SoulStone}";
         _cookieMainRollTxt.text = L10nKey.GetCookieRollText(cookiePrt.RollType);
         _cookieMainFormationTxt.text = L10nKey.GetCookieFormationText(cookiePrt.FormationPosType);
         _cookieMainGradeImage.sprite = IconHelper.GetGradeIconImage(cookiePrt.GradeType);

@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Security.Cryptography.Xml;
 using Proto;
 using Protocol;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -19,7 +18,7 @@ namespace WebStudyServer.Manager
 
         public KingdomDecoManager(UserRepo userRepo, KingdomDecoModel model) : base(userRepo, model)
         {
-            Prt = APP.Prt.GetKingdomItemPrt(model.Num);
+            Prt = ProtoDb.Get<KingdomItemProto>(model.Num);
         }
 
         public void Inc(int cnt, string reason)

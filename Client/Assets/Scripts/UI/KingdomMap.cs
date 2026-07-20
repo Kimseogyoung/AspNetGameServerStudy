@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Collections.Generic;
+using Proto;
 using UnityEngine;
 
 public class KingdomMap : ScriptBase
@@ -42,8 +43,8 @@ public class KingdomMap : ScriptBase
 
         if(_tileXSize > sizeX || _tileYSize > sizeY)
         {
-            LOG.E("TileÀÌ ´õ ÀÛ¾ÆÁö´Â °æ¿ì°¡ ÀÖÀ¸¸é ¾ÈµÊ");
-            // ÃÊ±âÈ­
+            LOG.E("Tileï¿½ï¿½ ï¿½ï¿½ ï¿½Û¾ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ì°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Èµï¿½");
+            // ï¿½Ê±ï¿½È­
             _tileXSize = 0;
             _tileYSize = 0;
         }
@@ -61,14 +62,14 @@ public class KingdomMap : ScriptBase
             }
         }
 
-        // TODO: °³¼± ÇÊ¿ä. ÀÏ´Ü ¸Å¹ø »èÁ¦ -> Àç»ý¼ºÇÏµµ·ÏÇÔ.
+        // TODO: ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½. ï¿½Ï´ï¿½ ï¿½Å¹ï¿½ ï¿½ï¿½ï¿½ï¿½ -> ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½.
         foreach (var go in _kingdomItemGODict.Values)
             UTIL.Destroy(go.GameObject);
         _kingdomItemGODict.Clear();
 
         foreach (var placedKingdomItem in APP.Ctx.Player.KingdomMap.PlacedKingdomItemList)
         {
-            var prt = APP.Prt.GetKingdomItemPrt(placedKingdomItem.Num);
+            var prt = ProtoDb.Get<KingdomItemProto>(placedKingdomItem.Num);
             var pos = GetTileCenterPos(placedKingdomItem.StartTileX, placedKingdomItem.StartTileY, placedKingdomItem.SizeX, placedKingdomItem.SizeY);
             var gameObj = UTIL.Instantiate(AppPath.GetPrefabPath("KingdomItem"), Vector3.zero, _kingdomItemRootGO, $"KingdomItem({placedKingdomItem.Id})");
             var spriteRenderer = UTIL.FindChild<SpriteRenderer>(gameObj);

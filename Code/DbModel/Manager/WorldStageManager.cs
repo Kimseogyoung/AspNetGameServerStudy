@@ -1,5 +1,4 @@
 using Proto;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -13,7 +12,7 @@ namespace WebStudyServer.Manager
 
         public WorldStageManager(UserRepo userRepo, WorldStageModel model) : base(userRepo, model)
         {
-            Prt = APP.Prt.GetWorldStagePrt(model.Num);
+            Prt = ProtoDb.Get<WorldStageProto>(model.Num);
         }
 
         public void SetStar(int star)

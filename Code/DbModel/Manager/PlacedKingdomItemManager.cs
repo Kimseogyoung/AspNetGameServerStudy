@@ -1,5 +1,4 @@
 using Proto;
-using WebStudyServer.GAME;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
 
@@ -15,7 +14,7 @@ namespace WebStudyServer.Manager
 
         public PlacedKingdomItemManager(UserRepo userRepo, PlacedKingdomItemModel model) : base(userRepo, model)
         {
-            Prt = APP.Prt.GetKingdomItemPrt(model.Num);
+            Prt = ProtoDb.Get<KingdomItemProto>(model.Num);
         }
     }
 }

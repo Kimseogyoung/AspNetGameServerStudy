@@ -5,7 +5,6 @@ using Proto.Helper;
 using Protocol;
 using Protocol.Packet.Custom;
 using ServerCore.Serializer;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -168,14 +167,14 @@ namespace WebStudyServer.Manager
             var placeTilePosList = new List<TilePos>(); // . Chg, Place 합산 Tile리스트
             foreach (var reqChgItem in reqChgItemList)
             {
-                var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqChgItem.Num);
+                var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(reqChgItem.Num);
                 var tilePosRanges = KingdomHelper.GetTilePosRanges(reqChgItem.TilePos.X, reqChgItem.TilePos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
                 placeTilePosList.AddRange(tilePosRanges);
             }
 
             foreach (var reqPlaceItem in reqPlaceItemList)
             {
-                var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqPlaceItem.Num);
+                var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(reqPlaceItem.Num);
                 var tilePosRanges = KingdomHelper.GetTilePosRanges(reqPlaceItem.TilePos.X, reqPlaceItem.TilePos.Y, prtKingdomItem.SizeX, prtKingdomItem.SizeY);
                 placeTilePosList.AddRange(tilePosRanges);
             }
@@ -198,7 +197,7 @@ namespace WebStudyServer.Manager
             {
                 ReqHelper.ValidContext(reqPlaceItem.PlacedItemId == 0, "MUST_BE_ZERO_PLACE_KINGDOM_ITEM", () => new { ReqPlaceItemId = reqPlaceItem.PlacedItemId });
 
-                var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqPlaceItem.Num);
+                var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(reqPlaceItem.Num);
                 var newPlacedObjId = ++copySnapshot.ObjIdCounter;
                 var newPlacedObj = new PlacedKingdomItemPacket
                 {
@@ -236,7 +235,7 @@ namespace WebStudyServer.Manager
             {
                 ReqHelper.ValidContext(reqChgItem.PlacedItemId != 0, "ZERO_CHG_KINGDOM_ITEM", () => new { ReqChgItemId = reqChgItem.PlacedItemId });
 
-                var prtKingdomItem = APP.Prt.GetKingdomItemPrt(reqChgItem.Num);
+                var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(reqChgItem.Num);
                 var newPlacedObj = new PlacedKingdomItemPacket
                 {
                     Id = reqChgItem.PlacedItemId,

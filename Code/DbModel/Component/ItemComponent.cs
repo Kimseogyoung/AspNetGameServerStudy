@@ -1,6 +1,6 @@
+using Proto;
 using ServerCore.Repo.Database;
 using WebStudyServer.Base;
-using WebStudyServer.GAME;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -19,7 +19,7 @@ namespace WebStudyServer.Component
         {
             if (!TryGetInternal(itemNum, out var mdlItem))
             {
-                var prt = APP.Prt.GetItemPrt(itemNum);
+                var prt = ProtoDb.Get<ItemProto>(itemNum);
                 mdlItem = CreateMdl(new ItemModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,

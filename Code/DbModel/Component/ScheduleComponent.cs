@@ -2,7 +2,6 @@ using Proto;
 using ServerCore.Repo.Database;
 using WebStudyServer.Base;
 using WebStudyServer.Extension;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
@@ -21,7 +20,7 @@ namespace WebStudyServer.Component
             // 전체 조회 — 캐시 -> DB조회 일반화가 어려운 부분이라 DbSession 직접 사용
             var mdlList = DbSession.Execute(db => db.SelectListByConditions<ScheduleModel>(null).ToList());
 
-            var prts = APP.Prt.GetSchedulePrts();
+            var prts = ProtoDb.GetAll<ScheduleProto>();
             var mgrList = new List<ScheduleManager>();
             foreach (var prt in prts)
             {
@@ -53,7 +52,7 @@ namespace WebStudyServer.Component
 
         public bool TryGet(int num, out ScheduleManager outSchedule)
         {
-            var prt = APP.Prt.GetSchedulePrt(num);
+            var prt = ProtoDb.Get<ScheduleProto>(num);
             var mdlSchedule = GetMdl(db => db.SelectByPk<ScheduleModel>(new { Num = num }));
             outSchedule = new ScheduleManager(_centerRepo, prt, mdlSchedule);
             return mdlSchedule != null;

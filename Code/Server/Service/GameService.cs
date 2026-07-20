@@ -6,7 +6,6 @@ using Server.Helper;
 using Server.Repo;
 using ServerCore;
 using WebStudyServer;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -85,7 +84,7 @@ namespace Server.Service
         #region KINGDOM
         public KingdomBuyStructureResponsePacket KingdomStructureBuy(KingdomBuyStructureRequestPacket req)
         {
-            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
+            var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
             var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
@@ -109,7 +108,7 @@ namespace Server.Service
 
         public KingdomBuyDecoResponsePacket KingdomDecoBuy(KingdomBuyDecoRequestPacket req)
         {
-            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(req.KingdomItemNum);
+            var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
             var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
@@ -325,7 +324,7 @@ namespace Server.Service
                 switch (resultObjValue.Key.Type)
                 {
                     case EObjType.COOKIE:
-                        var prtCookie = APP.Prt.GetCookiePrt(resultObjValue.Key.Num);
+                        var prtCookie = ProtoDb.Get<CookieProto>(resultObjValue.Key.Num);
                         gachaResult = new GachaResultPacket
                         {
                             ResultObjValue = resultObjValue,

@@ -1,6 +1,6 @@
+using Proto;
 using ServerCore.Repo.Database;
 using WebStudyServer.Base;
-using WebStudyServer.GAME;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -33,7 +33,7 @@ namespace WebStudyServer.Component
 
         public CookieManager TouchBySoulStone(int soulStoneNum)
         {
-            var prt = APP.Prt.GetCookieSoulStonePrt(soulStoneNum);
+            var prt = ProtoDb.Get<CookieSoulStoneProto>(soulStoneNum);
             return Touch(prt.CookieNum);
         }
 

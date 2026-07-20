@@ -15,7 +15,7 @@ public static class L10n
 
     public static string GetText(string key)
     {
-        if (!APP.Prt.TryGetLocalizationPrt(key, out var l10nPrt))
+        if (!ProtoDb.TryGet<LocalizationProto>(key, out var l10nPrt))
         {
             LOG.W($"Not Found L10n Key({key})");
             return key;

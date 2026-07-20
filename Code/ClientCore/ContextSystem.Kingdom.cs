@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Proto;
 using Proto.Helper;
 using Protocol;
 
@@ -12,7 +13,7 @@ namespace ClientCore
     {
         public async Task<KingdomBuyStructureResponsePacket> RequestKingdomBuyStructure(int kingdomItemNum)
         {
-            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
+            var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(kingdomItemNum);
             var req = new KingdomBuyStructureRequestPacket(kingdomItemNum, new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount });
             var res = await RpcSystem.RequestAsync<KingdomBuyStructureRequestPacket, KingdomBuyStructureResponsePacket>(req);
 
@@ -23,7 +24,7 @@ namespace ClientCore
 
         public async Task<KingdomFinishConstructStructureResponsePacket> RequestKingdomFinishConstructStructure(ulong kingdomStructureId, int kingdomItemNum)
         {
-            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
+            var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(kingdomItemNum);
             var req = new KingdomFinishConstructStructureRequestPacket(kingdomStructureId, kingdomItemNum);
             var res = await RpcSystem.RequestAsync<KingdomFinishConstructStructureRequestPacket, KingdomFinishConstructStructureResponsePacket>(req);
 
@@ -39,7 +40,7 @@ namespace ClientCore
                 Console.WriteLine($"NOT_FOUND_STRUCTURE_ITEM({kingdomStructureId})");
                 return new KingdomConstructStructureResponsePacket { Info = _errorRes };
             }
-            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomStructure.Num);
+            var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(kingdomStructure.Num);
 
             var reqCostList = new List<CostObjPacket>() { new CostObjPacket { Type = prtKingdomItem.ConstructObjType, Num = prtKingdomItem.ConstructObjNum, Amount = prtKingdomItem.ConstructObjAmount } };
             var req = new KingdomConstructStructureRequestPacket(kingdomStructureId, kingdomStructure.Num, reqCostList, new TilePosPacket { X = x, Y = y });
@@ -53,7 +54,7 @@ namespace ClientCore
 
         public async Task<KingdomBuyDecoResponsePacket> RequestKingdomBuyDeco(int kingdomItemNum)
         {
-            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
+            var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(kingdomItemNum);
             var req = new KingdomBuyDecoRequestPacket(kingdomItemNum, new CostObjPacket { Type = prtKingdomItem.CostObjType, Num = prtKingdomItem.CostObjNum, Amount = prtKingdomItem.CostObjAmount });
             var res = await RpcSystem.RequestAsync<KingdomBuyDecoRequestPacket, KingdomBuyDecoResponsePacket>(req);
 
@@ -64,7 +65,7 @@ namespace ClientCore
 
         public async Task<KingdomConstructDecoResponsePacket> RequestKingdomConstructDeco(int kingdomItemNum, int x, int y)
         {
-            var prtKingdomItem = APP.Prt.GetKingdomItemPrt(kingdomItemNum);
+            var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(kingdomItemNum);
             var req = new KingdomConstructDecoRequestPacket(kingdomItemNum, new TilePosPacket { X = x, Y = y });
             var res = await RpcSystem.RequestAsync<KingdomConstructDecoRequestPacket, KingdomConstructDecoResponsePacket>(req);
 
@@ -120,7 +121,7 @@ namespace ClientCore
                     continue;
                 }
 
-                var prtKingdomStructure = APP.Prt.GetKingdomItemPrt(placedItem.Num);
+                var prtKingdomStructure = ProtoDb.Get<KingdomItemProto>(placedItem.Num);
                 tileMapStr.AppendLine($"Id({placedItem.Id}:{placedItem.StructureItemId}) Num({prtKingdomStructure.Num}) Name({prtKingdomStructure.Name}) State({placedItem.State}) Pos({placedItem.StartTileX},{placedItem.StartTileY})");
             }
             Console.WriteLine(tileMapStr.ToString());

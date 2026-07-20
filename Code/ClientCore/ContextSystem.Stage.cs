@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Proto;
 using Protocol;
 
 namespace ClientCore
@@ -10,7 +11,7 @@ namespace ClientCore
     {
         public async Task<WorldFinishStageFirstResponsePacket> RequestWorldFinishFirstStage(int worldNum, int order, int star)
         {
-            var prtStage = APP.Prt.GetWorldStagePrtListByMk(worldNum).Where(x => x.Order == order).First();
+            var prtStage = ProtoDb.GetByMk<WorldStageProto>(worldNum).Where(x => x.Order == order).First();
             var prtRewardList = new List<ObjValue>();
             for (var i = 0; i <= star; i++)
             {
@@ -28,7 +29,7 @@ namespace ClientCore
 
         public async Task<WorldFinishStageRepeatResponsePacket> RequestWorldFinishRepeatStage(int worldNum, int order, int star)
         {
-            var prtStage = APP.Prt.GetWorldStagePrtListByMk(worldNum).Where(x => x.Order == order).First();
+            var prtStage = ProtoDb.GetByMk<WorldStageProto>(worldNum).Where(x => x.Order == order).First();
             var pakStage = GetWorldStageForce(prtStage.Num);
             var prtRewardList = new List<ObjValue>();
             for (var i = pakStage.Star + 1; i <= star; i++)
@@ -48,7 +49,7 @@ namespace ClientCore
         public async Task<WorldRewardStarResponsePacket> RequestWorldRewardStar(int worldNum, int star)
         {
             var pakWorld = GetWorldForce(worldNum);
-            var prtWorld = APP.Prt.GetWorldPrt(worldNum);
+            var prtWorld = ProtoDb.Get<WorldProto>(worldNum);
             var valTotalStar = Player.WorldStageList.Where(x => x.WorldNum == worldNum).Sum(x => x.Star);
             var prtReward = new ObjValue(Proto.EObjType.FREE_CASH, 0, 0);
             for (var i = pakWorld.RecvStarReward + 1; i <= star; i++)
@@ -68,7 +69,7 @@ namespace ClientCore
         {
             foreach (var pakWorld in Player.WorldList)
             {
-                var prtWorld = APP.Prt.GetWorldPrt(pakWorld.Num);
+                var prtWorld = ProtoDb.Get<WorldProto>(pakWorld.Num);
                 var valTotalStar = Player.WorldStageList.Where(x => x.WorldNum == pakWorld.Num).Sum(x => x.Star);
                 var valRecvStarReward = pakWorld.RecvStarReward;
                 var valStar = pakWorld.RecvStarReward;
@@ -80,7 +81,7 @@ namespace ClientCore
         {
             foreach (var pakStage in Player.WorldStageList)
             {
-                var prtWorld = APP.Prt.GetWorldStagePrt(pakStage.Num);
+                var prtWorld = ProtoDb.Get<WorldStageProto>(pakStage.Num);
                 Console.WriteLine($"StageNum:{prtWorld.Num}-{prtWorld.Num}({prtWorld.Name}), Star:{pakStage.Star}");
             }
         }

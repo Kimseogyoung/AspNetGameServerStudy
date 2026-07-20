@@ -91,7 +91,7 @@ public class UI_ShopPopup : UI_Popup
 
     public async Task Refresh()
     {
-        // ÀÓ½Ã 
+        // ï¿½Ó½ï¿½ 
         await APP.Ctx.RequestCheatReward(new ObjValue(EObjType.POINT_C_GACHA_NORMAL, 0, 100));
 
 
@@ -108,12 +108,12 @@ public class UI_ShopPopup : UI_Popup
             }
             
             var gachaSchedule = _gachaSchedulePacketList[i];
-            var prtGachaSchedule = APP.Prt.GetGachaSchedulePrt(gachaSchedule.Num);
+            var prtGachaSchedule = ProtoDb.Get<GachaScheduleProto>(gachaSchedule.Num);
             var idx = i;
             slot.SetGacha(prtGachaSchedule, () => SelectGacha(idx));
         }
 
-        // Ã¹¹øÂ° ½ºÄÉÁì ¼±ÅÃ »óÅÂ·Î ¸¸µê.
+        // Ã¹ï¿½ï¿½Â° ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ï¿½.
         SelectGacha(0);
     }
 
@@ -126,16 +126,16 @@ public class UI_ShopPopup : UI_Popup
         }
 
         var schedulePtk = _gachaSchedulePacketList[scheduleIdx];
-        var prtGachaSchedule = APP.Prt.GetGachaSchedulePrt(schedulePtk.Num);
+        var prtGachaSchedule = ProtoDb.Get<GachaScheduleProto>(schedulePtk.Num);
         _selectedGachaBG.sprite = UTIL.LoadSprite(prtGachaSchedule.BGSprite);
         _selectedGachaNameTxt.text = L10n.GetText(prtGachaSchedule.NameKey);
         _selectedGachaPeriodTxt.text = $"{L10n.GetPeriodText(schedulePtk.ActiveStartTime)} ~ {L10n.GetPeriodText(schedulePtk.ActiveEndTime)}";
 
-        if (prtGachaSchedule.PickupCookieNumList.Any(x=>x != 0)) // ÇÈ¾÷
+        if (prtGachaSchedule.PickupCookieNumList.Any(x=>x != 0)) // ï¿½È¾ï¿½
         {
             _selectedGachaCookieImage.gameObject.SetActive(true);
 
-            var cookiePrt = APP.Prt.GetCookiePrt(prtGachaSchedule.PickupCookieNumList[0]);
+            var cookiePrt = ProtoDb.Get<CookieProto>(prtGachaSchedule.PickupCookieNumList[0]);
             _selectedGachaCookieImage.sprite = UTIL.LoadSprite(cookiePrt.Sprite);
         }
         else
@@ -146,7 +146,7 @@ public class UI_ShopPopup : UI_Popup
         _probButton.RemoveAllEvent();
         _probButton.SetEvent(() => ShowGachaProb(prtGachaSchedule));
 
-        // Cost ¹öÆ° ¼¼ÆÃ
+        // Cost ï¿½ï¿½Æ° ï¿½ï¿½ï¿½ï¿½
         for (var costIdx = 0; costIdx < prtGachaSchedule.CostTypeList.Count; costIdx++)
         {
             var costType = prtGachaSchedule.CostTypeList[costIdx];
@@ -163,7 +163,7 @@ public class UI_ShopPopup : UI_Popup
                 }
                 var costButton = _costButtonList[buttonIdx];
                 costButton.SetCost(costType, costAmount);
-                costButton.Button.SetText($"{cnt}È¸ »Ì±â"); // TODO: L10n
+                costButton.Button.SetText($"{cnt}È¸ ï¿½Ì±ï¿½"); // TODO: L10n
                 costButton.Button.SetEvent(() => RunGacha(prtGachaSchedule, costType, costAmount, cnt).FireAndForget());
             }
         }
@@ -171,7 +171,7 @@ public class UI_ShopPopup : UI_Popup
 
     private async Task RunGacha(GachaScheduleProto prt, EObjType costType, int costAmount, int cnt)
     {
-        // NewÇ¥½ÃÇØÁÖ·Á°í È®ÀÎ. TODO: ÃßÈÄ ¼­¹ö¿¡¼­ Àü´Þ
+        // NewÇ¥ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ È®ï¿½ï¿½. TODO: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         var hasCookieNumSet = APP.Ctx.Player.CookieList.Where(x => x.State == ECookieState.AVAILABLE).Select(x=>x.Num).ToHashSet();
 
         var res = await APP.Ctx.RequestGachaNormal(prt.Num, costType, costAmount, cnt);
@@ -180,7 +180,7 @@ public class UI_ShopPopup : UI_Popup
             return;
         }
 
-        ShowGachaResult(prt, res.GachaResultList, hasCookieNumSet);// GachaResultList °¡Ã­ °á°ú
+        ShowGachaResult(prt, res.GachaResultList, hasCookieNumSet);// GachaResultList ï¿½ï¿½Ã­ ï¿½ï¿½ï¿½
     }
 
     private void ShowGachaProb(GachaScheduleProto prt)
@@ -194,7 +194,7 @@ public class UI_ShopPopup : UI_Popup
 
         if (gachaResultPktList.Count > _gachaResultSlotList.Count)
         {
-            // Ç¥½Ã °¡´ÉÇÑ ½½·Ôº¸´Ù ¸¹ÀÌ »Ì´Â °æ¿ì´Â ¿À·ù
+            // Ç¥ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ôºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ì´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             LOG.E($"Too Many GachaResult Cnt({gachaResultPktList.Count})");
             return;
         }
@@ -298,12 +298,12 @@ public class UI_ShopPopup : UI_Popup
             var image = IconHelper.GetFullImage(gachaResult.ResultObjValue.Key);
             Image.sprite = image;
 
-            var soulStonePrt = APP.Prt.GetCookieSoulStonePrt(gachaResult.SoulStoneNum);
+            var soulStonePrt = ProtoDb.Get<CookieSoulStoneProto>(gachaResult.SoulStoneNum);
             var soulStoneCnt = gachaResult.SoulStoneAmount;
-            var cookiePrt = APP.Prt.GetCookiePrt(soulStonePrt.CookieNum);
+            var cookiePrt = ProtoDb.Get<CookieProto>(soulStonePrt.CookieNum);
             var cookiePkt = ContextHelper.GetCookie(cookiePrt.Num);
 
-            var prtCookieStarEnhance = APP.Prt.GetCookieStarEnhancePrt(cookiePrt.GradeType, cookiePkt.Star);
+            var prtCookieStarEnhance = ProtoDb.Get<CookieStarEnhanceProto>((cookiePrt.GradeType, cookiePkt.Star));
 
             var grade = cookiePrt.GradeType;
             GradeImage.sprite = IconHelper.GetGradeIconImage(grade);

@@ -1,7 +1,6 @@
 using Proto;
 using Protocol;
 using Server.Extension;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -14,14 +13,14 @@ namespace WebStudyServer.Manager
 
         public WorldManager(UserRepo userRepo, WorldModel model) : base(userRepo, model)
         {
-            Prt = APP.Prt.GetWorldPrt(model.Num);
+            Prt = ProtoDb.Get<WorldProto>(model.Num);
         }
 
         public bool TryGetTopOpenStagePrt(out WorldStageProto prtNextWorldStage)
         {
             var worldNum = _model.Num;
 
-            var prtStageList = APP.Prt.GetWorldStagePrtListByMk(worldNum);
+            var prtStageList = ProtoDb.GetByMk<WorldStageProto>(worldNum);
             prtNextWorldStage = prtStageList.FirstOrDefault(x => x.Order > _model.TopFinishStageOrder);
             return prtNextWorldStage != null;
         }
@@ -30,7 +29,7 @@ namespace WebStudyServer.Manager
         {
             var worldNum = _model.Num;
 
-            var prtWorldList = APP.Prt.GetWorldPrtListByMk(Prt.Type);
+            var prtWorldList = ProtoDb.GetByMk<WorldProto>(Prt.Type);
             var prtPrevWorld = prtWorldList.LastOrDefault(x => x.Order < Prt.Order);
 
             if (prtPrevWorld == null)
@@ -64,7 +63,7 @@ namespace WebStudyServer.Manager
                 _model.TopFinishStageNum = prtStage.Num;
 
                 // 끝난경우 상태 변경
-                var prtLastStage = APP.Prt.GetWorldStagePrtListByMk(Prt.Num).Last();
+                var prtLastStage = ProtoDb.GetByMk<WorldStageProto>(Prt.Num).Last();
                 if (prtLastStage.Num == prtStage.Num)
                 {
                     _model.State = FinishState;

@@ -35,17 +35,17 @@ public static class IconHelper
             case EObjType.SOUL_STONE:
                 return GetFullImage(objKey);
             case EObjType.COOKIE:
-                var prtCookie = APP.Prt.GetCookiePrt(objKey.Num);
+                var prtCookie = ProtoDb.Get<CookieProto>(objKey.Num);
                 spritePath = prtCookie.IconSprite;
                 break;
             case EObjType.ITEM:
                 // Icon? 필요할지 추후 검토
-                var prtItem = APP.Prt.GetItemPrt(objKey.Num);
+                var prtItem = ProtoDb.Get<ItemProto>(objKey.Num);
                 spritePath = prtItem.Sprite;
                 break;
             case EObjType.KINGDOM_ITEM:
                 // Icon? 필요할지 추후 검토
-                var prtKingdomItem = APP.Prt.GetKingdomItemPrt(objKey.Num);
+                var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(objKey.Num);
                 spritePath = prtKingdomItem.Sprite;
                 break;
             default:
@@ -91,27 +91,27 @@ public static class IconHelper
             case EObjType.POINT_C_GACHA_NORMAL:
             case EObjType.POINT_C_GACHA_SPECIAL:
             case EObjType.POINT_C_GACHA_DESTINY:
-                var prtPoint = APP.Prt.GetPointPrt(objKey.Type);
+                var prtPoint = ProtoDb.Get<PointProto>(objKey.Type);
                 spritePath = prtPoint.Sprite;
                 break;
             case EObjType.TICKET_STAMINA:
-                var prtTicket = APP.Prt.GetTicketPrt(objKey.Type);
+                var prtTicket = ProtoDb.Get<TicketProto>(objKey.Type);
                 spritePath = prtTicket.Sprite;
                 break;
             case EObjType.COOKIE:
-                var prtCookie = APP.Prt.GetCookiePrt(objKey.Num);
+                var prtCookie = ProtoDb.Get<CookieProto>(objKey.Num);
                 spritePath = prtCookie.Sprite;
                 break;
             case EObjType.SOUL_STONE:
-                var prtCookieSoulStone = APP.Prt.GetCookieSoulStonePrt(objKey.Num);
+                var prtCookieSoulStone = ProtoDb.Get<CookieSoulStoneProto>(objKey.Num);
                 spritePath = prtCookieSoulStone.Sprite;
                 break;
             case EObjType.ITEM:
-                var prtItem = APP.Prt.GetItemPrt(objKey.Num);
+                var prtItem = ProtoDb.Get<ItemProto>(objKey.Num);
                 spritePath = prtItem.Sprite;
                 break;
             case EObjType.KINGDOM_ITEM:
-                var prtKingdomItem = APP.Prt.GetKingdomItemPrt(objKey.Num);
+                var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(objKey.Num);
                 spritePath = prtKingdomItem.Sprite;
                 break;
             default:

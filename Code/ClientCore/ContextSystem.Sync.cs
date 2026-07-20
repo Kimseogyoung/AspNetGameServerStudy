@@ -44,7 +44,7 @@ namespace ClientCore
                     break;
                 case EObjType.COOKIE:
                     var pakCookie = GetCookieForce(pakChgObj.Num);
-                    var prtCookie = APP.Prt.GetCookiePrt(pakChgObj.Num);
+                    var prtCookie = ProtoDb.Get<CookieProto>(pakChgObj.Num);
 
                     var soulStoneCnt = (int)pakChgObj.Amount * prtCookie.InitSoulStone;
                     if (pakCookie.State != ECookieState.AVAILABLE)
@@ -59,7 +59,7 @@ namespace ClientCore
                     }
                     break;
                 case EObjType.SOUL_STONE:
-                    var prtCookieSoulStone = APP.Prt.GetCookieSoulStonePrt(pakChgObj.Num);
+                    var prtCookieSoulStone = ProtoDb.Get<CookieSoulStoneProto>(pakChgObj.Num);
                     var pakCookie2 = GetCookieForce(prtCookieSoulStone.CookieNum);
                     pakCookie2.SoulStone += (int)pakChgObj.Amount;
                     break;
@@ -248,7 +248,7 @@ namespace ClientCore
             var pakWorld = Player.WorldList.Where(x => x.Num == num).FirstOrDefault();
             if (pakWorld == null)
             {
-                var prtWorld = APP.Prt.GetWorldPrt(num);
+                var prtWorld = ProtoDb.Get<WorldProto>(num);
                 pakWorld = new WorldPacket { Num = num };
                 Player.WorldList.Add(pakWorld);
             }
@@ -261,7 +261,7 @@ namespace ClientCore
             var pakWorldStage = Player.WorldStageList.Where(x => x.Num == num).FirstOrDefault();
             if (pakWorldStage == null)
             {
-                var prtStage = APP.Prt.GetWorldStagePrt(num);
+                var prtStage = ProtoDb.Get<WorldStageProto>(num);
                 pakWorldStage = new WorldStagePacket { Num = num, WorldNum = prtStage.WorldNum };
                 Player.WorldStageList.Add(pakWorldStage);
             }

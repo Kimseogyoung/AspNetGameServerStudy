@@ -60,13 +60,13 @@ namespace ClientCore
                         reqRewardList.Add(new ObjValue(objType, 0, objAmount));
                         break;
                     case EObjType.COOKIE:
-                        foreach (var cookiePrt in APP.Prt.GetCookiePrts())
+                        foreach (var cookiePrt in ProtoDb.GetAll<CookieProto>())
                         {
                             reqRewardList.Add(new ObjValue(objType, cookiePrt.Num, objAmount));
                         }
                         break;
                     case EObjType.ITEM:
-                        foreach (var itemPrt in APP.Prt.GetItemPrts())
+                        foreach (var itemPrt in ProtoDb.GetAll<ItemProto>())
                         {
                             reqRewardList.Add(new ObjValue(objType, itemPrt.Num, objAmount));
                         }
