@@ -64,6 +64,6 @@ namespace ServerCore.Repo.Database
             Cache.Set(listKey, newList, CacheTtl);
         }
 
-        private static TimeSpan CacheTtl => Core.Cfg.CacheDefaultTtl;
+        private static TimeSpan CacheTtl => Config<CoreConfig>.Get().CacheDefaultTtl;
     }
 }

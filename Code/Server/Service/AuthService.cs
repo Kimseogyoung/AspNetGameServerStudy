@@ -39,7 +39,7 @@ namespace WebStudyServer.Service
                                 SessionKey = originMgrSession.Model.Key,
                                 ChannelKey = originMgrChannel.Model.Key,
                                 AccountState = originMgrAccount.Model.State,
-                                AccountEnv = Core.Cfg.EnvName,
+                                AccountEnv = Config<CoreConfig>.Get().EnvName,
                                 ClientSecret = ""
                             }
                         };
@@ -68,7 +68,7 @@ namespace WebStudyServer.Service
                     SessionKey = mgrSession.Model.Key,
                     ChannelKey = mgrChannel.Model.Key,
                     AccountState = mgrAccount.Model.State,
-                    AccountEnv = Core.Cfg.EnvName,
+                    AccountEnv = Config<CoreConfig>.Get().EnvName,
                     ClientSecret = ""
                 }
             };
@@ -93,7 +93,7 @@ namespace WebStudyServer.Service
                     SessionKey = mgrSession.Model.Key,
                     ChannelKey = mgrChannel.Model.Key,
                     AccountState = mgrAccount.Model.State,
-                    AccountEnv = Core.Cfg.EnvName,
+                    AccountEnv = Config<CoreConfig>.Get().EnvName,
                     ClientSecret = ""
                 }
             };

@@ -1,4 +1,5 @@
 using Proto;
+using ServerCore;
 using ServerCore.Helper;
 using WebStudyServer.GAME;
 using WebStudyServer.Model;
@@ -14,7 +15,7 @@ namespace WebStudyServer.Manager
         public void Start()
         {
             // 세션 시작
-            var expireTime = _authRepo.RpcContext.ServerTime + APP.Cfg.SessionExpireSpan;
+            var expireTime = _authRepo.RpcContext.ServerTime + Config<GameConfig>.Get().SessionExpireSpan;
             var befSessionKey = Model.Key;
             var aftSessionKey = IdHelper.GenerateGuidKey();
             Model.Key = aftSessionKey;
@@ -71,13 +72,13 @@ namespace WebStudyServer.Manager
 
             // Half-life: 남은 시간이 절반 초과 → 갱신 불필요 (DB 부하 최적화)
             var remaining = expireTime - serverTime;
-            if (remaining > APP.Cfg.SessionExpireSpan / 2)
+            if (remaining > Config<GameConfig>.Get().SessionExpireSpan / 2)
             {
                 return false;
             }
 
             // 연장: ExpireTimestamp 갱신 → DB + 캐시 TTL 동시 갱신
-            Model.ExpireTimestamp = TimeHelper.DateTimeToTimeStamp(serverTime + APP.Cfg.SessionExpireSpan);
+            Model.ExpireTimestamp = TimeHelper.DateTimeToTimeStamp(serverTime + Config<GameConfig>.Get().SessionExpireSpan);
             _authRepo.Session.Update(Model.Key, Model);
             return true;
         }
@@ -102,14 +103,14 @@ namespace WebStudyServer.Manager
             }
 
             // Grace period 초과 여부 확인
-            if (serverTime > expireTime + APP.Cfg.SessionGracePeriodSpan)
+            if (serverTime > expireTime + Config<GameConfig>.Get().SessionGracePeriodSpan)
             {
                 return false;
             }
 
             // 세션 부활: State + ExpireTimestamp 갱신
             Model.State = ESessionState.ACTIVE;
-            Model.ExpireTimestamp = TimeHelper.DateTimeToTimeStamp(serverTime + APP.Cfg.SessionExpireSpan);
+            Model.ExpireTimestamp = TimeHelper.DateTimeToTimeStamp(serverTime + Config<GameConfig>.Get().SessionExpireSpan);
             _authRepo.Session.Update(Model.Key, Model);
             return true;
         }

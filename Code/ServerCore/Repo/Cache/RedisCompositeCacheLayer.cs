@@ -42,7 +42,7 @@ namespace ServerCore.Repo.Cache
         // ttl null → DefaultTtl, CacheTtl.Permanent → 영구. 람다 캡처 전에 resolve.
         public void Set<T>(CacheKey key, T value, TimeSpan? ttl = null)
         {
-            var resolved = ttl ?? Core.Cfg.CacheDefaultTtl;
+            var resolved = ttl ?? Config<CoreConfig>.Get().CacheDefaultTtl;
             _memory.Set(key, value);
             _pending.Add(() => _redis.Set(key, value, resolved));
         }

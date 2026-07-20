@@ -1,5 +1,6 @@
 using NLog;
 using Protocol;
+using ServerCore;
 using ServerCore.Serializer;
 using WebStudyServer.GAME;
 
@@ -85,9 +86,9 @@ namespace WebStudyServer.Helper
 
         public static string GetOutputContentType(HttpContext httpContext)
         {
-            if (!string.IsNullOrEmpty(APP.Cfg.ForceContentType)) // 강제설정값이 있음.
+            if (!string.IsNullOrEmpty(Config<GameConfig>.Get().ForceContentType)) // 강제설정값이 있음.
             {
-                return APP.Cfg.ForceContentType;
+                return Config<GameConfig>.Get().ForceContentType;
             }
 
             if (httpContext.Request.Query.TryGetValue("Out", out var outContentType) && MsgProtocol.ContentTypeList.Contains(outContentType))

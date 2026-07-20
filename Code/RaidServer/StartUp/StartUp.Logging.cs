@@ -10,7 +10,7 @@ namespace RaidServer
         {
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole();
-            builder.Logging.SetMinimumLevel(Core.Cfg.LogLevel);
+            builder.Logging.SetMinimumLevel(Config<CoreConfig>.Get().LogLevel);
         }
     }
 }

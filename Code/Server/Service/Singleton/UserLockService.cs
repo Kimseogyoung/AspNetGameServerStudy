@@ -10,7 +10,7 @@ namespace WebStudyServer
         {
             _lockService = lockService;
             _logger = logger;
-            _useDbLock = Core.Cfg.UseUserLock;
+            _useDbLock = Config<CoreConfig>.Get().UseUserLock;
         }
 
         public async Task RunAtomicAsync(ulong accountId, Func<Task> action)

@@ -19,7 +19,7 @@ namespace ServerCore
         Redis,
     }
 
-    public class CoreConfig
+    public class CoreConfig : IConfig
     {
         public string LogFolder { get; private set; } = string.Empty;
         public LogLevel LogLevel { get; private set; } = LogLevel.Debug;

@@ -2,6 +2,7 @@ using AutoMapper;
 using Proto;
 using Protocol;
 using Protocol.Packet.Custom;
+using ServerCore;
 using ServerCore.Helper;
 using WebStudyServer.GAME;
 using WebStudyServer.Helper;
@@ -21,7 +22,7 @@ namespace WebStudyServer.Manager
         public PlayerPacket PreparePlayer(IMapper mapper)
         {
             // Player 초기 세팅
-            var pakDefaultPlayer = APP.Cfg.PakDefaultPlayer;
+            var pakDefaultPlayer = Config<GameConfig>.Get().PakDefaultPlayer;
 
             // ------------------------------------------------------------ 디폴트 모델 생성           
             // PlayerDetail

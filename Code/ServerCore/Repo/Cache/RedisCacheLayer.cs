@@ -59,7 +59,7 @@ namespace ServerCore.Repo.Cache
                 : JsonSerializer.Serialize(value, JsonOpts);
 
             // null → DefaultTtl 적용. Permanent → Redis TTL 없음(null).
-            var resolved = ttl ?? Core.Cfg.CacheDefaultTtl;
+            var resolved = ttl ?? Config<CoreConfig>.Get().CacheDefaultTtl;
             var redisTtl = resolved == CacheTtl.Permanent ? (TimeSpan?)null : resolved;
             _db.StringSet(key.Value, raw, redisTtl);
         }

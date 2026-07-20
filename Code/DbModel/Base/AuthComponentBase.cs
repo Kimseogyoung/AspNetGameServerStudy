@@ -36,7 +36,7 @@ namespace WebStudyServer.Base
             var result = _repository.Db.Execute(dbFetch);
             if (result != null)
             {
-                _repository.Cache.Set(cacheKey, result, slidingTtl ?? Core.Cfg.CacheDefaultTtl);
+                _repository.Cache.Set(cacheKey, result, slidingTtl ?? Config<CoreConfig>.Get().CacheDefaultTtl);
             }
             return result;
         }

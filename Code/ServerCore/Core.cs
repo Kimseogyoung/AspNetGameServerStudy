@@ -8,7 +8,6 @@ namespace ServerCore
 {
     public static class Core
     {
-        public static CoreConfig Cfg { get; } = new CoreConfig();
         public static IdGenerator IdGenerator { get; private set; } = null!;
         public static ILogger Logger { get; private set; } = NullLogger.Instance;
 
@@ -20,15 +19,16 @@ namespace ServerCore
             }
 
             _isInit = true;
-            Cfg.Init(config, environ);
+            Config<CoreConfig>.Init(config, environ);
+            var cfg = Config<CoreConfig>.Get();
 
-            var workerId = Cfg.ServerNum == -1 ? new Random().Next(1024) : Cfg.ServerNum;
+            var workerId = cfg.ServerNum == -1 ? new Random().Next(1024) : cfg.ServerNum;
             IdGenerator = new IdGenerator(workerId);
 
             Logger = LoggerFactory.Create(builder =>
             {
                 builder.AddConsole();
-                builder.SetMinimumLevel(Cfg.LogLevel);
+                builder.SetMinimumLevel(cfg.LogLevel);
             }).CreateLogger("Core");
         }
 

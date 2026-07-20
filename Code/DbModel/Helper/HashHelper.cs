@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using NLog;
+using ServerCore;
 using WebStudyServer.GAME;
 
 namespace WebStudyServer.Helper
@@ -10,7 +11,7 @@ namespace WebStudyServer.Helper
     {
         public static bool IsMatchHash(string targetHash, object obj, string secret, int rewardSeed = 0, bool useLog = true)
         {
-            if (APP.Cfg.UseStrictValidation)
+            if (Config<GameConfig>.Get().UseStrictValidation)
             {
                 Log.Warn("STRICT_SKIP_HASH_CHECK");
                 return false;

@@ -14,7 +14,7 @@ namespace WebStudyServer
     {
         public void Logging(WebApplicationBuilder builder)
         {
-            var logLevel = Core.Cfg.LogLevel;
+            var logLevel = Config<CoreConfig>.Get().LogLevel;
 
             builder.Logging.ClearProviders(); // 기본 로깅 제공자 제거
             builder.Logging.AddNLog(); // NLog 사용 설정

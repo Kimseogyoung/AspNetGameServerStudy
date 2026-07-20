@@ -6,7 +6,6 @@ namespace WebStudyServer.GAME
 {
     public static class APP
     {
-        public static GameConfig Cfg { get; } = new GameConfig();
         public static ProtoSystem Prt { get; } = new ProtoSystem();
         public static IdGenerator IdGenerator => Core.IdGenerator;
 
@@ -20,7 +19,7 @@ namespace WebStudyServer.GAME
 
             _isInit = true;
             Core.Init(config, environ);
-            Cfg.Init(config, environ);
+            Config.InitAll(config, environ); // GameConfig 등 IConfig 구현체를 리플렉션으로 전부 로드
             Prt.Init(config, environ);
         }
 

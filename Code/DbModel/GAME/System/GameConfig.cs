@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Protocol;
+using ServerCore;
 using ServerCore.Serializer;
 
 namespace WebStudyServer
 {
     // Server(Web/RPC) 전용 설정. 인프라(DB/Cache/Redis 등) 공용 설정은 ServerCore.CoreConfig 참고.
     // appsettings의 "Game" 섹션에서 읽음.
-    public class GameConfig
+    public class GameConfig : IConfig
     {
         public bool UseSwagger { get; private set; }
         public MySqlServerVersion? DbVersion { get; private set; }

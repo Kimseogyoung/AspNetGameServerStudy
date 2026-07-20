@@ -20,7 +20,7 @@ namespace WebStudyServer
             var result = _dbRepo.Auth.Repository.Db.Execute<long>(
                 db => db.QuerySingle<long>(
                     "SELECT GET_LOCK(@id, @timeout)",
-                    new { id = $"acnt:{accountId}", timeout = Core.Cfg.UserLockTimeoutSpan.TotalSeconds }));
+                    new { id = $"acnt:{accountId}", timeout = Config<CoreConfig>.Get().UserLockTimeoutSpan.TotalSeconds }));
             return result > 0;
         }
 

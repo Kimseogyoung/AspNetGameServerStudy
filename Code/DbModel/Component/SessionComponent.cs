@@ -15,7 +15,7 @@ namespace WebStudyServer.Component
     {
         public static class Key
         {
-            internal static TimeSpan Ttl => Core.Cfg.CacheDefaultTtl;
+            internal static TimeSpan Ttl => Config<CoreConfig>.Get().CacheDefaultTtl;
 
             public static CacheKey AccountIdBySessionKey(string key)
                 => CacheKey.For<SessionModel>("AccountBySessionKey", key); // 제네릭 T떼기

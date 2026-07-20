@@ -2,7 +2,7 @@ namespace ServerCore.Repo.Cache
 {
     // TTL 헬퍼 상수.
     // Set ttl 파라미터:
-    //   null            → Core.Cfg.CacheDefaultTtl 자동 적용
+    //   null            → Config<CoreConfig>.Get().CacheDefaultTtl 자동 적용
     //   CacheTtl.Permanent → TTL 없이 영구 저장
     //   TimeSpan 값     → 지정한 절대 TTL
     public static class CacheTtl

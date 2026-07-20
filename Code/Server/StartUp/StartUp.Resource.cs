@@ -16,7 +16,7 @@ namespace WebStudyServer
             services.AddScoped<UserLockService>();;
 
             // Db
-            switch (Core.Cfg.DbType)
+            switch (Config<CoreConfig>.Get().DbType)
             {
                 case DbType.MySql:
                     services.AddScoped<ILockService, MySqlLockService>();
@@ -27,15 +27,15 @@ namespace WebStudyServer
                     services.AddSingleton<IDbSessionFactory, InMemoryDbSessionFactory>();
                     break;
                 default:
-                    throw new Exception($"No handling DbType({Core.Cfg.DbType})");
+                    throw new Exception($"No handling DbType({Config<CoreConfig>.Get().DbType})");
             }
 
             // Cache
-            switch (Core.Cfg.CacheType)
+            switch (Config<CoreConfig>.Get().CacheType)
             {
                 case CacheType.Redis:
                     services.AddSingleton<IConnectionMultiplexer>(
-                    _ => ConnectionMultiplexer.Connect(Core.Cfg.RedisConnectionString));
+                    _ => ConnectionMultiplexer.Connect(Config<CoreConfig>.Get().RedisConnectionString));
                     services.AddScoped<InMemoryCacheLayer>();
                     services.AddScoped<RedisCacheLayer>();
                     services.AddScoped<ICacheSession, RedisCompositeCacheLayer>();
@@ -44,7 +44,7 @@ namespace WebStudyServer
                     services.AddScoped<ICacheSession, InMemoryCacheLayer>();
                     break;
                 default:
-                    throw new Exception($"No handling DbType({Core.Cfg.DbType})");
+                    throw new Exception($"No handling DbType({Config<CoreConfig>.Get().DbType})");
             }
 
             services.AddMemoryCache();
@@ -79,7 +79,7 @@ namespace WebStudyServer
             // Center
             ModelRegistration.Init<ScheduleModel>("Num");
 
-            if (Core.Cfg.DbType != DbType.InMemory)
+            if (Config<CoreConfig>.Get().DbType != DbType.InMemory)
             {
                 ConnectionTest();
             }
@@ -87,19 +87,19 @@ namespace WebStudyServer
 
         private void ConnectionTest()
         {
-            foreach (var connectionStr in Core.Cfg.UserDbConnectionStrList)
+            foreach (var connectionStr in Config<CoreConfig>.Get().UserDbConnectionStrList)
             {
                 var excutor = DBSqlExecutor.StartTransaction(connectionStr, System.Data.IsolationLevel.ReadCommitted);
                 excutor.Commit();
             }
 
-            foreach (var connectionStr in Core.Cfg.AuthDbConnectionStrList)
+            foreach (var connectionStr in Config<CoreConfig>.Get().AuthDbConnectionStrList)
             {
                 var excutor = DBSqlExecutor.StartTransaction(connectionStr, System.Data.IsolationLevel.ReadCommitted);
                 excutor.Commit();
             }
 
-            foreach (var connectionStr in Core.Cfg.CenterDbConnectionStrList)
+            foreach (var connectionStr in Config<CoreConfig>.Get().CenterDbConnectionStrList)
             {
                 var excutor = DBSqlExecutor.StartTransaction(connectionStr, System.Data.IsolationLevel.ReadCommitted);
                 excutor.Commit();
