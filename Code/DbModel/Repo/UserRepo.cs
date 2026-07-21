@@ -2,7 +2,6 @@ using ServerCore;
 using ServerCore.Repo.Database;
 using WebStudyServer.Base;
 using WebStudyServer.Component;
-using WebStudyServer.GAME;
 
 namespace WebStudyServer.Repo
 {

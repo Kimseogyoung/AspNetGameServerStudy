@@ -15,7 +15,7 @@ namespace ServerCore.Extension
             _ = task.ContinueWith(t =>
             {
                 var fileName = Path.GetFileNameWithoutExtension(filePath);
-                Core.Logger.LogError(t.Exception, $"UNHANDLED_EXCEPTION {fileName}.{memberName}:{lineNumber}");
+                LoggerProvider.LogError(t.Exception, $"UNHANDLED_EXCEPTION {fileName}.{memberName}:{lineNumber}");
             }, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
         }
     }

@@ -4,7 +4,6 @@ using Protocol;
 using Protocol.Packet.Custom;
 using ServerCore;
 using ServerCore.Helper;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;

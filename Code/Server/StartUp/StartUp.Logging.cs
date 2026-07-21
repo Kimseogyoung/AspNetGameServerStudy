@@ -6,7 +6,6 @@ using NLog.Config;
 using NLog.Extensions.Logging;
 using NLog.Targets;
 using ServerCore;
-using WebStudyServer.GAME;
 
 namespace WebStudyServer
 {

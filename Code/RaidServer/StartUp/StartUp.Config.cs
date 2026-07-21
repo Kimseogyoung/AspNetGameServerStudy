@@ -17,7 +17,10 @@ namespace RaidServer
              .AddYamlFile($"appsettings.{builder.Environment.EnvironmentName}.yaml", optional: true)
              .AddEnvironmentVariables();
 
-            Core.Init(builder.Configuration, builder.Environment);
+            Config<CoreConfig>.Init(builder.Configuration, builder.Environment);
+            var cfg = Config<CoreConfig>.Get();
+            IdGeneratorProvider.Init(cfg);
+            LoggerProvider.Init(cfg);
         }
     }
 }

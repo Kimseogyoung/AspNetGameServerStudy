@@ -3,7 +3,6 @@ using Proto;
 using Protocol;
 using Server.Repo;
 using WebStudyServer;
-using WebStudyServer.GAME;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;

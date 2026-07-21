@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json;
 using NLog;
 using ServerCore;
-using WebStudyServer.GAME;
 
 namespace WebStudyServer.Helper
 {
