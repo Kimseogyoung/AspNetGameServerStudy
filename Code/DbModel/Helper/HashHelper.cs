@@ -101,6 +101,6 @@ namespace WebStudyServer.Helper
             return builder.ToString();
         }
 
-        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger Log = LogManager.GetCurrentClassLogger();
     }
 }

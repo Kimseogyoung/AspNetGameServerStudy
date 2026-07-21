@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Proto;
 using Protocol;
 using ServerCore;
-using WebStudyServer.Extension;
+using ServerCore.Extension;
 using WebStudyServer.Helper;
 
 namespace WebStudyServer

@@ -1,4 +1,6 @@
-namespace WebStudyServer.Extension
+using Microsoft.Extensions.Logging;
+
+namespace ServerCore.Extension
 {
     public static class LogExtension
     {
@@ -20,6 +22,11 @@ namespace WebStudyServer.Extension
         public static void Error(this ILogger logger, string message, params object[] args)
         {
             logger.Log(LogLevel.Error, message, args);
+        }
+
+        public static void Error(this ILogger logger, Exception exception, string message, params object[] args)
+        {
+            logger.LogError(exception, message, args);
         }
     }
 }

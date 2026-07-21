@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using WebStudyServer.Extension;
+using ServerCore.Extension;
 
 namespace WebStudyServer.Filter
 {

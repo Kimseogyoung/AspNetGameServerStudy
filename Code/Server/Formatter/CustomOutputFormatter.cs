@@ -6,7 +6,7 @@ using NLog;
 using NLog.Targets;
 using Protocol;
 using ServerCore.Serializer;
-using WebStudyServer.Extension;
+using ServerCore.Extension;
 using WebStudyServer.Helper;
 
 namespace WebStudyServer

@@ -3,7 +3,7 @@ using WebStudyServer.Manager;
 using WebStudyServer.Repo;
 using WebStudyServer.Model;
 using ServerCore.Repo.Database;
-using WebStudyServer.Extension;
+using ServerCore.Extension;
 using Proto;
 using WebStudyServer.Helper;
 using Protocol;

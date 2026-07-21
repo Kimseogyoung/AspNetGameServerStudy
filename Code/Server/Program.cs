@@ -1,3 +1,4 @@
+using ServerCore;
 using WebStudyServer;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ startup.Resource(builder.Services);
 startup.AddRpcMethod(builder.Services);
 
 var app = builder.Build();
+Logger.Init(app.Services.GetRequiredService<ILoggerFactory>());
 startup.AppConfigure(app, app.Environment);
 app.Run();
 

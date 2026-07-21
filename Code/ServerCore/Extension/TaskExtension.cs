@@ -1,6 +1,5 @@
 using System.IO;
 using System.Runtime.CompilerServices;
-using Microsoft.Extensions.Logging;
 
 namespace ServerCore.Extension
 {
@@ -15,7 +14,7 @@ namespace ServerCore.Extension
             _ = task.ContinueWith(t =>
             {
                 var fileName = Path.GetFileNameWithoutExtension(filePath);
-                LoggerProvider.LogError(t.Exception, $"UNHANDLED_EXCEPTION {fileName}.{memberName}:{lineNumber}");
+                Logger.Get().Error(t.Exception, $"UNHANDLED_EXCEPTION {fileName}.{memberName}:{lineNumber}");
             }, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
         }
     }

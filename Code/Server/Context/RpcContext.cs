@@ -6,7 +6,7 @@ using Protocol;
 using ServerCore;
 using Server.Repo;
 using WebStudyServer.Component;
-using WebStudyServer.Extension;
+using ServerCore.Extension;
 using WebStudyServer.Helper;
 using WebStudyServer.Repo;
 

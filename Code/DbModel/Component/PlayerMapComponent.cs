@@ -1,7 +1,7 @@
 using Proto;
 using ServerCore.Repo.Database;
 using WebStudyServer.Base;
-using WebStudyServer.Extension;
+using ServerCore.Extension;
 using WebStudyServer.Helper;
 using WebStudyServer.Manager;
 using WebStudyServer.Model;

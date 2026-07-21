@@ -1,5 +1,5 @@
 using ServerCore;
-using WebStudyServer.Extension;
+using ServerCore.Extension;
 
 namespace WebStudyServer
 {

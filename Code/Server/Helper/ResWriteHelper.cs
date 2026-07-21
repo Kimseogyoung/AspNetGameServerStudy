@@ -122,6 +122,6 @@ namespace WebStudyServer.Helper
         //    return clientIpAddress;
         //}
 
-        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger Log = LogManager.GetCurrentClassLogger();
     }
 }

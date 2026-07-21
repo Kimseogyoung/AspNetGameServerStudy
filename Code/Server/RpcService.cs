@@ -5,7 +5,7 @@ using Server.Repo;
 using ServerCore;
 using ServerCore.Serializer;
 using WebStudyServer;
-using WebStudyServer.Extension;
+using ServerCore.Extension;
 using WebStudyServer.Helper;
 namespace Server
 {

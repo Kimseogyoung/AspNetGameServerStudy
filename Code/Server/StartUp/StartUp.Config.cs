@@ -18,7 +18,6 @@ namespace WebStudyServer
             Config<CoreConfig>.Init(builder.Configuration, builder.Environment);
             var cfg = Config<CoreConfig>.Get();
             IdGeneratorProvider.Init(cfg);
-            LoggerProvider.Init(cfg);
             ServerCore.Config.InitAll(builder.Configuration, builder.Environment); // GameConfig 등 IConfig 구현체를 리플렉션으로 전부 로드
         }
     }
