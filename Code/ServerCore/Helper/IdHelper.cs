@@ -12,7 +12,7 @@ namespace ServerCore.Helper
 
         public static ulong GenerateSfId()
         {
-            var id = (ulong)Core.IdGenerator.CreateId();
+            var id = (ulong)IdGeneratorProvider.Get().CreateId();
             return id;
         }
 

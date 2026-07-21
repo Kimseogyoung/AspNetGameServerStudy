@@ -1,12 +1,9 @@
-using IdGen;
 using ServerCore;
 
 namespace WebStudyServer.GAME
 {
     public static class APP
     {
-        public static IdGenerator IdGenerator => Core.IdGenerator;
-
         public static void Init(IConfiguration config, IHostEnvironment environ)
         {
             if (_isInit)
