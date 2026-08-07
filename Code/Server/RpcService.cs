@@ -2,6 +2,7 @@ using Microsoft.OpenApi.Models;
 using Proto;
 using Protocol;
 using Server.Repo;
+using Server.Service;
 using ServerCore;
 using ServerCore.Serializer;
 using WebStudyServer;
@@ -24,6 +25,15 @@ namespace Server
         public async Task OnHttpBodyRequestAsync(HttpContext httpCtx, string pattern)
         {
             var rpcCtx = httpCtx.RequestServices.GetRequiredService<RpcContext>();
+
+            // Seq 재전송이면 재실행 없이 캐시된 응답을 그대로 반환한다.
+            var responseCache = httpCtx.RequestServices.GetRequiredService<ResponseCacheService>();
+            if (responseCache.TryGet(rpcCtx, out var cachedBody))
+            {
+                var cachedContentType = ResWriteHelper.GetOutputContentType(httpCtx);
+                await ResWriteHelper.WriteBytesAsync(httpCtx, cachedContentType, cachedBody);
+                return;
+            }
 
             // 로그
             var httpMethod = httpCtx.Request.Method;
@@ -50,9 +60,6 @@ namespace Server
                 return;
             }
 
-            // TODO: Response Cache
-            //
-
             // TODO: Logger 수정하고 적용 (Body가 메시지로 나오면 안되고 arg에만 들어가게)
             //var args = new Dictionary<string, object>()
             //{
@@ -64,22 +71,27 @@ namespace Server
             _logger.Info("Req Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcReqObj);
 
             // 예외는 여기서 잡지 않고 전역 UseExceptionHandler(ErrorHandler)로 위임한다.
-            var rpcResObj = await HandleMethodAsync(rpcCtx, httpCtx, rpcMethod, rpcReqObj);
+            var rpcResObj = await HandleMethodAsync(rpcCtx, httpCtx, rpcMethod, rpcReqObj, responseCache);
 
             _logger.Info("Res Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcResObj);
         }
 
-        private async Task<object> HandleMethodAsync(RpcContext rpcCtx, HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj)
+        private async Task<object> HandleMethodAsync(RpcContext rpcCtx, HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj, ResponseCacheService responseCache)
         {
             var userLockSvc = httpCtx.RequestServices.GetRequiredService<UserLockService>();
             var dbRepo = httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>();
             object rpcResObj = null;
+            var contentType = ResWriteHelper.GetOutputContentType(httpCtx);
+            byte[] resBody = null;
             try
             {
                 await userLockSvc.RunAtomicAsync(rpcCtx.AccountId, async () =>
                 {
                     rpcResObj = await rpcMethod.RunAsync(rpcCtx, httpCtx, rpcReqObj);
                 });
+
+                resBody = _contentTypeToSerializerDict[contentType].Serialize(rpcResObj);
+                responseCache.Set(rpcCtx, resBody);
 
                 dbRepo.Commit();
             }
@@ -89,7 +101,7 @@ namespace Server
                 throw; // 오류 발생 시 ErrorHandler에서 처리
             }
 
-            await ResWriteHelper.WriteResponseBodyAsync(httpCtx, rpcResObj, rpcMethod.Res);
+            await ResWriteHelper.WriteBytesAsync(httpCtx, contentType, resBody);
             return rpcResObj;
         }
 

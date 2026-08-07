@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Server.Repo;
+using Server.Service;
 using ServerCore;
 using ServerCore.Extension;
 using StackExchange.Redis;
@@ -52,6 +53,7 @@ namespace WebStudyServer
 
             services.AddScoped<DbSessionManager>();
             services.AddScoped<GlobalDbRepo>();
+            services.AddScoped<ResponseCacheService>();
 
             // Auth
             ModelRegistration.Init<AccountModel>("Id");

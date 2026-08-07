@@ -183,7 +183,7 @@ namespace ClientCore
         private string MakeQueryString(string url)
         {
             var timestamp = GetTimestamp();
-            var fullUrl = $"{url}?sessionkey={_sessionKey}&devicekey={_deviceKey}&timestamp={timestamp}";
+            var fullUrl = $"{url}?sessionkey={_sessionKey}&devicekey={_deviceKey}&timestamp={timestamp}&seq={_seq}";
             return fullUrl;
         }
 

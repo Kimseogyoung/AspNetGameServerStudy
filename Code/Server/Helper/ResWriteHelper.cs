@@ -7,6 +7,14 @@ namespace WebStudyServer.Helper
 {
     public static class ResWriteHelper
     {
+        // 이미 직렬화된 바이트를 그대로 응답에 쓴다 (Seq 응답 캐시 재전송 등, 재직렬화가 필요 없는 경우).
+        public static async Task WriteBytesAsync(HttpContext httpContext, string contentType, byte[] body, int statusCode = StatusCodes.Status200OK)
+        {
+            httpContext.Response.StatusCode = statusCode;
+            httpContext.Response.ContentType = contentType;
+            await httpContext.Response.Body.WriteAsync(body);
+        }
+
         // NOTE: 강제로 응답을 작성해주는 경우 호출
         public static async Task WriteResponseBodyAsync(HttpContext httpContext, object body, Type type, int statusCode = StatusCodes.Status200OK)
         {
