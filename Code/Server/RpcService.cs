@@ -1,6 +1,7 @@
 using Microsoft.OpenApi.Models;
 using Proto;
 using Protocol;
+using Server.Helper;
 using Server.Repo;
 using Server.Service;
 using ServerCore;
@@ -22,7 +23,7 @@ namespace Server
             }
         }
 
-        public async Task OnHttpBodyRequestAsync(HttpContext httpCtx, string pattern)
+        public async Task OnHttpBodyRequestAsync(HttpContext httpCtx, string methodName)
         {
             var rpcCtx = httpCtx.RequestServices.GetRequiredService<RpcContext>();
 
@@ -46,7 +47,6 @@ namespace Server
                 return;
             }
 
-            var methodName = GetMethodNameFromPath(httpCtx, pattern);
             if (!NameToMethodDict.TryGetValue(methodName, out var rpcMethod))
             {
                 throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NOT_FOUND_METHOD", new { MethodName = methodName });
@@ -87,7 +87,7 @@ namespace Server
             {
                 await userLockSvc.RunAtomicAsync(rpcCtx.AccountId, async () =>
                 {
-                    rpcResObj = await rpcMethod.RunAsync(rpcCtx, httpCtx, rpcReqObj);
+                    rpcResObj = await rpcMethod.RunAsync(rpcCtx, httpCtx, dbRepo, rpcReqObj);
                 });
 
                 resBody = _contentTypeToSerializerDict[contentType].Serialize(rpcResObj);
@@ -103,13 +103,6 @@ namespace Server
 
             await ResWriteHelper.WriteBytesAsync(httpCtx, contentType, resBody);
             return rpcResObj;
-        }
-
-        private string GetMethodNameFromPath(HttpContext httpCtx, string pattern)
-        {
-            var path = httpCtx.Request.Path;
-            var methodName = path.Value.Replace($"/{pattern}/", "");
-            return methodName;
         }
 
         public IReadOnlyDictionary<string, IRpcMethod> NameToMethodDict => _nameToMethodDict;
@@ -134,17 +127,15 @@ namespace Server
             foreach (var keyPair in rpcSvc.NameToMethodDict)
             {
                 var methodName = keyPair.Key;
+                var rpcMethod = keyPair.Value;
                 app.MapPost($"{pattern}/{methodName}", async (RpcService rpcSvc, HttpContext httpCtx) =>
                 {
-                    await rpcSvc.OnHttpBodyRequestAsync(httpCtx, pattern);
+                    await rpcSvc.OnHttpBodyRequestAsync(httpCtx, methodName);
                 }).WithOpenApi((op) => new OpenApiOperation
                 {
-
-                    RequestBody = keyPair.Value.CreateOpenApiRequestBody(),
-                    //Parameters = keyPair.Value.CreateOpenApiParameters(),
-                    Responses = keyPair.Value.CreateOpenApiResponse()
+                    RequestBody = OpenApiHelper.CreateRequestBody(rpcMethod.Req),
+                    Responses = OpenApiHelper.CreateResponse(rpcMethod.Res)
                 });
-                ;
             }
         }
     }

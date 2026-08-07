@@ -1,4 +1,4 @@
-using Microsoft.OpenApi.Models;
+using Server.Repo;
 using WebStudyServer;
 
 namespace Server
@@ -8,9 +8,6 @@ namespace Server
         public Type Req { get; }
         public Type Res { get; }
         string Name { get; }
-        Task<object> RunAsync(RpcContext rpcCtx, HttpContext httpCtx, object rpcReq);
-        List<OpenApiParameter> CreateOpenApiParameters();
-        OpenApiRequestBody CreateOpenApiRequestBody();
-        OpenApiResponses CreateOpenApiResponse();
+        Task<object> RunAsync(RpcContext rpcCtx, HttpContext httpCtx, GlobalDbRepo dbRepo, object rpcReq);
     }
 }

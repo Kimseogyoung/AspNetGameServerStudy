@@ -1,11 +1,7 @@
-using Microsoft.OpenApi.Models;
 using Proto;
 using Protocol;
-using Server.Helper;
 using Server.Repo;
-using ServerCore;
 using WebStudyServer;
-using WebStudyServer.Helper;
 
 namespace Server
 {
@@ -43,12 +39,12 @@ namespace Server
             Res = typeof(TRes);
         }
 
-        public async Task<object> RunAsync(RpcContext rpcCtx, HttpContext httpCtx, object rpcReq)
+        public async Task<object> RunAsync(RpcContext rpcCtx, HttpContext httpCtx, GlobalDbRepo dbRepo, object rpcReq)
         {
             _authPolicy?.Validate(rpcCtx);
             if (_authPolicy?.RequiresUserRepo == true)
             {
-                httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>().BeginOwnUserRepo();
+                dbRepo.BeginOwnUserRepo();
             }
 
             var rpcSvc = httpCtx.RequestServices.GetRequiredService<TSvc>();
@@ -72,22 +68,6 @@ namespace Server
                 return res;
             }
         }
-
-        public List<OpenApiParameter> CreateOpenApiParameters()
-        {
-            return OpenApiHelper.CreateParameters(typeof(TReq));
-        }
-
-        public OpenApiRequestBody CreateOpenApiRequestBody()
-        {
-            return OpenApiHelper.CreateRequestBody(typeof(TReq));
-        }
-
-        public OpenApiResponses CreateOpenApiResponse()
-        {
-            return OpenApiHelper.CreateResponse(typeof(TRes));
-        }
-
 
         private readonly IRpcAuthPolicy _authPolicy;
         private readonly RunAsyncDelegate _runAsync;
