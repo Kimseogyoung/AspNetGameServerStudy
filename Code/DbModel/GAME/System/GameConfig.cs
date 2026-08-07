@@ -31,6 +31,10 @@ namespace WebStudyServer
             IsShowErrorDetail = config.GetValue("Game:IsShowErrorDetail", false);
             UseStrictValidation = config.GetValue("Game:UseStrictValidation", true);
             ForceContentType = config.GetValue("Game:ForceContentType", MsgProtocol.JsonContentType);
+            if (!string.IsNullOrEmpty(ForceContentType) && !MsgProtocol.ContentTypeList.Contains(ForceContentType))
+            {
+                throw new Exception($"INVALID_FORCE_CONTENT_TYPE:{ForceContentType}");
+            }
 
             DefaultPlayerPath = config.GetValue("Game:DefaultPlayerPath", "Data/DefaultPlayer.json");
             var defaultPlayerJson = File.ReadAllText(DefaultPlayerPath);
