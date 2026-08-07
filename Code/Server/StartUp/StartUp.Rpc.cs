@@ -40,7 +40,8 @@ namespace WebStudyServer
                 new RpcGameMethod<CheatService, CheatRewardRequestPacket, CheatRewardResponsePacket>(CheatRewardRequestPacket.NAME, (cheatSvc, req) => { return cheatSvc.Reward(req); }),
 
             };
-            services.AddSingleton(sp => new RpcService(rpcMethodList, sp.GetRequiredService<ILogger<RpcService>>()));
+            services.AddSingleton(sp => new RpcMethodRegistry(rpcMethodList));
+            services.AddScoped<RpcService>();
         }
     }
 }

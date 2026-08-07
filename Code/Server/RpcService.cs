@@ -13,23 +13,21 @@ namespace Server
 {
     public class RpcService
     {
-        public RpcService(List<IRpcMethod> methodList, ILogger<RpcService> logger)
+        public RpcService(RpcMethodRegistry registry, RpcContext rpcCtx, ResponseCacheService responseCache,
+            UserLockService userLockSvc, GlobalDbRepo dbRepo, ILogger<RpcService> logger)
         {
+            _registry = registry;
+            _rpcCtx = rpcCtx;
+            _responseCache = responseCache;
+            _userLockSvc = userLockSvc;
+            _dbRepo = dbRepo;
             _logger = logger;
-
-            foreach (var method in methodList)
-            {
-                _nameToMethodDict.Add(method.Name, method);
-            }
         }
 
         public async Task OnHttpBodyRequestAsync(HttpContext httpCtx, string methodName)
         {
-            var rpcCtx = httpCtx.RequestServices.GetRequiredService<RpcContext>();
-
             // Seq 재전송이면 재실행 없이 캐시된 응답을 그대로 반환한다.
-            var responseCache = httpCtx.RequestServices.GetRequiredService<ResponseCacheService>();
-            if (responseCache.TryGet(rpcCtx, out var cachedBody))
+            if (_responseCache.TryGet(_rpcCtx, out var cachedBody))
             {
                 var cachedContentType = ResWriteHelper.GetOutputContentType(httpCtx);
                 await ResWriteHelper.WriteBytesAsync(httpCtx, cachedContentType, cachedBody);
@@ -47,7 +45,7 @@ namespace Server
                 return;
             }
 
-            if (!NameToMethodDict.TryGetValue(methodName, out var rpcMethod))
+            if (!_registry.NameToMethodDict.TryGetValue(methodName, out var rpcMethod))
             {
                 throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NOT_FOUND_METHOD", new { MethodName = methodName });
             }
@@ -71,33 +69,31 @@ namespace Server
             _logger.Info("Req Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcReqObj);
 
             // 예외는 여기서 잡지 않고 전역 UseExceptionHandler(ErrorHandler)로 위임한다.
-            var rpcResObj = await HandleMethodAsync(rpcCtx, httpCtx, rpcMethod, rpcReqObj, responseCache);
+            var rpcResObj = await HandleMethodAsync(httpCtx, rpcMethod, rpcReqObj);
 
             _logger.Info("Res Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcResObj);
         }
 
-        private async Task<object> HandleMethodAsync(RpcContext rpcCtx, HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj, ResponseCacheService responseCache)
+        private async Task<object> HandleMethodAsync(HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj)
         {
-            var userLockSvc = httpCtx.RequestServices.GetRequiredService<UserLockService>();
-            var dbRepo = httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>();
             object rpcResObj = null;
             var contentType = ResWriteHelper.GetOutputContentType(httpCtx);
             byte[] resBody = null;
             try
             {
-                await userLockSvc.RunAtomicAsync(rpcCtx.AccountId, async () =>
+                await _userLockSvc.RunAtomicAsync(_rpcCtx.AccountId, async () =>
                 {
-                    rpcResObj = await rpcMethod.RunAsync(rpcCtx, httpCtx, dbRepo, rpcReqObj);
+                    rpcResObj = await rpcMethod.RunAsync(_rpcCtx, httpCtx, _dbRepo, rpcReqObj);
                 });
 
                 resBody = _contentTypeToSerializerDict[contentType].Serialize(rpcResObj);
-                responseCache.Set(rpcCtx, resBody);
+                _responseCache.Set(_rpcCtx, resBody);
 
-                dbRepo.Commit();
+                _dbRepo.Commit();
             }
             catch (Exception)
             {
-                dbRepo.Rollback();
+                _dbRepo.Rollback();
                 throw; // 오류 발생 시 ErrorHandler에서 처리
             }
 
@@ -105,9 +101,11 @@ namespace Server
             return rpcResObj;
         }
 
-        public IReadOnlyDictionary<string, IRpcMethod> NameToMethodDict => _nameToMethodDict;
-        private readonly Dictionary<string, IRpcMethod> _nameToMethodDict = [];
-
+        private readonly RpcMethodRegistry _registry;
+        private readonly RpcContext _rpcCtx;
+        private readonly ResponseCacheService _responseCache;
+        private readonly UserLockService _userLockSvc;
+        private readonly GlobalDbRepo _dbRepo;
         private readonly ILogger<RpcService> _logger;
 
         private readonly Dictionary<string, IDataSerializer> _contentTypeToSerializerDict = new()
@@ -119,12 +117,12 @@ namespace Server
 
     public static class RpcServiceExtension
     {
-        // RpcService에 등록된 모든 메소드를 pattern에 매핑
+        // 등록된 모든 메소드를 pattern에 매핑
         public static void MapAllPostRpc(this WebApplication app, string pattern)
         {
-            var rpcSvc = app.Services.GetRequiredService<RpcService>();
+            var registry = app.Services.GetRequiredService<RpcMethodRegistry>();
 
-            foreach (var keyPair in rpcSvc.NameToMethodDict)
+            foreach (var keyPair in registry.NameToMethodDict)
             {
                 var methodName = keyPair.Key;
                 var rpcMethod = keyPair.Value;
