@@ -21,27 +21,16 @@ namespace WebStudyServer
             var errorCode = (int)EErrorCode.NO_HANDLING_ERROR;
             var errorMsg = exception.Message;
             var errorHash = HashHelper.CalculateMD5Hash(errorMsg)[..6];
-            string errorArgs;
-            switch (exception)
+            object errorArgsObj = null;
+            if (exception is IServerExpectedException expectedExc)
             {
-                case GameException gameExc:
-                    errorCode = gameExc.Code;
-                    errorArgs = gameExc.Args != null
-                        ? System.Text.Json.JsonSerializer.Serialize((object)gameExc.Args)
-                        : "";
-                    break;
-                case CancelReqException cancelExc:
-                    errorCode = (int)cancelExc.ErrCode;
-                    errorArgs = cancelExc.ApiPath;
-                    break;
-                case UserLockException userLockExc:
-                    errorCode = userLockExc.Code;
-                    errorArgs = $"AccountId={userLockExc.AccountId}";
-                    break;
-                default:
-                    errorArgs = "";
-                    break;
+                errorCode = expectedExc.ErrorCode;
+                errorArgsObj = expectedExc.ErrorArgs;
             }
+
+            var errorArgs = errorArgsObj != null
+                ? System.Text.Json.JsonSerializer.Serialize(errorArgsObj)
+                : "";
 
             _logger.Error("Error:{Code}:{Hash}:{Msg} Args({Args}) StackTrace({StackTrace})", errorCode, errorHash, errorMsg, errorArgs, exception.StackTrace);
 

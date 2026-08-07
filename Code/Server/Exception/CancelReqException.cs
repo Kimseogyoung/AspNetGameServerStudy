@@ -1,11 +1,16 @@
 using Proto;
+using ServerCore;
 
 namespace WebStudyServer
 {
-    public class CancelReqException : Exception
+    public class CancelReqException : Exception, IServerExpectedException
     {
         public EErrorCode ErrCode { get; private set; } = EErrorCode.CANCELED_OPERATION;
         public string ApiPath { get; private set; }
+
+        public int ErrorCode => (int)ErrCode;
+        public object ErrorArgs => ApiPath;
+
         public CancelReqException(string apiPath) : base("CANCEL_OPERATION")
         {
             ApiPath = apiPath;

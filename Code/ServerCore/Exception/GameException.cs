@@ -2,41 +2,41 @@ using Proto;
 
 namespace ServerCore
 {
-    public class GameException : Exception
+    public class GameException : Exception, IServerExpectedException
     {
-        public int Code { get; private set; }
+        public int ErrorCode { get; private set; }
 
-        public dynamic Args { get; private set; }
+        public object ErrorArgs { get; private set; }
 
 
         public GameException(EErrorCode code, string message, dynamic args) : base(message)
         {
-            Code = (int)code;
-            Args = args;
+            ErrorCode = (int)code;
+            ErrorArgs = args;
         }
 
         public GameException(int code, string message, dynamic args) : base(message)
         {
-            Code = code;
-            Args = args;
+            ErrorCode = code;
+            ErrorArgs = args;
         }
 
         public GameException(int code, string message) : base(message)
         {
-            Code = code;
+            ErrorCode = code;
         }
 
         [Obsolete("에러코드를 명시하는 생성자를 사용하세요. 예: GameException(EErrorCode.NO_HANDLING_ERROR, message, args)")]
         public GameException(string message, dynamic args) : base(message)
         {
-            Code = -1;
-            Args = args;
+            ErrorCode = -1;
+            ErrorArgs = args;
         }
 
         [Obsolete("에러코드를 명시하는 생성자를 사용하세요. 예: GameException(EErrorCode.NO_HANDLING_ERROR, message)")]
         public GameException(string message) : base(message)
         {
-            Code = -1;
+            ErrorCode = -1;
         }
     }
 }
