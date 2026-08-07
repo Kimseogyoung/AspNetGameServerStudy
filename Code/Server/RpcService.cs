@@ -26,6 +26,10 @@ namespace Server
 
         public async Task OnHttpBodyRequestAsync(HttpContext httpCtx, string methodName)
         {
+            // 점검모드면 여기서 차단 (캐시된 응답 재전송 포함, RPC 전체를 막아야 함)
+            CancelReqException.ThrowCancelRequestException(httpCtx);
+            _rpcCtx.Init(httpCtx);
+
             // Seq 재전송이면 재실행 없이 캐시된 응답을 그대로 반환한다.
             if (_responseCache.TryGet(_rpcCtx, out var cachedBody))
             {
