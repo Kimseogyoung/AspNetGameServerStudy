@@ -9,34 +9,15 @@ namespace WebStudyServer
 {
     public class ErrorHandler
     {
-        public ErrorHandler()
+        public async Task Handle(HttpContext httpContext)
         {
-        }
-
-        public Task Handle(HttpContext httpContext)
-        {
-            var exc = httpContext.Features.Get<IExceptionHandlerPathFeature>()?.Error;
-            if (exc == null)
+            var exception = httpContext.Features.Get<IExceptionHandlerPathFeature>()?.Error;
+            if (exception == null)
             {
                 _logger.Warn("EXCEPTION_IS_NULL");
-                return Task.FromResult(false);
+                return;
             }
 
-            return HandleInternalAsync(httpContext, exc);
-        }
-
-        public Task HandleWithException(HttpContext httpContext, Exception exception)
-        {
-            return HandleInternalAsync(httpContext, exception);
-        }
-
-        public async Task<object> HandleWithExceptionAsync(HttpContext httpContext, Exception exception)
-        {
-            return await HandleInternalAsync(httpContext, exception);
-        }
-
-        private async Task<object> HandleInternalAsync(HttpContext httpContext, Exception exception)
-        {
             var errorCode = (int)EErrorCode.NO_HANDLING_ERROR;
             var errorMsg = exception.Message;
             var errorHash = HashHelper.CalculateMD5Hash(errorMsg)[..6];
@@ -77,7 +58,6 @@ namespace WebStudyServer
             };
 
             await ResWriteHelper.WriteResponseBodyAsync(httpContext, res, typeof(ErrorResponsePacket), StatusCodes.Status500InternalServerError);
-            return res;
         }
 
         private readonly NLog.ILogger _logger = NLog.LogManager.GetCurrentClassLogger();

@@ -1,6 +1,7 @@
 namespace WebStudyServer.Middleware
 {
-    // Map.Post방식으로 바꿨기 때문에 필요한지 검토 
+    // 요청 컨텍스트(RpcContext) 초기화 + 점검모드 판정만 담당한다.
+    // 예외는 여기서 잡지 않고 전역 UseExceptionHandler(ErrorHandler)로 위임한다.
     public class ReqMiddleware
     {
         public ReqMiddleware(RequestDelegate next)
@@ -10,24 +11,12 @@ namespace WebStudyServer.Middleware
 
         public async Task InvokeAsync(HttpContext httpCtx)
         {
-            try
-            {
-                CancelReqException.ThrowCancelRequestException(httpCtx);
-                var rpcContext = httpCtx.RequestServices.GetRequiredService<RpcContext>();
-                rpcContext.Init(httpCtx);
+            CancelReqException.ThrowCancelRequestException(httpCtx);
 
-                await _next(httpCtx);
-                return;
-            }
-            catch (Exception ex)
-            {
-                var errorHandler = httpCtx.RequestServices.GetRequiredService<ErrorHandler>();
-                await errorHandler.HandleWithException(httpCtx, ex);
-            }
-            finally
-            {
+            var rpcContext = httpCtx.RequestServices.GetRequiredService<RpcContext>();
+            rpcContext.Init(httpCtx);
 
-            }
+            await _next(httpCtx);
         }
 
         private readonly RequestDelegate _next;

@@ -25,56 +25,48 @@ namespace Server
         {
             var rpcCtx = httpCtx.RequestServices.GetRequiredService<RpcContext>();
 
-            // 로그 
+            // 로그
             var httpMethod = httpCtx.Request.Method;
             var httpPath = httpCtx.Request.Path.ToString();
-            object rpcResObj = null;
-            try
+
+            var httpReqContentType = CustomInputFormatter.GetContentTypeByHeader(httpCtx);
+            if (!_contentTypeToSerializerDict.TryGetValue(httpReqContentType, out var rpcReqSerializer))
             {
-                var httpReqContentType = CustomInputFormatter.GetContentTypeByHeader(httpCtx);
-                if (!_contentTypeToSerializerDict.TryGetValue(httpReqContentType, out var rpcReqSerializer))
-                {
-                    httpCtx.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
-                    return;
-                }
-
-                var methodName = GetMethodNameFromPath(httpCtx, pattern);
-                if (!NameToMethodDict.TryGetValue(methodName, out var rpcMethod))
-                {
-                    throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NOT_FOUND_METHOD", new { MethodName = methodName });
-                }
-
-                var httpReqStream = httpCtx.Request.Body;
-                var rpcReqObj = await rpcReqSerializer.DeserializeAsync(rpcMethod.Req, httpReqStream);
-                if (rpcReqObj == null)
-                {
-                    httpCtx.Response.StatusCode = StatusCodes.Status400BadRequest;
-                    return;
-                }
-
-                // TODO: Response Cache
-                //
-
-                // TODO: Logger 수정하고 적용 (Body가 메시지로 나오면 안되고 arg에만 들어가게)
-                //var args = new Dictionary<string, object>()
-                //{
-                //    { "Method", httpMethod },
-                //    { "Path", httpPath },
-                //    { "Body", rpcReqObj},
-                //};
-
-                _logger.Info("Req Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcReqObj);
-                rpcResObj = await HandleMethodAsync(rpcCtx, httpCtx, rpcMethod, rpcReqObj);
+                httpCtx.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
+                return;
             }
-            catch (Exception exc)
+
+            var methodName = GetMethodNameFromPath(httpCtx, pattern);
+            if (!NameToMethodDict.TryGetValue(methodName, out var rpcMethod))
             {
-                var errorSvc = httpCtx.RequestServices.GetRequiredService<ErrorHandler>();
-                rpcResObj = await errorSvc.HandleWithExceptionAsync(httpCtx, exc);
+                throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NOT_FOUND_METHOD", new { MethodName = methodName });
             }
-            finally
+
+            var httpReqStream = httpCtx.Request.Body;
+            var rpcReqObj = await rpcReqSerializer.DeserializeAsync(rpcMethod.Req, httpReqStream);
+            if (rpcReqObj == null)
             {
-                _logger.Info("Res Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcResObj);
+                httpCtx.Response.StatusCode = StatusCodes.Status400BadRequest;
+                return;
             }
+
+            // TODO: Response Cache
+            //
+
+            // TODO: Logger 수정하고 적용 (Body가 메시지로 나오면 안되고 arg에만 들어가게)
+            //var args = new Dictionary<string, object>()
+            //{
+            //    { "Method", httpMethod },
+            //    { "Path", httpPath },
+            //    { "Body", rpcReqObj},
+            //};
+
+            _logger.Info("Req Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcReqObj);
+
+            // 예외는 여기서 잡지 않고 전역 UseExceptionHandler(ErrorHandler)로 위임한다.
+            var rpcResObj = await HandleMethodAsync(rpcCtx, httpCtx, rpcMethod, rpcReqObj);
+
+            _logger.Info("Res Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcResObj);
         }
 
         private async Task<object> HandleMethodAsync(RpcContext rpcCtx, HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj)
