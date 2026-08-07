@@ -53,7 +53,7 @@ namespace ClientCore
         {
             req.Info = new RequestInfoPacket
             {
-                Seq = 0
+                Seq = ++_seq
             };
 
             // 요청 URL
@@ -119,33 +119,14 @@ namespace ClientCore
                     return res;
                 }
 
+                var innerDesc = exc.InnerException != null
+                    ? $"{exc.InnerException.GetType().Name}:{exc.InnerException.Message}"
+                    : "None";
                 res.Info.ResultCode = (int)EErrorCode.NO_HANDLING_ERROR;
-                res.Info.ResultMsg = $"Exception Msg({exc.Message}) InnerException({exc.InnerException.GetType().Name}:{exc.InnerException.Message})";
+                res.Info.ResultMsg = $"Exception Msg({exc.Message}) InnerException({innerDesc})";
                 return res;
             }
 
-        }
-
-        private string StringSerialize<REQ>(REQ obj)
-        {
-            switch (_contentType)
-            {
-                case MsgProtocol.JsonContentType:
-                    var json = JsonSerializer.Serialize<REQ>(obj, Opts);
-                    return json;
-                case MsgProtocol.ProtoBufContentType:
-                    byte[] serializedData;
-                    using (var ms = new MemoryStream())
-                    {
-                        ProtoBuf.Serializer.Serialize(ms, obj);
-                        serializedData = ms.ToArray();
-                    }
-                    var protoBufStr = Encoding.UTF8.GetString(serializedData);
-                    return protoBufStr;
-                default:
-                    break;
-            }
-            return string.Empty;
         }
 
         private byte[] ByteArrSerialize<REQ>(REQ obj)
@@ -227,8 +208,6 @@ namespace ClientCore
         private string _host = string.Empty;
         private string _contentType = string.Empty;
         private HttpClient _httpClient;
-
-        private static readonly DateTime s_timestampBaseTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
         public readonly static JsonSerializerOptions Opts = new JsonSerializerOptions
         {
