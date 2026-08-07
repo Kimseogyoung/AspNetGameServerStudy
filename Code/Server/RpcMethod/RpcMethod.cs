@@ -25,52 +25,30 @@ namespace Server
             Res = typeof(TRes);
         }
 
-        public RpcMethod(string name, RunAsyncDelegate runAsync, ERpcMethodType type = ERpcMethodType.NONE)
+        public RpcMethod(string name, RunAsyncDelegate runAsync, IRpcAuthPolicy authPolicy = null)
         {
             Name = name;
             _runAsync = runAsync;
-            _type = type;
+            _authPolicy = authPolicy;
             Req = typeof(TReq);
             Res = typeof(TRes);
         }
 
-        public RpcMethod(string name, RunDelegate run, ERpcMethodType type = ERpcMethodType.NONE)
+        public RpcMethod(string name, RunDelegate run, IRpcAuthPolicy authPolicy = null)
         {
             Name = name;
             _run = run;
-            _type = type;
+            _authPolicy = authPolicy;
             Req = typeof(TReq);
             Res = typeof(TRes);
         }
 
         public async Task<object> RunAsync(RpcContext rpcCtx, HttpContext httpCtx, object rpcReq)
         {
-            // 여기서 처리해야하는지는 의문임.
-            switch (_type)
+            _authPolicy?.Validate(rpcCtx);
+            if (_authPolicy?.RequiresUserRepo == true)
             {
-                case ERpcMethodType.NONE:
-                    break;
-                case ERpcMethodType.AUTHORIZED:
-                    {
-                        ValidateSession(rpcCtx);
-                        ReqHelper.Valid(rpcCtx.AccountId != 0, EErrorCode.CONTEXT_ACCOUNT, () => new { rpcCtx.SessionKey });
-                        var dbRepo = httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>();
-                        dbRepo.BeginOwnUserRepo();
-                        break;
-                    }
-                case ERpcMethodType.AUTHORIZED_PLAYER:
-                    {
-                        ValidateSession(rpcCtx);
-                        ReqHelper.Valid(rpcCtx.AccountId != 0, EErrorCode.CONTEXT_ACCOUNT, () => new { rpcCtx.SessionKey });
-                        ReqHelper.Valid(rpcCtx.PlayerId != 0, EErrorCode.CONTEXT_PLAYER, () => new { rpcCtx.SessionKey, rpcCtx.AccountId });
-                        var dbRepo = httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>();
-                        dbRepo.BeginOwnUserRepo();
-                        break;
-                    }
-                case ERpcMethodType.OPS:
-                    break;
-                default:
-                    throw new Exception($"NO_HANDLING_RPC_METHOD_TYPE:{_type}");
+                httpCtx.RequestServices.GetRequiredService<GlobalDbRepo>().BeginOwnUserRepo();
             }
 
             var rpcSvc = httpCtx.RequestServices.GetRequiredService<TSvc>();
@@ -111,25 +89,7 @@ namespace Server
         }
 
 
-        private static void ValidateSession(RpcContext rpcCtx)
-        {
-            switch (rpcCtx.SessionLoadState)
-            {
-                case RpcContext.ESessionLoadState.LOADED:
-                    return;
-                case RpcContext.ESessionLoadState.NOT_FOUND:
-                    throw new GameException(EErrorCode.SESSION_NOT_FOUND, "SESSION_NOT_FOUND",
-                        new { rpcCtx.SessionKey });
-                case RpcContext.ESessionLoadState.EXPIRED:
-                    throw new GameException(EErrorCode.SESSION_EXPIRED, "SESSION_EXPIRED",
-                        new { rpcCtx.SessionKey });
-                default:
-                    throw new GameException(EErrorCode.CONTEXT, "FAILED_SESSION_LOAD",
-                        new { rpcCtx.SessionKey, rpcCtx.SessionLoadState });
-            }
-        }
-
-        private readonly ERpcMethodType _type;
+        private readonly IRpcAuthPolicy _authPolicy;
         private readonly RunAsyncDelegate _runAsync;
         private readonly RunDelegate _run;
 
