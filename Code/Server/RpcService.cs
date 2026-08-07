@@ -43,7 +43,7 @@ namespace Server
             var httpPath = httpCtx.Request.Path.ToString();
 
             var httpReqContentType = CustomInputFormatter.GetContentTypeByHeader(httpCtx);
-            if (!_contentTypeToSerializerDict.TryGetValue(httpReqContentType, out var rpcReqSerializer))
+            if (!_registry.ContentTypeToSerializerDict.TryGetValue(httpReqContentType, out var rpcReqSerializer))
             {
                 httpCtx.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
                 return;
@@ -90,7 +90,7 @@ namespace Server
                     rpcResObj = await rpcMethod.RunAsync(_rpcCtx, httpCtx, _dbRepo, rpcReqObj);
                 });
 
-                resBody = _contentTypeToSerializerDict[contentType].Serialize(rpcResObj);
+                resBody = _registry.ContentTypeToSerializerDict[contentType].Serialize(rpcResObj);
                 _responseCache.Set(_rpcCtx, resBody);
 
                 _dbRepo.Commit();
@@ -111,12 +111,6 @@ namespace Server
         private readonly UserLockService _userLockSvc;
         private readonly GlobalDbRepo _dbRepo;
         private readonly ILogger<RpcService> _logger;
-
-        private readonly Dictionary<string, IDataSerializer> _contentTypeToSerializerDict = new()
-        {
-            {MsgProtocol.JsonContentType, new JsonDataSerializer()},
-            {MsgProtocol.ProtoBufContentType, new ProtoBufDataSerializer()},
-        };
     }
 
     public static class RpcServiceExtension
