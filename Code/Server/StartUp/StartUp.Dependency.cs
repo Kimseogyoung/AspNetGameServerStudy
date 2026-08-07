@@ -49,6 +49,10 @@ namespace WebStudyServer
             services.AddScoped<CommonService>();
             services.AddScoped<AuthService>();
             services.AddScoped<GameService>();
+            services.AddScoped<KingdomService>();
+            services.AddScoped<GachaService>();
+            services.AddScoped<CookieService>();
+            services.AddScoped<WorldService>();
             services.AddScoped<CheatService>();
 
             services.AddScoped<RpcContext>();
