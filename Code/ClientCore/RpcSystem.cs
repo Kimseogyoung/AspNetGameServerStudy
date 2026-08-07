@@ -99,34 +99,39 @@ namespace ClientCore
 
                     var json = JsonSerializer.Serialize(res);
                     Console.WriteLine("응답: " + json);
-                    throw new Exception("ERROR");
+                    return res;
                 }
                 else
                 {
-                    var res = new RES();
-                    res.Info.ResultCode = (int)EErrorCode.NO_HANDLING_ERROR;
-                    res.Info.ResultMsg = $"{response.StatusCode}Code";
-                    return res;
+                    return MakeErrorResult<RES>(EErrorCode.NO_HANDLING_ERROR, $"{response.StatusCode}Code");
                 }
             }
             catch (Exception exc)
             {
-                var res = new RES();
                 if (exc.InnerException is SocketException)
                 {
-                    res.Info.ResultCode = (int)EErrorCode.SERVER_DOWN;
-                    res.Info.ResultMsg = exc.Message;
-                    return res;
+                    return MakeErrorResult<RES>(EErrorCode.SERVER_DOWN, exc.Message);
+                }
+
+                if (exc is TaskCanceledException)
+                {
+                    return MakeErrorResult<RES>(EErrorCode.TIMEOUT, exc.Message);
                 }
 
                 var innerDesc = exc.InnerException != null
                     ? $"{exc.InnerException.GetType().Name}:{exc.InnerException.Message}"
                     : "None";
-                res.Info.ResultCode = (int)EErrorCode.NO_HANDLING_ERROR;
-                res.Info.ResultMsg = $"Exception Msg({exc.Message}) InnerException({innerDesc})";
-                return res;
+                return MakeErrorResult<RES>(EErrorCode.NO_HANDLING_ERROR, $"Exception Msg({exc.Message}) InnerException({innerDesc})");
             }
 
+        }
+
+        private static RES MakeErrorResult<RES>(EErrorCode code, string msg) where RES : IResponsePacket, new()
+        {
+            var res = new RES();
+            res.Info.ResultCode = (int)code;
+            res.Info.ResultMsg = msg;
+            return res;
         }
 
         private byte[] ByteArrSerialize<REQ>(REQ obj)
