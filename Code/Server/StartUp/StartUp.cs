@@ -3,7 +3,6 @@ using Microsoft.OpenApi.Models;
 using ProtoBuf.Meta;
 using Server;
 using Server.Service;
-using WebStudyServer.Filter;
 using WebStudyServer.Manager;
 
 namespace WebStudyServer
@@ -38,8 +37,6 @@ namespace WebStudyServer
             }
 
             app.UseHttpsRedirection();
-
-            app.UseAuthorization();
 
             app.MapControllers();
 

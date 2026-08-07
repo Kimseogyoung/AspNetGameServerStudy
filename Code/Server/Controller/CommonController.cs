@@ -19,11 +19,5 @@ namespace WebStudyServer.Controllers
         {
             return Ok("ok");
         }
-
-        [HttpGet("hello-world")]
-        public ActionResult<bool> HelloWorld()
-        {
-            return Ok("hello-world");
-        }
     }
 }

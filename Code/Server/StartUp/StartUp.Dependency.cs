@@ -2,7 +2,6 @@ using Microsoft.OpenApi.Models;
 using Server.Service;
 using ServerCore;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using WebStudyServer.Filter;
 using WebStudyServer.Service;
 
 namespace WebStudyServer
@@ -27,7 +26,6 @@ namespace WebStudyServer
 
         private void AddFilters(IServiceCollection services)
         {
-            services.AddScoped<LogFilter>();
         }
 
         private void AddRaidServerLauncher(IServiceCollection services)

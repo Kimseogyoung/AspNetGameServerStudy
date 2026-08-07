@@ -62,7 +62,7 @@
 | 로깅/모니터링 | 로깅 | 파일 로그 | NLog (파일 + 콘솔) | O |
 | 로깅/모니터링 | 로깅 | 원격 저장소 로그 (Fluent Bit 등으로 S3/Elasticsearch 전달·저장) | | X |
 | 로깅/모니터링 | 로깅 | 로그 구조화 | 파라미터 바인딩 방식 (`{Key}`) | O |
-| 로깅/모니터링 | 로깅 | 요청/응답 로그 (Body 내용 포함) | `LogFilter` (Method, Path, Body, StatusCode) | O |
+| 로깅/모니터링 | 로깅 | 요청/응답 로그 (Body 내용 포함) | `RpcService`가 RPC 요청/응답 직접 로깅 (Method, Path, Body). MVC 경로용이던 `LogFilter`는 DI 등록만 되고 실제 미적용 상태라 삭제함 | O |
 | 로깅/모니터링 | 로깅 | 요청 처리 시간 로그 | | X |
 | 로깅/모니터링 | 로깅 | 슬로우 쿼리 로그 | | X |
 | 로깅/모니터링 | 로깅 | 로그 수집/검색 인프라 (Athena, Elasticsearch 등) | | X |
