@@ -13,14 +13,15 @@ namespace WebStudyServer.Component
     {
         public KingdomDecoComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(KingdomDecoModel model) => CacheKey.For<KingdomDecoModel>(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<KingdomDecoModel>(playerId);
+        protected override CacheKey KeyFor(KingdomDecoModel model) => CacheKey.For(CacheKeyTags.KingdomDecoModel, model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.KingdomDecoModel, playerId);
 
-        public KingdomDecoManager Touch(int itemNum)
+        public async Task<KingdomDecoManager> TouchAsync(int itemNum)
         {
-            if (!TryGetInternal(itemNum, out var mdlDeco))
+            var mdlDeco = await TryGetInternalAsync(itemNum);
+            if (mdlDeco == null)
             {
-                mdlDeco = CreateMdl(new KingdomDecoModel
+                mdlDeco = await CreateMdlAsync(new KingdomDecoModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = itemNum,
@@ -30,9 +31,9 @@ namespace WebStudyServer.Component
             return new KingdomDecoManager(_userRepo, mdlDeco);
         }
 
-        public KingdomDecoManager Create(KingdomItemProto prt)
+        public async Task<KingdomDecoManager> CreateAsync(KingdomItemProto prt)
         {
-            var mdlKingdomDeco = CreateMdl(new KingdomDecoModel
+            var mdlKingdomDeco = await CreateMdlAsync(new KingdomDecoModel
             {
                 Num = prt.Num,
                 State = EKingdomItemState.STORED,
@@ -42,23 +43,22 @@ namespace WebStudyServer.Component
             return new KingdomDecoManager(_userRepo, mdlKingdomDeco, prt);
         }
 
-        public List<KingdomDecoManager> GetAllList(List<int> numList)
+        public async Task<List<KingdomDecoManager>> GetAllListAsync(List<int> numList)
         {
             if (numList.Count == 0)
             {
                 return [];
             }
 
-            var mdlList = GetMdlList(x => numList.Contains(x.Num));
-            ReqHelper.ValidContext(mdlList.Count != numList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST",
+            var mdlList = await GetMdlListAsync(x => numList.Contains(x.Num));
+            ReqHelper.ValidContext(mdlList.Count == numList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST",
                 () => new { NumList = numList, MdlNumList = mdlList.Select(x => x.Num) });
             return [.. mdlList.Select(x => new KingdomDecoManager(_userRepo, x))];
         }
 
-        private bool TryGetInternal(int num, out KingdomDecoModel outKingdomDeco)
+        private Task<KingdomDecoModel?> TryGetInternalAsync(int num)
         {
-            outKingdomDeco = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
-            return outKingdomDeco != null;
+            return GetMdlAsync(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
         }
     }
 }

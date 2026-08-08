@@ -18,13 +18,14 @@ namespace Server.Service
             _mapper = mapper;
         }
 
-        public WorldFinishStageFirstResponsePacket WorldFinishStageFirst(WorldFinishStageFirstRequestPacket req)
+        public async Task<WorldFinishStageFirstResponsePacket> WorldFinishStageFirstAsync(WorldFinishStageFirstRequestPacket req)
         {
-            var mgrWorld = OwnUser.World.Touch(req.WorldNum);
-            var mgrWorldStage = OwnUser.WorldStage.Touch(req.StageNum);
+            var mgrWorld = await OwnUser.World.TouchAsync(req.WorldNum);
+            var mgrWorldStage = await OwnUser.WorldStage.TouchAsync(req.StageNum);
             ReqHelper.ValidContext(mgrWorld.TryGetTopOpenStagePrt(out var prtNextWorldStage), "NOT_FOUND_TOP_OPEN_STAGE", () => new { WorldNum = mgrWorld.Prt.Num, mgrWorld.Model.TopFinishStageNum });
             ReqHelper.ValidContext(prtNextWorldStage.Num == req.StageNum, "NOT_EQUAL_FIRST_FINISH_STAGE", () => new { WorldNum = mgrWorld.Prt.Num, ReqStageNum = req.StageNum, ValStageNum = prtNextWorldStage.Num });
-            ReqHelper.ValidContext(mgrWorld.IsFinishPrevWorld(), "NOT_FINISH_PREV_WORLD", () => new { WorldNum = mgrWorld.Prt.Num });
+            var isFinishPrevWorld = await mgrWorld.IsFinishPrevWorldAsync();
+            ReqHelper.ValidContext(isFinishPrevWorld, "NOT_FINISH_PREV_WORLD", () => new { WorldNum = mgrWorld.Prt.Num });
 
             // 최초 보상
             var prtRewardList = new List<ObjValue>();
@@ -44,11 +45,11 @@ namespace Server.Service
             var valRewardList = ReqHelper.ValidRewardList(req.RewardValueList, prtRewardList, reason);
 
             // 처리
-            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
-            var chgObjList = mgrPlayerDetail.IncRewardList(valRewardList, reason);
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var chgObjList = await mgrPlayerDetail.IncRewardListAsync(valRewardList, reason);
 
-            mgrWorld.FinishStage(mgrWorldStage.Prt);
-            mgrWorldStage.SetStar(valStar);
+            await mgrWorld.FinishStageAsync(mgrWorldStage.Prt);
+            await mgrWorldStage.SetStarAsync(valStar);
 
             return new WorldFinishStageFirstResponsePacket
             {
@@ -58,10 +59,10 @@ namespace Server.Service
             };
         }
 
-        public WorldFinishStageRepeatResponsePacket WorldFinishStageRepeat(WorldFinishStageRepeatRequestPacket req)
+        public async Task<WorldFinishStageRepeatResponsePacket> WorldFinishStageRepeatAsync(WorldFinishStageRepeatRequestPacket req)
         {
-            var mgrWorld = OwnUser.World.Touch(req.WorldNum);
-            var mgrWorldStage = OwnUser.WorldStage.Touch(req.StageNum);
+            var mgrWorld = await OwnUser.World.TouchAsync(req.WorldNum);
+            var mgrWorldStage = await OwnUser.WorldStage.TouchAsync(req.StageNum);
 
             ReqHelper.ValidContext(req.StageNum <= mgrWorld.Model.TopFinishStageNum, "NOT_FINISHED_STAGE", () => new { req.WorldNum, req.StageNum, mgrWorld.Model.TopFinishStageNum });
 
@@ -84,10 +85,10 @@ namespace Server.Service
             var valRewardList = ReqHelper.ValidRewardList(req.RewardValueList, prtRewardList, reason);
 
             // 처리
-            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
-            var chgObjList = mgrPlayerDetail.IncRewardList(valRewardList, reason);
-            mgrWorld.FinishStage(mgrWorldStage.Prt);
-            mgrWorldStage.SetStar(valStar);
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var chgObjList = await mgrPlayerDetail.IncRewardListAsync(valRewardList, reason);
+            await mgrWorld.FinishStageAsync(mgrWorldStage.Prt);
+            await mgrWorldStage.SetStarAsync(valStar);
 
             return new WorldFinishStageRepeatResponsePacket
             {
@@ -97,9 +98,9 @@ namespace Server.Service
             };
         }
 
-        public WorldRewardStarResponsePacket WorldRewardStar(WorldRewardStarRequestPacket req)
+        public async Task<WorldRewardStarResponsePacket> WorldRewardStarAsync(WorldRewardStarRequestPacket req)
         {
-            var mgrWorld = OwnUser.World.Touch(req.WorldNum);
+            var mgrWorld = await OwnUser.World.TouchAsync(req.WorldNum);
 
             var valTotalStar = OwnUser.WorldStage.GetTotalStar(mgrWorld.Model.Num);
             var maxTotalStar = mgrWorld.Prt.RewardStarList[req.AftRewardStar - 1];
@@ -117,9 +118,9 @@ namespace Server.Service
             var valReward = ReqHelper.ValidReward(req.RewardValue, prtReward, reason);
 
             // 처리
-            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
-            mgrWorld.RewardStar(req.AftRewardStar, valTotalStar);
-            var chgObj = mgrPlayerDetail.IncReward(valReward, reason);
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            await mgrWorld.RewardStarAsync(req.AftRewardStar, valTotalStar);
+            var chgObj = await mgrPlayerDetail.IncRewardAsync(valReward, reason);
 
             return new WorldRewardStarResponsePacket
             {

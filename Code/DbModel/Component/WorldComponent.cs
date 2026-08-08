@@ -11,14 +11,15 @@ namespace WebStudyServer.Component
     {
         public WorldComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(WorldModel model) => CacheKey.For<WorldModel>(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<WorldModel>(playerId);
+        protected override CacheKey KeyFor(WorldModel model) => CacheKey.For(CacheKeyTags.WorldModel, model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.WorldModel, playerId);
 
-        public WorldManager Touch(int worldNum)
+        public async Task<WorldManager> TouchAsync(int worldNum)
         {
-            if (!TryGetInternal(worldNum, out var mdlWorld))
+            var mdlWorld = await TryGetInternalAsync(worldNum);
+            if (mdlWorld == null)
             {
-                mdlWorld = CreateMdl(new WorldModel
+                mdlWorld = await CreateMdlAsync(new WorldModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = worldNum,
@@ -28,10 +29,9 @@ namespace WebStudyServer.Component
             return new WorldManager(_userRepo, mdlWorld);
         }
 
-        public bool TryGetInternal(int num, out WorldModel outWorld)
+        public Task<WorldModel?> TryGetInternalAsync(int num)
         {
-            outWorld = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
-            return outWorld != null;
+            return GetMdlAsync(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
         }
     }
 }

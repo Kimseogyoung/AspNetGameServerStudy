@@ -25,7 +25,7 @@ namespace WebStudyServer.Manager
             return prtNextWorldStage != null;
         }
 
-        public bool IsFinishPrevWorld()
+        public async Task<bool> IsFinishPrevWorldAsync()
         {
             var worldNum = _model.Num;
 
@@ -38,7 +38,8 @@ namespace WebStudyServer.Manager
                 return true;
             }
 
-            if (!_userRepo.World.TryGetInternal(prtPrevWorld.Num, out var outWorldMdl))
+            var outWorldMdl = await _userRepo.World.TryGetInternalAsync(prtPrevWorld.Num);
+            if (outWorldMdl == null)
             {
                 return false;
             }
@@ -46,14 +47,14 @@ namespace WebStudyServer.Manager
             return outWorldMdl.State == FinishState; // FINISH STATE
         }
 
-        public void RewardStar(int valAftStar, int valTotalStar)
+        public async Task RewardStarAsync(int valAftStar, int valTotalStar)
         {
             _ = _model.RecvStarReward;
             _model.RecvStarReward = valAftStar;
-            _userRepo.World.UpdateMdl(_model);
+            await _userRepo.World.UpdateMdlAsync(_model);
         }
 
-        public void FinishStage(WorldStageProto prtStage)
+        public async Task FinishStageAsync(WorldStageProto prtStage)
         {
             _model.LastPlayStageNum = prtStage.Num;
 
@@ -70,7 +71,7 @@ namespace WebStudyServer.Manager
                 }
             }
 
-            _userRepo.World.UpdateMdl(_model);
+            await _userRepo.World.UpdateMdlAsync(_model);
         }
 
         private const int FinishState = 10;

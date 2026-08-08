@@ -18,14 +18,14 @@ namespace Server.Service
             _mapper = mapper;
         }
 
-        public GameEnterResponsePacket Enter(GameEnterRequestPacket req)
+        public async Task<GameEnterResponsePacket> EnterAsync(GameEnterRequestPacket req)
         {
-            var mgrPlayer = OwnUser.Player.Touch();
+            var mgrPlayer = await OwnUser.Player.TouchAsync();
 
             if (mgrPlayer.Model.State >= Proto.EPlayerState.PREPARED)
             {
                 // Prepare 이후 접속시마다 처리해줘야할 것이 있으면 여기서 처리
-                var pakPlayer = mgrPlayer.LoadPlayer(_mapper);
+                var pakPlayer = await mgrPlayer.LoadPlayerAsync(_mapper);
                 return new GameEnterResponsePacket
                 {
                     Player = pakPlayer,
@@ -33,7 +33,7 @@ namespace Server.Service
             }
             else
             {
-                var pakPlayer = mgrPlayer.PreparePlayer(_mapper);
+                var pakPlayer = await mgrPlayer.PreparePlayerAsync(_mapper);
 
                 var accountId = mgrPlayer.Model.AccountId;
                 var authRepo = _dbRepo.Auth;
@@ -44,9 +44,10 @@ namespace Server.Service
                     ShardId = OwnUser.ShardId,
                 });
 
-                if (authRepo.Session.TryGetByAccountId(accountId, out var mdlSession))
+                var mdlSession = await authRepo.Session.TryGetByAccountIdAsync(accountId);
+                if (mdlSession != null)
                 {
-                    mdlSession.SetPlayerId(mgrPlayer.Id);
+                    await mdlSession.SetPlayerIdAsync(mgrPlayer.Id);
                 }
 
 
@@ -57,10 +58,10 @@ namespace Server.Service
             }
         }
 
-        public GameChangeNameResponsePacket ChangeNameFirst(GameChangeNameRequestPacket req)
+        public async Task<GameChangeNameResponsePacket> ChangeNameFirstAsync(GameChangeNameRequestPacket req)
         {
             var reqName = req.PlayerName;
-            var mgrPlayer = OwnUser.Player.Touch();
+            var mgrPlayer = await OwnUser.Player.TouchAsync();
 
             mgrPlayer.ValidState(EPlayerState.CHANGED_NAME_FIRST);
 
@@ -68,7 +69,7 @@ namespace Server.Service
             ReqHelper.Valid(!_dbRepo.AllUser.TryGetPlayerByName(reqName, out _), EErrorCode.GAME_CHANGE_NAME_EXIST_NAME);
 
             // 변경
-            mgrPlayer.ChangeName(reqName);
+            await mgrPlayer.ChangeNameAsync(reqName);
 
             return new GameChangeNameResponsePacket
             {

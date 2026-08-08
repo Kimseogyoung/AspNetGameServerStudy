@@ -3,7 +3,6 @@ using Server.Repo;
 using Server.Service;
 using ServerCore;
 using ServerCore.Extension;
-using StackExchange.Redis;
 using WebStudyServer.Model;
 using ServerCore.Repo.Cache;
 using ServerCore.Repo.Database;
@@ -32,21 +31,7 @@ namespace WebStudyServer
             }
 
             // Cache
-            switch (Config<CoreConfig>.Get().CacheType)
-            {
-                case CacheType.Redis:
-                    services.AddSingleton<IConnectionMultiplexer>(
-                    _ => ConnectionMultiplexer.Connect(Config<CoreConfig>.Get().RedisConnectionString));
-                    services.AddScoped<InMemoryCacheLayer>();
-                    services.AddScoped<RedisCacheLayer>();
-                    services.AddScoped<ICacheSession, RedisCompositeCacheLayer>();
-                    break;
-                case CacheType.InMemory:
-                    services.AddScoped<ICacheSession, InMemoryCacheLayer>();
-                    break;
-                default:
-                    throw new Exception($"No handling DbType({Config<CoreConfig>.Get().DbType})");
-            }
+            services.AddCacheSession(Config<CoreConfig>.Get().CacheType, Config<CoreConfig>.Get().RedisConnectionString);
 
             services.AddMemoryCache();
             services.AddSingleton<InMemoryStore>();

@@ -12,15 +12,16 @@ namespace WebStudyServer.Component
     {
         public ItemComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(ItemModel model) => CacheKey.For<ItemModel>(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<ItemModel>(playerId);
+        protected override CacheKey KeyFor(ItemModel model) => CacheKey.For(CacheKeyTags.ItemModel, model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.ItemModel, playerId);
 
-        public ItemManager Touch(int itemNum)
+        public async Task<ItemManager> TouchAsync(int itemNum)
         {
-            if (!TryGetInternal(itemNum, out var mdlItem))
+            var mdlItem = await TryGetInternalAsync(itemNum);
+            if (mdlItem == null)
             {
                 var prt = ProtoDb.Get<ItemProto>(itemNum);
-                mdlItem = CreateMdl(new ItemModel
+                mdlItem = await CreateMdlAsync(new ItemModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = itemNum,
@@ -31,10 +32,9 @@ namespace WebStudyServer.Component
             return new ItemManager(_userRepo, mdlItem);
         }
 
-        public bool TryGetInternal(int num, out ItemModel outItem)
+        public Task<ItemModel?> TryGetInternalAsync(int num)
         {
-            outItem = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
-            return outItem != null;
+            return GetMdlAsync(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
         }
     }
 }

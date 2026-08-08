@@ -25,17 +25,18 @@ namespace WebStudyServer.Base
 
         // 단건 캐시 → DB fallback (Auth/Session 전용)
         // slidingTtl: 캐시 히트 시 TTL 갱신 (Sliding Expiration). null이면 갱신 없음.
-        protected T? GetMdlWithCache<T>(CacheKey cacheKey, Func<IDbExecutor, T?> dbFetch, TimeSpan? slidingTtl = null) where T : ModelBase
+        protected async Task<T?> GetMdlWithCacheAsync<T>(CacheKey cacheKey, Func<IDbExecutor, T?> dbFetch, TimeSpan? slidingTtl = null) where T : ModelBase
         {
-            if (_repository.Cache.TryGet<T>(cacheKey, out var cached, slidingTtl))
+            var cached = await _repository.Cache.TryGetAsync<T>(cacheKey, slidingTtl);
+            if (cached.Hit)
             {
-                return cached;
+                return cached.Value;
             }
 
             var result = _repository.Db.Execute(dbFetch);
             if (result != null)
             {
-                _repository.Cache.Set(cacheKey, result, slidingTtl ?? Config<CoreConfig>.Get().CacheDefaultTtl);
+                await _repository.Cache.SetAsync(cacheKey, result, slidingTtl ?? Config<CoreConfig>.Get().CacheDefaultTtl);
             }
             return result;
         }

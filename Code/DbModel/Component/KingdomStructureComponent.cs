@@ -14,18 +14,18 @@ namespace WebStudyServer.Component
     {
         public KingdomStructureComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(KingdomStructureModel model) => CacheKey.For<KingdomStructureModel>(model.PlayerId, model.SfId);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<KingdomStructureModel>(playerId);
+        protected override CacheKey KeyFor(KingdomStructureModel model) => CacheKey.For(CacheKeyTags.KingdomStructureModel, model.PlayerId, model.SfId);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.KingdomStructureModel, playerId);
 
-        public int GetKingdomStructureCnt(int num)
+        public async Task<int> GetKingdomStructureCntAsync(int num)
         {
-            var mdlList = GetMdlList(x => num == x.Num);
+            var mdlList = await GetMdlListAsync(x => num == x.Num);
             return mdlList.Count;
         }
 
-        public KingdomStructureManager Create(KingdomItemProto prt)
+        public async Task<KingdomStructureManager> CreateAsync(KingdomItemProto prt)
         {
-            var mdlKingdomStructure = CreateMdl(new KingdomStructureModel
+            var mdlKingdomStructure = await CreateMdlAsync(new KingdomStructureModel
             {
                 SfId = IdHelper.GenerateSfId(),
                 Num = prt.Num,
@@ -36,30 +36,29 @@ namespace WebStudyServer.Component
             return new KingdomStructureManager(_userRepo, mdlKingdomStructure, prt);
         }
 
-        public KingdomStructureManager Get(ulong sfId)
+        public async Task<KingdomStructureManager> GetAsync(ulong sfId)
         {
-            ReqHelper.ValidContext(TryGetInternal(sfId, out var mdlKingdomStructure),
-                "NOT_FOUND_KINGDOM_ITEM", () => new { SfId = sfId });
+            var mdlKingdomStructure = await TryGetInternalAsync(sfId);
+            ReqHelper.ValidContext(mdlKingdomStructure != null, "NOT_FOUND_KINGDOM_ITEM", () => new { SfId = sfId });
             return new KingdomStructureManager(_userRepo, mdlKingdomStructure);
         }
 
-        public List<KingdomStructureManager> GetAllList(List<ulong> sfIdList)
+        public async Task<List<KingdomStructureManager>> GetAllListAsync(List<ulong> sfIdList)
         {
             if (sfIdList.Count == 0)
             {
                 return [];
             }
 
-            var mdlList = GetMdlList(x => sfIdList.Contains(x.SfId));
-            ReqHelper.ValidContext(mdlList.Count != sfIdList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST",
+            var mdlList = await GetMdlListAsync(x => sfIdList.Contains(x.SfId));
+            ReqHelper.ValidContext(mdlList.Count == sfIdList.Count, "NOT_EQUAL_KINGDOM_ITEM_LIST",
                 () => new { SfIdList = sfIdList, MdlIdList = mdlList.Select(x => x.SfId) });
             return [.. mdlList.Select(x => new KingdomStructureManager(_userRepo, x))];
         }
 
-        private bool TryGetInternal(ulong sfId, out KingdomStructureModel outKingdomStructure)
+        private Task<KingdomStructureModel?> TryGetInternalAsync(ulong sfId)
         {
-            outKingdomStructure = GetMdl(x => x.SfId == sfId);
-            return outKingdomStructure != null;
+            return GetMdlAsync(x => x.SfId == sfId);
         }
     }
 }

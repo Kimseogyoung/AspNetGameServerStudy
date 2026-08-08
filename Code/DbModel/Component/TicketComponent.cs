@@ -12,16 +12,17 @@ namespace WebStudyServer.Component
     {
         public TicketComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(TicketModel model) => CacheKey.For<TicketModel>(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<TicketModel>(playerId);
+        protected override CacheKey KeyFor(TicketModel model) => CacheKey.For(CacheKeyTags.TicketModel, model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.TicketModel, playerId);
 
-        public TicketManager Touch(EObjType objType)
+        public async Task<TicketManager> TouchAsync(EObjType objType)
         {
             var ticketNum = (int)objType;
 
-            if (!TryGetInternal(ticketNum, out var mdlTicket))
+            var mdlTicket = await TryGetInternalAsync(ticketNum);
+            if (mdlTicket == null)
             {
-                mdlTicket = CreateMdl(new TicketModel
+                mdlTicket = await CreateMdlAsync(new TicketModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = ticketNum,
@@ -31,10 +32,9 @@ namespace WebStudyServer.Component
             return new TicketManager(_userRepo, mdlTicket);
         }
 
-        public bool TryGetInternal(int num, out TicketModel outTicket)
+        public Task<TicketModel?> TryGetInternalAsync(int num)
         {
-            outTicket = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
-            return outTicket != null;
+            return GetMdlAsync(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
         }
     }
 }

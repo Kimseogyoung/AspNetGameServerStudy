@@ -17,55 +17,47 @@ namespace WebStudyServer.Component
             internal static TimeSpan Ttl => Config<CoreConfig>.Get().CacheDefaultTtl;
 
             public static CacheKey AccountIdBySessionKey(string key)
-                => CacheKey.For<SessionModel>("AccountBySessionKey", key); // 제네릭 T떼기
+                => CacheKey.For(CacheKeyTags.SessionModel, "AccountBySessionKey", key);
 
             public static CacheKey SessionByAccountId(ulong accountId)
-                => CacheKey.For<SessionModel>("AccountId", accountId);
+                => CacheKey.For(CacheKeyTags.SessionModel, "AccountId", accountId);
         }
 
         public SessionComponent(AuthRepo authRepo, IRepository repository) : base(authRepo, repository)
         {
         }
 
-        public bool TryGetByKey(string key, out SessionManager mgrSession)
+        public async Task<SessionManager?> TryGetByKeyAsync(string key)
         {
-            mgrSession = null;
-
             var accountIdBySessionKey = Key.AccountIdBySessionKey(key);
 
-            if (!_repository.Cache.TryGet<ulong>(accountIdBySessionKey, out var cachedAccountId, Key.Ttl))
+            var cached = await _repository.Cache.TryGetAsync<ulong>(accountIdBySessionKey, Key.Ttl);
+            if (!cached.Hit)
             {
                 var dbSession = GetMdl<SessionModel>(db => db.SelectByConditions<SessionModel>(new { Key = key }));
                 if (dbSession == null)
                 {
-                    return false;
+                    return null;
                 }
 
-                _repository.Cache.Set(Key.SessionByAccountId(dbSession.AccountId), dbSession, Key.Ttl);
-                _repository.Cache.Set(accountIdBySessionKey, dbSession.AccountId, Key.Ttl);
-                mgrSession = new SessionManager(_authRepo, dbSession);
-                return true;
+                await _repository.Cache.SetAsync(Key.SessionByAccountId(dbSession.AccountId), dbSession, Key.Ttl);
+                await _repository.Cache.SetAsync(accountIdBySessionKey, dbSession.AccountId, Key.Ttl);
+                return new SessionManager(_authRepo, dbSession);
             }
 
-            return TryGetByAccountId(cachedAccountId, out mgrSession);
+            return await TryGetByAccountIdAsync(cached.Value);
         }
 
-        public bool TryGetByAccountId(ulong accountId, out SessionManager mgrSession)
+        public async Task<SessionManager?> TryGetByAccountIdAsync(ulong accountId)
         {
-            mgrSession = null;
-            var mdlSession = GetByAccountId(accountId);
-            if (mdlSession == null)
-            {
-                return false;
-            }
-            mgrSession = new SessionManager(_authRepo, mdlSession);
-            return true;
+            var mdlSession = await GetByAccountIdAsync(accountId);
+            return mdlSession == null ? null : new SessionManager(_authRepo, mdlSession);
         }
 
-        private SessionModel? GetByAccountId(ulong accountId)
+        private async Task<SessionModel?> GetByAccountIdAsync(ulong accountId)
         {
             var sessionByAccountIdKey = Key.SessionByAccountId(accountId);
-            var session = GetMdlWithCache<SessionModel>(
+            var session = await GetMdlWithCacheAsync<SessionModel>(
                     sessionByAccountIdKey,
                     db => db.SelectByConditions<SessionModel>(new { AccountId = accountId }),
                     Key.Ttl);
@@ -74,15 +66,15 @@ namespace WebStudyServer.Component
             {
                 // 포인터 업데이트
                 var accountIdBySessionKey = Key.AccountIdBySessionKey(session.Key);
-                _repository.Cache.Set(accountIdBySessionKey, accountId, Key.Ttl);
+                await _repository.Cache.SetAsync(accountIdBySessionKey, accountId, Key.Ttl);
             }
 
             return session;
         }
 
-        public SessionManager Touch(ulong accountId)
+        public async Task<SessionManager> TouchAsync(ulong accountId)
         {
-            var mdlSession = GetByAccountId(accountId);
+            var mdlSession = await GetByAccountIdAsync(accountId);
             if (mdlSession == null)
             {
                 mdlSession = CreateMdl(new SessionModel
@@ -101,30 +93,30 @@ namespace WebStudyServer.Component
                 });
 
                 var accountIdKey = Key.SessionByAccountId(accountId);
-                _repository.Cache.Set(accountIdKey, mdlSession, Key.Ttl);
-                _repository.Cache.Set(Key.AccountIdBySessionKey(mdlSession.Key), accountId, Key.Ttl);
+                await _repository.Cache.SetAsync(accountIdKey, mdlSession, Key.Ttl);
+                await _repository.Cache.SetAsync(Key.AccountIdBySessionKey(mdlSession.Key), accountId, Key.Ttl);
             }
             return new SessionManager(_authRepo, mdlSession);
         }
 
         // primary 캐시 갱신. 키 로테이션 시 이전 포인터 제거 + 새 포인터 등록.
-        public void Update(string befSessionKey, SessionModel mdlSession)
+        public async Task UpdateAsync(string befSessionKey, SessionModel mdlSession)
         {
             if (befSessionKey != mdlSession.Key)
             {
-                _repository.Cache.Invalidate(Key.AccountIdBySessionKey(befSessionKey));
-                _repository.Cache.Set(Key.AccountIdBySessionKey(mdlSession.Key), mdlSession.AccountId, Key.Ttl);
+                await _repository.Cache.InvalidateAsync(Key.AccountIdBySessionKey(befSessionKey));
+                await _repository.Cache.SetAsync(Key.AccountIdBySessionKey(mdlSession.Key), mdlSession.AccountId, Key.Ttl);
             }
 
             UpdateMdl(mdlSession);
-            _repository.Cache.Set(Key.SessionByAccountId(mdlSession.AccountId), mdlSession, Key.Ttl);
+            await _repository.Cache.SetAsync(Key.SessionByAccountId(mdlSession.AccountId), mdlSession, Key.Ttl);
         }
 
         // 두 키 즉시 제거
-        public void Logout(SessionModel mdlSession)
+        public async Task LogoutAsync(SessionModel mdlSession)
         {
-            _repository.Cache.Invalidate(Key.SessionByAccountId(mdlSession.AccountId));
-            _repository.Cache.Invalidate(Key.AccountIdBySessionKey(mdlSession.Key));
+            await _repository.Cache.InvalidateAsync(Key.SessionByAccountId(mdlSession.AccountId));
+            await _repository.Cache.InvalidateAsync(Key.AccountIdBySessionKey(mdlSession.Key));
         }
     }
 }

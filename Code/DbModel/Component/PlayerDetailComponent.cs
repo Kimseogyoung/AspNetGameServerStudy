@@ -11,16 +11,17 @@ namespace WebStudyServer.Component
     {
         public PlayerDetailComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(PlayerDetailModel model) => CacheKey.For<PlayerDetailModel>(model.PlayerId);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<PlayerDetailModel>(playerId);
+        protected override CacheKey KeyFor(PlayerDetailModel model) => CacheKey.For(CacheKeyTags.PlayerDetailModel, model.PlayerId);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.PlayerDetailModel, playerId);
 
-        public PlayerDetailManager Touch()
+        public async Task<PlayerDetailManager> TouchAsync()
         {
             var playerId = _userRepo.RpcContext.PlayerId;
 
-            if (!TryGet(playerId, out var mdlPlayerDetail))
+            var mdlPlayerDetail = await TryGetAsync(playerId);
+            if (mdlPlayerDetail == null)
             {
-                mdlPlayerDetail = CreateMdl(new PlayerDetailModel
+                mdlPlayerDetail = await CreateMdlAsync(new PlayerDetailModel
                 {
                     PlayerId = playerId,
                 });
@@ -29,10 +30,9 @@ namespace WebStudyServer.Component
             return new PlayerDetailManager(_userRepo, mdlPlayerDetail);
         }
 
-        public bool TryGet(ulong id, out PlayerDetailModel outPlayer)
+        public Task<PlayerDetailModel?> TryGetAsync(ulong id)
         {
-            outPlayer = GetMdl(x => x.PlayerId == id);
-            return outPlayer != null;
+            return GetMdlAsync(x => x.PlayerId == id);
         }
     }
 }

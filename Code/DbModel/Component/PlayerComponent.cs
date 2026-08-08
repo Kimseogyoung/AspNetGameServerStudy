@@ -13,8 +13,8 @@ namespace WebStudyServer.Component
     {
         public PlayerComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(PlayerModel model) => CacheKey.For<PlayerModel>(model.Id);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<PlayerModel>(playerId);
+        protected override CacheKey KeyFor(PlayerModel model) => CacheKey.For(CacheKeyTags.PlayerModel, model.Id);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.PlayerModel, playerId);
 
         // PlayerModel의 PK는 Id (PlayerId 컬럼 없음)
         protected override List<PlayerModel> LoadFromDb(IDbExecutor db)
@@ -22,7 +22,7 @@ namespace WebStudyServer.Component
             return db.SelectListByConditions<PlayerModel>(new { Id = RpcCtx.PlayerId }).ToList();
         }
 
-        public PlayerManager Touch()
+        public async Task<PlayerManager> TouchAsync()
         {
             var playerId = _userRepo.RpcContext.PlayerId;
             var accountId = _userRepo.RpcContext.AccountId;
@@ -30,7 +30,7 @@ namespace WebStudyServer.Component
             if (playerId == 0)
             {
                 _userRepo.RpcContext.SetPlayerId(accountId * 10);
-                var mdlPlayer = CreateMdl(new PlayerModel
+                var mdlPlayer = await CreateMdlAsync(new PlayerModel
                 {
                     Id = _userRepo.RpcContext.PlayerId,
                     AccountId = accountId,
@@ -40,21 +40,21 @@ namespace WebStudyServer.Component
                 return new PlayerManager(_userRepo, mdlPlayer);
             }
 
-            return Get();
+            return await GetAsync();
         }
 
-        public PlayerManager Get()
+        public async Task<PlayerManager> GetAsync()
         {
             var playerId = _userRepo.RpcContext.PlayerId;
             ReqHelper.ValidContext(playerId != 0, "ZERO_PLAYER_ID", () => new { PlayerId = playerId });
-            ReqHelper.ValidContext(TryGet(playerId, out var outMdlPlayer), "NOT_FOUND_PLAYER", () => new { PlayerId = playerId });
+            var outMdlPlayer = await TryGetAsync(playerId);
+            ReqHelper.ValidContext(outMdlPlayer != null, "NOT_FOUND_PLAYER", () => new { PlayerId = playerId });
             return new PlayerManager(_userRepo, outMdlPlayer);
         }
 
-        public bool TryGet(ulong id, out PlayerModel outPlayer)
+        public Task<PlayerModel?> TryGetAsync(ulong id)
         {
-            outPlayer = GetMdl(x => x.Id == id);
-            return outPlayer != null;
+            return GetMdlAsync(x => x.Id == id);
         }
 
         public bool TryGetByAccountId(ulong accountId, out PlayerModel outPlayer)

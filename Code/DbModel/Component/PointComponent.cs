@@ -12,16 +12,17 @@ namespace WebStudyServer.Component
     {
         public PointComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(PointModel model) => CacheKey.For<PointModel>(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<PointModel>(playerId);
+        protected override CacheKey KeyFor(PointModel model) => CacheKey.For(CacheKeyTags.PointModel, model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.PointModel, playerId);
 
-        public PointManager Touch(EObjType objType)
+        public async Task<PointManager> TouchAsync(EObjType objType)
         {
             var pointNum = (int)objType;
 
-            if (!TryGetInternal(pointNum, out var mdlPoint))
+            var mdlPoint = await TryGetInternalAsync(pointNum);
+            if (mdlPoint == null)
             {
-                mdlPoint = CreateMdl(new PointModel
+                mdlPoint = await CreateMdlAsync(new PointModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = pointNum,
@@ -31,10 +32,9 @@ namespace WebStudyServer.Component
             return new PointManager(_userRepo, mdlPoint);
         }
 
-        public bool TryGetInternal(int num, out PointModel outPoint)
+        public Task<PointModel?> TryGetInternalAsync(int num)
         {
-            outPoint = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
-            return outPoint != null;
+            return GetMdlAsync(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
         }
     }
 }

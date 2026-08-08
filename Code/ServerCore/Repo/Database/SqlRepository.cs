@@ -16,42 +16,45 @@ namespace ServerCore.Repo.Database
         }
 
         // ── SelectList: Cache → DB(dbFetch 위임) → Set ───────────────────
-        public List<T> GetList<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase
+        public async Task<List<T>> GetListAsync<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase
         {
-            if (Cache.TryGet<List<T>>(listKey, out var cached, CacheTtl))
+            var cached = await Cache.TryGetAsync<List<T>>(listKey, CacheTtl);
+            if (cached.Hit)
             {
-                return [.. cached];
+                return [.. cached.Value!];
             }
 
             var result = Db.Execute(dbFetch);
-            Cache.Set(listKey, result, CacheTtl);
+            await Cache.SetAsync(listKey, result, CacheTtl);
             return result;
         }
 
         // ── Insert: DB → 캐시 로드 중이면 항목 추가 ─────────────────────
-        public T Insert<T>(T entity, CacheKey listKey) where T : ModelBase
+        public async Task<T> InsertAsync<T>(T entity, CacheKey listKey) where T : ModelBase
         {
             entity = Db.Execute(db => db.Insert<T>(entity));
 
-            if (Cache.TryGet<List<T>>(listKey, out var cached))
+            var cached = await Cache.TryGetAsync<List<T>>(listKey);
+            if (cached.Hit)
             {
-                Cache.Set(listKey, new List<T>(cached) { entity }, CacheTtl);
+                await Cache.SetAsync(listKey, new List<T>(cached.Value!) { entity }, CacheTtl);
             }
 
             return entity;
         }
 
         // ── Update: DB → 캐시 로드 중이면 match 항목 교체 ────────────────
-        public void Update<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
+        public async Task UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
         {
             Db.Execute(db => db.Update<T>(entity));
 
-            if (!Cache.TryGet<List<T>>(listKey, out var cached))
+            var cached = await Cache.TryGetAsync<List<T>>(listKey);
+            if (!cached.Hit)
             {
                 return;
             }
 
-            var newList = cached.ToList();
+            var newList = cached.Value!.ToList();
             var idx = newList.FindIndex(x => match(x));
             if (idx >= 0)
             {
@@ -61,7 +64,7 @@ namespace ServerCore.Repo.Database
             {
                 newList.Add(entity);
             }
-            Cache.Set(listKey, newList, CacheTtl);
+            await Cache.SetAsync(listKey, newList, CacheTtl);
         }
 
         private static TimeSpan CacheTtl => Config<CoreConfig>.Get().CacheDefaultTtl;

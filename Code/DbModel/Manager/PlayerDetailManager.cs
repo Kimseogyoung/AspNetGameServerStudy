@@ -26,9 +26,9 @@ namespace WebStudyServer.Manager
         }
 
         // TODO: Reward관련 내용 별도 멤버변수로 빼는것 고려
-        public ChgObjPacket DecCost(ObjValue valCostObj, string reason)
+        public async Task<ChgObjPacket> DecCostAsync(ObjValue valCostObj, string reason)
         {
-            var amount = DecCost(valCostObj.Key.Type, valCostObj.Key.Num, valCostObj.Value, reason);
+            var amount = await DecCostAsync(valCostObj.Key.Type, valCostObj.Key.Num, valCostObj.Value, reason);
             var obj = new ChgObjPacket
             {
                 TotalAmount = amount,
@@ -39,7 +39,7 @@ namespace WebStudyServer.Manager
             return obj;
         }
 
-        public double DecCost(EObjType objType, int objNum, double objAmount, string reason)
+        public async Task<double> DecCostAsync(EObjType objType, int objNum, double objAmount, string reason)
         {
             // 마이너스, 소수점 체크
             ReqHelper.ValidUnderFlowParam(objAmount, reason);
@@ -49,44 +49,44 @@ namespace WebStudyServer.Manager
             switch (objTypeCategory)
             {
                 case EObjType.EXP:
-                    var exp = DecExpInternal(valObjAmount, reason);
+                    var exp = await DecExpInternalAsync(valObjAmount, reason);
                     return exp;
                 case EObjType.GOLD:
-                    var gold = DecGoldInternal(valObjAmount, reason);
+                    var gold = await DecGoldInternalAsync(valObjAmount, reason);
                     return gold;
                 case EObjType.TOTAL_CASH:
-                    var totalCash = DecCashInternal(valObjAmount, reason);
+                    var totalCash = await DecCashInternalAsync(valObjAmount, reason);
                     return totalCash;
                 case EObjType.POINT_START:
                     var pointNum = (int)objType;
-                    var pointAmount = DecPointInternal(pointNum, valObjAmount, reason);
+                    var pointAmount = await DecPointInternalAsync(pointNum, valObjAmount, reason);
                     return pointAmount;
                 case EObjType.TICKET_START:
                     var ticketNum = (int)objType;
-                    var ticketAmount = DecTicketInternal(ticketNum, valObjAmount, reason);
+                    var ticketAmount = await DecTicketInternalAsync(ticketNum, valObjAmount, reason);
                     return ticketAmount;
                 case EObjType.ITEM:
-                    var itemAmount = DecItemInternal(objNum, valObjAmount, reason);
+                    var itemAmount = await DecItemInternalAsync(objNum, valObjAmount, reason);
                     return itemAmount;
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_COST_OBJ_TYPE", new { ObjType = objType });
             }
         }
 
-        public List<ChgObjPacket> IncRewardList(List<ObjValue> valRewardObjValList, string reason)
+        public async Task<List<ChgObjPacket>> IncRewardListAsync(List<ObjValue> valRewardObjValList, string reason)
         {
             var objList = new List<ChgObjPacket>();
             foreach (var valReward in valRewardObjValList)
             {
-                var obj = IncReward(valReward, reason);
+                var obj = await IncRewardAsync(valReward, reason);
                 objList.Add(obj);
             }
             return objList;
         }
 
-        public ChgObjPacket IncReward(ObjValue valRewardObjVal, string reason)
+        public async Task<ChgObjPacket> IncRewardAsync(ObjValue valRewardObjVal, string reason)
         {
-            var amount = IncReward(valRewardObjVal.Key.Type, valRewardObjVal.Key.Num, valRewardObjVal.Value, reason);
+            var amount = await IncRewardAsync(valRewardObjVal.Key.Type, valRewardObjVal.Key.Num, valRewardObjVal.Value, reason);
             var obj = new ChgObjPacket
             {
                 TotalAmount = amount,
@@ -97,7 +97,7 @@ namespace WebStudyServer.Manager
             return obj;
         }
 
-        public double IncReward(EObjType objType, int objNum, double objAmount, string reason)
+        public async Task<double> IncRewardAsync(EObjType objType, int objNum, double objAmount, string reason)
         {
             // 마이너스, 소수점 체크
             ReqHelper.ValidUnderFlowParam(objAmount, reason);
@@ -107,33 +107,33 @@ namespace WebStudyServer.Manager
             switch (objTypeCategory)
             {
                 case EObjType.GOLD:
-                    var gold = IncGoldInternal(valObjAmount, reason);
+                    var gold = await IncGoldInternalAsync(valObjAmount, reason);
                     return gold;
                 case EObjType.EXP:
-                    var exp = IncExpInternal(valObjAmount, reason);
+                    var exp = await IncExpInternalAsync(valObjAmount, reason);
                     return exp;
                 case EObjType.REAL_CASH:
-                    var realCash = IncRealCashInternal(valObjAmount, reason);
+                    var realCash = await IncRealCashInternalAsync(valObjAmount, reason);
                     return realCash;
                 case EObjType.FREE_CASH:
-                    var freeCash = IncFreeCashInternal(valObjAmount, reason);
+                    var freeCash = await IncFreeCashInternalAsync(valObjAmount, reason);
                     return freeCash;
                 case EObjType.POINT_START:
                     var pointNum = (int)objType;
-                    var pointAmount = IncPointInternal(pointNum, valObjAmount, reason);
+                    var pointAmount = await IncPointInternalAsync(pointNum, valObjAmount, reason);
                     return pointAmount;
                 case EObjType.TICKET_START:
                     var ticketNum = (int)objType;
-                    var ticketAmount = IncTicketInternal(ticketNum, valObjAmount, reason);
+                    var ticketAmount = await IncTicketInternalAsync(ticketNum, valObjAmount, reason);
                     return ticketAmount;
                 case EObjType.ITEM:
-                    var itemAmount = IncItemInternal(objNum, valObjAmount, reason);
+                    var itemAmount = await IncItemInternalAsync(objNum, valObjAmount, reason);
                     return itemAmount;
                 case EObjType.COOKIE:
-                    var cookieSoulStone1 = IncCookieInternal(objNum, (int)valObjAmount, reason);
+                    var cookieSoulStone1 = await IncCookieInternalAsync(objNum, (int)valObjAmount, reason);
                     return cookieSoulStone1;
                 case EObjType.SOUL_STONE:
-                    var cookieSoulStone2 = IncSoulStoneInternal(objNum, (int)valObjAmount, reason);
+                    var cookieSoulStone2 = await IncSoulStoneInternalAsync(objNum, (int)valObjAmount, reason);
                     return cookieSoulStone2;
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_REWARD_OBJ_TYPE", new { ObjType = objType });
@@ -141,9 +141,9 @@ namespace WebStudyServer.Manager
         }
 
         #region GOLD
-        public double DecGold(double amount, string reason) => DecGoldInternal(amount, reason);
-        public double IncGold(double amount, string reason) => IncGoldInternal(amount, reason);
-        private double DecGoldInternal(double amount, string reason)
+        public Task<double> DecGoldAsync(double amount, string reason) => DecGoldInternalAsync(amount, reason);
+        public Task<double> IncGoldAsync(double amount, string reason) => IncGoldInternalAsync(amount, reason);
+        private async Task<double> DecGoldInternalAsync(double amount, string reason)
         {
             _ = _model.Gold;
 
@@ -151,11 +151,11 @@ namespace WebStudyServer.Manager
 
             _model.Gold -= amount;
             _model.AccGold -= amount;
-            _userRepo.PlayerDetail.UpdateMdl(_model);
+            await _userRepo.PlayerDetail.UpdateMdlAsync(_model);
             return _model.Gold;
         }
 
-        private double IncGoldInternal(double amount, string reason)
+        private async Task<double> IncGoldInternalAsync(double amount, string reason)
         {
             _ = _model.Gold;
 
@@ -163,15 +163,15 @@ namespace WebStudyServer.Manager
 
             _model.Gold += amount;
             _model.AccGold += amount;
-            _userRepo.PlayerDetail.UpdateMdl(_model);
+            await _userRepo.PlayerDetail.UpdateMdlAsync(_model);
             return _model.Gold;
         }
         #endregion
 
         #region EXP
-        public double DecExp(double amount, string reason) => DecExpInternal(amount, reason);
-        public double IncExp(double amount, string reason) => IncExpInternal(amount, reason);
-        private double DecExpInternal(double amount, string reason)
+        public Task<double> DecExpAsync(double amount, string reason) => DecExpInternalAsync(amount, reason);
+        public Task<double> IncExpAsync(double amount, string reason) => IncExpInternalAsync(amount, reason);
+        private async Task<double> DecExpInternalAsync(double amount, string reason)
         {
             var befExp = _model.Exp;
 
@@ -181,11 +181,11 @@ namespace WebStudyServer.Manager
 
             _model.Exp -= amount;
             _model.AccExp -= amount;
-            _userRepo.PlayerDetail.UpdateMdl(_model);
+            await _userRepo.PlayerDetail.UpdateMdlAsync(_model);
             return _model.Exp;
         }
 
-        private double IncExpInternal(double amount, string reason)
+        private async Task<double> IncExpInternalAsync(double amount, string reason)
         {
             _ = _model.Exp;
 
@@ -193,16 +193,16 @@ namespace WebStudyServer.Manager
 
             _model.Exp += amount;
             _model.AccExp += amount;
-            _userRepo.PlayerDetail.UpdateMdl(_model);
+            await _userRepo.PlayerDetail.UpdateMdlAsync(_model);
             return _model.Exp;
         }
         #endregion
 
         #region CASH
-        public double DecCash(double amount, string reason) => DecCashInternal(amount, reason);
-        public double IncFreeCash(double amount, string reason) => IncFreeCashInternal(amount, reason);
-        public double IncRealCash(double amount, string reason) => IncRealCashInternal(amount, reason);
-        private double DecCashInternal(double amount, string reason)
+        public Task<double> DecCashAsync(double amount, string reason) => DecCashInternalAsync(amount, reason);
+        public Task<double> IncFreeCashAsync(double amount, string reason) => IncFreeCashInternalAsync(amount, reason);
+        public Task<double> IncRealCashAsync(double amount, string reason) => IncRealCashInternalAsync(amount, reason);
+        private async Task<double> DecCashInternalAsync(double amount, string reason)
         {
             var befFreeCash = _model.FreeCash;
             var befAccFreeCash = _model.AccFreeCash;
@@ -230,13 +230,13 @@ namespace WebStudyServer.Manager
                 _model.AccFreeCash -= freeCashCost;
             }
 
-            _userRepo.PlayerDetail.UpdateMdl(_model);
+            await _userRepo.PlayerDetail.UpdateMdlAsync(_model);
 
             var totalCash = _model.RealCash + _model.FreeCash;
             return totalCash;
         }
 
-        private double IncFreeCashInternal(double amount, string reason)
+        private async Task<double> IncFreeCashInternalAsync(double amount, string reason)
         {
             _ = _model.FreeCash;
 
@@ -244,11 +244,11 @@ namespace WebStudyServer.Manager
 
             _model.FreeCash += amount;
             _model.AccFreeCash += amount;
-            _userRepo.PlayerDetail.UpdateMdl(_model);
+            await _userRepo.PlayerDetail.UpdateMdlAsync(_model);
             return _model.FreeCash;
         }
 
-        private double IncRealCashInternal(double amount, string reason)
+        private async Task<double> IncRealCashInternalAsync(double amount, string reason)
         {
             _ = _model.RealCash;
 
@@ -256,71 +256,71 @@ namespace WebStudyServer.Manager
 
             _model.RealCash += amount;
             _model.AccRealCash += amount;
-            _userRepo.PlayerDetail.UpdateMdl(_model);
+            await _userRepo.PlayerDetail.UpdateMdlAsync(_model);
             return _model.RealCash;
         }
         #endregion
 
         #region POINT
-        private double DecPointInternal(int pointNum, double amount, string reason)
+        private async Task<double> DecPointInternalAsync(int pointNum, double amount, string reason)
         {
-            var mgrPoint = _userRepo.Point.Touch((EObjType)pointNum);
-            var pointAmount = mgrPoint.DecAmount(amount, reason);
+            var mgrPoint = await _userRepo.Point.TouchAsync((EObjType)pointNum);
+            var pointAmount = await mgrPoint.DecAmountAsync(amount, reason);
             return pointAmount;
         }
 
-        private double IncPointInternal(int pointNum, double amount, string reason)
+        private async Task<double> IncPointInternalAsync(int pointNum, double amount, string reason)
         {
-            var mgrPoint = _userRepo.Point.Touch((EObjType)pointNum);
-            var pointAmount = mgrPoint.IncAmount(amount, reason);
+            var mgrPoint = await _userRepo.Point.TouchAsync((EObjType)pointNum);
+            var pointAmount = await mgrPoint.IncAmountAsync(amount, reason);
             return pointAmount;
         }
         #endregion
 
         #region TICKET
-        private double DecTicketInternal(int ticketNum, double amount, string reason)
+        private async Task<double> DecTicketInternalAsync(int ticketNum, double amount, string reason)
         {
-            var mgrPoint = _userRepo.Ticket.Touch((EObjType)ticketNum);
-            var pointAmount = mgrPoint.DecAmount(amount, reason);
+            var mgrPoint = await _userRepo.Ticket.TouchAsync((EObjType)ticketNum);
+            var pointAmount = await mgrPoint.DecAmountAsync(amount, reason);
             return pointAmount;
         }
 
-        private double IncTicketInternal(int ticketNum, double amount, string reason)
+        private async Task<double> IncTicketInternalAsync(int ticketNum, double amount, string reason)
         {
-            var mgrPoint = _userRepo.Ticket.Touch((EObjType)ticketNum);
-            var pointAmount = mgrPoint.IncAmount(amount, reason);
+            var mgrPoint = await _userRepo.Ticket.TouchAsync((EObjType)ticketNum);
+            var pointAmount = await mgrPoint.IncAmountAsync(amount, reason);
             return pointAmount;
         }
         #endregion
 
         #region COOKIE
-        private double IncCookieInternal(int cookieNum, int amount, string reason)
+        private async Task<double> IncCookieInternalAsync(int cookieNum, int amount, string reason)
         {
-            var mgrCookie = _userRepo.Cookie.Touch(cookieNum);
-            var soulStone = mgrCookie.IncCookie(amount, reason);
+            var mgrCookie = await _userRepo.Cookie.TouchAsync(cookieNum);
+            var soulStone = await mgrCookie.IncCookieAsync(amount, reason);
             return soulStone;
         }
 
-        private double IncSoulStoneInternal(int soulStoneNum, int amount, string reason)
+        private async Task<double> IncSoulStoneInternalAsync(int soulStoneNum, int amount, string reason)
         {
-            var mgrCookie = _userRepo.Cookie.TouchBySoulStone(soulStoneNum);
-            var soulStone = mgrCookie.IncSoulStone(amount, reason);
+            var mgrCookie = await _userRepo.Cookie.TouchBySoulStoneAsync(soulStoneNum);
+            var soulStone = await mgrCookie.IncSoulStoneAsync(amount, reason);
             return soulStone;
         }
         #endregion
 
         #region ITEM
-        private double DecItemInternal(int itemNum, double amount, string reason)
+        private async Task<double> DecItemInternalAsync(int itemNum, double amount, string reason)
         {
-            var mgrItem = _userRepo.Item.Touch(itemNum);
-            var itemAmount = mgrItem.DecAmount(amount, reason);
+            var mgrItem = await _userRepo.Item.TouchAsync(itemNum);
+            var itemAmount = await mgrItem.DecAmountAsync(amount, reason);
             return itemAmount;
         }
 
-        private double IncItemInternal(int itemNum, double amount, string reason)
+        private async Task<double> IncItemInternalAsync(int itemNum, double amount, string reason)
         {
-            var mgrItem = _userRepo.Item.Touch(itemNum);
-            var itemAmount = mgrItem.IncAmount(amount, reason);
+            var mgrItem = await _userRepo.Item.TouchAsync(itemNum);
+            var itemAmount = await mgrItem.IncAmountAsync(amount, reason);
             return itemAmount;
         }
         #endregion

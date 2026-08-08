@@ -17,13 +17,13 @@ namespace Server.Service
             _mapper = mapper;
         }
 
-        public KingdomBuyStructureResponsePacket KingdomStructureBuy(KingdomBuyStructureRequestPacket req)
+        public async Task<KingdomBuyStructureResponsePacket> KingdomStructureBuyAsync(KingdomBuyStructureRequestPacket req)
         {
             var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
-            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
-            var hasItemCnt = OwnUser.KingdomStructure.GetKingdomStructureCnt(prtKingdomItem.Num);
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var hasItemCnt = await OwnUser.KingdomStructure.GetKingdomStructureCntAsync(prtKingdomItem.Num);
             ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
 
@@ -31,9 +31,9 @@ namespace Server.Service
             var reason = $"BUY_KINGDOM_STRUCTURE:{req.KingdomItemNum}";
             var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
 
-            var resultCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
+            var resultCostObj = await mgrPlayerDetail.DecCostAsync(valCostObj, reason);
 
-            var mgrKingdomStructure = OwnUser.KingdomStructure.Create(prtKingdomItem);
+            var mgrKingdomStructure = await OwnUser.KingdomStructure.CreateAsync(prtKingdomItem);
             return new KingdomBuyStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
@@ -41,13 +41,13 @@ namespace Server.Service
             };
         }
 
-        public KingdomBuyDecoResponsePacket KingdomDecoBuy(KingdomBuyDecoRequestPacket req)
+        public async Task<KingdomBuyDecoResponsePacket> KingdomDecoBuyAsync(KingdomBuyDecoRequestPacket req)
         {
             var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
-            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
-            var mgrKingdomDeco = OwnUser.KingdomDeco.Touch(prtKingdomItem.Num);
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrKingdomDeco = await OwnUser.KingdomDeco.TouchAsync(prtKingdomItem.Num);
             ReqHelper.ValidContext(mgrKingdomDeco.Model.TotalCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_DECO_CNT",
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = mgrKingdomDeco.Model.TotalCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
 
@@ -55,8 +55,8 @@ namespace Server.Service
             var reason = $"BUY_KINGDOM_DECO:{req.KingdomItemNum}";
             var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
 
-            var chgCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
-            mgrKingdomDeco.Inc(1, reason);
+            var chgCostObj = await mgrPlayerDetail.DecCostAsync(valCostObj, reason);
+            await mgrKingdomDeco.IncAsync(1, reason);
             return new KingdomBuyDecoResponsePacket
             {
                 KingdomDeco = _mapper.Map<KingdomDecoPacket>(mgrKingdomDeco.Model),
@@ -64,11 +64,11 @@ namespace Server.Service
             };
         }
 
-        public KingdomConstructStructureResponsePacket KingdomConstructStructure(KingdomConstructStructureRequestPacket req)
+        public async Task<KingdomConstructStructureResponsePacket> KingdomConstructStructureAsync(KingdomConstructStructureRequestPacket req)
         {
-            var mgrKingdomStructure = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
-            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
-            var mgrKingdomMap = OwnUser.KingdomMap.Touch();
+            var mgrKingdomStructure = await OwnUser.KingdomStructure.GetAsync(req.KingdomStructureId);
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrKingdomMap = await OwnUser.KingdomMap.TouchAsync();
 
             // Tile 위치 중복 체크
             var valTileStartPos = mgrKingdomMap.ValidEmptyTile(req.StartTilePos, mgrKingdomStructure.Prt);
@@ -80,14 +80,14 @@ namespace Server.Service
             var valCostObj = ReqHelper.ValidCost(req.CostObjList[0], prtKingdomItem.ConstructObjType, prtKingdomItem.ConstructObjNum, prtKingdomItem.ConstructObjAmount, reason);
 
             // 처리: 건설 재료 소모
-            var chgCostObj = mgrPlayerDetail.DecCost(valCostObj, reason);
+            var chgCostObj = await mgrPlayerDetail.DecCostAsync(valCostObj, reason);
 
             // DELETEME: Map 형태로 저장 형식 변경            // 처리: 타일 설치
             // var placedKingdomItem = OwnUser.PlacedKingdomItem.Create(mgrKingdomStructure.Prt, reqStartTilePos.X, reqStartTilePos.Y, mgrKingdomStructure);
 
             // 처리: 건설 시작(상태 변경)
-            mgrKingdomMap.ConstructStructure(mgrKingdomStructure, valTileStartPos);
-            mgrKingdomStructure.Construct();
+            await mgrKingdomMap.ConstructStructureAsync(mgrKingdomStructure, valTileStartPos);
+            await mgrKingdomStructure.ConstructAsync();
             return new KingdomConstructStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
@@ -96,12 +96,12 @@ namespace Server.Service
             };
         }
 
-        public KingdomConstructDecoResponsePacket KingdomConstructDeco(KingdomConstructDecoRequestPacket req)
+        public async Task<KingdomConstructDecoResponsePacket> KingdomConstructDecoAsync(KingdomConstructDecoRequestPacket req)
         {
-            var mgrKingdomDeco = OwnUser.KingdomDeco.Touch(req.KingdomItemNum);
+            var mgrKingdomDeco = await OwnUser.KingdomDeco.TouchAsync(req.KingdomItemNum);
 
-            _ = OwnUser.PlayerDetail.Touch();
-            var mgrKingdomMap = OwnUser.KingdomMap.Touch();
+            _ = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrKingdomMap = await OwnUser.KingdomMap.TouchAsync();
 
             // Tile 위치 중복 체크
             var valTileStartPos = mgrKingdomMap.ValidEmptyTile(req.StartTilePos, mgrKingdomDeco.Prt);
@@ -110,8 +110,8 @@ namespace Server.Service
             // var placedKingdomItem = OwnUser.PlacedKingdomItem.Create(mgrKingdomDeco.Prt, reqStartTilePos.X, reqStartTilePos.Y);
 
             // 처리: 건설 완료 (보유 개수 차감)
-            mgrKingdomMap.ConstructDeco(mgrKingdomDeco, valTileStartPos);
-            mgrKingdomDeco.Place();
+            await mgrKingdomMap.ConstructDecoAsync(mgrKingdomDeco, valTileStartPos);
+            await mgrKingdomDeco.PlaceAsync();
 
             return new KingdomConstructDecoResponsePacket
             {
@@ -120,27 +120,27 @@ namespace Server.Service
             };
         }
 
-        public KingdomFinishConstructStructureResponsePacket KingdomFinishConstructStructure(KingdomFinishConstructStructureRequestPacket req)
+        public async Task<KingdomFinishConstructStructureResponsePacket> KingdomFinishConstructStructureAsync(KingdomFinishConstructStructureRequestPacket req)
         {
-            var mgrKingdomItem = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
-            mgrKingdomItem.SetReady(EKingdomItemState.CONSTRUCTING);
+            var mgrKingdomItem = await OwnUser.KingdomStructure.GetAsync(req.KingdomStructureId);
+            await mgrKingdomItem.SetReadyAsync(EKingdomItemState.CONSTRUCTING);
             return new KingdomFinishConstructStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
             };
         }
 
-        public KingdomChangeItemResponsePacket KingdomItemChange(KingdomChangeItemRequestPacket req)
+        public async Task<KingdomChangeItemResponsePacket> KingdomItemChangeAsync(KingdomChangeItemRequestPacket req)
         {
-            var mgrKingdomMap = OwnUser.KingdomMap.Touch();
+            var mgrKingdomMap = await OwnUser.KingdomMap.TouchAsync();
 
             // Chg + Place 리스트중에 겹치는거 없는지 검증
             var valSnapshot = mgrKingdomMap.ValiePlaceItemsSnapshot(req.StoreKingdomItemIdList, req.ChgKingdomItemList, req.PlaceKingdomItemList,
                 out var valStructureDeltaCntDict, out var valDecoDeltaCntDict);
 
             // Store + Create 한 변화량으로, 보유 수량 검증
-            var mgrKingdomStructureList = OwnUser.KingdomStructure.GetAllList([.. valStructureDeltaCntDict.Keys]);
-            var mgrKingdomDecoList = OwnUser.KingdomDeco.GetAllList([.. valDecoDeltaCntDict.Keys]);
+            var mgrKingdomStructureList = await OwnUser.KingdomStructure.GetAllListAsync([.. valStructureDeltaCntDict.Keys]);
+            var mgrKingdomDecoList = await OwnUser.KingdomDeco.GetAllListAsync([.. valDecoDeltaCntDict.Keys]);
             foreach (var mgrKingdomStructure in mgrKingdomStructureList)
             {
                 var cnt = valStructureDeltaCntDict[mgrKingdomStructure.Model.SfId];
@@ -160,11 +160,11 @@ namespace Server.Service
                 var cnt = valStructureDeltaCntDict[mgrKingdomStructure.Model.SfId];
                 if (cnt > 0)
                 {
-                    mgrKingdomStructure.Store();
+                    await mgrKingdomStructure.StoreAsync();
                 }
                 else if (cnt < 0)
                 {
-                    mgrKingdomStructure.Place();
+                    await mgrKingdomStructure.PlaceAsync();
                 }
             }
 
@@ -173,15 +173,15 @@ namespace Server.Service
                 var cnt = valDecoDeltaCntDict[mgrKingdomDeco.Model.Num];
                 if (cnt > 0)
                 {
-                    mgrKingdomDeco.Store(cnt);
+                    await mgrKingdomDeco.StoreAsync(cnt);
                 }
                 else if (cnt < 0)
                 {
-                    mgrKingdomDeco.Place(-cnt);
+                    await mgrKingdomDeco.PlaceAsync(-cnt);
                 }
             }
             // 맵 스냅샷 저장
-            mgrKingdomMap.SaveSnapshot(valSnapshot);
+            await mgrKingdomMap.SaveSnapshotAsync(valSnapshot);
 
             // 로그
 
@@ -193,17 +193,17 @@ namespace Server.Service
             };
         }
 
-        public KingdomDecTimeStructureResponsePacket KingdomStructureDecTime(KingdomDecTimeStructureRequestPacket req)
+        public async Task<KingdomDecTimeStructureResponsePacket> KingdomStructureDecTimeAsync(KingdomDecTimeStructureRequestPacket req)
         {
-            var mgrKingdomItem = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
-            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
+            var mgrKingdomItem = await OwnUser.KingdomStructure.GetAsync(req.KingdomStructureId);
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
 
 
             // TODO: 남은 시간, 캐시 보유량 일치하는지 검증
             //
 
-            _ = mgrPlayerDetail.DecCash(req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
-            mgrKingdomItem.DecTime();
+            _ = await mgrPlayerDetail.DecCashAsync(req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
+            await mgrKingdomItem.DecTimeAsync();
             return new KingdomDecTimeStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
@@ -211,10 +211,10 @@ namespace Server.Service
             };
         }
 
-        public KingdomFinishCraftStructureResponsePacket KingdomFinishCraftStructure(KingdomFinishCraftStructureRequestPacket req)
+        public async Task<KingdomFinishCraftStructureResponsePacket> KingdomFinishCraftStructureAsync(KingdomFinishCraftStructureRequestPacket req)
         {
-            var mgrKingdomItem = OwnUser.KingdomStructure.Get(req.KingdomStructureId);
-            mgrKingdomItem.SetReady(EKingdomItemState.CRAFTING);
+            var mgrKingdomItem = await OwnUser.KingdomStructure.GetAsync(req.KingdomStructureId);
+            await mgrKingdomItem.SetReadyAsync(EKingdomItemState.CRAFTING);
             return new KingdomFinishCraftStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),

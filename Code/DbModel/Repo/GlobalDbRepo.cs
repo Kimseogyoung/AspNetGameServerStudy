@@ -67,7 +67,7 @@ namespace Server.Repo
             return new AllUserRepo(factories);
         }
 
-        public void Commit()
+        public async Task CommitAsync()
         {
             try
             {
@@ -76,13 +76,13 @@ namespace Server.Repo
             catch (Exception e)
             {
                 _logger.LogError(e, "DB Commit 오류");
-                Rollback();
+                await RollbackAsync();
                 throw;
             }
 
             try
             {
-                _cacheSession.FlushPendingWrites();
+                await _cacheSession.FlushPendingWritesAsync();
             }
             catch (Exception e)
             {
@@ -92,7 +92,7 @@ namespace Server.Repo
             }
         }
 
-        public void Rollback()
+        public Task RollbackAsync()
         {
             try
             {
@@ -106,6 +106,8 @@ namespace Server.Repo
                 Close();
                 throw;
             }
+
+            return Task.CompletedTask;
         }
 
         public void Close()

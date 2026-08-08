@@ -5,7 +5,6 @@ using ServerCore;
 using ServerCore.Extension;
 using ServerCore.Repo.Cache;
 using ServerCore.Repo.Database;
-using StackExchange.Redis;
 using WebStudyServer.Model;
 
 namespace RaidServer
@@ -28,21 +27,7 @@ namespace RaidServer
             }
 
             // Cache (세션 검증 등 공유 Redis 용도)
-            switch (Config<CoreConfig>.Get().CacheType)
-            {
-                case CacheType.Redis:
-                    services.AddSingleton<IConnectionMultiplexer>(
-                        _ => ConnectionMultiplexer.Connect(Config<CoreConfig>.Get().RedisConnectionString));
-                    services.AddScoped<InMemoryCacheLayer>();
-                    services.AddScoped<RedisCacheLayer>();
-                    services.AddScoped<ICacheSession, RedisCompositeCacheLayer>();
-                    break;
-                case CacheType.InMemory:
-                    services.AddScoped<ICacheSession, InMemoryCacheLayer>();
-                    break;
-                default:
-                    throw new Exception($"No handling CacheType({Config<CoreConfig>.Get().CacheType})");
-            }
+            services.AddCacheSession(Config<CoreConfig>.Get().CacheType, Config<CoreConfig>.Get().RedisConnectionString);
 
             services.AddSingleton<InMemoryStore>();
 

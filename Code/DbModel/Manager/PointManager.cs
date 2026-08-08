@@ -13,7 +13,7 @@ namespace WebStudyServer.Manager
         {
         }
 
-        public double DecAmount(double amount, string reason)
+        public async Task<double> DecAmountAsync(double amount, string reason)
         {
             var befAmount = _model.Amount;
 
@@ -23,11 +23,11 @@ namespace WebStudyServer.Manager
 
             _model.Amount -= amount;
             _model.AccAmount -= amount;
-            _userRepo.Point.UpdateMdl(_model);
+            await _userRepo.Point.UpdateMdlAsync(_model);
             return _model.Amount;
         }
 
-        public double IncAmount(double amount, string reason)
+        public async Task<double> IncAmountAsync(double amount, string reason)
         {
             _ = _model.Amount;
 
@@ -35,7 +35,7 @@ namespace WebStudyServer.Manager
 
             _model.Amount += amount;
             _model.AccAmount += amount;
-            _userRepo.Point.UpdateMdl(_model);
+            await _userRepo.Point.UpdateMdlAsync(_model);
             return _model.Amount;
         }
 

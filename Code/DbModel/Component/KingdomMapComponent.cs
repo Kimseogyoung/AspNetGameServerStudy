@@ -12,14 +12,15 @@ namespace WebStudyServer.Component
     {
         public KingdomMapComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(KingdomMapModel model) => CacheKey.For<KingdomMapModel>(model.PlayerId);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<KingdomMapModel>(playerId);
+        protected override CacheKey KeyFor(KingdomMapModel model) => CacheKey.For(CacheKeyTags.KingdomMapModel, model.PlayerId);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.KingdomMapModel, playerId);
 
-        public KingdomMapManager Touch()
+        public async Task<KingdomMapManager> TouchAsync()
         {
-            if (!TryGetInternal(out var mdlKingdomMap))
+            var mdlKingdomMap = await TryGetInternalAsync();
+            if (mdlKingdomMap == null)
             {
-                mdlKingdomMap = CreateMdl(new KingdomMapModel
+                mdlKingdomMap = await CreateMdlAsync(new KingdomMapModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Snapshot = "",
@@ -30,10 +31,9 @@ namespace WebStudyServer.Component
             return new KingdomMapManager(_userRepo, mdlKingdomMap);
         }
 
-        private bool TryGetInternal(out KingdomMapModel outKingdomMap)
+        private Task<KingdomMapModel?> TryGetInternalAsync()
         {
-            outKingdomMap = GetMdl(x => x.PlayerId == RpcCtx.PlayerId);
-            return outKingdomMap != null;
+            return GetMdlAsync(x => x.PlayerId == RpcCtx.PlayerId);
         }
     }
 }

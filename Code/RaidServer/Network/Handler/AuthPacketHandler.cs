@@ -16,9 +16,9 @@ namespace RaidServer.Network
             _logger = logger;
         }
 
-        protected override Task RunAsync(string sessionId, AuthRequestPacket req)
+        protected override async Task RunAsync(string sessionId, AuthRequestPacket req)
         {
-            var res = _playerRaidSessionService.Authenticate(sessionId, req);
+            var res = await _playerRaidSessionService.AuthenticateAsync(sessionId, req);
 
             if (res.Result == EAuthResult.Success)
             {
@@ -36,8 +36,6 @@ namespace RaidServer.Network
                 ProtocolType = EProtocolType.Json,
                 Payload = res,
             });
-
-            return Task.CompletedTask;
         }
 
         private readonly SessionService _sessionService;

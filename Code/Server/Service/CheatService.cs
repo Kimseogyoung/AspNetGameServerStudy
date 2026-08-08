@@ -18,10 +18,10 @@ namespace Server.Service
             _mapper = mapper;
         }
 
-        public CheatRewardResponsePacket Reward(CheatRewardRequestPacket req)
+        public async Task<CheatRewardResponsePacket> RewardAsync(CheatRewardRequestPacket req)
         {
-            var mgrPlayerDetail = _dbRepo.OwnUser.PlayerDetail.Touch();
-            var chgObjList = mgrPlayerDetail.IncRewardList(req.RewardList, "CHEAT");
+            var mgrPlayerDetail = await _dbRepo.OwnUser.PlayerDetail.TouchAsync();
+            var chgObjList = await mgrPlayerDetail.IncRewardListAsync(req.RewardList, "CHEAT");
             return new CheatRewardResponsePacket
             {
                 ChgObjList = chgObjList

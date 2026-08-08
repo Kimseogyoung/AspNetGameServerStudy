@@ -24,7 +24,7 @@ namespace WebStudyServer.Manager
             return needSoulStone;
         }
 
-        public double IncCookie(int amount, string reason)
+        public async Task<double> IncCookieAsync(int amount, string reason)
         {
             _ = _model.SoulStone;
 
@@ -43,11 +43,11 @@ namespace WebStudyServer.Manager
                 _model.AccSoulStone += soulStoneCnt;
             }
 
-            _userRepo.Cookie.UpdateMdl(_model);
+            await _userRepo.Cookie.UpdateMdlAsync(_model);
             return _model.AccSoulStone;
         }
 
-        public double IncSoulStone(int amount, string reason)
+        public async Task<double> IncSoulStoneAsync(int amount, string reason)
         {
             _ = _model.SoulStone;
 
@@ -55,11 +55,11 @@ namespace WebStudyServer.Manager
 
             _model.SoulStone += amount;
             _model.AccSoulStone += amount;
-            _userRepo.Cookie.UpdateMdl(_model);
+            await _userRepo.Cookie.UpdateMdlAsync(_model);
             return _model.AccSoulStone;
         }
 
-        public void EnhanceStar(int aftStar, int usedSoulStone)
+        public async Task EnhanceStarAsync(int aftStar, int usedSoulStone)
         {
             _ = _model.Star;
             var befSoulStone = _model.SoulStone;
@@ -67,15 +67,15 @@ namespace WebStudyServer.Manager
 
             _model.Star = aftStar;
             _model.SoulStone -= usedSoulStone;
-            _userRepo.Cookie.UpdateMdl(_model);
+            await _userRepo.Cookie.UpdateMdlAsync(_model);
         }
 
-        public void EnhanceLv(int aftLv)
+        public async Task EnhanceLvAsync(int aftLv)
         {
             _ = _model.Lv;
 
             _model.Lv = aftLv;
-            _userRepo.Cookie.UpdateMdl(_model);
+            await _userRepo.Cookie.UpdateMdlAsync(_model);
         }
 
         private readonly CookieProto _prt = null;

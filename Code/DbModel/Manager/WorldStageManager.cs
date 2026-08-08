@@ -15,10 +15,10 @@ namespace WebStudyServer.Manager
             Prt = ProtoDb.Get<WorldStageProto>(model.Num);
         }
 
-        public void SetStar(int star)
+        public async Task SetStarAsync(int star)
         {
             _model.Star = star;
-            _userRepo.WorldStage.UpdateMdl(_model);
+            await _userRepo.WorldStage.UpdateMdlAsync(_model);
         }
     }
 }

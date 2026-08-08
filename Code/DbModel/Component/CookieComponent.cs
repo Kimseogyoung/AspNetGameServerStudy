@@ -12,14 +12,15 @@ namespace WebStudyServer.Component
     {
         public CookieComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(CookieModel model) => CacheKey.For<CookieModel>(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<CookieModel>(playerId);
+        protected override CacheKey KeyFor(CookieModel model) => CacheKey.For(CacheKeyTags.CookieModel, model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.CookieModel, playerId);
 
-        public CookieManager Touch(int cookieNum)
+        public async Task<CookieManager> TouchAsync(int cookieNum)
         {
-            if (!TryGetInternal(cookieNum, out var mdlCookie))
+            var mdlCookie = await TryGetInternalAsync(cookieNum);
+            if (mdlCookie == null)
             {
-                mdlCookie = CreateMdl(new CookieModel
+                mdlCookie = await CreateMdlAsync(new CookieModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = cookieNum,
@@ -31,16 +32,15 @@ namespace WebStudyServer.Component
             return new CookieManager(_userRepo, mdlCookie);
         }
 
-        public CookieManager TouchBySoulStone(int soulStoneNum)
+        public Task<CookieManager> TouchBySoulStoneAsync(int soulStoneNum)
         {
             var prt = ProtoDb.Get<CookieSoulStoneProto>(soulStoneNum);
-            return Touch(prt.CookieNum);
+            return TouchAsync(prt.CookieNum);
         }
 
-        public bool TryGetInternal(int num, out CookieModel outCookie)
+        public Task<CookieModel?> TryGetInternalAsync(int num)
         {
-            outCookie = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
-            return outCookie != null;
+            return GetMdlAsync(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
         }
     }
 }

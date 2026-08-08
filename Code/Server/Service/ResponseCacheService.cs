@@ -22,25 +22,25 @@ namespace Server.Service
             _enabled = Config<CoreConfig>.Get().CacheType == CacheType.Redis;
         }
 
-        public bool TryGet(RpcContext rpcCtx, out byte[] cachedBody)
+        public async Task<(bool Hit, byte[] Body)> TryGetAsync(RpcContext rpcCtx)
         {
             if (!_enabled || string.IsNullOrEmpty(rpcCtx.SessionKey))
             {
-                cachedBody = null;
-                return false;
+                return (false, null);
             }
 
-            return _cacheSession.TryGet(MakeKey(rpcCtx), out cachedBody);
+            var result = await _cacheSession.TryGetAsync<byte[]>(MakeKey(rpcCtx));
+            return (result.Hit, result.Value);
         }
 
-        public void Set(RpcContext rpcCtx, byte[] body)
+        public async Task SetAsync(RpcContext rpcCtx, byte[] body)
         {
             if (!_enabled || string.IsNullOrEmpty(rpcCtx.SessionKey))
             {
                 return;
             }
 
-            _cacheSession.Set(MakeKey(rpcCtx), body);
+            await _cacheSession.SetAsync(MakeKey(rpcCtx), body);
         }
 
         private static CacheKey MakeKey(RpcContext rpcCtx)

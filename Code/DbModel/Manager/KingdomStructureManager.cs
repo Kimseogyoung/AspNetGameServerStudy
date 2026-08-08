@@ -34,7 +34,7 @@ namespace WebStudyServer.Manager
             }
         }
 
-        public void Construct()
+        public async Task ConstructAsync()
         {
             _model.State = EKingdomItemState.CONSTRUCTING;
             _model.EndTime = RpcCtx.ServerTime + TimeSpan.FromSeconds(Prt.ConstructSec);
@@ -45,38 +45,38 @@ namespace WebStudyServer.Manager
                 _model.EndTime = DateTime.MinValue;
             }
 
-            _userRepo.KingdomStructure.UpdateMdl(_model);
+            await _userRepo.KingdomStructure.UpdateMdlAsync(_model);
         }
 
-        public void SetReady(EKingdomItemState correctBefState)
+        public async Task SetReadyAsync(EKingdomItemState correctBefState)
         {
             ReqHelper.ValidContext(_model.State == correctBefState, "NOT_EQUAL_CORRECT_BEF_KINGDOM_STRUCTURE_STATE", () => new { _model.State, CorrectBefState = correctBefState });
             ReqHelper.ValidContext(_model.EndTime >= RpcCtx.ServerTime, "NOT_FINISHED_KINGDOM_STRUCTURE", () => new { _model.EndTime, RpcCtx.ServerTime });
 
             _model.EndTime = DateTime.MinValue;
             _model.State = EKingdomItemState.READY;
-            _userRepo.KingdomStructure.UpdateMdl(_model);
+            await _userRepo.KingdomStructure.UpdateMdlAsync(_model);
         }
 
-        public void Store()
+        public async Task StoreAsync()
         {
             _model.State = EKingdomItemState.STORED;
             _model.EndTime = DateTime.MinValue;
-            _userRepo.KingdomStructure.UpdateMdl(_model);
+            await _userRepo.KingdomStructure.UpdateMdlAsync(_model);
         }
 
-        public void Place()
+        public async Task PlaceAsync()
         {
             _model.State = EKingdomItemState.READY;
             _model.EndTime = DateTime.MinValue;
-            _userRepo.KingdomStructure.UpdateMdl(_model);
+            await _userRepo.KingdomStructure.UpdateMdlAsync(_model);
         }
 
-        public void DecTime()
+        public async Task DecTimeAsync()
         {
             _model.EndTime = DateTime.MinValue;
             _model.State = EKingdomItemState.READY;
-            _userRepo.KingdomStructure.UpdateMdl(_model);
+            await _userRepo.KingdomStructure.UpdateMdlAsync(_model);
         }
     }
 }

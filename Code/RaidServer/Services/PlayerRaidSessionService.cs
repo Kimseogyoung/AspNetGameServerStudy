@@ -20,7 +20,7 @@ namespace RaidServer.Services
             sessionService.RegisterCloseListener(OnSessionClosed);
         }
 
-        public AuthResponsePacket Authenticate(string sessionId, AuthRequestPacket req)
+        public async Task<AuthResponsePacket> AuthenticateAsync(string sessionId, AuthRequestPacket req)
         {
             if (string.IsNullOrEmpty(req.SessionKey))
             {
@@ -39,7 +39,8 @@ namespace RaidServer.Services
             using var dbRepo = scope.ServiceProvider.GetRequiredService<GlobalDbRepo>();
             try
             {
-                if (!dbRepo.Auth.Session.TryGetByKey(req.SessionKey, out var mgrSession))
+                var mgrSession = await dbRepo.Auth.Session.TryGetByKeyAsync(req.SessionKey);
+                if (mgrSession == null)
                 {
                     return new AuthResponsePacket { Result = EAuthResult.SessionNotFound };
                 }
@@ -54,7 +55,7 @@ namespace RaidServer.Services
                 raidContext.SetShardId(mgrSession.Model.ShardId);
 
                 dbRepo.BeginOwnUserRepo();
-                var playerModel = dbRepo.OwnUser.Player.Get().Model;
+                var playerModel = (await dbRepo.OwnUser.Player.GetAsync()).Model;
 
                 // 재접속: 기존 세션 교체
                 if (_byPlayerId.TryGetValue(playerModel.Id, out var existing))
@@ -83,7 +84,7 @@ namespace RaidServer.Services
             }
             catch (Exception)
             {
-                dbRepo.Rollback();
+                await dbRepo.RollbackAsync();
                 throw;
             }
         }

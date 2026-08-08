@@ -28,10 +28,11 @@ namespace Server
         {
             // 점검모드면 여기서 차단 (캐시된 응답 재전송 포함, RPC 전체를 막아야 함)
             CancelReqException.ThrowCancelRequestException(httpCtx);
-            _rpcCtx.Init(httpCtx);
+            await _rpcCtx.InitAsync(httpCtx);
 
             // Seq 재전송이면 재실행 없이 캐시된 응답을 그대로 반환한다.
-            if (_responseCache.TryGet(_rpcCtx, out var cachedBody))
+            var (cacheHit, cachedBody) = await _responseCache.TryGetAsync(_rpcCtx);
+            if (cacheHit)
             {
                 var cachedContentType = ResWriteHelper.GetOutputContentType(httpCtx);
                 await ResWriteHelper.WriteBytesAsync(httpCtx, cachedContentType, cachedBody);
@@ -91,13 +92,13 @@ namespace Server
                 });
 
                 resBody = _registry.ContentTypeToSerializerDict[contentType].Serialize(rpcResObj);
-                _responseCache.Set(_rpcCtx, resBody);
+                await _responseCache.SetAsync(_rpcCtx, resBody);
 
-                _dbRepo.Commit();
+                await _dbRepo.CommitAsync();
             }
             catch (Exception)
             {
-                _dbRepo.Rollback();
+                await _dbRepo.RollbackAsync();
                 throw; // 오류 발생 시 ErrorHandler에서 처리
             }
 

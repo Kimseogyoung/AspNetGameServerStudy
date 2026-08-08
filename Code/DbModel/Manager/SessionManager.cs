@@ -11,7 +11,7 @@ namespace WebStudyServer.Manager
         {
         }
 
-        public void Start()
+        public async Task StartAsync()
         {
             // 세션 시작
             var expireTime = _authRepo.RpcContext.ServerTime + Config<GameConfig>.Get().SessionExpireSpan;
@@ -25,12 +25,12 @@ namespace WebStudyServer.Manager
             Model.DeviceKey = _authRepo.RpcContext.DeviceKey;
             Model.EncryptIV = "";
             Model.EncryptSecret = "";
-            _authRepo.Session.Update(befSessionKey, Model);
+            await _authRepo.Session.UpdateAsync(befSessionKey, Model);
 
             _authRepo.RpcContext.SetSessionKey(aftSessionKey);
         }
 
-        public void SetPlayerId(ulong playerId)
+        public async Task SetPlayerIdAsync(ulong playerId)
         {
             if (Model.PlayerId == playerId)
             {
@@ -38,7 +38,7 @@ namespace WebStudyServer.Manager
             }
 
             Model.PlayerId = playerId;
-            _authRepo.Session.Update(Model.Key, Model);
+            await _authRepo.Session.UpdateAsync(Model.Key, Model);
         }
 
         public bool IsExpire()
@@ -46,7 +46,7 @@ namespace WebStudyServer.Manager
             return Model.State != ESessionState.ACTIVE;
         }
 
-        public bool Extend()
+        public async Task<bool> ExtendAsync()
         {
             var serverTime = _authRepo.RpcContext.ServerTime;
             var expireTime = TimeHelper.TimeStampToDateTime(Model.ExpireTimestamp);
@@ -55,7 +55,7 @@ namespace WebStudyServer.Manager
             // Revival을 먼저 시도해야 첫 만료 요청에서 1 round-trip으로 처리됨
             if (Model.State == ESessionState.EXPIRED || serverTime >= expireTime)
             {
-                if (TryReviveByDeviceKey(serverTime, expireTime))
+                if (await TryReviveByDeviceKeyAsync(serverTime, expireTime))
                 {
                     return true;
                 }
@@ -63,7 +63,7 @@ namespace WebStudyServer.Manager
                 if (Model.State != ESessionState.EXPIRED)
                 {
                     Model.State = ESessionState.EXPIRED;
-                    _authRepo.Session.Update(Model.Key, Model);
+                    await _authRepo.Session.UpdateAsync(Model.Key, Model);
                 }
 
                 return false;
@@ -78,11 +78,11 @@ namespace WebStudyServer.Manager
 
             // 연장: ExpireTimestamp 갱신 → DB + 캐시 TTL 동시 갱신
             Model.ExpireTimestamp = TimeHelper.DateTimeToTimeStamp(serverTime + Config<GameConfig>.Get().SessionExpireSpan);
-            _authRepo.Session.Update(Model.Key, Model);
+            await _authRepo.Session.UpdateAsync(Model.Key, Model);
             return true;
         }
 
-        public void Expire()
+        public async Task ExpireAsync()
         {
             if (Model.State == ESessionState.EXPIRED)
             {
@@ -90,10 +90,10 @@ namespace WebStudyServer.Manager
             }
 
             Model.State = ESessionState.EXPIRED;
-            _authRepo.Session.Update(Model.Key, Model);
+            await _authRepo.Session.UpdateAsync(Model.Key, Model);
         }
 
-        private bool TryReviveByDeviceKey(DateTime serverTime, DateTime expireTime)
+        private async Task<bool> TryReviveByDeviceKeyAsync(DateTime serverTime, DateTime expireTime)
         {
             var reqDeviceKey = _authRepo.RpcContext.DeviceKey;
             if (string.IsNullOrEmpty(reqDeviceKey) || reqDeviceKey != Model.DeviceKey)
@@ -110,7 +110,7 @@ namespace WebStudyServer.Manager
             // 세션 부활: State + ExpireTimestamp 갱신
             Model.State = ESessionState.ACTIVE;
             Model.ExpireTimestamp = TimeHelper.DateTimeToTimeStamp(serverTime + Config<GameConfig>.Get().SessionExpireSpan);
-            _authRepo.Session.Update(Model.Key, Model);
+            await _authRepo.Session.UpdateAsync(Model.Key, Model);
             return true;
         }
 

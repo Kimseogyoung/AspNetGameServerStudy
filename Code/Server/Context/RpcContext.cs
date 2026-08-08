@@ -37,7 +37,7 @@ namespace WebStudyServer
             _logger = logger;
         }
 
-        public void Init(HttpContext httpContext)
+        public async Task InitAsync(HttpContext httpContext)
         {
             _logger.Debug("Init RpcContext");
 
@@ -51,7 +51,7 @@ namespace WebStudyServer
             SetCountry(httpContext);
 
             // 세션 & 유저 정보 로드
-            LoadSession(httpContext);
+            await LoadSessionAsync(httpContext);
         }
 
         // 유저 정보
@@ -75,7 +75,7 @@ namespace WebStudyServer
             SessionKey = sessionKey;
         }
 
-        public void LoadSession(HttpContext httpContext)
+        public async Task LoadSessionAsync(HttpContext httpContext)
         {
             if (SessionLoadState != ESessionLoadState.INITIALIZED)
             {
@@ -101,14 +101,15 @@ namespace WebStudyServer
             var authRepo = dbRepo.Auth;
             var sessionComp = authRepo.Session;
 
-            if (!sessionComp.TryGetByKey(sessionKey, out var mgrSession))
+            var mgrSession = await sessionComp.TryGetByKeyAsync(sessionKey);
+            if (mgrSession == null)
             {
                 _logger.Error("NOT_FOUND_SESSION Key({Key})", sessionKey);
                 SessionLoadState = ESessionLoadState.NOT_FOUND;
                 return;
             }
 
-            _ = mgrSession.Extend();
+            _ = await mgrSession.ExtendAsync();
 
             if (mgrSession.IsExpire())
             {

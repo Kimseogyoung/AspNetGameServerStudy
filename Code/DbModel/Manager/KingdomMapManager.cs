@@ -261,7 +261,7 @@ namespace WebStudyServer.Manager
             return copySnapshot;
         }
 
-        public void SaveSnapshot(KingdomMapSnapshotPacket newSnapshot = null)
+        public async Task SaveSnapshotAsync(KingdomMapSnapshotPacket newSnapshot = null)
         {
             if (newSnapshot != null)
             {
@@ -269,7 +269,7 @@ namespace WebStudyServer.Manager
             }
 
             _model.Snapshot = JsonDataSerializer.SerializeStr(Snapshot);
-            _userRepo.KingdomMap.UpdateMdl(_model);
+            await _userRepo.KingdomMap.UpdateMdlAsync(_model);
         }
 
         public List<PlacedKingdomItemPacket> ValidExistPlacedItemList(List<ulong> placedItemList)
@@ -283,14 +283,14 @@ namespace WebStudyServer.Manager
             return validPlacedItemList;
         }
 
-        public void ConstructStructure(KingdomStructureManager mgrStructManager, TilePosPacket valStartTilePos)
+        public Task ConstructStructureAsync(KingdomStructureManager mgrStructManager, TilePosPacket valStartTilePos)
         {
-            ConstructItemInternal(mgrStructManager.Prt, valStartTilePos, mgrStructManager.Model.SfId);
+            return ConstructItemInternalAsync(mgrStructManager.Prt, valStartTilePos, mgrStructManager.Model.SfId);
         }
 
-        public void ConstructDeco(KingdomDecoManager mgrDecoManager, TilePosPacket valStartTilePos)
+        public Task ConstructDecoAsync(KingdomDecoManager mgrDecoManager, TilePosPacket valStartTilePos)
         {
-            ConstructItemInternal(mgrDecoManager.Prt, valStartTilePos, 0);
+            return ConstructItemInternalAsync(mgrDecoManager.Prt, valStartTilePos, 0);
         }
 
         /*        public void StoreItemList(List<PlacedKingdomItemPacket> placedKingdomItemlist)
@@ -322,7 +322,7 @@ namespace WebStudyServer.Manager
             FillSnapshotTileMap(Snapshot, XSize, YSize);
         }
 
-        private void ConstructItemInternal(KingdomItemProto prtKingdomItem, TilePosPacket valStartTilePos, ulong structId)
+        private async Task ConstructItemInternalAsync(KingdomItemProto prtKingdomItem, TilePosPacket valStartTilePos, ulong structId)
         {
             var newPlacedObjId = ++Snapshot.ObjIdCounter;
             var newPlacedObj = new PlacedKingdomItemPacket
@@ -346,7 +346,7 @@ namespace WebStudyServer.Manager
             }
 
             Snapshot.PlacedObjDict.Add(newPlacedObj.Id, newPlacedObj);
-            SaveSnapshot();
+            await SaveSnapshotAsync();
         }
 
         private bool HasOverlappingTiles(List<TilePos> placeTilePosList)

@@ -29,31 +29,33 @@ namespace WebStudyServer.Base
             return db.SelectListByConditions<T>(new { RpcCtx.PlayerId }).ToList();
         }
 
-        public List<T> GetMdlList()
+        public Task<List<T>> GetMdlListAsync()
         {
-            return _repo.GetList<T>(ListKeyFor(RpcCtx.PlayerId), LoadFromDb);
+            return _repo.GetListAsync<T>(ListKeyFor(RpcCtx.PlayerId), LoadFromDb);
         }
 
-        public List<T> GetMdlList(Func<T, bool> predicate)
+        public async Task<List<T>> GetMdlListAsync(Func<T, bool> predicate)
         {
-            return GetMdlList().Where(predicate).ToList();
+            var list = await GetMdlListAsync();
+            return list.Where(predicate).ToList();
         }
 
-        public T? GetMdl(Func<T, bool> predicate)
+        public async Task<T?> GetMdlAsync(Func<T, bool> predicate)
         {
-            return GetMdlList().FirstOrDefault(predicate);
+            var list = await GetMdlListAsync();
+            return list.FirstOrDefault(predicate);
         }
 
-        public T CreateMdl(T entity)
+        public Task<T> CreateMdlAsync(T entity)
         {
             entity.UpdateTime = entity.CreateTime = DateTime.UtcNow;
-            return _repo.Insert<T>(entity, ListKeyFor(RpcCtx.PlayerId));
+            return _repo.InsertAsync<T>(entity, ListKeyFor(RpcCtx.PlayerId));
         }
 
-        public void UpdateMdl(T entity)
+        public Task UpdateMdlAsync(T entity)
         {
             entity.UpdateTime = DateTime.UtcNow;
-            _repo.Update<T>(entity, ListKeyFor(RpcCtx.PlayerId), x => KeyFor(x).Value == KeyFor(entity).Value);
+            return _repo.UpdateAsync<T>(entity, ListKeyFor(RpcCtx.PlayerId), x => KeyFor(x).Value == KeyFor(entity).Value);
         }
 
         // IDbExecutor 범위 밖 특수 쿼리 전용 (SelectListByConditions, 집계 SQL 등)

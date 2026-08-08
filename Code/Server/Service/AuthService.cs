@@ -15,9 +15,9 @@ namespace WebStudyServer.Service
             _dbRepo = dbRepo;
         }
 
-        public AuthSignUpResponsePacket SignUp(string idfv)
+        public async Task<AuthSignUpResponsePacket> SignUpAsync(string idfv)
         {
-            // idfv 찾기.           
+            // idfv 찾기.
             if (Auth.Device.TryGet(idfv, out var mgrDevice))
             {
                 // 일치하는 idfv가 이미 있다면 해당 계정 정보 리턴
@@ -27,9 +27,9 @@ namespace WebStudyServer.Service
                 {
                     if (Auth.Channel.TryGetActive(originMgrAccount.Id, out var originMgrChannel))
                     {
-                        var originMgrSession = Auth.Session.Touch(originMgrAccount.Id);
-                        originMgrSession.Expire(); // 기존 세션 무효화
-                        originMgrSession.Start();
+                        var originMgrSession = await Auth.Session.TouchAsync(originMgrAccount.Id);
+                        await originMgrSession.ExpireAsync(); // 기존 세션 무효화
+                        await originMgrSession.StartAsync();
 
                         return new AuthSignUpResponsePacket
                         {
@@ -51,14 +51,14 @@ namespace WebStudyServer.Service
             // Account 생성
             var mgrAccount = Auth.Account.Create();
             // Session 생성
-            var mgrSession = Auth.Session.Touch(mgrAccount.Id);
+            var mgrSession = await Auth.Session.TouchAsync(mgrAccount.Id);
             // Device 정보 생성
             _ = Auth.Device.Create(idfv);
             // 채널 생성
             var mgrChannel = Auth.Channel.Create(mgrAccount.Id, EChannelType.GUEST);
 
             // 세션 갱신 및 리턴
-            mgrSession.Start();
+            await mgrSession.StartAsync();
 
             return new AuthSignUpResponsePacket
             {
@@ -73,7 +73,7 @@ namespace WebStudyServer.Service
             };
         }
 
-        public AuthSignInResponsePacket SignIn(string channelId)
+        public async Task<AuthSignInResponsePacket> SignInAsync(string channelId)
         {
             // 채널 찾기
             var mgrChannel = Auth.Channel.Get(channelId);
@@ -82,9 +82,9 @@ namespace WebStudyServer.Service
             var mgrAccount = Auth.Account.GetActive(mgrChannel.Model.AccountId);
 
             // 세션 갱신 및 리턴
-            var mgrSession = Auth.Session.Touch(mgrAccount.Id);
-            mgrSession.Expire(); // 기존 세션 무효화
-            mgrSession.Start();
+            var mgrSession = await Auth.Session.TouchAsync(mgrAccount.Id);
+            await mgrSession.ExpireAsync(); // 기존 세션 무효화
+            await mgrSession.StartAsync();
             return new AuthSignInResponsePacket
             {
                 Result = new SignInResultPacket

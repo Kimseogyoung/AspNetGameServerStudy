@@ -12,13 +12,15 @@ namespace ServerCore.Repo.Cache
             Value = value;
         }
 
-        // 타입명 + ids 를 ':' 로 이어붙여 키 생성
-        // 예) For<CookieModel>(playerId, num)  → "CookieModel:{playerId}:{num}"
-        //     For<PlayerModel>(playerId)        → "PlayerModel:{playerId}"  (리스트 키 겸용)
-        //     For<PlayerModel>("AccountId", id) → "PlayerModel:AccountId:{id}"
-        public static CacheKey For<T>(params object[] ids)
+        // 태그 + ids 를 ':' 로 이어붙여 키 생성.
+        // 태그는 타입명을 리플렉션으로 따오지 않고 호출부에서 명시적으로 넘긴다
+        // (타입 리네임 시 캐시 키가 조용히 바뀌는 걸 막기 위함 - CacheKeyTags 참고).
+        // 예) For(CacheKeyTags.CookieModel, playerId, num) → "CookieModel:{playerId}:{num}"
+        //     For(CacheKeyTags.PlayerModel, playerId)      → "PlayerModel:{playerId}"  (리스트 키 겸용)
+        //     For(CacheKeyTags.SessionModel, "AccountId", id) → "SessionModel:AccountId:{id}"
+        public static CacheKey For(string tag, params object[] ids)
         {
-            return new CacheKey($"{typeof(T).Name}:{string.Join(":", ids)}");
+            return new CacheKey($"{tag}:{string.Join(":", ids)}");
         }
     }
 }

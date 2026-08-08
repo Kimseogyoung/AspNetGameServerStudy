@@ -30,18 +30,18 @@ namespace Server.Service
             };
         }
 
-        public GachaNormalResponsePacket GachaNormal(GachaNormalRequestPacket req)
+        public async Task<GachaNormalResponsePacket> GachaNormalAsync(GachaNormalRequestPacket req)
         {
             var centerRepo = _dbRepo.Center;
             var scheduleMgr = centerRepo.Schedule.Get(req.ScheduleNum, EScheduleTimeType.TOTAL);
-            var mgrPlayerDetail = OwnUser.PlayerDetail.Touch();
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
 
             // Cost일치하는지 체크
             var valCnt = scheduleMgr.ValidGachaCnt(req.Cnt);
             var valCost = scheduleMgr.ValidGachaCost(req.CostObj, valCnt);
 
             // 재화 소모
-            var resultCostObj = mgrPlayerDetail.DecCost(valCost, scheduleMgr.MakeGachaReason(valCnt));
+            var resultCostObj = await mgrPlayerDetail.DecCostAsync(valCost, scheduleMgr.MakeGachaReason(valCnt));
 
             var gachaRandom = new GachaRandom(scheduleMgr.GachaPrt, RpcContext.ServerTime);
             var rewardObjValList = new List<ObjValue>();
@@ -78,7 +78,7 @@ namespace Server.Service
             }
 
             // TODO: 가챠 전용 Inc로 ㄱㄱ
-            var chgObjList = mgrPlayerDetail.IncRewardList(rewardObjValList, scheduleMgr.MakeGachaReason(valCnt));
+            var chgObjList = await mgrPlayerDetail.IncRewardListAsync(rewardObjValList, scheduleMgr.MakeGachaReason(valCnt));
 
             return new GachaNormalResponsePacket
             {

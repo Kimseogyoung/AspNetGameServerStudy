@@ -21,7 +21,7 @@ namespace WebStudyServer.Manager
             Prt = ProtoDb.Get<KingdomItemProto>(model.Num);
         }
 
-        public void Inc(int cnt, string reason)
+        public async Task IncAsync(int cnt, string reason)
         {
             ReqHelper.ValidUnderFlowParam(cnt, $"DECO_CNT:{reason}");
 
@@ -34,7 +34,7 @@ namespace WebStudyServer.Manager
 
             _model.TotalCnt += cnt;
             _model.UnplacedCnt += cnt;
-            _userRepo.KingdomDeco.UpdateMdl(_model);
+            await _userRepo.KingdomDeco.UpdateMdlAsync(_model);
         }
 
         public void ValidChgAction(int cnt)
@@ -52,17 +52,17 @@ namespace WebStudyServer.Manager
             }
         }
 
-        public void Place(int cnt = 1)
+        public async Task PlaceAsync(int cnt = 1)
         {
             ReqHelper.ValidContext(_model.UnplacedCnt >= cnt, "NOT_ENOUGH_DECO_CNT", () => new { _model.Num, _model.UnplacedCnt, DecCnt = cnt });
             var befTotalCnt = _model.TotalCnt;
             var befUnplacedCnt = _model.UnplacedCnt;
 
             _model.UnplacedCnt -= cnt;
-            _userRepo.KingdomDeco.UpdateMdl(_model);
+            await _userRepo.KingdomDeco.UpdateMdlAsync(_model);
         }
 
-        public void Store(int cnt = 1)
+        public async Task StoreAsync(int cnt = 1)
         {
             var placedCnt = _model.TotalCnt - _model.UnplacedCnt;
             ReqHelper.ValidContext(placedCnt >= cnt, "NOT_ENOUGH_DECO_CNT", () => new { _model.Num, _model.UnplacedCnt, DecCnt = cnt });
@@ -70,7 +70,7 @@ namespace WebStudyServer.Manager
             var befUnplacedCnt = _model.UnplacedCnt;
 
             _model.UnplacedCnt += cnt;
-            _userRepo.KingdomDeco.UpdateMdl(_model);
+            await _userRepo.KingdomDeco.UpdateMdlAsync(_model);
 
             //placedKingdomItem 로그
         }

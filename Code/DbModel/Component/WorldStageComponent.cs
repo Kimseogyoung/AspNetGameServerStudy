@@ -12,14 +12,15 @@ namespace WebStudyServer.Component
     {
         public WorldStageComponent(UserRepo userRepo, IRepository repository) : base(userRepo, repository) { }
 
-        protected override CacheKey KeyFor(WorldStageModel model) => CacheKey.For<WorldStageModel>(model.PlayerId, model.Num);
-        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For<WorldStageModel>(playerId);
+        protected override CacheKey KeyFor(WorldStageModel model) => CacheKey.For(CacheKeyTags.WorldStageModel, model.PlayerId, model.Num);
+        protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.WorldStageModel, playerId);
 
-        public WorldStageManager Touch(int worldStageNum)
+        public async Task<WorldStageManager> TouchAsync(int worldStageNum)
         {
-            if (!TryGetInternal(worldStageNum, out var mdlWorldStage))
+            var mdlWorldStage = await TryGetInternalAsync(worldStageNum);
+            if (mdlWorldStage == null)
             {
-                mdlWorldStage = CreateMdl(new WorldStageModel
+                mdlWorldStage = await CreateMdlAsync(new WorldStageModel
                 {
                     PlayerId = _userRepo.RpcContext.PlayerId,
                     Num = worldStageNum,
@@ -37,10 +38,9 @@ namespace WebStudyServer.Component
                 new { RpcCtx.PlayerId, WorldNum = worldNum }));
         }
 
-        public bool TryGetInternal(int num, out WorldStageModel outWorldStage)
+        public Task<WorldStageModel?> TryGetInternalAsync(int num)
         {
-            outWorldStage = GetMdl(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
-            return outWorldStage != null;
+            return GetMdlAsync(x => x.PlayerId == RpcCtx.PlayerId && x.Num == num);
         }
     }
 }

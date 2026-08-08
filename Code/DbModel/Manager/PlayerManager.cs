@@ -18,16 +18,16 @@ namespace WebStudyServer.Manager
         {
         }
 
-        public PlayerPacket PreparePlayer(IMapper mapper)
+        public async Task<PlayerPacket> PreparePlayerAsync(IMapper mapper)
         {
             // Player 초기 세팅
             var pakDefaultPlayer = Config<GameConfig>.Get().PakDefaultPlayer;
 
-            // ------------------------------------------------------------ 디폴트 모델 생성           
+            // ------------------------------------------------------------ 디폴트 모델 생성
             // PlayerDetail
             var newMdlPlayerDetail = mapper.Map<PlayerDetailModel>(pakDefaultPlayer);
             newMdlPlayerDetail.PlayerId = RpcCtx.PlayerId;
-            var mdlPlayerDetail = _userRepo.PlayerDetail.CreateMdl(newMdlPlayerDetail);
+            var mdlPlayerDetail = await _userRepo.PlayerDetail.CreateMdlAsync(newMdlPlayerDetail);
 
             // Cookie
             var mdlCookieList = new List<CookieModel>();
@@ -35,7 +35,7 @@ namespace WebStudyServer.Manager
             {
                 var newMdlCookie = mapper.Map<CookieModel>(pakCookie);
                 newMdlCookie.PlayerId = RpcCtx.PlayerId;
-                var mdlCookie = _userRepo.Cookie.CreateMdl(newMdlCookie);
+                var mdlCookie = await _userRepo.Cookie.CreateMdlAsync(newMdlCookie);
                 mdlCookieList.Add(mdlCookie);
             }
 
@@ -45,7 +45,7 @@ namespace WebStudyServer.Manager
             {
                 var newMdlKingdomStructure = mapper.Map<KingdomStructureModel>(pakKingdomStructure);
                 newMdlKingdomStructure.PlayerId = RpcCtx.PlayerId;
-                var mdlKingdomStructure = _userRepo.KingdomStructure.CreateMdl(newMdlKingdomStructure);
+                var mdlKingdomStructure = await _userRepo.KingdomStructure.CreateMdlAsync(newMdlKingdomStructure);
                 mdlKindgomStructureList.Add(mdlKingdomStructure);
             }
 
@@ -55,14 +55,14 @@ namespace WebStudyServer.Manager
             {
                 var newMdlKingdomDeco = mapper.Map<KingdomDecoModel>(pakKingdomDeco);
                 newMdlKingdomDeco.PlayerId = RpcCtx.PlayerId;
-                var mdlKingdomDeco = _userRepo.KingdomDeco.CreateMdl(newMdlKingdomDeco);
+                var mdlKingdomDeco = await _userRepo.KingdomDeco.CreateMdlAsync(newMdlKingdomDeco);
                 mdlKindgomDecoList.Add(mdlKingdomDeco);
             }
 
             // KingdomMap
             var (newMdlKingdomMap, kingdomSnapshot) = KingdomMapManager.CreateKingdomMapModelDummy(pakDefaultPlayer.KingdomMap, mdlKindgomStructureList);
             newMdlKingdomMap.PlayerId = RpcCtx.PlayerId;
-            var mdlKingdomMap = _userRepo.KingdomMap.CreateMdl(newMdlKingdomMap);
+            var mdlKingdomMap = await _userRepo.KingdomMap.CreateMdlAsync(newMdlKingdomMap);
 
             _model.Lv = pakDefaultPlayer.Lv;
             _model.CastleLv = pakDefaultPlayer.CastleLv;
@@ -73,7 +73,7 @@ namespace WebStudyServer.Manager
             _model.ProfileCookieNum = pakDefaultPlayer.ProfileCookieNum;
             _model.KingdomExp = pakDefaultPlayer.KingdomExp;
             _model.State = EPlayerState.PREPARED;
-            _userRepo.Player.UpdateMdl(_model);
+            await _userRepo.Player.UpdateMdlAsync(_model);
             // ------------------------------------------------------------ 디폴트 모델 생성 완료
 
             // ------------------------------------------------------------ 패킷 생성
@@ -99,11 +99,11 @@ namespace WebStudyServer.Manager
             return pakPlayer;
         }
 
-        public PlayerPacket LoadPlayer(IMapper mapper)
+        public async Task<PlayerPacket> LoadPlayerAsync(IMapper mapper)
         {
             var pakPlayer = mapper.Map<PlayerPacket>(_model);
 
-            var mdlPlayerDetail = _userRepo.PlayerDetail.Touch();
+            var mdlPlayerDetail = await _userRepo.PlayerDetail.TouchAsync();
             pakPlayer.Gold = mdlPlayerDetail.Model.Gold;
             pakPlayer.AccGold = mdlPlayerDetail.Model.AccGold;
             pakPlayer.RealCash = mdlPlayerDetail.Model.RealCash;
@@ -111,15 +111,14 @@ namespace WebStudyServer.Manager
             pakPlayer.AccRealCash = mdlPlayerDetail.Model.AccRealCash;
             pakPlayer.AccFreeCash = mdlPlayerDetail.Model.AccFreeCash;
 
-            _ = _userRepo.Cookie.GetMdlList();
-            pakPlayer.CookieList = mapper.Map<List<CookiePacket>>(_userRepo.Cookie.GetMdlList());
-            pakPlayer.PointList = mapper.Map<List<PointPacket>>(_userRepo.Point.GetMdlList());
-            pakPlayer.TicketList = mapper.Map<List<TicketPacket>>(_userRepo.Ticket.GetMdlList());
-            pakPlayer.ItemList = mapper.Map<List<ItemPacket>>(_userRepo.Item.GetMdlList());
-            pakPlayer.KingdomStructureList = mapper.Map<List<KingdomStructurePacket>>(_userRepo.KingdomStructure.GetMdlList());
-            pakPlayer.KingdomDecoList = mapper.Map<List<KingdomDecoPacket>>(_userRepo.KingdomDeco.GetMdlList());
+            pakPlayer.CookieList = mapper.Map<List<CookiePacket>>(await _userRepo.Cookie.GetMdlListAsync());
+            pakPlayer.PointList = mapper.Map<List<PointPacket>>(await _userRepo.Point.GetMdlListAsync());
+            pakPlayer.TicketList = mapper.Map<List<TicketPacket>>(await _userRepo.Ticket.GetMdlListAsync());
+            pakPlayer.ItemList = mapper.Map<List<ItemPacket>>(await _userRepo.Item.GetMdlListAsync());
+            pakPlayer.KingdomStructureList = mapper.Map<List<KingdomStructurePacket>>(await _userRepo.KingdomStructure.GetMdlListAsync());
+            pakPlayer.KingdomDecoList = mapper.Map<List<KingdomDecoPacket>>(await _userRepo.KingdomDeco.GetMdlListAsync());
 
-            var mgrKingdomMap = _userRepo.KingdomMap.Touch();
+            var mgrKingdomMap = await _userRepo.KingdomMap.TouchAsync();
             pakPlayer.KingdomMap = new KingdomMapPacket
             {
                 State = mgrKingdomMap.Model.State,
@@ -141,10 +140,10 @@ namespace WebStudyServer.Manager
             ReqHelper.ValidContext(IsValidState(state), "ALREADY_PASSED_PLAYER_STATE", () => new { MdlState = Model.State, ValState = state });
         }
 
-        public void ChangeName(string name)
+        public async Task ChangeNameAsync(string name)
         {
             Model.ProfileName = name;
-            _userRepo.Player.UpdateMdl(Model);
+            await _userRepo.Player.UpdateMdlAsync(Model);
         }
     }
 }
