@@ -12,12 +12,12 @@ namespace ServerCore.Repo.Database
             _executor = executor;
         }
 
-        public void Execute(Action<IDbExecutor> action)
+        public Task ExecuteAsync(Func<IDbExecutor, Task> action)
         {
-            _executor.Excute((conn, tx) => action(new DapperDbExecutor(conn, tx)));
+            return _executor.Excute((conn, tx) => action(new DapperDbExecutor(conn, tx)));
         }
 
-        public T Execute<T>(Func<IDbExecutor, T> func)
+        public Task<T> ExecuteAsync<T>(Func<IDbExecutor, Task<T>> func)
         {
             return _executor.Excute((conn, tx) => func(new DapperDbExecutor(conn, tx)));
         }

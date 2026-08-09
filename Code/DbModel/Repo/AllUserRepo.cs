@@ -13,32 +13,21 @@ namespace WebStudyServer.Repo
             _factories = factories;
         }
 
-        public bool TryGetPlayerByName(string name, out PlayerModel outMdlPlayer)
+        public async Task<(bool Found, PlayerModel? Value)> TryGetPlayerByNameAsync(string name)
         {
             // TODO: 캐시
-            //
 
             // 샤드 전체 탐색
-            PlayerModel foundMdlPlayer = null;
             foreach (var factory in _factories)
             {
-                factory.Execute(db =>
+                var mdlPlayer = await factory.ExecuteAsync(db => db.SelectByConditions<PlayerModel>(new { ProfileName = name }));
+                if (mdlPlayer != null)
                 {
-                    var mdlPlayer = db.SelectByConditions<PlayerModel>(new { ProfileName = name });
-                    if (mdlPlayer != null)
-                    {
-                        foundMdlPlayer = mdlPlayer;
-                    }
-                });
-
-                if (foundMdlPlayer != null)
-                {
-                    break;
+                    return (true, mdlPlayer);
                 }
             }
 
-            outMdlPlayer = foundMdlPlayer;
-            return outMdlPlayer != null;
+            return (false, null);
         }
     }
 }

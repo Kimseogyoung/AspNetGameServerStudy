@@ -102,7 +102,7 @@ namespace Server.Service
         {
             var mgrWorld = await OwnUser.World.TouchAsync(req.WorldNum);
 
-            var valTotalStar = OwnUser.WorldStage.GetTotalStar(mgrWorld.Model.Num);
+            var valTotalStar = await OwnUser.WorldStage.GetTotalStarAsync(mgrWorld.Model.Num);
             var maxTotalStar = mgrWorld.Prt.RewardStarList[req.AftRewardStar - 1];
             ReqHelper.ValidContext(maxTotalStar <= valTotalStar, "NOT_ENOUGH_TOTAL_STAR", () => new { WorldNum = mgrWorld.Prt.Num, ValTotalStar = valTotalStar, PrtMaxTotalStar = maxTotalStar });
             ReqHelper.ValidContext(req.BefRewardStar >= mgrWorld.Model.RecvStarReward, "ALREADY_RECV_WORLD_STAR_REWARD", () => new { WorldNum = mgrWorld.Prt.Num, ReqBefStar = req.BefRewardStar });

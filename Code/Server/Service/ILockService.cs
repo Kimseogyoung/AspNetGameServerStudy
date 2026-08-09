@@ -2,7 +2,7 @@ namespace WebStudyServer
 {
     public interface ILockService
     {
-        bool Enter(ulong accountId);
-        bool Exit(ulong accountId);
+        Task<bool> EnterAsync(ulong accountId);
+        Task<bool> ExitAsync(ulong accountId);
     }
 }

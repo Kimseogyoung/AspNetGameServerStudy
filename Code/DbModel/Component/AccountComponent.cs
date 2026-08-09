@@ -15,21 +15,21 @@ namespace WebStudyServer.Component
         {
         }
 
-        public AccountManager GetActive(ulong accountId)
+        public async Task<AccountManager> GetActiveAsync(ulong accountId)
         {
-            ReqHelper.ValidContext(TryGet(accountId, out var mgrAccount), "NOT_FOUND_ACCOUNT", () => new { AccountId = accountId });
+            var (found, mgrAccount) = await TryGetAsync(accountId);
+            ReqHelper.ValidContext(found, "NOT_FOUND_ACCOUNT", () => new { AccountId = accountId });
             ReqHelper.ValidContext(mgrAccount.IsActive(), "NOT_ACTIVE_ACCOUNT", () => new { AccountId = accountId, mgrAccount.Model.State });
             return mgrAccount;
         }
 
-        public bool TryGet(ulong id, out AccountManager outAccount)
+        public async Task<(bool Found, AccountManager? Value)> TryGetAsync(ulong id)
         {
-            var mdlAccount = GetMdl(db => db.SelectByPk<AccountModel>(new { Id = id }));
-            outAccount = new AccountManager(_authRepo, mdlAccount);
-            return mdlAccount != null;
+            var mdlAccount = await GetMdlAsync(db => db.SelectByPk<AccountModel>(new { Id = id }));
+            return mdlAccount == null ? (false, null) : (true, new AccountManager(_authRepo, mdlAccount));
         }
 
-        public AccountManager Create()
+        public async Task<AccountManager> CreateAsync()
         {
             var newAccount = new AccountModel
             {
@@ -39,7 +39,7 @@ namespace WebStudyServer.Component
                 ClientSecret = ""
             };
 
-            var repoAccount = CreateMdl(newAccount);
+            var repoAccount = await CreateMdlAsync(newAccount);
             var mgrAccount = new AccountManager(_authRepo, repoAccount);
 
             _authRepo.RpcContext.SetAccountId(mgrAccount.Id);
@@ -47,9 +47,9 @@ namespace WebStudyServer.Component
             return mgrAccount;
         }
 
-        public void UpdateAccount(AccountModel mdlAccount)
+        public Task UpdateAccountAsync(AccountModel mdlAccount)
         {
-            UpdateMdl(mdlAccount);
+            return UpdateMdlAsync(mdlAccount);
         }
     }
 }

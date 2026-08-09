@@ -24,9 +24,9 @@ namespace WebStudyServer.Base
         protected abstract CacheKey ListKeyFor(ulong playerId);
 
         // PlayerId 기준 전체 로드. 특수 조건 필요 시 override.
-        protected virtual List<T> LoadFromDb(IDbExecutor db)
+        protected virtual async Task<List<T>> LoadFromDb(IDbExecutor db)
         {
-            return db.SelectListByConditions<T>(new { RpcCtx.PlayerId }).ToList();
+            return (await db.SelectListByConditions<T>(new { RpcCtx.PlayerId })).ToList();
         }
 
         public Task<List<T>> GetMdlListAsync()

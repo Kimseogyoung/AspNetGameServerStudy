@@ -17,26 +17,26 @@ namespace WebStudyServer.Base
             _repository = repository;
         }
 
-        protected T? GetMdl<T>(Func<IDbExecutor, T?> dbFetch) where T : ModelBase
+        protected Task<T?> GetMdlAsync<T>(Func<IDbExecutor, Task<T?>> dbFetch) where T : ModelBase
         {
-            return _repository.Db.Execute(dbFetch);
+            return _repository.Db.ExecuteAsync(dbFetch);
         }
 
-        protected List<T> GetMdlList<T>(Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase
+        protected Task<List<T>> GetMdlListAsync<T>(Func<IDbExecutor, Task<List<T>>> dbFetch) where T : ModelBase
         {
-            return _repository.Db.Execute(dbFetch);
+            return _repository.Db.ExecuteAsync(dbFetch);
         }
 
-        protected T CreateMdl<T>(T entity) where T : ModelBase
+        protected async Task<T> CreateMdlAsync<T>(T entity) where T : ModelBase
         {
             entity.UpdateTime = entity.CreateTime = DateTime.UtcNow;
-            return _repository.Db.Execute(db => db.Insert<T>(entity));
+            return await _repository.Db.ExecuteAsync(db => db.Insert<T>(entity));
         }
 
-        protected void UpdateMdl<T>(T entity) where T : ModelBase
+        protected async Task UpdateMdlAsync<T>(T entity) where T : ModelBase
         {
             entity.UpdateTime = DateTime.UtcNow;
-            _repository.Db.Execute(db => db.Update<T>(entity));
+            await _repository.Db.ExecuteAsync(db => db.Update<T>(entity));
         }
 
         // IDbExecutor 범위 밖 특수 쿼리 전용 (SelectListByConditions, 집계 SQL 등)

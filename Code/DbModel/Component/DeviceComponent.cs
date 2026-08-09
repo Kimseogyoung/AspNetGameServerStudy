@@ -14,18 +14,15 @@ namespace WebStudyServer.Component
         {
         }
 
-        public bool TryGet(string idfv, out DeviceManager mgrDevice)
+        public async Task<(bool Found, DeviceManager? Value)> TryGetAsync(string idfv)
         {
-            mgrDevice = null;
-            var mdlDevice = GetMdl(db => db.SelectByPk<DeviceModel>(new { Key = idfv }));
-            if (mdlDevice == null) return false;
-            mgrDevice = new DeviceManager(_authRepo, mdlDevice);
-            return true;
+            var mdlDevice = await GetMdlAsync(db => db.SelectByPk<DeviceModel>(new { Key = idfv }));
+            return mdlDevice == null ? (false, null) : (true, new DeviceManager(_authRepo, mdlDevice));
         }
 
-        public DeviceManager Create(string idfv)
+        public async Task<DeviceManager> CreateAsync(string idfv)
         {
-            var repoDevice = CreateMdl(new DeviceModel
+            var repoDevice = await CreateMdlAsync(new DeviceModel
             {
                 Key = idfv,
                 Idfa = "",
@@ -39,9 +36,9 @@ namespace WebStudyServer.Component
             return new DeviceManager(_authRepo, repoDevice);
         }
 
-        public void Update(DeviceModel mdlDevice)
+        public Task UpdateAsync(DeviceModel mdlDevice)
         {
-            UpdateMdl(mdlDevice);
+            return UpdateMdlAsync(mdlDevice);
         }
     }
 }

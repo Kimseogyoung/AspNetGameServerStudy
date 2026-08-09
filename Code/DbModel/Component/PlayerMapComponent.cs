@@ -15,15 +15,15 @@ namespace WebStudyServer.Component
         {
         }
 
-        public PlayerMapModel Create(PlayerMapModel inPlayerMap)
+        public Task<PlayerMapModel> CreateAsync(PlayerMapModel inPlayerMap)
         {
-            return CreateMdl(inPlayerMap);
+            return CreateMdlAsync(inPlayerMap);
         }
 
-        public bool TryGetPlayerMap(ulong accountId, out PlayerMapModel outPlayerMap)
+        public async Task<(bool Found, PlayerMapModel? Value)> TryGetPlayerMapAsync(ulong accountId)
         {
-            outPlayerMap = GetMdl(db => db.SelectByPk<PlayerMapModel>(new { AccountId = accountId }));
-            return outPlayerMap != null;
+            var mdlPlayerMap = await GetMdlAsync(db => db.SelectByPk<PlayerMapModel>(new { AccountId = accountId }));
+            return (mdlPlayerMap != null, mdlPlayerMap);
         }
     }
 }

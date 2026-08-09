@@ -11,7 +11,7 @@ namespace ServerCore.Repo.Database
         IDbSession Db { get; }
 
         // ── SelectList: Cache → DB fallback → BulkSet ─────────────────────
-        Task<List<T>> GetListAsync<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase;
+        Task<List<T>> GetListAsync<T>(CacheKey listKey, Func<IDbExecutor, Task<List<T>>> dbFetch) where T : ModelBase;
 
         // ── Insert: DB Insert → Cache.Set(listKey, entity, match=none) ────
         // listKey: 컬렉션 키. DB Insert 후 auto PK 포함 entity 반환.

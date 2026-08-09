@@ -20,10 +20,10 @@ namespace Server.Service
             _mapper = mapper;
         }
 
-        public ScheduleLoadResponsePacket LoadSchedule(ScheduleLoadRequestPacket req)
+        public async Task<ScheduleLoadResponsePacket> LoadScheduleAsync(ScheduleLoadRequestPacket req)
         {
             var centerRepo = _dbRepo.Center;
-            var mgrScheduleList = centerRepo.Schedule.GetList();
+            var mgrScheduleList = await centerRepo.Schedule.GetListAsync();
             return new ScheduleLoadResponsePacket
             {
                 ScheduleList = _mapper.Map<List<SchedulePacket>>(mgrScheduleList),
@@ -33,7 +33,7 @@ namespace Server.Service
         public async Task<GachaNormalResponsePacket> GachaNormalAsync(GachaNormalRequestPacket req)
         {
             var centerRepo = _dbRepo.Center;
-            var scheduleMgr = centerRepo.Schedule.Get(req.ScheduleNum, EScheduleTimeType.TOTAL);
+            var scheduleMgr = await centerRepo.Schedule.GetAsync(req.ScheduleNum, EScheduleTimeType.TOTAL);
             var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
 
             // Cost일치하는지 체크

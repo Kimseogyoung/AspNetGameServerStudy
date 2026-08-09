@@ -16,20 +16,19 @@ namespace ServerCore.Repo.Database
             Db = dbFactory;
         }
 
-        public Task<List<T>> GetListAsync<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase
+        public Task<List<T>> GetListAsync<T>(CacheKey listKey, Func<IDbExecutor, Task<List<T>>> dbFetch) where T : ModelBase
         {
-            return Task.FromResult(Db.Execute(dbFetch));
+            return Db.ExecuteAsync(dbFetch);
         }
 
         public Task<T> InsertAsync<T>(T entity, CacheKey listKey) where T : ModelBase
         {
-            return Task.FromResult(Db.Execute(db => db.Insert<T>(entity)));
+            return Db.ExecuteAsync(db => db.Insert<T>(entity));
         }
 
-        public Task UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
+        public async Task UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
         {
-            Db.Execute(db => db.Update<T>(entity));
-            return Task.CompletedTask;
+            await Db.ExecuteAsync(db => db.Update<T>(entity));
         }
     }
 }

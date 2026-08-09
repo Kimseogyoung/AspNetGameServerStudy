@@ -30,11 +30,11 @@ namespace WebStudyServer.Component
             return new WorldStageManager(_userRepo, mdlWorldStage);
         }
 
-        public int GetTotalStar(int worldNum)
+        public Task<int> GetTotalStarAsync(int worldNum)
         {
             // TODO: 캐시
             var sql = "SELECT SUM(RewardAmount) FROM WorldStage WHERE PlayerId = @PlayerId AND WorldNum = @WorldNum";
-            return DbSession.Execute(db => db.QuerySingle<int>(sql,
+            return DbSession.ExecuteAsync(db => db.QuerySingle<int>(sql,
                 new { RpcCtx.PlayerId, WorldNum = worldNum }));
         }
 

@@ -15,10 +15,10 @@ namespace WebStudyServer.Component
         {
         }
 
-        public List<ScheduleManager> GetList()
+        public async Task<List<ScheduleManager>> GetListAsync()
         {
             // 전체 조회 — 캐시 -> DB조회 일반화가 어려운 부분이라 DbSession 직접 사용
-            var mdlList = DbSession.Execute(db => db.SelectListByConditions<ScheduleModel>(null).ToList());
+            var mdlList = await DbSession.ExecuteAsync(async db => (await db.SelectListByConditions<ScheduleModel>(null)).ToList());
 
             var prts = ProtoDb.GetAll<ScheduleProto>();
             var mgrList = new List<ScheduleManager>();
@@ -32,9 +32,10 @@ namespace WebStudyServer.Component
             return mgrList;
         }
 
-        public ScheduleManager Get(int num, EScheduleTimeType validTimeType = EScheduleTimeType.NONE)
+        public async Task<ScheduleManager> GetAsync(int num, EScheduleTimeType validTimeType = EScheduleTimeType.NONE)
         {
-            ReqHelper.ValidContext(TryGet(num, out var mgrSchedule), "NOT_FOUND_SCHEDULE", () => new { Num = num });
+            var (found, mgrSchedule) = await TryGetAsync(num);
+            ReqHelper.ValidContext(found, "NOT_FOUND_SCHEDULE", () => new { Num = num });
             switch (validTimeType)
             {
                 case EScheduleTimeType.TOTAL:
@@ -50,12 +51,11 @@ namespace WebStudyServer.Component
             return mgrSchedule;
         }
 
-        public bool TryGet(int num, out ScheduleManager outSchedule)
+        public async Task<(bool Found, ScheduleManager? Value)> TryGetAsync(int num)
         {
             var prt = ProtoDb.Get<ScheduleProto>(num);
-            var mdlSchedule = GetMdl(db => db.SelectByPk<ScheduleModel>(new { Num = num }));
-            outSchedule = new ScheduleManager(_centerRepo, prt, mdlSchedule);
-            return mdlSchedule != null;
+            var mdlSchedule = await GetMdlAsync(db => db.SelectByPk<ScheduleModel>(new { Num = num }));
+            return mdlSchedule == null ? (false, null) : (true, new ScheduleManager(_centerRepo, prt, mdlSchedule));
         }
     }
 }

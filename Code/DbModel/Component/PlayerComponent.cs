@@ -17,9 +17,9 @@ namespace WebStudyServer.Component
         protected override CacheKey ListKeyFor(ulong playerId) => CacheKey.For(CacheKeyTags.PlayerModel, playerId);
 
         // PlayerModel의 PK는 Id (PlayerId 컬럼 없음)
-        protected override List<PlayerModel> LoadFromDb(IDbExecutor db)
+        protected override async Task<List<PlayerModel>> LoadFromDb(IDbExecutor db)
         {
-            return db.SelectListByConditions<PlayerModel>(new { Id = RpcCtx.PlayerId }).ToList();
+            return (await db.SelectListByConditions<PlayerModel>(new { Id = RpcCtx.PlayerId })).ToList();
         }
 
         public async Task<PlayerManager> TouchAsync()
@@ -57,11 +57,14 @@ namespace WebStudyServer.Component
             return GetMdlAsync(x => x.Id == id);
         }
 
-        public bool TryGetByAccountId(ulong accountId, out PlayerModel outPlayer)
+        public Task<(bool Found, PlayerModel? Value)> TryGetByAccountIdAsync(ulong accountId)
         {
             // AccountId는 ListKey(PlayerId) 기준 컬렉션 밖의 조회 → DB 직접 접근
-            outPlayer = DbSession.Execute(db => db.SelectByConditions<PlayerModel>(new { AccountId = accountId }));
-            return outPlayer != null;
+            return DbSession.ExecuteAsync(async db =>
+            {
+                var mdlPlayer = await db.SelectByConditions<PlayerModel>(new { AccountId = accountId });
+                return (mdlPlayer != null, mdlPlayer);
+            });
         }
     }
 }

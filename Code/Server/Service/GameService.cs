@@ -37,7 +37,7 @@ namespace Server.Service
 
                 var accountId = mgrPlayer.Model.AccountId;
                 var authRepo = _dbRepo.Auth;
-                authRepo.PlayerMap.Create(new PlayerMapModel
+                await authRepo.PlayerMap.CreateAsync(new PlayerMapModel
                 {
                     AccountId = accountId,
                     PlayerId = mgrPlayer.Id,
@@ -66,7 +66,8 @@ namespace Server.Service
             mgrPlayer.ValidState(EPlayerState.CHANGED_NAME_FIRST);
 
             // 중복 체크 (클라에 팝업)
-            ReqHelper.Valid(!_dbRepo.AllUser.TryGetPlayerByName(reqName, out _), EErrorCode.GAME_CHANGE_NAME_EXIST_NAME);
+            var (found, _) = await _dbRepo.AllUser.TryGetPlayerByNameAsync(reqName);
+            ReqHelper.Valid(!found, EErrorCode.GAME_CHANGE_NAME_EXIST_NAME);
 
             // 변경
             await mgrPlayer.ChangeNameAsync(reqName);

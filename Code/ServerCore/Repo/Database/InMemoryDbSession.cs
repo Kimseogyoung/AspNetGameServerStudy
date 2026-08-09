@@ -12,12 +12,12 @@ namespace ServerCore.Repo.Database
             _store = store;
         }
 
-        public void Execute(Action<IDbExecutor> action)
+        public Task ExecuteAsync(Func<IDbExecutor, Task> action)
         {
-            action(new InMemoryDbExecutor(_store));
+            return action(new InMemoryDbExecutor(_store));
         }
 
-        public T Execute<T>(Func<IDbExecutor, T> func)
+        public Task<T> ExecuteAsync<T>(Func<IDbExecutor, Task<T>> func)
         {
             return func(new InMemoryDbExecutor(_store));
         }

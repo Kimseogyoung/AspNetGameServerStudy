@@ -16,7 +16,7 @@ namespace ServerCore.Repo.Database
         }
 
         // ── SelectList: Cache → DB(dbFetch 위임) → Set ───────────────────
-        public async Task<List<T>> GetListAsync<T>(CacheKey listKey, Func<IDbExecutor, List<T>> dbFetch) where T : ModelBase
+        public async Task<List<T>> GetListAsync<T>(CacheKey listKey, Func<IDbExecutor, Task<List<T>>> dbFetch) where T : ModelBase
         {
             var cached = await Cache.TryGetAsync<List<T>>(listKey, CacheTtl);
             if (cached.Hit)
@@ -24,7 +24,7 @@ namespace ServerCore.Repo.Database
                 return [.. cached.Value!];
             }
 
-            var result = Db.Execute(dbFetch);
+            var result = await Db.ExecuteAsync(dbFetch);
             await Cache.SetAsync(listKey, result, CacheTtl);
             return result;
         }
@@ -32,7 +32,7 @@ namespace ServerCore.Repo.Database
         // ── Insert: DB → 캐시 로드 중이면 항목 추가 ─────────────────────
         public async Task<T> InsertAsync<T>(T entity, CacheKey listKey) where T : ModelBase
         {
-            entity = Db.Execute(db => db.Insert<T>(entity));
+            entity = await Db.ExecuteAsync(db => db.Insert<T>(entity));
 
             var cached = await Cache.TryGetAsync<List<T>>(listKey);
             if (cached.Hit)
@@ -46,7 +46,7 @@ namespace ServerCore.Repo.Database
         // ── Update: DB → 캐시 로드 중이면 match 항목 교체 ────────────────
         public async Task UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
         {
-            Db.Execute(db => db.Update<T>(entity));
+            await Db.ExecuteAsync(db => db.Update<T>(entity));
 
             var cached = await Cache.TryGetAsync<List<T>>(listKey);
             if (!cached.Hit)

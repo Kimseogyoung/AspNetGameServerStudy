@@ -18,14 +18,17 @@ namespace WebStudyServer.Service
         public async Task<AuthSignUpResponsePacket> SignUpAsync(string idfv)
         {
             // idfv 찾기.
-            if (Auth.Device.TryGet(idfv, out var mgrDevice))
+            var (foundDevice, mgrDevice) = await Auth.Device.TryGetAsync(idfv);
+            if (foundDevice)
             {
                 // 일치하는 idfv가 이미 있다면 해당 계정 정보 리턴
 
                 // 계정 찾기
-                if (Auth.Account.TryGet(mgrDevice.Model.AccountId, out var originMgrAccount))
+                var (foundAccount, originMgrAccount) = await Auth.Account.TryGetAsync(mgrDevice.Model.AccountId);
+                if (foundAccount)
                 {
-                    if (Auth.Channel.TryGetActive(originMgrAccount.Id, out var originMgrChannel))
+                    var (foundChannel, originMgrChannel) = await Auth.Channel.TryGetActiveAsync(originMgrAccount.Id);
+                    if (foundChannel)
                     {
                         var originMgrSession = await Auth.Session.TouchAsync(originMgrAccount.Id);
                         await originMgrSession.ExpireAsync(); // 기존 세션 무효화
@@ -49,13 +52,13 @@ namespace WebStudyServer.Service
             // ~idfv가 없다면
 
             // Account 생성
-            var mgrAccount = Auth.Account.Create();
+            var mgrAccount = await Auth.Account.CreateAsync();
             // Session 생성
             var mgrSession = await Auth.Session.TouchAsync(mgrAccount.Id);
             // Device 정보 생성
-            _ = Auth.Device.Create(idfv);
+            _ = await Auth.Device.CreateAsync(idfv);
             // 채널 생성
-            var mgrChannel = Auth.Channel.Create(mgrAccount.Id, EChannelType.GUEST);
+            var mgrChannel = await Auth.Channel.CreateAsync(mgrAccount.Id, EChannelType.GUEST);
 
             // 세션 갱신 및 리턴
             await mgrSession.StartAsync();
@@ -76,10 +79,10 @@ namespace WebStudyServer.Service
         public async Task<AuthSignInResponsePacket> SignInAsync(string channelId)
         {
             // 채널 찾기
-            var mgrChannel = Auth.Channel.Get(channelId);
+            var mgrChannel = await Auth.Channel.GetAsync(channelId);
 
             // 채널 -> Account 찾기
-            var mgrAccount = Auth.Account.GetActive(mgrChannel.Model.AccountId);
+            var mgrAccount = await Auth.Account.GetActiveAsync(mgrChannel.Model.AccountId);
 
             // 세션 갱신 및 리턴
             var mgrSession = await Auth.Session.TouchAsync(mgrAccount.Id);

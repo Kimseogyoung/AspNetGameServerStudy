@@ -32,7 +32,7 @@ namespace WebStudyServer
                 new RpcGameMethod<CookieService, CookieEnhanceStarRequestPacket, CookieEnhanceStarResponsePacket>(CookieEnhanceStarRequestPacket.NAME, (cookieSvc, req) => { return cookieSvc.EnhanceCookieStarAsync(req); }),
                 new RpcGameMethod<CookieService, CookieEnhanceLvRequestPacket, CookieEnhanceLvResponsePacket>(CookieEnhanceLvRequestPacket.NAME, (cookieSvc, req) => { return cookieSvc.EnhanceCookieLvAsync(req); }),
                 new RpcGameMethod<GachaService, GachaNormalRequestPacket, GachaNormalResponsePacket>(GachaNormalRequestPacket.NAME, (gachaSvc, req) => { return gachaSvc.GachaNormalAsync(req); }),
-                new RpcGameMethod<GachaService, ScheduleLoadRequestPacket, ScheduleLoadResponsePacket>(ScheduleLoadRequestPacket.NAME, (gachaSvc, req) => { return Task.FromResult(gachaSvc.LoadSchedule(req)); }),
+                new RpcGameMethod<GachaService, ScheduleLoadRequestPacket, ScheduleLoadResponsePacket>(ScheduleLoadRequestPacket.NAME, (gachaSvc, req) => { return gachaSvc.LoadScheduleAsync(req); }),
                 new RpcGameMethod<WorldService, WorldFinishStageFirstRequestPacket, WorldFinishStageFirstResponsePacket>(WorldFinishStageFirstRequestPacket.NAME, (worldSvc, req) => { return worldSvc.WorldFinishStageFirstAsync(req); }),
                 new RpcGameMethod<WorldService, WorldFinishStageRepeatRequestPacket, WorldFinishStageRepeatResponsePacket>(WorldFinishStageRepeatRequestPacket.NAME, (worldSvc, req) => { return worldSvc.WorldFinishStageRepeatAsync(req); }),
                 new RpcGameMethod<WorldService, WorldRewardStarRequestPacket, WorldRewardStarResponsePacket>(WorldRewardStarRequestPacket.NAME, (worldSvc, req) => { return worldSvc.WorldRewardStarAsync(req); }),

@@ -38,7 +38,7 @@ namespace ServerCore.Extension
             SetQueryParameter<T>(keyFields);
         }
 
-        public static T Insert<T>(this IDbConnection connection, T entity, IDbTransaction transaction)
+        public static async Task<T> InsertAsync<T>(this IDbConnection connection, T entity, IDbTransaction transaction)
         {
             var queryParam = GetQueryParameter<T>();
 
@@ -48,7 +48,7 @@ namespace ServerCore.Extension
             var hasAutoIncreaseProperty = tableName != "Player" && idProp != null;
 
             var insertSql = $@"
-                INSERT INTO {queryParam.TableName} ({queryParam.Fields}) 
+                INSERT INTO {queryParam.TableName} ({queryParam.Fields})
                 VALUES ({queryParam.Parameters});";
 
             // Id가 있는 경우 추가적으로 SELECT 실행
@@ -56,7 +56,7 @@ namespace ServerCore.Extension
             {
                 insertSql += $@"
                 SELECT * FROM {queryParam.TableName} WHERE Id = CONVERT(LAST_INSERT_ID(), UNSIGNED);";
-                var mdl = connection.QuerySingleOrDefault<T>(insertSql, entity, transaction);
+                var mdl = await connection.QuerySingleOrDefaultAsync<T>(insertSql, entity, transaction);
                 if (mdl == null)
                 {
                     throw new GameException(EErrorCode.PARAM, "INSERT_FAIL", null);
@@ -66,12 +66,12 @@ namespace ServerCore.Extension
             else
             {
                 // Id가 없으면 INSERT만 수행
-                connection.Execute(insertSql, entity, transaction);
+                await connection.ExecuteAsync(insertSql, entity, transaction);
                 return entity;
             }
         }
 
-        public static void Update<T>(this IDbConnection connection, T entity, IDbTransaction transaction)
+        public static async Task UpdateAsync<T>(this IDbConnection connection, T entity, IDbTransaction transaction)
         {
             var tableName = GetTableName<T>();
             var queryParam = GetQueryParameter<T>();
@@ -79,14 +79,14 @@ namespace ServerCore.Extension
 
             // Build UPDATE SQL
             var updateSql = $@"
-            UPDATE {tableName} 
-            SET {queryParam.UpdateSet} 
+            UPDATE {tableName}
+            SET {queryParam.UpdateSet}
             WHERE {whereClause};";
 
-            connection.Execute(updateSql, entity, transaction);
+            await connection.ExecuteAsync(updateSql, entity, transaction);
         }
 
-        public static T SelectByPk<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
+        public static Task<T> SelectByPkAsync<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
         {
             var tableName = GetTableName<T>();
 
@@ -95,14 +95,14 @@ namespace ServerCore.Extension
 
             var selectSql = $@"SELECT * FROM {tableName} WHERE {whereClause};";
 
-            return connection.QuerySingleOrDefault<T>(selectSql, keyValues, transaction);
+            return connection.QuerySingleOrDefaultAsync<T>(selectSql, keyValues, transaction);
         }
 
-        public static T SelectByConditions<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
+        public static Task<T> SelectByConditionsAsync<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
         {
             if (keyValues == null)
             {
-                return connection.QuerySingleOrDefault<T>(
+                return connection.QuerySingleOrDefaultAsync<T>(
                     $"SELECT * FROM {GetTableName<T>()}", transaction: transaction);
             }
 
@@ -115,14 +115,14 @@ namespace ServerCore.Extension
                     return $"SELECT * FROM {GetTableName<T>()} WHERE {where}";
                 });
 
-            return connection.QuerySingleOrDefault<T>(sql, keyValues, transaction);
+            return connection.QuerySingleOrDefaultAsync<T>(sql, keyValues, transaction);
         }
 
-        public static IEnumerable<T> SelectListByConditions<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
+        public static async Task<IEnumerable<T>> SelectListByConditionsAsync<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
         {
             if (keyValues == null)
             {
-                return connection.Query<T>(
+                return await connection.QueryAsync<T>(
                     $"SELECT * FROM {GetTableName<T>()}", transaction: transaction);
             }
 
@@ -138,7 +138,7 @@ namespace ServerCore.Extension
                     return $"SELECT * FROM {GetTableName<T>()} WHERE {where}";
                 });
 
-            return connection.Query<T>(sql, keyValues, transaction);
+            return await connection.QueryAsync<T>(sql, keyValues, transaction);
         }
 
         private static void SetPKWhereClause<T>(params string[] keyFields)

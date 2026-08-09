@@ -17,34 +17,34 @@ namespace ServerCore.Repo.Database
             _tx = tx;
         }
 
-        public T SelectByPk<T>(object param) where T : class
+        public Task<T> SelectByPk<T>(object param) where T : class
         {
-            return _conn.SelectByPk<T>(param, _tx);
+            return _conn.SelectByPkAsync<T>(param, _tx);
         }
 
-        public T SelectByConditions<T>(object conditions) where T : class
+        public Task<T> SelectByConditions<T>(object conditions) where T : class
         {
-            return _conn.SelectByConditions<T>(conditions, _tx);
+            return _conn.SelectByConditionsAsync<T>(conditions, _tx);
         }
 
-        public IEnumerable<T> SelectListByConditions<T>(object conditions) where T : class
+        public Task<IEnumerable<T>> SelectListByConditions<T>(object conditions) where T : class
         {
-            return _conn.SelectListByConditions<T>(conditions, _tx);
+            return _conn.SelectListByConditionsAsync<T>(conditions, _tx);
         }
 
-        public T Insert<T>(T entity) where T : class
+        public Task<T> Insert<T>(T entity) where T : class
         {
-            return _conn.Insert<T>(entity, _tx);
+            return _conn.InsertAsync<T>(entity, _tx);
         }
 
-        public void Update<T>(T entity) where T : class
+        public Task Update<T>(T entity) where T : class
         {
-            _conn.Update(entity, _tx);
+            return _conn.UpdateAsync(entity, _tx);
         }
 
-        public T QuerySingle<T>(string sql, object param)
+        public Task<T> QuerySingle<T>(string sql, object param)
         {
-            return _conn.QuerySingleOrDefault<T>(sql, param, transaction: _tx);
+            return _conn.QuerySingleOrDefaultAsync<T>(sql, param, transaction: _tx);
         }
     }
 }

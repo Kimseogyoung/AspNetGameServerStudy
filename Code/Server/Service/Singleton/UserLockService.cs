@@ -23,7 +23,7 @@ namespace WebStudyServer
 
             _logger.Debug("WaitUserLock AccountId({AccountId})", accountId);
 
-            if (!_lockService.Enter(accountId))
+            if (!await _lockService.EnterAsync(accountId))
             {
                 _logger.Error("FAILED_GET_USER_LOCK AccountId({AccountId})", accountId);
                 throw new UserLockException(accountId, "USER_LOCK_DB_TIME_OUT");
@@ -41,7 +41,7 @@ namespace WebStudyServer
             finally
             {
                 _logger.Debug("ExitUserLock AccountId({AccountId})", accountId);
-                if (!_lockService.Exit(accountId))
+                if (!await _lockService.ExitAsync(accountId))
                 {
                     _logger.Error("FAILED_RELEASE_USER_LOCK AccountId({AccountId})", accountId);
                     throw new UserLockException(accountId, "FAILED_RELEASE_USER_LOCK");

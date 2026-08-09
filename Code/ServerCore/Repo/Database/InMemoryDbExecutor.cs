@@ -26,27 +26,27 @@ namespace ServerCore.Repo.Database
             _store = store;
         }
 
-        public T SelectByPk<T>(object param) where T : class
+        public Task<T> SelectByPk<T>(object param) where T : class
         {
-            return ScanFirst<T>(param);
+            return Task.FromResult(ScanFirst<T>(param));
         }
 
-        public T SelectByConditions<T>(object conditions) where T : class
+        public Task<T> SelectByConditions<T>(object conditions) where T : class
         {
-            return ScanFirst<T>(conditions);
+            return Task.FromResult(ScanFirst<T>(conditions));
         }
 
-        public IEnumerable<T> SelectListByConditions<T>(object conditions) where T : class
+        public Task<IEnumerable<T>> SelectListByConditions<T>(object conditions) where T : class
         {
             if (conditions == null)
             {
-                return _store.GetAll(typeof(T)).Cast<T>();
+                return Task.FromResult(_store.GetAll(typeof(T)).Cast<T>());
             }
 
-            return ScanAll<T>(conditions);
+            return Task.FromResult(ScanAll<T>(conditions));
         }
 
-        public T Insert<T>(T entity) where T : class
+        public Task<T> Insert<T>(T entity) where T : class
         {
             // SQL의 AUTO_INCREMENT 동작 모방:
             // Id 프로퍼티가 있고 값이 0이면 스토어에서 다음 ID를 발급한다.
@@ -59,16 +59,17 @@ namespace ServerCore.Repo.Database
             }
 
             _store.Set(type, InMemoryPkRegistry.ComputePkKey(entity), entity);
-            return entity;
+            return Task.FromResult(entity);
         }
 
-        public void Update<T>(T entity) where T : class
+        public Task Update<T>(T entity) where T : class
         {
             _store.Set(typeof(T), InMemoryPkRegistry.ComputePkKey(entity), entity);
+            return Task.CompletedTask;
         }
 
         // InMemory 모드에서는 집계 SQL을 실행할 수 없으므로 NotSupportedException.
-        public T QuerySingle<T>(string sql, object param)
+        public Task<T> QuerySingle<T>(string sql, object param)
         {
             throw new NotSupportedException();
         }

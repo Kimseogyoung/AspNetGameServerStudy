@@ -16,31 +16,27 @@ namespace WebStudyServer.Component
         {
         }
 
-        public bool TryGetActive(ulong accountId, out ChannelManager mgrChannel)
+        public async Task<(bool Found, ChannelManager? Value)> TryGetActiveAsync(ulong accountId)
         {
-            mgrChannel = null;
-            var mdlActiveChannel = GetList(accountId).FirstOrDefault(x => x.State == EChannelState.ACTIVE);
-            if (mdlActiveChannel == null) return false;
-            mgrChannel = new ChannelManager(_authRepo, mdlActiveChannel);
-            return true;
+            var list = await GetListAsync(accountId);
+            var mdlActiveChannel = list.FirstOrDefault(x => x.State == EChannelState.ACTIVE);
+            return mdlActiveChannel == null ? (false, null) : (true, new ChannelManager(_authRepo, mdlActiveChannel));
         }
 
-        public ChannelManager Get(string key)
+        public async Task<ChannelManager> GetAsync(string key)
         {
-            ReqHelper.ValidContext(TryGet(key, out var mgrChannel), "NOT_FOUND_CHANNEL", () => new { ChannelKey = key });
+            var (found, mgrChannel) = await TryGetAsync(key);
+            ReqHelper.ValidContext(found, "NOT_FOUND_CHANNEL", () => new { ChannelKey = key });
             return mgrChannel;
         }
 
-        public bool TryGet(string key, out ChannelManager mgrChannel)
+        public async Task<(bool Found, ChannelManager? Value)> TryGetAsync(string key)
         {
-            mgrChannel = null;
-            var mdlChannel = GetMdl(db => db.SelectByPk<ChannelModel>(new { Key = key }));
-            if (mdlChannel == null) return false;
-            mgrChannel = new ChannelManager(_authRepo, mdlChannel);
-            return true;
+            var mdlChannel = await GetMdlAsync(db => db.SelectByPk<ChannelModel>(new { Key = key }));
+            return mdlChannel == null ? (false, null) : (true, new ChannelManager(_authRepo, mdlChannel));
         }
 
-        public ChannelManager Create(ulong accountId, EChannelType type, string channelKey = "")
+        public async Task<ChannelManager> CreateAsync(ulong accountId, EChannelType type, string channelKey = "")
         {
             switch (type)
             {
@@ -49,7 +45,7 @@ namespace WebStudyServer.Component
                     break;
             }
 
-            var repoChannel = CreateMdl(new ChannelModel
+            var repoChannel = await CreateMdlAsync(new ChannelModel
             {
                 Key = channelKey,
                 AccountId = accountId,
@@ -61,14 +57,14 @@ namespace WebStudyServer.Component
             return new ChannelManager(_authRepo, repoChannel);
         }
 
-        public List<ChannelModel> GetList(ulong accountId)
+        public Task<List<ChannelModel>> GetListAsync(ulong accountId)
         {
-            return GetMdlList(db => db.SelectListByConditions<ChannelModel>(new { AccountId = accountId }).ToList());
+            return GetMdlListAsync<ChannelModel>(async db => (await db.SelectListByConditions<ChannelModel>(new { AccountId = accountId })).ToList());
         }
 
-        public void Update(ChannelModel mdlChannel)
+        public Task UpdateAsync(ChannelModel mdlChannel)
         {
-            UpdateMdl(mdlChannel);
+            return UpdateMdlAsync(mdlChannel);
         }
     }
 }
