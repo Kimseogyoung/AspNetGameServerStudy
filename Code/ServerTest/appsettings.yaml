@@ -28,7 +28,6 @@ Cache:
 
 Db:
     Type: InMemory
-    Version: 8.0.21
     UserDb:
         ConnectionStrList: []
     AuthDb:

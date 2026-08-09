@@ -16,7 +16,6 @@ Cache:
     ConnectionString: "localhost:6379"
     DefaultTtl: 00:30:00
 Db:
-    Version: 8.0.21
     Type: MySql
     UserDb:
         ConnectionStrList:

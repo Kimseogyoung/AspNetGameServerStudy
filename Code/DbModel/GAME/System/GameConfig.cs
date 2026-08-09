@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Protocol;
 using ServerCore;
 using ServerCore.Serializer;
@@ -10,7 +9,6 @@ namespace WebStudyServer
     public class GameConfig : IConfig
     {
         public bool UseSwagger { get; private set; }
-        public MySqlServerVersion? DbVersion { get; private set; }
         public TimeSpan SessionExpireSpan { get; private set; } = new();
         public TimeSpan SessionGracePeriodSpan { get; private set; } = TimeSpan.FromDays(30);
         public string DefaultPlayerPath { get; private set; } = string.Empty;
@@ -23,7 +21,6 @@ namespace WebStudyServer
         public void Init(IConfiguration config, IHostEnvironment environ)
         {
             UseSwagger = config.GetValue("Game:UseSwagger", false);
-            DbVersion = new MySqlServerVersion(config.GetValue("Db:Version", "0.0.0"));
 
             SessionExpireSpan = config.GetValue("Game:SessionExpireSpan", TimeSpan.FromMinutes(20));
             SessionGracePeriodSpan = config.GetValue("Game:SessionGracePeriodSpan", TimeSpan.FromDays(30));
