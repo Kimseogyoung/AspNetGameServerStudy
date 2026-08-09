@@ -41,7 +41,7 @@ namespace ServerCore.Repo.Cache
                 // 미스로 처리하고 DB fallback에 맡긴다. JsonException만이 아니라 커스텀 컨버터가 던질 수
                 // 있는 다른 예외까지 포함해서 넓게 잡는다 - fail-open이 목적이라 특정 예외 타입에
                 // 의존하면 안 됨.
-                logger.LogWarning(e, "RedisCacheLayer 역직렬화 실패 - 미스로 처리. Key({Key}), ExpectedType({Type})", key.Value, typeof(T).Name);
+                logger.LogWarning(e, "CACHE_DESERIALIZE_FAILED - falling back to miss. Key({Key}), ExpectedType({Type})", key.Value, typeof(T).Name);
                 return new CacheResult<T>(false, default);
             }
 
@@ -51,6 +51,34 @@ namespace ServerCore.Repo.Cache
             }
 
             return new CacheResult<T>(outValue != null, outValue);
+        }
+
+        public async Task<CacheResult<object>> TryGetAsync(CacheKey key, Type type, TimeSpan? slidingTtl = null)
+        {
+            var redisValue = await _db.StringGetAsync(key.Value);
+            if (!redisValue.HasValue)
+            {
+                return new CacheResult<object>(false, null);
+            }
+
+            var raw = redisValue.ToString();
+            object outValue;
+            try
+            {
+                outValue = type == typeof(string) ? raw : JsonSerializer.Deserialize(raw, type, JsonOpts);
+            }
+            catch (Exception e)
+            {
+                logger.LogWarning(e, "CACHE_DESERIALIZE_FAILED - falling back to miss. Key({Key}), ExpectedType({Type})", key.Value, type.Name);
+                return new CacheResult<object>(false, null);
+            }
+
+            if (outValue != null && slidingTtl.HasValue)
+            {
+                await _db.KeyExpireAsync(key.Value, slidingTtl.Value);
+            }
+
+            return new CacheResult<object>(outValue != null, outValue);
         }
 
         public Task SetAsync<T>(CacheKey key, T value, TimeSpan resolvedTtl)

@@ -30,60 +30,54 @@ namespace Server
             CancelReqException.ThrowCancelRequestException(httpCtx);
             await _rpcCtx.InitAsync(httpCtx);
 
-            // Seq 재전송이면 재실행 없이 캐시된 응답을 그대로 반환한다.
-            var (cacheHit, cachedBody) = await _responseCache.TryGetAsync(_rpcCtx);
-            if (cacheHit)
-            {
-                var cachedContentType = ResWriteHelper.GetOutputContentType(httpCtx);
-                await ResWriteHelper.WriteBytesAsync(httpCtx, cachedContentType, cachedBody);
-                return;
-            }
-
-            // 로그
-            var httpMethod = httpCtx.Request.Method;
-            var httpPath = httpCtx.Request.Path.ToString();
-
-            var httpReqContentType = CustomInputFormatter.GetContentTypeByHeader(httpCtx);
-            if (!_registry.ContentTypeToSerializerDict.TryGetValue(httpReqContentType, out var rpcReqSerializer))
-            {
-                httpCtx.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
-                return;
-            }
-
             if (!_registry.NameToMethodDict.TryGetValue(methodName, out var rpcMethod))
             {
                 throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NOT_FOUND_METHOD", new { MethodName = methodName });
             }
 
-            var httpReqStream = httpCtx.Request.Body;
-            var rpcReqObj = await rpcReqSerializer.DeserializeAsync(rpcMethod.Req, httpReqStream);
+            // 요청은 캐시 히트 여부와 무관하게 항상 파싱함.
+            var rpcReqObj = await ParseRequestAsync(httpCtx, rpcMethod);
+            if (rpcReqObj == null)
+            {
+                return; // 415/400 - 응답은 ParseRequestAsync에서 이미 작성됨
+            }
+
+            _logger.Info("Req Method({Method}) Path({Path}) Body({Body})", httpCtx.Request.Method, httpCtx.Request.Path.ToString(), rpcReqObj);
+
+            // Seq 재전송이면 재실행 없이 캐시된 응답 객체를 그대로 쓴다.
+            var (cacheHit, cachedObj) = await _responseCache.TryGetAsync(_rpcCtx, rpcMethod.Res);
+            var resObj = cacheHit ? cachedObj : await HandleMethodAsync(httpCtx, rpcMethod, rpcReqObj);
+
+            _logger.Info("Res Method({Method}) Path({Path}) CacheHit({CacheHit}) Body({Body})",httpCtx.Request.Method, httpCtx.Request.Path.ToString(), cacheHit, resObj);
+
+            var contentType = ResWriteHelper.GetOutputContentType(httpCtx);
+            var resBody = _registry.ContentTypeToSerializerDict[contentType].Serialize(resObj);
+            await ResWriteHelper.WriteBytesAsync(httpCtx, contentType, resBody);
+        }
+
+        // ContentType 협상 → 역직렬화, 실패 시 415/400 응답 후 null 반환.
+        private async Task<object> ParseRequestAsync(HttpContext httpCtx, IRpcMethod rpcMethod)
+        {
+            var httpReqContentType = CustomInputFormatter.GetContentTypeByHeader(httpCtx);
+            if (!_registry.ContentTypeToSerializerDict.TryGetValue(httpReqContentType, out var rpcReqSerializer))
+            {
+                httpCtx.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
+                return null;
+            }
+
+            var rpcReqObj = await rpcReqSerializer.DeserializeAsync(rpcMethod.Req, httpCtx.Request.Body);
             if (rpcReqObj == null)
             {
                 httpCtx.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
+                return null;
             }
 
-            // TODO: Logger 수정하고 적용 (Body가 메시지로 나오면 안되고 arg에만 들어가게)
-            //var args = new Dictionary<string, object>()
-            //{
-            //    { "Method", httpMethod },
-            //    { "Path", httpPath },
-            //    { "Body", rpcReqObj},
-            //};
-
-            _logger.Info("Req Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcReqObj);
-
-            // 예외는 여기서 잡지 않고 전역 UseExceptionHandler(ErrorHandler)로 위임한다.
-            var rpcResObj = await HandleMethodAsync(httpCtx, rpcMethod, rpcReqObj);
-
-            _logger.Info("Res Method({Method}) Path({Path}) Body({Body})", httpMethod, httpPath, rpcResObj);
+            return rpcReqObj;
         }
 
         private async Task<object> HandleMethodAsync(HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj)
         {
             object rpcResObj = null;
-            var contentType = ResWriteHelper.GetOutputContentType(httpCtx);
-            byte[] resBody = null;
             try
             {
                 await _userLockSvc.RunAtomicAsync(_rpcCtx.AccountId, async () =>
@@ -91,8 +85,7 @@ namespace Server
                     rpcResObj = await rpcMethod.RunAsync(_rpcCtx, httpCtx, _dbRepo, rpcReqObj);
                 });
 
-                resBody = _registry.ContentTypeToSerializerDict[contentType].Serialize(rpcResObj);
-                await _responseCache.SetAsync(_rpcCtx, resBody);
+                await _responseCache.SetAsync(_rpcCtx, rpcResObj);
 
                 await _dbRepo.CommitAsync();
             }
@@ -102,7 +95,6 @@ namespace Server
                 throw; // 오류 발생 시 ErrorHandler에서 처리
             }
 
-            await ResWriteHelper.WriteBytesAsync(httpCtx, contentType, resBody);
             return rpcResObj;
         }
 

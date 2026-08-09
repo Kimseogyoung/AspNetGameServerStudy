@@ -21,6 +21,9 @@ namespace ServerCore.Repo.Cache
     public interface ICacheSession
     {
         Task<CacheResult<T>> TryGetAsync<T>(CacheKey key, TimeSpan? slidingTtl = null);
+
+        Task<CacheResult<object>> TryGetAsync(CacheKey key, Type type, TimeSpan? slidingTtl = null);
+
         Task SetAsync<T>(CacheKey key, T value, TimeSpan? ttl = null);
         Task InvalidateAsync(CacheKey key);
         Task FlushPendingWritesAsync();

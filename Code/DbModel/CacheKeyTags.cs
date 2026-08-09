@@ -17,5 +17,6 @@ namespace WebStudyServer
         public const string WorldModel = "WorldModel";
         public const string WorldStageModel = "WorldStageModel";
         public const string SessionModel = "SessionModel";
+        public const string RpcResponseCache = "RpcResponseCache";
     }
 }

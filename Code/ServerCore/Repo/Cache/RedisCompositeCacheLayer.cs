@@ -28,6 +28,23 @@ namespace ServerCore.Repo.Cache
             return redisResult;
         }
 
+        public async Task<CacheResult<object>> TryGetAsync(CacheKey key, Type type, TimeSpan? slidingTtl = null)
+        {
+            var memoryResult = await memory.TryGetAsync<object>(key);
+            if (memoryResult.Hit)
+            {
+                return memoryResult;
+            }
+
+            var redisResult = await redis.TryGetAsync(key, type, slidingTtl);
+            if (redisResult.Hit)
+            {
+                await memory.SetAsync(key, redisResult.Value);
+            }
+
+            return redisResult;
+        }
+
         // InMemory 즉시 반영 + Redis pending (DB 커밋 후 flush)
         // ttl null → DefaultTtl, CacheTtl.Permanent → 영구. 람다 캡처 전에 resolve.
         public async Task SetAsync<T>(CacheKey key, T value, TimeSpan? ttl = null)

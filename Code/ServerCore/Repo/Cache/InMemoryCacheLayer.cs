@@ -21,11 +21,27 @@ namespace ServerCore.Repo.Cache
             // 캐스팅 실패는 캐시 오류지 요청 실패 사유가 아님 - 미스로 처리하고 DB fallback에 맡긴다.
             if (value is not T typedValue)
             {
-                logger.LogWarning("InMemoryCacheLayer 캐스팅 실패 - 미스로 처리. Key({Key}), ExpectedType({Type})", key.Value, typeof(T).Name);
+                logger.LogWarning("Failed to cast cached value, falling back to miss. Key({Key}), ExpectedType({Type})", key.Value, typeof(T).Name);
                 return Task.FromResult(new CacheResult<T>(false, default));
             }
 
             return Task.FromResult(new CacheResult<T>(true, typedValue));
+        }
+
+        public Task<CacheResult<object>> TryGetAsync(CacheKey key, Type type, TimeSpan? slidingTtl = null)
+        {
+            if (!_store.TryGetValue(key.Value, out var value))
+            {
+                return Task.FromResult(new CacheResult<object>(false, null));
+            }
+
+            if (!type.IsInstanceOfType(value))
+            {
+                logger.LogWarning("Failed to cast cached value, falling back to miss. Key({Key}), ExpectedType({Type})", key.Value, type.Name);
+                return Task.FromResult(new CacheResult<object>(false, null));
+            }
+
+            return Task.FromResult(new CacheResult<object>(true, value));
         }
 
         public Task SetAsync<T>(CacheKey key, T value, TimeSpan? ttl = null)

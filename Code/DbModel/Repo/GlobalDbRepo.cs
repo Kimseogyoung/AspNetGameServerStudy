@@ -87,7 +87,7 @@ namespace Server.Repo
             catch (Exception e)
             {
                 // DB는 이미 커밋됨 — Rollback 불가. pending을 버리고 stale 상태로 남긴다.
-                _logger.LogError(e, "Redis flush 오류 — stale cache 상태");
+                _logger.LogError(e, "CACHE_FLUSH_FAILED - cache left stale, DB already committed");
                 _cacheSession.DiscardPendingWrites();
             }
         }

@@ -19,7 +19,6 @@ namespace ServerCore
             _instance = new IdGenerator(workerId);
         }
 
-        public static IdGenerator Get() =>
-            _instance ?? throw new InvalidOperationException("IdGeneratorProvider not initialized. Call IdGeneratorProvider.Init first.");
+        public static IdGenerator Get() => _instance ?? throw new InvalidOperationException("IdGeneratorProvider not initialized. Call IdGeneratorProvider.Init first.");
     }
 }
