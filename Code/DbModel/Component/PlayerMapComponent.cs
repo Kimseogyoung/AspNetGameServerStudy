@@ -22,7 +22,7 @@ namespace WebStudyServer.Component
 
         public async Task<(bool Found, PlayerMapModel? Value)> TryGetPlayerMapAsync(ulong accountId)
         {
-            var mdlPlayerMap = await GetMdlAsync(db => db.SelectByPk<PlayerMapModel>(new { AccountId = accountId }));
+            var mdlPlayerMap = await GetMdlAsync(db => db.SelectByPkAsync<PlayerMapModel>(new { AccountId = accountId }));
             return (mdlPlayerMap != null, mdlPlayerMap);
         }
     }

@@ -34,7 +34,7 @@ namespace WebStudyServer.Component
         {
             // TODO: 캐시
             var sql = "SELECT SUM(RewardAmount) FROM WorldStage WHERE PlayerId = @PlayerId AND WorldNum = @WorldNum";
-            return DbSession.ExecuteAsync(db => db.QuerySingle<int>(sql,
+            return DbSession.ExecuteAsync(db => db.QuerySingleAsync<int>(sql,
                 new { RpcCtx.PlayerId, WorldNum = worldNum }));
         }
 

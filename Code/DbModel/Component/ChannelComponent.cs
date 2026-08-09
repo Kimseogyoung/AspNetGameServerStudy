@@ -32,7 +32,7 @@ namespace WebStudyServer.Component
 
         public async Task<(bool Found, ChannelManager? Value)> TryGetAsync(string key)
         {
-            var mdlChannel = await GetMdlAsync(db => db.SelectByPk<ChannelModel>(new { Key = key }));
+            var mdlChannel = await GetMdlAsync(db => db.SelectByPkAsync<ChannelModel>(new { Key = key }));
             return mdlChannel == null ? (false, null) : (true, new ChannelManager(_authRepo, mdlChannel));
         }
 
@@ -59,7 +59,7 @@ namespace WebStudyServer.Component
 
         public Task<List<ChannelModel>> GetListAsync(ulong accountId)
         {
-            return GetMdlListAsync<ChannelModel>(async db => (await db.SelectListByConditions<ChannelModel>(new { AccountId = accountId })).ToList());
+            return GetMdlListAsync<ChannelModel>(async db => (await db.SelectListByConditionsAsync<ChannelModel>(new { AccountId = accountId })).ToList());
         }
 
         public Task UpdateAsync(ChannelModel mdlChannel)

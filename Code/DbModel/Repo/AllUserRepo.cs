@@ -20,7 +20,7 @@ namespace WebStudyServer.Repo
             // 샤드 전체 탐색
             foreach (var factory in _factories)
             {
-                var mdlPlayer = await factory.ExecuteAsync(db => db.SelectByConditions<PlayerModel>(new { ProfileName = name }));
+                var mdlPlayer = await factory.ExecuteAsync(db => db.SelectByConditionsAsync<PlayerModel>(new { ProfileName = name }));
                 if (mdlPlayer != null)
                 {
                     return (true, mdlPlayer);

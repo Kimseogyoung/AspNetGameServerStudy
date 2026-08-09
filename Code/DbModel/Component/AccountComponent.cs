@@ -25,7 +25,7 @@ namespace WebStudyServer.Component
 
         public async Task<(bool Found, AccountManager? Value)> TryGetAsync(ulong id)
         {
-            var mdlAccount = await GetMdlAsync(db => db.SelectByPk<AccountModel>(new { Id = id }));
+            var mdlAccount = await GetMdlAsync(db => db.SelectByPkAsync<AccountModel>(new { Id = id }));
             return mdlAccount == null ? (false, null) : (true, new AccountManager(_authRepo, mdlAccount));
         }
 

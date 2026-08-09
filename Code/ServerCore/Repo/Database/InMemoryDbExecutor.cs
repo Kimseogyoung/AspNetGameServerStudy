@@ -26,17 +26,17 @@ namespace ServerCore.Repo.Database
             _store = store;
         }
 
-        public Task<T> SelectByPk<T>(object param) where T : class
+        public Task<T> SelectByPkAsync<T>(object param) where T : class
         {
             return Task.FromResult(ScanFirst<T>(param));
         }
 
-        public Task<T> SelectByConditions<T>(object conditions) where T : class
+        public Task<T> SelectByConditionsAsync<T>(object conditions) where T : class
         {
             return Task.FromResult(ScanFirst<T>(conditions));
         }
 
-        public Task<IEnumerable<T>> SelectListByConditions<T>(object conditions) where T : class
+        public Task<IEnumerable<T>> SelectListByConditionsAsync<T>(object conditions) where T : class
         {
             if (conditions == null)
             {
@@ -46,7 +46,7 @@ namespace ServerCore.Repo.Database
             return Task.FromResult(ScanAll<T>(conditions));
         }
 
-        public Task<T> Insert<T>(T entity) where T : class
+        public Task<T> InsertAsync<T>(T entity) where T : class
         {
             // SQL의 AUTO_INCREMENT 동작 모방:
             // Id 프로퍼티가 있고 값이 0이면 스토어에서 다음 ID를 발급한다.
@@ -62,14 +62,14 @@ namespace ServerCore.Repo.Database
             return Task.FromResult(entity);
         }
 
-        public Task Update<T>(T entity) where T : class
+        public Task UpdateAsync<T>(T entity) where T : class
         {
             _store.Set(typeof(T), InMemoryPkRegistry.ComputePkKey(entity), entity);
             return Task.CompletedTask;
         }
 
         // InMemory 모드에서는 집계 SQL을 실행할 수 없으므로 NotSupportedException.
-        public Task<T> QuerySingle<T>(string sql, object param)
+        public Task<T> QuerySingleAsync<T>(string sql, object param)
         {
             throw new NotSupportedException();
         }

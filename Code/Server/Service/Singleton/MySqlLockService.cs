@@ -17,7 +17,7 @@ namespace WebStudyServer
         public async Task<bool> EnterAsync(ulong accountId)
         {
             var result = await _dbRepo.Auth.Repository.Db.ExecuteAsync<long>(
-                db => db.QuerySingle<long>(
+                db => db.QuerySingleAsync<long>(
                     "SELECT GET_LOCK(@id, @timeout)",
                     new { id = $"acnt:{accountId}", timeout = Config<CoreConfig>.Get().UserLockTimeoutSpan.TotalSeconds }));
             return result > 0;
@@ -26,7 +26,7 @@ namespace WebStudyServer
         public async Task<bool> ExitAsync(ulong accountId)
         {
             var result = await _dbRepo.Auth.Repository.Db.ExecuteAsync<long>(
-                db => db.QuerySingle<long>(
+                db => db.QuerySingleAsync<long>(
                     "SELECT RELEASE_LOCK(@id)",
                     new { id = $"acnt:{accountId}" }));
             return result > 0;

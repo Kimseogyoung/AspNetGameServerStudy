@@ -34,7 +34,7 @@ namespace WebStudyServer.Component
             var cached = await _repository.Cache.TryGetAsync<ulong>(accountIdBySessionKey, Key.Ttl);
             if (!cached.Hit)
             {
-                var dbSession = await GetMdlAsync<SessionModel>(db => db.SelectByConditions<SessionModel>(new { Key = key }));
+                var dbSession = await GetMdlAsync<SessionModel>(db => db.SelectByConditionsAsync<SessionModel>(new { Key = key }));
                 if (dbSession == null)
                 {
                     return null;
@@ -59,7 +59,7 @@ namespace WebStudyServer.Component
             var sessionByAccountIdKey = Key.SessionByAccountId(accountId);
             var session = await GetMdlWithCacheAsync<SessionModel>(
                     sessionByAccountIdKey,
-                    db => db.SelectByConditions<SessionModel>(new { AccountId = accountId }),
+                    db => db.SelectByConditionsAsync<SessionModel>(new { AccountId = accountId }),
                     Key.Ttl);
 
             if (session != null)

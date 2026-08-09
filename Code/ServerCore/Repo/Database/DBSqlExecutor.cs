@@ -28,14 +28,14 @@ namespace ServerCore.Repo.Database
             _transaction = _connection.BeginTransaction(isolationLevel);
         }
 
-        public void Excute(Action<IDbConnection, IDbTransaction> func)
+        public async Task ExecuteAsync(Func<IDbConnection, IDbTransaction, Task> func)
         {
-            func.Invoke(_connection, _transaction);
+            await func.Invoke(_connection, _transaction);
         }
 
-        public T Excute<T>(Func<IDbConnection, IDbTransaction, T> func)
+        public async Task<T> ExecuteAsync<T>(Func<IDbConnection, IDbTransaction, Task<T>> func)
         {
-            return func.Invoke(_connection, _transaction);
+            return await func.Invoke(_connection, _transaction);
         }
 
         public void Commit()

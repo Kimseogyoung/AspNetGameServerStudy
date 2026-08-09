@@ -18,7 +18,7 @@ namespace WebStudyServer.Component
         public async Task<List<ScheduleManager>> GetListAsync()
         {
             // 전체 조회 — 캐시 -> DB조회 일반화가 어려운 부분이라 DbSession 직접 사용
-            var mdlList = await DbSession.ExecuteAsync(async db => (await db.SelectListByConditions<ScheduleModel>(null)).ToList());
+            var mdlList = await DbSession.ExecuteAsync(async db => (await db.SelectListByConditionsAsync<ScheduleModel>(null)).ToList());
 
             var prts = ProtoDb.GetAll<ScheduleProto>();
             var mgrList = new List<ScheduleManager>();
@@ -54,7 +54,7 @@ namespace WebStudyServer.Component
         public async Task<(bool Found, ScheduleManager? Value)> TryGetAsync(int num)
         {
             var prt = ProtoDb.Get<ScheduleProto>(num);
-            var mdlSchedule = await GetMdlAsync(db => db.SelectByPk<ScheduleModel>(new { Num = num }));
+            var mdlSchedule = await GetMdlAsync(db => db.SelectByPkAsync<ScheduleModel>(new { Num = num }));
             return mdlSchedule == null ? (false, null) : (true, new ScheduleManager(_centerRepo, prt, mdlSchedule));
         }
     }

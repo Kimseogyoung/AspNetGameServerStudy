@@ -16,7 +16,7 @@ namespace WebStudyServer.Component
 
         public async Task<(bool Found, DeviceManager? Value)> TryGetAsync(string idfv)
         {
-            var mdlDevice = await GetMdlAsync(db => db.SelectByPk<DeviceModel>(new { Key = idfv }));
+            var mdlDevice = await GetMdlAsync(db => db.SelectByPkAsync<DeviceModel>(new { Key = idfv }));
             return mdlDevice == null ? (false, null) : (true, new DeviceManager(_authRepo, mdlDevice));
         }
 

@@ -19,7 +19,7 @@ namespace WebStudyServer.Component
         // PlayerModel의 PK는 Id (PlayerId 컬럼 없음)
         protected override async Task<List<PlayerModel>> LoadFromDb(IDbExecutor db)
         {
-            return (await db.SelectListByConditions<PlayerModel>(new { Id = RpcCtx.PlayerId })).ToList();
+            return (await db.SelectListByConditionsAsync<PlayerModel>(new { Id = RpcCtx.PlayerId })).ToList();
         }
 
         public async Task<PlayerManager> TouchAsync()
@@ -62,7 +62,7 @@ namespace WebStudyServer.Component
             // AccountId는 ListKey(PlayerId) 기준 컬렉션 밖의 조회 → DB 직접 접근
             return DbSession.ExecuteAsync(async db =>
             {
-                var mdlPlayer = await db.SelectByConditions<PlayerModel>(new { AccountId = accountId });
+                var mdlPlayer = await db.SelectByConditionsAsync<PlayerModel>(new { AccountId = accountId });
                 return (mdlPlayer != null, mdlPlayer);
             });
         }

@@ -49,13 +49,13 @@ namespace WebStudyServer.Base
         protected async Task<T> CreateMdlAsync<T>(T entity) where T : ModelBase
         {
             entity.UpdateTime = entity.CreateTime = DateTime.UtcNow;
-            return await _repository.Db.ExecuteAsync(db => db.Insert<T>(entity));
+            return await _repository.Db.ExecuteAsync(db => db.InsertAsync<T>(entity));
         }
 
         protected async Task UpdateMdlAsync<T>(T entity) where T : ModelBase
         {
             entity.UpdateTime = DateTime.UtcNow;
-            await _repository.Db.ExecuteAsync(db => db.Update<T>(entity));
+            await _repository.Db.ExecuteAsync(db => db.UpdateAsync<T>(entity));
         }
 
         // IDbExecutor 범위 밖 특수 쿼리 전용 (SelectListByConditions, 집계 SQL 등)

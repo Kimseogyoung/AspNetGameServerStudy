@@ -32,7 +32,7 @@ namespace ServerCore.Repo.Database
         // ── Insert: DB → 캐시 로드 중이면 항목 추가 ─────────────────────
         public async Task<T> InsertAsync<T>(T entity, CacheKey listKey) where T : ModelBase
         {
-            entity = await Db.ExecuteAsync(db => db.Insert<T>(entity));
+            entity = await Db.ExecuteAsync(db => db.InsertAsync<T>(entity));
 
             var cached = await Cache.TryGetAsync<List<T>>(listKey);
             if (cached.Hit)
@@ -46,7 +46,7 @@ namespace ServerCore.Repo.Database
         // ── Update: DB → 캐시 로드 중이면 match 항목 교체 ────────────────
         public async Task UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
         {
-            await Db.ExecuteAsync(db => db.Update<T>(entity));
+            await Db.ExecuteAsync(db => db.UpdateAsync<T>(entity));
 
             var cached = await Cache.TryGetAsync<List<T>>(listKey);
             if (!cached.Hit)
