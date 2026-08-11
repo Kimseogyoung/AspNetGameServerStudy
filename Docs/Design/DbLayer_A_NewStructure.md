@@ -245,9 +245,15 @@ public partial class AccountModel : ModelBase { }
 
 | | 판단 |
 |---|---|
-| `Owner` → **`ScopeKey`** 개명 | `Owner`는 "무엇의 소유자인지"가 드러나지 않는다. 실제 의미는 *스코프(User/Auth/Center) 안에서 행을 소유자별로 가르는 컬럼*이고, `GameDb.User(playerId)` → 그 컬럼으로 필터라는 연결이 이름에 있어야 한다. `Pk`와 같은 "컬럼명을 담는 필드" 명명 규칙과도 일치. `PartitionKey`는 기각 — AccountId 기준 물리 샤딩(`GlobalDbRepo._shardMap`)과 축이 다른데 이름이 겹친다 |
+| `Owner` → **`ScopeKey`** 개명 | `Owner`는 "무엇의 소유자인지"가 드러나지 않는다. 실제 의미는 *User 스코프 안에서 행을 소유자별로 가르는 컬럼*이고, `GameDb.User(playerId)` → 그 컬럼으로 필터라는 연결이 이름에 있어야 한다. `Pk`와 같은 "컬럼명을 담는 필드" 명명 규칙과도 일치. `PartitionKey`는 기각 — AccountId 기준 물리 샤딩(`GlobalDbRepo._shardMap`)과 축이 다른데 이름이 겹친다 |
+| `ScopeKey`는 **User 폴더 한정** | 소유자 개념(ambient owner + 자동 `WHERE` + 소유자별 캐시 버킷)이 있는 건 `UserComponentBase`뿐이다. `AuthComponentBase`/`CenterComponentBase`에는 소유자 개념이 전무하고, Auth의 AccountId 조회는 전부 **인자 기반 명시 조회**다(소유자 축 리스트 조회는 `ChannelComponent.GetListAsync` 하나뿐 — **T2**). `fk = AccountId`는 참조 무결성 선언이지 스코프 선언이 아니다 |
+| 출처는 **기존 `fk` 토큰** | CSV에 `fk`가 이미 있고 이미 소비된다(`ModelGenerator.cs:376` → Liquibase FK). `scope` 같은 새 토큰을 넣으면 같은 사실이 두 군데 선언되어 드리프트한다. `User/Player`만 `fk`가 없으므로(스코프 루트) PK를 ScopeKey로 쓴다. `fk` 2개 이상이면 생성 실패 |
 | `Table` **제외** | `DapperExtension.cs:31-35`가 클래스명−`Model`로 테이블명을 만들고 오버라이드 경로가 없다. 규칙 이탈 모델 현재 0개 → 지금 넣으면 추측 |
 | `Cache`/`SlidingTtl` **제외, TODO 주석만** | 3.9의 정책 열거가 아직 닫히지 않았다(아래 5종 표의 `SessionComponent` 행이 2플래그로 표현되지 않는다). 틀린 enum을 모델 20개에 먼저 박는 비용 > 나중에 필드 하나 붙이는 비용. **S2에서 `DataSet<T>` 형태가 코드로 확정된 뒤 올린다** |
+
+> **S2로 이월된 열린 질문**: 소유자가 User에만 있다면 `GameDb.Auth()` / `GameDb.Center()`는 스코프가 아니라 **DB 선택**이다. 셋을 `DataScope`라는 균일한 추상으로 묶는 것이 맞는지 S2에서 판단한다. S1은 어느 결론에도 영향받지 않는다.
+
+실행 절차·체크리스트는 `DbLayer_A_StepByStep.md` §S1-A/B/C 참조.
 
 ### 3.2 `GameDb` — Unit of Work 루트
 

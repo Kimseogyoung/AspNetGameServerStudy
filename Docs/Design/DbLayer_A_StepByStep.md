@@ -189,7 +189,9 @@ _authRepo.RpcContext.SetShardId(mgrAccount.Model.ShardId);
 
 ### S1 — `[Entity]` + `EntityRegistry` (병존 검증)
 
-**건드리는 파일**: `Model/*.generated.cs` 20개(attribute 추가), `EntityRegistry.cs`(신규), `StartUp.Resource.cs`(검증 1줄 추가)
+> **착수 준비 완료 (2026-08-12).** 아래 "실행 체크리스트"부터 그대로 진행하면 된다. 미결정 사항 없음.
+
+**건드리는 파일**: `ClassGenerator`(생성 로직 + `ModelTemplate.txt`), `Data/Csv/Model/Auth/Session.csv`(2셀), `ClassGenerator/Properties/launchSettings.json`(경로 1개), `Model/*.generated.cs` 20개(재생성 결과), `EntityRegistry.cs`(신규), `StartUp.Resource.cs`(검증 2줄)
 
 ```csharp
 // Before — StartUp.Resource.cs 에만 존재. 모델 파일에는 PK 정보가 없다.
@@ -199,12 +201,80 @@ ModelRegistration.Init<CookieModel>("PlayerId", "Num");
 [Entity(Pk = ["PlayerId", "Num"], ScopeKey = "PlayerId")]
 public partial class CookieModel : ModelBase { }
 
-[Entity(Pk = ["Id"])]                        // 스코프 소유자 없음
+[Entity(Pk = ["Id"])]                        // Auth 계열 — ScopeKey 없음
 public partial class AccountModel : ModelBase { }
 
-[Entity(Pk = ["Id"], ScopeKey = "Id")]       // 자기 Id가 스코프 키
+[Entity(Pk = ["Id"], ScopeKey = "Id")]       // User 스코프 루트 — 자기 Id가 스코프 키
 public partial class PlayerModel : ModelBase { }
 ```
+
+#### S1-A 실행 체크리스트
+
+| # | 작업 | 비고 |
+|---|---|---|
+| 1 | `launchSettings.json`의 `ModelGenerater` → `--mdlOutputPath`를 `..\Server\Model` → **`..\DbModel\Model`** 로 수정 | 9d0cf53 프로젝트 분리 이후 stale. **생성기를 돌리기 전 필수** |
+| 2 | `Data/Csv/Model/Auth/Session.csv` 2셀 수정 (아래 §S1-C) | CSV만 실제 DB와 어긋나 있다 |
+| 3 | 생성기를 **먼저 한 번 그대로 돌려** diff가 비어 있는지 확인 | 비어 있지 않으면 생성 파일이 CSV에서 드리프트한 것이다. **S1 이전에 알아야 한다** |
+| 4 | `ModelGenerator`에 `[Entity]` 렌더링 추가 (`{{ClassAttribute}}` 슬롯, §S1-B 규칙) + `AMBIGUOUS_SCOPE_KEY` 가드 | `ModelTemplate.txt:7`에 슬롯이 이미 있고 `ModelGenerator.cs:225`가 `""`를 넣고 있다 |
+| 5 | 재생성 → diff가 **attribute 추가만**인지 확인 | |
+| 6 | `EntityRegistry.ScanAndRegister` — `DapperExtension.Init` + `InMemoryPkRegistry.Init` **양쪽** 등록 (5.8) | 후자 누락 시 InMemory = `ServerTest` 전멸 |
+| 7 | `StartUp.Resource.cs`에 `ScanAndRegister` + `AssertMatches` 2줄 추가, 기존 19줄 **존치** | |
+| 8 | `Server` + `RaidServer` 양쪽 부팅 + `ServerTest` 전체 통과 | 동작 변화 0이어야 한다 |
+
+**예상 걸림돌**: `PlacedKingdomItemModel`은 `ProtocolType = Packet` 전용인데 `PlacedKingdomItemModel.generated.cs`는 존재하고 `StartUp.Resource.cs:56`에서 등록이 주석 처리되어 있다. `AssertMatches`가 "attribute는 있는데 등록이 없다"로 잡을 것이다. **예상된 결과이며, 스캔 대상에서 제외할지 등록을 살릴지 그때 판단한다.**
+
+#### S1-B `[Entity]` 생성 규칙 (확정)
+
+**`Pk`** — CSV `Key` 컬럼의 `pk` 토큰 (`ModelGenerator.cs:319`가 이미 쓰고 있다).
+
+**`ScopeKey`** — **`User/` 폴더 한정.**
+
+```
+User/  : fk 토큰이 붙은 컬럼 → ScopeKey
+User/Player : fk 없음(스코프 루트) → PK를 ScopeKey 로
+Auth/  : ScopeKey 없음
+Center/: ScopeKey 없음
+```
+
+CSV는 **한 줄도 새로 안 쓴다** — `fk` 토큰이 이미 있고 이미 소비되고 있다(`ModelGenerator.cs:376`이 Liquibase FK를 만든다). `scope` 같은 새 토큰을 넣으면 같은 사실이 두 군데 선언되어 드리프트한다.
+
+**왜 User 한정인가 — 코드가 근거다.** 소유자 개념(ambient owner + 자동 `WHERE` + 소유자별 캐시 버킷)이 있는 건 User 계열뿐이다.
+
+| 계열 | 소유자 | 근거 |
+|---|---|---|
+| User | **있음** | `UserComponentBase.LoadFromDb`가 **모든** 조회에 `WHERE PlayerId = RpcCtx.PlayerId`를 자동으로 건다 |
+| Auth | 없음 | `AuthComponentBase`에 소유자 개념이 전무하다. `GetMdlAsync(dbFetch)`가 임의 람다를 받을 뿐 |
+| Center | 없음 | 동일. Schedule은 전체 조회 |
+
+Auth의 AccountId 조회는 전부 **인자 기반 명시 조회**이지 ambient 스코프가 아니다. 전수 조사 결과: `ChannelComponent.GetListAsync(accountId)`(비-PK 리스트 → **T2**, Channel의 PK는 `Key`), `SessionComponent.GetByAccountIdAsync`(AccountId가 PK + 자체 포인터 캐시, 5.3), `PlayerMapComponent`(AccountId가 PK 그 자체), `DeviceComponent`(**AccountId 조회 없음** — `Key`=idfv PK 조회만), `AccountComponent`(자기 Id가 PK). **소유자 축 리스트 조회는 Channel 하나뿐이고 그것은 T2다.**
+
+즉 `fk = AccountId`는 **DB 참조 무결성 선언**이지 스코프 선언이 아니다. User 폴더에서만 둘이 우연히 일치한다.
+
+**가드**: 한 모델에 `fk`가 2개 이상이면 `AMBIGUOUS_SCOPE_KEY:{className}`으로 **생성 실패**시킨다. (한 테이블이 Player를 두 번 참조하는 경우 — 현재 0건. 생기는 순간 조용히 틀린 컬럼을 고르는 대신 터진다.)
+
+#### S1-C `Session.csv` 수정 — CSV만 틀렸다
+
+```diff
+  # Data/Csv/Model/Auth/Session.csv
+- Key,VARCHAR(50),,,,pk
++ Key,VARCHAR(50),,,,index
+- AccountId,BIGINT UNSIGNED,,,Model,fk
++ AccountId,BIGINT UNSIGNED,,,Model,"pk, fk"
+```
+
+| | Session PK | |
+|---|---|---|
+| 실제 DB — `Code/Liquibase/AuthDbChangeLog.yml` | **AccountId** (`primaryKey: true`), `Key`에는 `Session_Key_Index` | 정답 |
+| 런타임 — `StartUp.Resource.cs:46` | **AccountId** | 일치 |
+| `Session.csv` | `Key` | **혼자 어긋남** |
+
+`AuthDbChangeLog.yml`은 `create-account-table` / `add-account-age-column` / `add-session-index`처럼 버전이 매겨진 changeSet 이력을 가진 **손으로 쓴 적용 대상**이고, `CreateLog_*.json`은 생성기 출력물이다. 따라서 **스키마 마이그레이션도, 런타임 변경도 필요 없다.** CSV만 고치면 네 곳이 전부 정합해진다.
+
+`index` 토큰은 `ModelGenerator.cs:393-397`에서 `{className}_{FieldName}_Index` = **`Session_Key_Index`** 를 만든다 — 실제 DB에 이미 있는 인덱스와 이름까지 같다.
+
+> **한때 이렇게 판단했다가 뒤집은 기록**: CSV(`Key`)를 정답으로 보고 런타임을 거기 맞추려 했으나, 그러면 `SessionManager.cs:18-28`의 **세션 키 회전이 조용히 깨진다**. 회전은 `Model.Key`를 새 값으로 바꾼 뒤 UPDATE하는데, PK가 `Key`면 `WHERE Key = <새 키>`가 되어 0행 매치가 된다. 실제 DB를 확인해 보니 애초에 `AccountId`가 PK였고 런타임이 맞았다. **CSV 하나만 stale.**
+
+**남는 사실(지금 조치 불필요)**: `Session_Key_Index`는 non-unique인데 `TryGetByKeyAsync`가 단건을 기대한다. 키가 GUID라 실질 충돌은 없지만 DB가 강제하지는 않는다.
 
 **필드는 `Pk`(필수) + `ScopeKey`(선택) 둘뿐이다.** 확정 근거는 아래 두 항목:
 
@@ -212,7 +282,7 @@ public partial class PlayerModel : ModelBase { }
 
 **`Cache`/`SlidingTtl`도 S1에는 넣지 않는다 — TODO 주석으로만 남긴다.** 5.4가 "나중에 넣으면 20개를 두 번 손댄다"고 적었으나 **그 논거는 약하다**: attribute 20줄에 필드 하나 추가하는 것은 기계적 편집인 반면, 일반화가 맞지 않는 enum을 20개 모델에 먼저 박는 비용이 훨씬 크다. 5.4에서 살아남는 것은 **발견 자체**(정책이 실제로 5종이고 `DataSet<T>`가 1종만 전제한다 / sliding TTL이 설계에 없었다)이며, 그것은 **S2에서 `DataSet<T>`를 설계할 때의 제약**으로 이월한다.
 
-**`Owner` → `ScopeKey` 개명(2026-08-12).** `Owner`는 "무엇의 소유자인가"가 드러나지 않는다. 이 필드의 실제 의미는 **스코프(User/Auth/Center) 안에서 행을 소유자별로 가르는 컬럼**이고, `GameDb.User(playerId)` → 그 컬럼으로 필터라는 연결이 이름에 드러나야 한다. `Pk`와 같이 "컬럼명을 담는 필드"라는 명명 규칙도 일치한다. `PartitionKey`는 기각 — 이 저장소에는 이미 AccountId 기준 물리 샤딩(`GlobalDbRepo._shardMap`)이 따로 있어 서로 다른 축이 같은 이름을 쓰게 된다.
+**`Owner` → `ScopeKey` 개명(2026-08-12).** `Owner`는 "무엇의 소유자인가"가 드러나지 않는다. 이 필드의 실제 의미는 **User 스코프 안에서 행을 소유자별로 가르는 컬럼**이고, `GameDb.User(playerId)` → 그 컬럼으로 필터라는 연결이 이름에 드러나야 한다. `Pk`와 같이 "컬럼명을 담는 필드"라는 명명 규칙도 일치한다. `PartitionKey`는 기각 — 이 저장소에는 이미 AccountId 기준 물리 샤딩(`GlobalDbRepo._shardMap`)이 따로 있어 서로 다른 축이 같은 이름을 쓰게 된다.
 
 ```csharp
 // StartUp.Resource.cs — 기존 19줄은 그대로 두고 아래를 추가한다
@@ -226,7 +296,10 @@ EntityRegistry.AssertMatches(ModelRegistration.Snapshot());   // 불일치 시 �
 
 **아직 안 되는 것**: 아무것도 이 메타데이터를 소비하지 않는다. 동작 변화 0.
 
-**롤백**: attribute와 2줄 삭제.
+**롤백**: `StartUp` 2줄 + `EntityRegistry.cs` 삭제, 생성기 변경 되돌린 뒤 재생성. `Session.csv`와 `launchSettings.json` 수정은 **되돌리지 않는다** — 둘 다 A안과 무관하게 stale을 고친 것이다.
+
+**S2로 이월되는 열린 질문 — Auth/Center는 스코프가 아니다.**
+소유자가 User에만 있다면 `GameDb.Auth()` / `GameDb.Center()`를 "스코프"라 부르는 것 자체가 과일반화다. 그건 스코프가 아니라 **DB 선택**이다. 하나는 소유자를 갖고 둘은 안 갖는 셋을 `DataScope`라는 균일한 추상으로 묶으면 Auth/Center 쪽에는 늘 의미 없는 인자와 빈 규칙이 따라다닌다. **S2에서 `GameDb`/`Scope`/`DataSet<T>` 형태를 정할 때 판단한다.** S1은 어느 쪽으로 결론이 나도 영향받지 않는다 — "User 엔티티만 ScopeKey를 갖는다"는 두 경우 모두 참이다.
 
 ---
 
@@ -1003,8 +1076,8 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | 스텝 | 추가되는 작업 |
 |---|---|
 | **S0-4** (완료) | **커밋 경계를 유저 락 안으로 이동 (5.1)** · **락 커넥션 분리 (5.2 선결)** — §4.2 |
-| **S1** | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · 스캔이 `DapperExtension` + `InMemoryPkRegistry` 양쪽 등록 (5.8) |
-| **S2** | **`DataSet<T>`가 캐시 정책 5종을 수용하는 형태 확정 (5.4 이월)** · `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
+| **S1** | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · **ScopeKey는 User 폴더 한정, `fk` 토큰에서 생성** · `Session.csv` + `launchSettings.json` stale 수정 · 스캔이 `DapperExtension` + `InMemoryPkRegistry` 양쪽 등록 (5.8) |
+| **S2** | **`DataSet<T>`가 캐시 정책 5종을 수용하는 형태 확정 (5.4 이월)** · **Auth/Center를 스코프로 볼지 판단 (S1 이월)** · `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
 | **S4** | `ECachePolicy.None` 경로 실증 (Account/Channel/Device는 원래 캐시 없음) |
 | **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
 | **S8** | `GlobalList` 정책 실증 · `ScheduleView`가 `ServerTime`을 인자로 (5.10) |
