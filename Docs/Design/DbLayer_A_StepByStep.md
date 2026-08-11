@@ -741,9 +741,21 @@ public class AuthService : ServiceBase
 | **S0-1** | 저장 모델 | **확정 — (c) dirty 플래그 + 커밋 시 flush** (§3.8) | 1.2 3)블록, S2 `ModelBase`, S5 전체, S9 Raw flush |
 | **S0-2** | `ClassGenerator`가 `[Entity]`를 찍을 수 있는가 | **미확인** | S1 (불가하면 모델 20개 수작업 — 작업량만 영향) |
 | **S0-3** | 감사·반환 타입 | **확정 — `ChangeSet` 존치(근거: 와이어 계약 분리), 감사는 싱크별 개별 조립** | S5 도메인 메서드 반환형, S13 |
-| **S0-4** | 커밋 경계를 유저 락 안으로 | **확정 — A안 착수 전 별도 선행 커밋** | 리뷰 5.1 |
+| **S0-4** | 커밋 경계를 유저 락 안으로 | **완료 — 선행 커밋 2개로 반영** | 리뷰 5.1, 5.2 |
 
 **남은 미확인은 S0-2 하나뿐이며 작업량에만 영향을 준다 — 실행을 막지 않는다.**
+
+**S0-2 확인 결과(2026-08-11) — 가능하다.** `Template/ModelTemplate.txt`에 `{{ClassAttribute}}` 슬롯이 이미 있고 `ModelGenerator.cs:225`가 모델에는 빈 문자열을 넣고 있다(패킷은 같은 슬롯에 `[ProtoContract]`). PK도 이미 스펙에 있다 — `ModelGenerator.cs:319`의 `x.KeyList.Contains("pk")`, 인덱스는 `c_index`/`index`(334·393행). 따라서 `[Entity(Pk)]`와 `[SecondaryIndex]`는 자동 생성이 가능하다.
+다만 `Owner`/`Cache`/`SlidingTtl`은 엑셀 스펙에 대응 컬럼이 없다. 모델 20개는 전부 `*.generated.cs` 단독이고 수기 partial이 하나도 없으므로, **A안이 어차피 도메인 partial을 새로 만든다면 `[Entity]`는 수기 partial 쪽에 두는 것**이 스펙 포맷을 건드리지 않아 낫다. S1 착수 시 확정한다.
+
+### 4.2 S0-4 반영 내역 (완료)
+
+| 커밋 | 내용 |
+|---|---|
+| 1 | `DbUtilityConnection` 신설 + `MySqlLockService` 전용 커넥션 전환. **실행 순서 변화 없음** — 5.2의 선결 조건만 제거 |
+| 2 | `RpcService.HandleMethodAsync`의 `SetAsync`/`CommitAsync`/`RollbackAsync`를 `RunAtomicAsync` 안으로 이동 |
+
+두 커밋으로 나눈 이유: 커넥션 분리는 커밋 경계와 무관하게 그 자체로 옳은 수정이므로, 경계 이동을 되돌려야 할 때 같이 딸려 나가면 안 된다.
 
 ### 4.1 dirty 모델에서 확인이 필요한 것 (S2 착수 시)
 
@@ -798,9 +810,11 @@ await _userLockSvc.RunAtomicAsync(_rpcCtx.AccountId, async () =>
 });
 ```
 
-→ **S2의 완료 조건에 "커밋 경계를 락 안으로 이동"을 포함한다.** dirty flush를 실제로 켜는 S5보다 먼저 해두는 것이 안전하다.
+→ **S0-4로 분리해 A안 착수 전에 선행 처리한다.** dirty flush를 실제로 켜는 S5보다 먼저 해두는 것이 안전하다. (**완료** — §4.2)
 
 > 참고: 현재 코드도 커밋이 락 밖이라 미묘하지만, 쓰기가 락 안이라 DB row lock이 잡혀 실질적으로 직렬화된다. (c)는 그 우연한 보호마저 제거한다.
+
+롤백도 함께 락 안으로 넣었다. 롤백만 밖에 두면 "락 해제 후 롤백" 구간이 생겨, 그 사이에 들어온 같은 계정 요청이 아직 되돌려지지 않은 값을 읽는다.
 
 ### 5.2 🔴 치명 — `MySqlLockService`가 `GlobalDbRepo`에 의존한다 (S11에서 컴파일 에러)
 
@@ -813,15 +827,36 @@ await _dbRepo.Auth.Repository.Db.ExecuteAsync<long>(
 
 §7 어디에도 락 서비스 이관이 없다. S11이 `GlobalDbRepo`를 지우면 **깨진다.**
 
-그리고 단순 이관으로 끝나지 않는다 — **3.9 T3의 "실행 전 자동 flush" 규칙과 정면 충돌**한다. `GET_LOCK`을 부르면서 dirty flush가 트리거되면 **락도 걸리기 전에 쓰기가 나간다.**
+**그리고 이건 S11까지 갈 문제가 아니었다 — 5.1을 고치는 순간(S0-4) 이미 런타임에서 깨진다.** 처음엔 "S11 컴파일 에러"로만 적었는데, 실제 파손 시점이 훨씬 앞이다:
 
-**수정**: T3에 예외 경로를 만든다. 락·유틸리티 쿼리는 엔티티 상태와 무관하므로 flush하지 않는다.
+```
+DbSessionManager.Commit() → 세션마다 Commit() → DBSqlExecutor.CloseInternal()  // 커넥션 Dispose
+```
+
+커밋을 락 안으로 옮기면 순서가 `GET_LOCK → 쓰기 → COMMIT(커넥션 Dispose) → finally: RELEASE_LOCK`이 되어, `UserLockService.cs:44`의 `finally`가 Dispose된 커넥션을 건드린다. **MySql + `UseUserLock: true`(운영 설정)에서 매 요청 터진다.** `ServerTest`는 `UseUserLock: false` + InMemory + `InMemoryLockService`(no-op)라 이 경로를 전혀 타지 않아 테스트로는 잡히지 않는다.
+
+**진단 정정 — 원인은 트랜잭션이 아니라 수명이다.** `DBSqlExecutor`가 트랜잭션을 강제해서 깨진 게 아니다. 락을 무트랜잭션 세션으로 열었어도 그게 `DbSessionManager`에 등록되는 한 커밋이 똑같이 닫는다. 구분 축은 **"요청 작업 단위에 참여하는가"**다.
+
+| | `DBSqlExecutor` / `IDbSession` | `DbUtilityConnection` |
+|---|---|---|
+| `DbSessionManager` 추적 | O | X |
+| 수명 | 요청 커밋/롤백까지 | 호출자 소유, **커밋보다 오래 삶** |
+| 트랜잭션 | 현재는 항상. **내부 사정** | 없음 |
+
+**수정(S0-4에서 완료)**: `ServerCore/Repo/Database/DbUtilityConnection.cs`를 신설하고 `MySqlLockService`를 거기로 옮겼다. `IDbSession`을 구현하지 않으므로 `DbSessionManager.Open()`에 넣을 수 없다 — 경계를 타입이 강제한다. `DBSqlExecutor`는 손대지 않았다.
+
+**열린 질문 (S2/S11로 이월)**: 읽기 전용 요청이 매 요청 진짜 트랜잭션을 여는 문제(최초 리뷰 지적)의 답은 **lazy BEGIN**이다 — 커넥션은 열되 첫 쓰기에서 `BeginTransaction`. 이건 `DBSqlExecutor` + `DbSessionManager` **내부** 변경이고 위 구분과 충돌하지 않는다(그 세션은 여전히 매니저가 추적하고 커밋 시 닫힌다). 소비처가 생기는 S2/S11에서 판단한다. 그때 무트랜잭션 상태의 `Commit()`이 no-op이 되는 것은 오용이 아니라 "쓸 게 없었다"는 정당한 결과다.
+
+**T3 auto-flush와의 충돌은 그대로 남아 있다** — `GET_LOCK`을 부르면서 dirty flush가 트리거되면 락도 걸리기 전에 쓰기가 나간다. 락 쿼리가 엔티티 세션을 아예 쓰지 않게 되어 구조적으로는 해소됐지만, `GameDb.Utility`가 이 무flush 성질을 명시적으로 보장해야 한다.
 
 ```csharp
 GameDb.Utility.ExecuteScalarAsync<long>(sql, args)   // flush 없음. 엔티티와 무관한 쿼리 전용
 ```
 
-→ **S2에 `GameDb.Utility` 추가, S11 전에 `MySqlLockService` 이관을 별도 항목으로 넣는다.**
+→ **S2에 `GameDb.Utility` 추가.** S10.5는 축소됐다 — 커넥션 분리는 S0-4에서 끝났고, `DbUtilityConnection`을 `GameDb.Utility`로 감싸는 일만 남는다.
+
+**남은 비용(의도적으로 감수)**: 커넥션을 소유하는 타입이 둘이 됐다. 최초 리뷰가 지적한 쿼리 로깅/재시도를 넣을 때 양쪽 다 손봐야 한다. 공통 베이스 추출은 세 번째 소비처가 생기면 한다(R7). 세 번째 후보는 이미 있다 — `StartUp.Resource.cs:78`의 `ConnectionTest()`가 핑 하나에 `StartTransaction` + `Commit`을 하고 있고 이것도 매니저 밖 사용이다(시작 시점 동기 코드라 S0-4 범위에서 제외).
+그리고 락이 걸린 요청은 커넥션을 하나 더 쓴다. 커넥션 풀 크기 확인이 필요하다.
 
 ### 5.3 🟠 기능 후퇴 — `SessionComponent`는 이미 완성된 T2 포인터 캐시다
 
@@ -956,11 +991,12 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 
 | 스텝 | 추가되는 작업 |
 |---|---|
+| **S0-4** (완료) | **커밋 경계를 유저 락 안으로 이동 (5.1)** · **락 커넥션 분리 (5.2 선결)** — §4.2 |
 | **S1** | `[Entity]`에 `Cache`/`SlidingTtl` 포함 (5.4) · 스캔이 `DapperExtension` + `InMemoryPkRegistry` 양쪽 등록 (5.8) |
-| **S2** | **커밋 경계를 유저 락 안으로 이동 (5.1)** · `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) |
+| **S2** | `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
 | **S4** | `ECachePolicy.None` 경로 실증 (Account/Channel/Device는 원래 캐시 없음) |
 | **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
 | **S8** | `GlobalList` 정책 실증 · `ScheduleView`가 `ServerTime`을 인자로 (5.10) |
 | **S9** | `scope.Raw` 자동 flush **와** `GameDb.Utility` 무flush 경로 구분 확정 (5.2) |
-| **S10.5** (신규) | **`MySqlLockService`를 `GameDb.Utility`로 이관** — S11 전에 반드시 (5.2) |
+| **S10.5** (축소) | `MySqlLockService`가 쓰는 `DbUtilityConnection`을 `GameDb.Utility`로 감싸기 — 커넥션 분리 자체는 S0-4에서 완료 (5.2) |
 | **S11** | `AllUserRepo` → `GameDb.AllShards` 형태 확정 (5.5) · 지연 오픈 적용 |

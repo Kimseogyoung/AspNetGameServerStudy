@@ -78,22 +78,27 @@ namespace Server
         private async Task<object> HandleMethodAsync(HttpContext httpCtx, IRpcMethod rpcMethod, object rpcReqObj)
         {
             object rpcResObj = null;
-            try
+
+            // 쓰기·커밋·롤백이 모두 유저 락 안에 있어야 한다. 커밋이 밖으로 나가면
+            // 같은 계정의 동시 요청이 서로의 결과를 덮어쓸 수 있다(lost update).
+            await _userLockSvc.RunAtomicAsync(_rpcCtx.AccountId, async () =>
             {
-                await _userLockSvc.RunAtomicAsync(_rpcCtx.AccountId, async () =>
+                try
                 {
                     rpcResObj = await rpcMethod.RunAsync(_rpcCtx, httpCtx, _dbRepo, rpcReqObj);
-                });
 
-                await _responseCache.SetAsync(_rpcCtx, rpcResObj);
+                    // 응답 캐시 쓰기는 커밋보다 앞이어야 한다 — 캐시 세션의 pending에 쌓였다가
+                    // CommitAsync에서 DB 커밋 후 함께 반영되고, 롤백 시 같이 버려진다.
+                    await _responseCache.SetAsync(_rpcCtx, rpcResObj);
 
-                await _dbRepo.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await _dbRepo.RollbackAsync();
-                throw; // 오류 발생 시 ErrorHandler에서 처리
-            }
+                    await _dbRepo.CommitAsync();
+                }
+                catch (Exception)
+                {
+                    await _dbRepo.RollbackAsync();
+                    throw; // 오류 발생 시 ErrorHandler에서 처리
+                }
+            });
 
             return rpcResObj;
         }
