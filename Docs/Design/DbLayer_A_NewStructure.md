@@ -41,7 +41,7 @@ Gen1의 불편 4개에 Gen2가 해법 4개를 냈다. 그런데 **각 해법이 
 
 | A안 해법 | 이 해법이 까는 **새 전제** | 그 전제가 깨지는 곳 | 대응 |
 |---|---|---|---|
-| `DataSet<T>` + Owner 자동 스코핑 | *모든 조회는 Owner 스코프 컬렉션 안에서 끝난다* | 비-Owner 컬럼 조회, 집계 쿼리, Owner 없는 엔티티 | **3.9** 4티어 분류 |
+| `DataSet<T>` + ScopeKey 자동 스코핑 | *모든 조회는 스코프 컬렉션 안에서 끝난다* | 비-ScopeKey 컬럼 조회, 집계 쿼리, ScopeKey 없는 엔티티 | **3.9** 4티어 분류 |
 
 Gen3가 다음 세대에 넘길 뻔한 문제를 R2로 미리 잡은 사례다. 이후에도 A안의 각 요소에 대해 같은 질문을 반복한다.
 
@@ -230,16 +230,24 @@ Domain은 Data를 모르고, Data는 Application을 모른다. `IGameContext`는
 ### 3.1 엔티티 메타데이터 — attribute + 어셈블리 스캔
 
 ```csharp
-[Entity(Table = "Item", Pk = new[] { "PlayerId", "Num" }, Owner = "PlayerId")]
+[Entity(Pk = ["PlayerId", "Num"], ScopeKey = "PlayerId")]
 public partial class ItemModel : ModelBase { /* 코드젠 */ }
 
-[Entity(Table = "Account", Pk = new[] { "Id" })]              // Owner 없음 = 소유자 스코프 밖
+[Entity(Pk = ["Id"])]              // ScopeKey 없음 = 소유자 스코프 밖
 public partial class AccountModel : ModelBase { }
 ```
 
 - 부팅 시 `EntityRegistry.ScanAndRegister(typeof(ItemModel).Assembly)` 한 줄이 전부. 프로세스마다 목록을 복붙하지 않는다.
-- `Owner`가 "이 엔티티는 누구 소유인가"를 **데이터로** 표현한다. 지금은 `UserComponentBase.LoadFromDb`가 `WHERE PlayerId = ...`를 코드에 하드코딩하고 있는데, 그게 메타데이터로 올라간다.
+- `ScopeKey`가 "이 엔티티는 스코프 안에서 누구 소유인가"를 **데이터로** 표현한다. 지금은 `UserComponentBase.LoadFromDb`가 `WHERE PlayerId = ...`를 코드에 하드코딩하고 있는데, 그게 메타데이터로 올라간다.
 - 코드젠(`ClassGenerator`)이 PK 정보를 이미 알고 있으므로 이 attribute까지 함께 찍어내면 손으로 쓸 것도 없다.
+
+**S1 시점의 확정 필드는 `Pk` + `ScopeKey` 둘뿐이다 (2026-08-12).**
+
+| | 판단 |
+|---|---|
+| `Owner` → **`ScopeKey`** 개명 | `Owner`는 "무엇의 소유자인지"가 드러나지 않는다. 실제 의미는 *스코프(User/Auth/Center) 안에서 행을 소유자별로 가르는 컬럼*이고, `GameDb.User(playerId)` → 그 컬럼으로 필터라는 연결이 이름에 있어야 한다. `Pk`와 같은 "컬럼명을 담는 필드" 명명 규칙과도 일치. `PartitionKey`는 기각 — AccountId 기준 물리 샤딩(`GlobalDbRepo._shardMap`)과 축이 다른데 이름이 겹친다 |
+| `Table` **제외** | `DapperExtension.cs:31-35`가 클래스명−`Model`로 테이블명을 만들고 오버라이드 경로가 없다. 규칙 이탈 모델 현재 0개 → 지금 넣으면 추측 |
+| `Cache`/`SlidingTtl` **제외, TODO 주석만** | 3.9의 정책 열거가 아직 닫히지 않았다(아래 5종 표의 `SessionComponent` 행이 2플래그로 표현되지 않는다). 틀린 enum을 모델 20개에 먼저 박는 비용 > 나중에 필드 하나 붙이는 비용. **S2에서 `DataSet<T>` 형태가 코드로 확정된 뒤 올린다** |
 
 ### 3.2 `GameDb` — Unit of Work 루트
 
@@ -266,7 +274,7 @@ public class GameDb : IAsyncDisposable
 public class UserScope          // AuthScope / CenterScope 도 동형
 {
     public int   ShardId  { get; }
-    public ulong PlayerId { get; }        // Owner 값
+    public ulong PlayerId { get; }        // ScopeKey 값
 
     public DataSet<T> Set<T>() where T : ModelBase, new();   // 스코프 내 캐싱
 }
@@ -282,8 +290,8 @@ public class DataSet<T> where T : ModelBase, new()
 ```
 
 - **`XxxComponent` 클래스가 존재하지 않는다.** 등록된 엔티티면 `user.Set<ItemModel>()`로 바로 쓴다.
-- `Owner`가 지정된 엔티티는 `GetListAsync`가 **자동으로 `WHERE PlayerId = scope.PlayerId`를 붙인다.** 스코프 밖 데이터를 실수로 읽을 수 없다.
-- `CreateAsync`/`UpdateAsync`는 `entity`의 Owner 필드가 `scope.PlayerId`와 다르면 **즉시 예외**. → 5.5.1에서 지적한 "DB엔 정상 저장, 캐시는 엉뚱한 버킷"이라는 조용한 정합성 버그를 구조적으로 차단.
+- `ScopeKey`가 지정된 엔티티는 `GetListAsync`가 **자동으로 `WHERE PlayerId = scope.PlayerId`를 붙인다.** 스코프 밖 데이터를 실수로 읽을 수 없다.
+- `CreateAsync`/`UpdateAsync`는 `entity`의 ScopeKey 필드가 `scope.PlayerId`와 다르면 **즉시 예외**. → 5.5.1에서 지적한 "DB엔 정상 저장, 캐시는 엉뚱한 버킷"이라는 조용한 정합성 버그를 구조적으로 차단.
 - 스코프 컬렉션 안에서 끝나는 조회는 클래스를 새로 만들지 않고 **확장 메서드**로 붙인다:
 
 ```csharp
@@ -484,7 +492,7 @@ internal async Task FlushDirtyAsync()    // DataSet<T> — T가 컴파일 타임
 }
 ```
 
-`listKey`/`match`는 지금 `UserComponentBase`가 엔티티마다 추상 메서드(`ListKeyFor`/`KeyFor`)로 만들던 것인데, **`[Entity(Pk=…, Owner=…)]` 메타데이터 + 스코프의 `ownerId`로 생성**된다. 그 반복도 함께 사라진다. **엔진 계층은 한 줄도 바뀌지 않는다.**
+`listKey`/`match`는 지금 `UserComponentBase`가 엔티티마다 추상 메서드(`ListKeyFor`/`KeyFor`)로 만들던 것인데, **`[Entity(Pk=…, ScopeKey=…)]` 메타데이터 + 스코프의 `ownerId`로 생성**된다. 그 반복도 함께 사라진다. **엔진 계층은 한 줄도 바뀌지 않는다.**
 
 **캐시 — 이미 지연 구조라 오히려 정합적이 된다.**
 
@@ -541,24 +549,24 @@ A commit → 90 기록 / B commit → 90 기록
 
 ### 3.9 표준 CRUD 밖 조회 — 4티어 분류
 
-`DataSet<T>`는 *"모든 조회는 Owner 스코프 컬렉션 안에서 끝난다"*를 전제한다(0.2 형식으로 말하면 A안이 까는 새 전제다). 이 전제가 깨지는 조회가 실제로 존재하므로, **문법(확장 메서드)이 아니라 캐시 사본 관리로 분류한다.**
+`DataSet<T>`는 *"모든 조회는 스코프 컬렉션 안에서 끝난다"*를 전제한다(0.2 형식으로 말하면 A안이 까는 새 전제다). 이 전제가 깨지는 조회가 실제로 존재하므로, **문법(확장 메서드)이 아니라 캐시 사본 관리로 분류한다.**
 
 **근본 제약**: 현재 `UserComponentBase`는 "플레이어당 T 전체 리스트 캐시 1개" 모델이고, 모든 조회가 그 리스트를 통과하므로 엔티티 사본이 하나다. 그래서 무효화가 단순하다. **특화 쿼리가 이 모델을 깨는 이유는 별도 SQL 결과가 그 리스트와 별개 사본이 되기 때문**이며, 무효화 조건을 시스템이 추론할 수 없다. 현 코드가 특수 쿼리마다 캐시를 포기한 이유가 이것이다(`ScheduleComponent` "일반화가 어려운 부분이라", `WorldStageComponent` "TODO: 캐시", `PlayerComponent` "컬렉션 밖의 조회 → DB 직접 접근").
 
 | 티어 | 언제 | 캐시 | 진입점 | 선언 |
 |---|---|---|---|---|
-| **T0** 메타데이터 | Owner 컬럼명이 다름 / Owner 없음 | 기본 리스트 캐시 | 없음(자동) | `[Entity(Owner=…)]` |
+| **T0** 메타데이터 | ScopeKey 컬럼명이 다름 / ScopeKey 없음 | 기본 리스트 캐시 | 없음(자동) | `[Entity(ScopeKey=…)]` |
 | **T1** 스코프 필터 | 로드된 컬렉션에서 고르기 | 기본 리스트 캐시 **재사용** | `DataSet<T>` 확장 메서드 | **새 SQL 금지**(3.3) |
-| **T2** 보조 인덱스 | 비-Owner 컬럼으로 **엔티티** 찾기 | **현 단계 캐시 없음** (아래) | `set.ByIndexAsync(...)` | `[SecondaryIndex("AccountId")]` |
+| **T2** 보조 인덱스 | 비-ScopeKey 컬럼으로 **엔티티** 찾기 | **현 단계 캐시 없음** (아래) | `set.ByIndexAsync(...)` | `[SecondaryIndex("AccountId")]` |
 | **T3** 원시 쿼리 | 집계 / 조인 / 스칼라 | **금지**가 기본 | `scope.Raw<T>(sql)` — 감추지 않음 | 호출부 주석 필수 |
 
 **현 탈출구 4건의 실제 분류** — 절반은 특수 쿼리가 아니라 메타데이터 부족이었다:
 
 | 현재 코드 | 실체 | 티어 |
 |---|---|---|
-| `PlayerComponent.LoadFromDb` override ("PlayerModel의 PK는 Id") | Owner 컬럼명이 `Id`일 뿐 | **T0 — 소멸** |
-| `ScheduleComponent.GetListAsync` (`conditions: null`) | Owner 없는 엔티티의 전체 리스트 | **T0 — 흡수** |
-| `PlayerComponent.TryGetByAccountIdAsync` | 비-Owner 컬럼 → 엔티티 | **T2** |
+| `PlayerComponent.LoadFromDb` override ("PlayerModel의 PK는 Id") | ScopeKey 컬럼명이 `Id`일 뿐 | **T0 — 소멸** |
+| `ScheduleComponent.GetListAsync` (`conditions: null`) | ScopeKey 없는 엔티티의 전체 리스트 | **T0 — 흡수** |
+| `PlayerComponent.TryGetByAccountIdAsync` | 비-ScopeKey 컬럼 → 엔티티 | **T2** |
 | `WorldStageComponent.GetTotalStarAsync` (`SUM`) | 집계 스칼라 | **T3** |
 
 → 5.2.3이 "Component 상당수에서 반복"이라 했지만, 분류하면 `[Entity]` 도입만으로 절반이 사라지고 **진짜 특수한 것은 2건**이다.
@@ -569,7 +577,7 @@ A commit → 90 기록 / B commit → 90 기록
 
 | 현재 위치 | 정책 | `[Entity]` 표현 |
 |---|---|---|
-| `UserComponentBase` | Owner별 리스트 캐시 | `Cache = OwnerList` |
+| `UserComponentBase` | 소유자별 리스트 캐시 | `Cache = OwnerList` |
 | `AuthComponentBase.GetMdlAsync` | 캐시 없음 | `Cache = None` |
 | `AuthComponentBase.GetMdlWithCacheAsync` | 단건 캐시 + **sliding TTL** | `Cache = Single, SlidingTtl = true` |
 | `CenterComponentBase` | 캐시 없음 (매 요청 전체 조회) | **`Cache = GlobalList` — 캐싱 도입 확정** |
@@ -579,7 +587,9 @@ A commit → 90 기록 / B commit → 90 기록
 public enum ECachePolicy { None, Single, OwnerList, GlobalList }
 ```
 
-**sliding TTL은 세션 유지에 필수**다(`GetMdlWithCacheAsync`의 `slidingTtl` 인자 — 캐시 히트 시 TTL 갱신). attribute 설계에 처음부터 포함한다. 나중에 추가하면 모델 20개를 두 번 손댄다.
+**sliding TTL은 세션 유지에 필수**다(`GetMdlWithCacheAsync`의 `slidingTtl` 인자 — 캐시 히트 시 TTL 갱신).
+
+**단, 이 5종을 attribute로 올리는 시점은 S1이 아니라 S2다 (2026-08-12 정정).** 위 표의 마지막 행(`SessionComponent` = 단건 + 포인터 캐시)이 `Cache`/`SlidingTtl` 두 플래그로 표현되지 않는다는 것이 **열거가 아직 닫히지 않았다는 증거**다. `DataSet<T>`가 5종을 실제로 수용하는 형태를 코드로 확정한 뒤 attribute로 올린다. 그때까지 `[Entity]`에는 TODO 주석만 둔다. 이 표 자체는 **S2 설계가 만족해야 할 제약 목록**으로 유효하다.
 
 **T2 — 신규 도입은 하지 않되, 이미 구현된 것은 유지한다.**
 `TryGetByAccountIdAsync`의 결과는 T1 리스트 캐시와 **같은 엔티티**다. 여기에 값을 캐싱하면 사본이 둘이 된다. 정석 해법은 값이 아니라 **키만 캐싱**하는 것이다:
@@ -626,7 +636,7 @@ T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출
 |---|---|---|
 | 5.1.1 | Manager 유무 불균형 (14줄~412줄) | **Manager 개념 자체가 없음.** 로직 없는 엔티티는 파일도 없고, 로직 있는 엔티티는 Model partial 파일만 생긴다. 판단할 게 없어짐 |
 | 5.1.2 | 모든 로드가 Manager 경유 → 1:1 가정이 리스트/운영툴과 충돌 | `DataSet<T>.GetListAsync()`가 `List<T>`(Model)를 그대로 반환. 래핑 개념이 없으므로 N개 벌크 처리에 아무 마찰 없음 |
-| 5.1.3 | `Model` public getter로 캡슐화 미강제 | **부분 해소.** 필드 직접 대입은 여전히 가능(Dapper 리플렉션·직렬화 때문에 public setter 필요). 다만 "저장"은 반드시 `DataSet.UpdateAsync`를 거치고, Owner 가드가 걸리므로 잘못된 저장은 막힌다. 완전 캡슐화는 비목표(8.5 참고) |
+| 5.1.3 | `Model` public getter로 캡슐화 미강제 | **부분 해소.** 필드 직접 대입은 여전히 가능(Dapper 리플렉션·직렬화 때문에 public setter 필요). 다만 "저장"은 반드시 `DataSet.UpdateAsync`를 거치고, ScopeKey 가드가 걸리므로 잘못된 저장은 막힌다. 완전 캡슐화는 비목표(8.5 참고) |
 | 5.1.4 | Manager가 전체 Repo를 들고 있음 | Model은 DB 참조가 아예 없어 다른 엔티티에 접근 불가. 다중 Model 규칙은 `ObjectLedger` 같은 **이름 있는 도메인 서비스**로 승격 |
 | 5.2.1 | 등록 누락이 런타임에만 터짐 | `[Entity]` attribute + 어셈블리 스캔. 등록이라는 수동 단계가 사라짐 |
 | 5.2.2 | Component 4형식을 모델마다 손으로 반복 | `DataSet<T>` 하나로 끝. 서브클래스 불필요 |
@@ -661,7 +671,7 @@ T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출
 - **App Service의 오케스트레이션 실수는 여전히 사람 책임이다.** 순서를 잘못 짜거나 원자성이 필요한 연산을 쪼개는 것 자체는 타입이 막지 못한다. 도메인 이벤트/사가 같은 장치는 이 규모에 과하다고 보고 도입하지 않는다.
 - **비-Cash 재화의 DB 감사 원장은 비목표다.** DB 원장은 유료 재화(`FREE_CASH`/`REAL_CASH`/`TOTAL_CASH`)에만 둔다 — 환불·차지백·CS 분쟁이 걸리는 축이기 때문이다. EXP/GOLD/POINT/TICKET/ITEM/COOKIE 변동은 `ChangeSet`으로 반환되고 구조화 로그까지만 간다. 재검토 조건은 S0-3에 기록.
 - **로직 많은 엔티티의 partial 파일은 여전히 커진다.** `KingdomMapModel.cs`는 지금 `KingdomMapManager`(412줄)와 비슷한 크기가 될 것이다. 나빠지진 않지만 해결되지도 않는다.
-- **`DataSet<T>` 제네릭 + attribute 메타데이터는 리플렉션 의존도를 더 높인다.** 지금도 `DapperExtension`이 리플렉션 기반이지만, A안은 Owner 스코핑·쓰기 가드까지 메타데이터로 처리하므로 "컴파일 타임에 안 보이는 규칙"이 늘어난다. 부팅 시 전량 검증(등록 누락·Owner 필드 부재 즉시 실패)으로 완화한다.
+- **`DataSet<T>` 제네릭 + attribute 메타데이터는 리플렉션 의존도를 더 높인다.** 지금도 `DapperExtension`이 리플렉션 기반이지만, A안은 ScopeKey 스코핑·쓰기 가드까지 메타데이터로 처리하므로 "컴파일 타임에 안 보이는 규칙"이 늘어난다. 부팅 시 전량 검증(등록 누락·ScopeKey 필드 부재 즉시 실패)으로 완화한다.
 
 ---
 
@@ -715,11 +725,11 @@ T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출
 | Phase | Step | 내용 | 완료 조건 | 롤백 비용 |
 |---|---|---|---|---|
 | **0 선결** | S0-1 | ~~3.8 저장 모델 확정~~ → **(c) dirty 플래그로 확정** | 3.8 재작성 완료 | — |
-| | S0-2 | `ClassGenerator`의 PK/Owner attribute 생성 가능 여부 확인 | 확인 결과 기록 | — |
+| | S0-2 | `ClassGenerator`의 PK/`ScopeKey` attribute 생성 가능 여부 확인 | **완료 — 가능**(StepByStep §4) | — |
 | | S0-3 | **확정** — `ChangeSet` 존치(근거 교체: 와이어 계약 분리), 감사는 싱크별 개별 처리, 이름 `RewardHelper` | 3.5 재작성 완료 | — |
-| | S0-4 | **커밋 경계를 유저 락 안으로 (코드)** — A안 착수 전 별도 커밋 | 전체 통과 | 순서 복원 |
-| **1 기반** | S1 | `[Entity]`(+`Cache`/`SlidingTtl`) + `EntityRegistry` (기존 등록과 **병존·비교**) | 양 프로세스 부팅 + 전체 통과 | attribute 삭제 |
-| | S2 | `GameDb`/`Scope`/`DataSet<T>`/`Utility` 신설 · **커밋 경계를 유저 락 안으로** · `ModelBase` dirty | 빌드 + 전체 통과 | 신규 파일 삭제 + 순서 복원 |
+| | S0-4 | **완료** — 락 커넥션 분리(1bf5a39) + 커밋 경계를 유저 락 안으로(7aba510) | 빌드 + 전체 통과 | 순서 복원 |
+| **1 기반** | S1 | `[Entity(Pk, ScopeKey)]` + `EntityRegistry` (기존 등록과 **병존·비교**) | 양 프로세스 부팅 + 전체 통과 | attribute 삭제 |
+| | S2 | `GameDb`/`Scope`/`DataSet<T>`/`Utility` 신설 · **캐시 정책 5종 수용 형태 확정** · `ModelBase` dirty | 빌드 + 전체 통과 | 신규 파일 삭제 |
 | | S3 | 엔진 계층 `DeleteAsync` 추가 (5.6) | 신규 단위 테스트 | 메서드 삭제 |
 | **2 파일럿** | S4 | **Channel / Device / Account** | `AuthTest`+`GameEnterTest`, 구 클래스 3쌍 삭제 | **클래스 3쌍** ← 게이트 |
 | **3 재화** | S5 | Point / Ticket / Item / Cookie + `ChangeSet` | `CookieTest` | 클래스 4쌍 |
@@ -728,7 +738,7 @@ T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출
 | | S8 | Schedule / PlayerMap · **T0 확정** | 전체 통과 | 2쌍 |
 | | S9 | World / WorldStage · **T3 확정** | `WorldTest` | 2쌍 |
 | | S10 | Kingdom 4종 (628줄, 최대) | `KingdomTest` | 4쌍 |
-| | S10.5 | **`MySqlLockService` → `GameDb.Utility` 이관** (S11 선행 필수) | 락 동작 확인 | 1파일 |
+| | S10.5 | `DbUtilityConnection` → `GameDb.Utility`로 감싸기 (커넥션 분리는 S0-4에서 완료) | 락 동작 확인 | 1파일 |
 | **5 철거** | S11 | 구 계층 전량 삭제 + 커밋 주체 역전 + `AllUserRepo` → `GameDb.AllShards` | 전체 통과 | 되돌리기 불가 |
 | | S12 | `IGameContext` 축소 / 수동 등록 목록 삭제 / 네임스페이스 | 전체 통과 | 기계적 |
 | | S13 | 감사 로그 기록 (신규 기능) | 신규 테스트 | 기능 제거 |
@@ -747,7 +757,7 @@ T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출
 - `ModelBase`에 `IsDirty`/`MarkDirty()`/`ClearDirty()` 추가가 **S2의 선행 작업**으로 들어간다.
 
 **S0-2. `ClassGenerator` 확인**
-PK/Owner를 attribute로 함께 찍을 수 있으면 S1이 자동화된다. 불가하면 모델 20개에 손으로 붙인다 — 감당 가능하지만 **알고 시작한다.**
+PK/ScopeKey를 attribute로 함께 찍을 수 있으면 S1이 자동화된다. 불가하면 모델 20개에 손으로 붙인다 — 감당 가능하지만 **알고 시작한다.**
 
 **S0-3. 감사·반환 타입 — 확정됨**
 
@@ -826,7 +836,7 @@ Manager 43/42/38/83줄. 이들의 로직은 전부 "검증 → 필드 변경 →
 **T2 확정 지점이기도 하다.** `PlayerComponent.TryGetByAccountIdAsync`가 `[SecondaryIndex("AccountId")]` + `set.ByIndexAsync(...)`로 바뀐다. **캐시 동작은 도입하지 않는다** — 조회는 지금과 동일하게 DB 직접이고, 달라지는 것은 이름 있는 정식 경로가 된다는 점뿐이다(3.9).
 
 **S8. Schedule / PlayerMap — T0 + `GlobalList` 캐싱 확정**
-`ScheduleComponent.GetListAsync`는 특수 쿼리가 아니라 **Owner 없는 엔티티의 전체 리스트**다(3.9). `[Entity(Pk="Num", Cache = GlobalList)]`로 흡수되며, 현재의 `DbSession` 직접 사용(*"일반화가 어려운 부분이라"*)이 사라진다. **T0(메타데이터 흡수) 패턴이 여기서 확정된다.**
+`ScheduleComponent.GetListAsync`는 특수 쿼리가 아니라 **ScopeKey 없는 엔티티의 전체 리스트**다(3.9). `[Entity(Pk="Num", Cache = GlobalList)]`로 흡수되며, 현재의 `DbSession` 직접 사용(*"일반화가 어려운 부분이라"*)이 사라진다. **T0(메타데이터 흡수) 패턴이 여기서 확정된다.**
 
 **캐싱 도입 확정 (결정됨).** 현재 Center 계열은 캐시가 전혀 없어 매 요청마다 Schedule 테이블을 전량 조회한다. 스케줄은 거의 변하지 않으므로 캐싱 이득이 크다. **대신 무효화 경로가 필요하다** — 스케줄 갱신은 운영툴/배치에서 일어나므로, 이 스텝에 다음을 포함한다:
 - `GlobalList` 캐시 키를 **샤드/오너와 무관한 전역 키**로 정의

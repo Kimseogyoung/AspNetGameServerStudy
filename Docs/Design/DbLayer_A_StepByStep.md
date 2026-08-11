@@ -196,15 +196,23 @@ _authRepo.RpcContext.SetShardId(mgrAccount.Model.ShardId);
 ModelRegistration.Init<CookieModel>("PlayerId", "Num");
 
 // After — 지식이 모델로 이동
-[Entity(Table = "Cookie", Pk = new[] { "PlayerId", "Num" }, Owner = "PlayerId")]
+[Entity(Pk = ["PlayerId", "Num"], ScopeKey = "PlayerId")]
 public partial class CookieModel : ModelBase { }
 
-[Entity(Table = "Account", Pk = new[] { "Id" })]              // Owner 없음
+[Entity(Pk = ["Id"])]                        // 스코프 소유자 없음
 public partial class AccountModel : ModelBase { }
 
-[Entity(Table = "Player", Pk = new[] { "Id" }, Owner = "Id")]  // Owner 컬럼명이 Id
+[Entity(Pk = ["Id"], ScopeKey = "Id")]       // 자기 Id가 스코프 키
 public partial class PlayerModel : ModelBase { }
 ```
+
+**필드는 `Pk`(필수) + `ScopeKey`(선택) 둘뿐이다.** 확정 근거는 아래 두 항목:
+
+**`Table`을 넣지 않는다.** `DapperExtension.cs:31-35`가 클래스명에서 `Model`을 떼어 테이블명을 만들고 **오버라이드 경로가 존재하지 않는다.** 규칙을 벗어나는 모델이 현재 0개이므로 지금 넣으면 순수 추측이다. 벗어나는 모델이 생기면 그때 추가한다(R7).
+
+**`Cache`/`SlidingTtl`도 S1에는 넣지 않는다 — TODO 주석으로만 남긴다.** 5.4가 "나중에 넣으면 20개를 두 번 손댄다"고 적었으나 **그 논거는 약하다**: attribute 20줄에 필드 하나 추가하는 것은 기계적 편집인 반면, 일반화가 맞지 않는 enum을 20개 모델에 먼저 박는 비용이 훨씬 크다. 5.4에서 살아남는 것은 **발견 자체**(정책이 실제로 5종이고 `DataSet<T>`가 1종만 전제한다 / sliding TTL이 설계에 없었다)이며, 그것은 **S2에서 `DataSet<T>`를 설계할 때의 제약**으로 이월한다.
+
+**`Owner` → `ScopeKey` 개명(2026-08-12).** `Owner`는 "무엇의 소유자인가"가 드러나지 않는다. 이 필드의 실제 의미는 **스코프(User/Auth/Center) 안에서 행을 소유자별로 가르는 컬럼**이고, `GameDb.User(playerId)` → 그 컬럼으로 필터라는 연결이 이름에 드러나야 한다. `Pk`와 같이 "컬럼명을 담는 필드"라는 명명 규칙도 일치한다. `PartitionKey`는 기각 — 이 저장소에는 이미 AccountId 기준 물리 샤딩(`GlobalDbRepo._shardMap`)이 따로 있어 서로 다른 축이 같은 이름을 쓰게 된다.
 
 ```csharp
 // StartUp.Resource.cs — 기존 19줄은 그대로 두고 아래를 추가한다
@@ -214,7 +222,7 @@ EntityRegistry.AssertMatches(ModelRegistration.Snapshot());   // 불일치 시 �
 
 **직후 가능해지는 것**
 - `Server`와 `RaidServer`의 등록 목록이 어긋나면 **부팅이 즉시 실패**한다. 지금은 조용히 어긋난 뒤 해당 요청에서 `NOT_FOUND_QUERY_PARAM`으로 터진다(5.5.4).
-- `PlayerModel`의 Owner가 `Id`라는 사실이 **데이터로** 표현된다 → `PlayerComponent.LoadFromDb` override의 존재 이유가 메타데이터로 올라간다.
+- `PlayerModel`의 `ScopeKey`가 `Id`라는 사실이 **데이터로** 표현된다 → `PlayerComponent.LoadFromDb` override의 존재 이유가 메타데이터로 올라간다.
 
 **아직 안 되는 것**: 아무것도 이 메타데이터를 소비하지 않는다. 동작 변화 0.
 
@@ -573,7 +581,7 @@ var player  = await _db.User(shardId, session.PlayerId).Set<PlayerModel>().GetOn
 
 ```csharp
 // ── T2 : 보조 인덱스. 선언만 하고 캐시는 넣지 않는다 (§3.9 결정)
-[Entity(Table = "Player", Pk = new[] { "Id" }, Owner = "Id")]
+[Entity(Pk = ["Id"], ScopeKey = "Id")]
 [SecondaryIndex("AccountId")]
 public partial class PlayerModel : ModelBase { }
 
@@ -598,9 +606,9 @@ var (found, player) = await user.Set<PlayerModel>().ByIndexAsync(nameof(PlayerMo
 var mdlList = await DbSession.ExecuteAsync(async db =>
     (await db.SelectListByConditionsAsync<ScheduleModel>(null)).ToList());
 
-// ── After : 특수 쿼리가 아니었다. Owner 없는 엔티티일 뿐 (§3.9 T0)
-[Entity(Table = "Schedule", Pk = new[] { "Num" }, Cache = ECachePolicy.GlobalList)]
-public partial class ScheduleModel : ModelBase { }        // Owner 없음 → WHERE 없음
+// ── After : 특수 쿼리가 아니었다. ScopeKey 없는 엔티티일 뿐 (§3.9 T0)
+[Entity(Pk = ["Num"], Cache = ECachePolicy.GlobalList)]   // Cache는 S2에서 형태 확정 후 부착
+public partial class ScheduleModel : ModelBase { }        // ScopeKey 없음 → WHERE 없음
 
 var schedules = await center.Set<ScheduleModel>().GetListAsync();   // 전역 리스트 캐시
 ```
@@ -746,7 +754,7 @@ public class AuthService : ServiceBase
 **남은 미확인은 S0-2 하나뿐이며 작업량에만 영향을 준다 — 실행을 막지 않는다.**
 
 **S0-2 확인 결과(2026-08-11) — 가능하다.** `Template/ModelTemplate.txt`에 `{{ClassAttribute}}` 슬롯이 이미 있고 `ModelGenerator.cs:225`가 모델에는 빈 문자열을 넣고 있다(패킷은 같은 슬롯에 `[ProtoContract]`). PK도 이미 스펙에 있다 — `ModelGenerator.cs:319`의 `x.KeyList.Contains("pk")`, 인덱스는 `c_index`/`index`(334·393행). 따라서 `[Entity(Pk)]`와 `[SecondaryIndex]`는 자동 생성이 가능하다.
-다만 `Owner`/`Cache`/`SlidingTtl`은 엑셀 스펙에 대응 컬럼이 없다. 모델 20개는 전부 `*.generated.cs` 단독이고 수기 partial이 하나도 없으므로, **A안이 어차피 도메인 partial을 새로 만든다면 `[Entity]`는 수기 partial 쪽에 두는 것**이 스펙 포맷을 건드리지 않아 낫다. S1 착수 시 확정한다.
+다만 `ScopeKey`는 엑셀 스펙에 대응 컬럼이 없다. 모델 20개는 전부 `*.generated.cs` 단독이고 수기 partial이 하나도 없으므로, **A안이 어차피 도메인 partial을 새로 만든다면 `[Entity]`는 수기 partial 쪽에 두는 것**이 스펙 포맷을 건드리지 않아 낫다. S1 착수 시 확정한다.
 
 ### 4.2 S0-4 반영 내역 (완료)
 
@@ -877,7 +885,7 @@ LogoutAsync(mdl)                             // 두 키 즉시 제거
 
 | 현재 위치 | 정책 |
 |---|---|
-| `UserComponentBase` | Owner별 **리스트** 캐시 |
+| `UserComponentBase` | 소유자별 **리스트** 캐시 |
 | `AuthComponentBase.GetMdlAsync` | **캐시 없음** (DB 직행) |
 | `AuthComponentBase.GetMdlWithCacheAsync` | **단건** 캐시 + **sliding TTL** |
 | `CenterComponentBase` | **캐시 없음** |
@@ -885,20 +893,23 @@ LogoutAsync(mdl)                             // 두 키 즉시 제거
 
 §3.3의 `DataSet<T>`는 리스트 캐시 하나만 전제한다. 5.3.2를 "메타데이터로 통일"한다고 했지만 **어떤 정책들이 존재해야 하는지 열거가 없다.**
 
-**수정**: `[Entity]`에 캐시 정책을 명시적으로 열거한다.
+**최초 수정안**: `[Entity]`에 캐시 정책을 명시적으로 열거한다.
 
 ```csharp
 public enum ECachePolicy { None, Single, OwnerList, GlobalList }
 
-[Entity(Table = "Cookie",  Pk = ["PlayerId","Num"], Owner = "PlayerId", Cache = ECachePolicy.OwnerList)]
-[Entity(Table = "Schedule", Pk = ["Num"],                                Cache = ECachePolicy.GlobalList)]
-[Entity(Table = "Account",  Pk = ["Id"],                                 Cache = ECachePolicy.None)]
-[Entity(Table = "Session",  Pk = ["AccountId"], Cache = ECachePolicy.Single, SlidingTtl = true)]
+[Entity(Pk = ["PlayerId","Num"], ScopeKey = "PlayerId", Cache = ECachePolicy.OwnerList)]
+[Entity(Pk = ["Num"],                                   Cache = ECachePolicy.GlobalList)]
+[Entity(Pk = ["Id"],                                    Cache = ECachePolicy.None)]
+[Entity(Pk = ["AccountId"], Cache = ECachePolicy.Single, SlidingTtl = true)]
 ```
 
-**sliding TTL이 설계에 아예 없었다** — `GetMdlWithCacheAsync(key, fetch, slidingTtl)`는 캐시 히트 시 TTL을 갱신하며, 세션 유지에 필수다. `[Entity]`에 `SlidingTtl`을 넣어야 한다.
+**sliding TTL이 설계에 아예 없었다** — `GetMdlWithCacheAsync(key, fetch, slidingTtl)`는 캐시 히트 시 TTL을 갱신하며, 세션 유지에 필수다.
 
-→ **S1의 attribute 설계에 `Cache`/`SlidingTtl`을 포함한다.** 나중에 추가하면 20개 모델을 두 번 손댄다.
+**결론 정정 (2026-08-12)** — 원래 "S1의 attribute 설계에 `Cache`/`SlidingTtl`을 포함한다. 나중에 추가하면 20개 모델을 두 번 손댄다"였는데, **이 논거를 철회한다.** attribute 20줄에 필드 하나를 나중에 붙이는 것은 기계적 편집이다. 반면 위 4종 열거가 실제 구현에서 깔끔하게 일반화되지 않으면 **틀린 enum이 20개 모델에 박힌 채로 시작**하게 되고, 그 되돌리기 비용이 훨씬 크다. 특히 5.3에서 확인된 `Session`의 포인터 캐시는 `Single`+`SlidingTtl` 두 플래그로 표현되지 않는 **다섯 번째 형태**이고, 이건 이 enum이 아직 닫히지 않았다는 증거다.
+
+→ **S1에는 넣지 않는다. `Cache`/`SlidingTtl`은 `[Entity]` 주석에 TODO로만 남긴다.**
+→ **이 항목에서 살아남는 것은 발견이지 해법이 아니다**: "정책이 실제로 5종인데 `DataSet<T>`는 1종만 전제한다"와 "sliding TTL이 설계에 없다"는 **S2에서 `DataSet<T>`를 설계할 때 반드시 만족해야 할 제약**으로 이월한다. 형태가 코드로 확정된 뒤에 attribute로 올린다(R7).
 
 ### 5.5 🟠 설계 누락 — `AllUserRepo`(전 샤드 검색)가 스코프 모델에 맞지 않는다
 
@@ -983,7 +994,7 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 
 ### 5.12 🟢 미개선 — T1 확장 메서드는 전체 로드 후 메모리 필터다
 
-`GetListAsync` 결과를 거르는 구조라 데이터가 커지면 비효율이다. **현재도 동일**하므로 후퇴는 아니지만 개선도 아니다. Owner 스코프 컬렉션이 작다는 전제 위에 있으며, 깨지면 T3로 승격한다.
+`GetListAsync` 결과를 거르는 구조라 데이터가 커지면 비효율이다. **현재도 동일**하므로 후퇴는 아니지만 개선도 아니다. 스코프 컬렉션이 작다는 전제 위에 있으며, 깨지면 T3로 승격한다.
 
 ---
 
@@ -992,8 +1003,8 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | 스텝 | 추가되는 작업 |
 |---|---|
 | **S0-4** (완료) | **커밋 경계를 유저 락 안으로 이동 (5.1)** · **락 커넥션 분리 (5.2 선결)** — §4.2 |
-| **S1** | `[Entity]`에 `Cache`/`SlidingTtl` 포함 (5.4) · 스캔이 `DapperExtension` + `InMemoryPkRegistry` 양쪽 등록 (5.8) |
-| **S2** | `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
+| **S1** | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · 스캔이 `DapperExtension` + `InMemoryPkRegistry` 양쪽 등록 (5.8) |
+| **S2** | **`DataSet<T>`가 캐시 정책 5종을 수용하는 형태 확정 (5.4 이월)** · `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
 | **S4** | `ECachePolicy.None` 경로 실증 (Account/Channel/Device는 원래 캐시 없음) |
 | **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
 | **S8** | `GlobalList` 정책 실증 · `ScheduleView`가 `ServerTime`을 인자로 (5.10) |
