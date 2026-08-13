@@ -847,8 +847,8 @@
               "columns": [
                 {
                   "column": {
-                    "name": "Num",
-                    "type": "INT",
+                    "name": "PlayerId",
+                    "type": "BIGINT UNSIGNED",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -857,8 +857,8 @@
                 },
                 {
                   "column": {
-                    "name": "PlayerId",
-                    "type": "BIGINT UNSIGNED",
+                    "name": "Num",
+                    "type": "INT",
                     "constraints": {
                       "primaryKey": false,
                       "nullable": false
@@ -920,7 +920,7 @@
           },
           {
             "addPrimaryKey": {
-              "columnNames": "Num, PlayerId",
+              "columnNames": "PlayerId, Num",
               "tableName": "KingdomDeco"
             }
           },

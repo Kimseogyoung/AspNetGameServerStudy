@@ -9,10 +9,10 @@ namespace WebStudyServer.Model
 	{
     
     		
-    		public int Num { get; set; } = default; //
+    		public ulong PlayerId { get; set; } = default; //
         
     		
-    		public ulong PlayerId { get; set; } = default; //
+    		public int Num { get; set; } = default; //
         
     		
     		public int TotalCnt { get; set; } = default; //

@@ -53,7 +53,6 @@ namespace WebStudyServer
             ModelRegistration.Init<KingdomMapModel>("PlayerId");
             ModelRegistration.Init<KingdomStructureModel>("SfId");
             ModelRegistration.Init<KingdomDecoModel>("PlayerId", "Num");
-            //ModelRegistration.Init<PlacedKingdomItemModel>("Id");
             ModelRegistration.Init<ItemModel>("PlayerId", "Num");
             ModelRegistration.Init<PointModel>("PlayerId", "Num");
             ModelRegistration.Init<TicketModel>("PlayerId", "Num");
