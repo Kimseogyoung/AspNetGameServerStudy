@@ -1,9 +1,10 @@
 @ECHO OFF
-REM 대상 이름 -> DB 이름 / changelog 파일 해석.
-REM 사용법: CALL _Target.bat <Auth|User|Center>
-REM 결과: DB_NAME, CHANGELOG
+REM Resolves a target name to DB name / changelog file.  ASCII ONLY (see _Env.bat).
+REM Usage: CALL _Target.bat <Auth|User|Center>
+REM Sets:  DB_NAME, CHANGELOG
 
-REM 직전 호출 값이 남아 오판하는 것을 막는다(이 배치들은 SETLOCAL 을 쓰지 않는다).
+REM Clear first: these scripts do not use SETLOCAL, so a previous call's value
+REM would otherwise survive and be mistaken for this call's result.
 SET "DB_NAME="
 SET "CHANGELOG="
 

@@ -1,8 +1,9 @@
 @ECHO OFF
-REM 최근 changeSet 되돌리기. 사용법: Rollback.bat <Auth|User|Center> [개수]   (기본 1)
+REM Rolls back recent changeSets.  Usage: Rollback.bat <Auth|User|Center> [count]  (default 1)
+REM ASCII ONLY (see _Env.bat).
 REM
-REM 생성 changelog 는 createTable 위주라 liquibase 가 자동 롤백을 만들어 준다.
-REM 다만 되돌리면 그 테이블의 데이터도 같이 사라진다.
+REM The generated changelog is mostly createTable, so liquibase can auto-generate
+REM the rollback. Rolling back drops those tables and their data with them.
 
 CALL "%~dp0_Env.bat"
 IF ERRORLEVEL 1 EXIT /B 1
