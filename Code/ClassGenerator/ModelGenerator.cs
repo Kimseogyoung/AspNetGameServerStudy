@@ -222,7 +222,7 @@ namespace ClassGenerator
                 var scriptObject = new Dictionary<string, object>
                 {
                     { "ClassName",  classNameWithMdl},
-                    { "ClassAttribute", ""},
+                    { "ClassAttribute", BuildEntityAttribute(className, defList)},
                     { "Fields", fieldList},
                 };
 
@@ -240,6 +240,58 @@ namespace ClassGenerator
 
                 File.WriteAllText(outputFilePath, result);
             }
+        }
+
+        // 모델 클래스에 붙는 [Entity] 를 만든다.
+        //
+        // 규칙이 애매한 경우는 추측하지 않고 생성을 실패시킨다. 여기서 조용히 틀린
+        // 컬럼을 고르면 그 값이 PK WHERE 절과 소유자 필터로 그대로 흘러가고,
+        // 증상은 "0행 매치"나 "남의 데이터 조회"처럼 예외 없이 나타난다.
+        private static string BuildEntityAttribute(string className, List<ModelDefinition> defList)
+        {
+            // Packet 전용 필드는 테이블에 없으므로 키 판정에서 제외한다.
+            // (GenerateLiquibaseChangeLog 도 같은 기준으로 컬럼을 고른다)
+            var mdlDefList = defList.Where(x => x.ProtocolType != "Packet").ToList();
+
+            var pkList = mdlDefList.Where(x => x.KeyList.Contains("pk")).Select(x => x.FieldName).ToList();
+            if (pkList.Count == 0)
+            {
+                throw new Exception($"MISSING_PK:{className}");
+            }
+
+            var pkArg = string.Join(", ", pkList.Select(x => $"\"{x}\""));
+
+            // 소유자 개념이 있는 것은 User 계열뿐이다. UserComponentBase.LoadFromDb 만
+            // 모든 조회에 WHERE PlayerId 를 자동으로 걸고, Auth/Center 에는 그런 축이 없다.
+            var folderName = defList[0].FolderName;
+            if (folderName != "User")
+            {
+                return $"[Entity(Pk = [{pkArg}])]";
+            }
+
+            // Player 는 스코프 루트라 fk 가 없는 것이 정상이고, 자기 PK 가 곧 스코프 키다.
+            // 이름으로 특수 처리한다 — "fk 가 없으면 PK 를 쓴다"로 일반화하면 fk 를
+            // 빠뜨린 User 모델이 자기 PK 를 스코프 키로 갖게 되어 소유자 필터가 사라진다.
+            if (className == "Player")
+            {
+                if (pkList.Count != 1)
+                {
+                    throw new Exception($"SCOPE_ROOT_COMPOSITE_PK:{className}");
+                }
+                return $"[Entity(Pk = [{pkArg}], ScopeKey = \"{pkList[0]}\")]";
+            }
+
+            var fkList = mdlDefList.Where(x => x.KeyList.Contains("fk")).Select(x => x.FieldName).ToList();
+            if (fkList.Count == 0)
+            {
+                throw new Exception($"MISSING_SCOPE_KEY:{className}");
+            }
+            if (fkList.Count > 1)
+            {
+                throw new Exception($"AMBIGUOUS_SCOPE_KEY:{className}");
+            }
+
+            return $"[Entity(Pk = [{pkArg}], ScopeKey = \"{fkList[0]}\")]";
         }
 
         public static void GenerateLiquibaseChangeLog(Dictionary<string, List<ModelDefinition>> modelDefListDict, string mdlOutputPath)

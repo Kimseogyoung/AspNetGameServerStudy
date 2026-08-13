@@ -4,7 +4,7 @@ using ServerCore.Model;
 
 namespace WebStudyServer.Model
 {
-	
+	[Entity(Pk = ["Num"])]
 	public partial class ScheduleModel : ModelBase
 	{
     

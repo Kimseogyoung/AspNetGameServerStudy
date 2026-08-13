@@ -4,7 +4,7 @@ using ServerCore.Model;
 
 namespace WebStudyServer.Model
 {
-	
+	[Entity(Pk = ["Key"])]
 	public partial class DeviceModel : ModelBase
 	{
     

@@ -64,6 +64,11 @@ namespace WebStudyServer
             // Center
             ModelRegistration.Init<ScheduleModel>("Num");
 
+            // [Entity] 스캔 등록. 위 목록과 병존시켜 서로 어긋나면 부팅이 실패하게 한다
+            // (ModelRegistration.Init 의 PK_REGISTRATION_CONFLICT). 위 목록은 검증이
+            // 끝나면 제거한다.
+            EntityRegistry.ScanAndRegister(typeof(PlayerModel).Assembly);
+
             if (Config<CoreConfig>.Get().DbType != DbType.InMemory)
             {
                 ConnectionTest();

@@ -4,7 +4,7 @@ using ServerCore.Model;
 
 namespace WebStudyServer.Model
 {
-	
+	[Entity(Pk = ["Id"])]
 	public partial class AccountModel : ModelBase
 	{
     

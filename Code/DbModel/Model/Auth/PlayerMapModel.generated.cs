@@ -4,7 +4,7 @@ using ServerCore.Model;
 
 namespace WebStudyServer.Model
 {
-	
+	[Entity(Pk = ["AccountId"])]
 	public partial class PlayerMapModel : ModelBase
 	{
     

@@ -4,7 +4,7 @@ using ServerCore.Model;
 
 namespace WebStudyServer.Model
 {
-	
+	[Entity(Pk = ["SfId"], ScopeKey = "PlayerId")]
 	public partial class KingdomStructureModel : ModelBase
 	{
     
