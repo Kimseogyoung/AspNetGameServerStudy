@@ -404,29 +404,46 @@ Auth 조회 진입점은 두 부류로 갈린다.
 
 **User 스코프에는 (a)가 없다.** 유저 데이터를 만질 시점엔 `PlayerId`가 확정돼 있다. 그래서 `GameDb.Auth(accountId)` 하나로는 부족하다 — 로그인 첫 쿼리를 보낼 곳이 없어진다. Auth를 User와 똑같이 만들 수 없는 이유는 "소유자 컬럼이 없어서"가 아니라 **"소유자를 알아내는 단계가 있어서"** 다.
 
-**(3) "빈 규칙이 따라다닌다"는 반론은 구체 클래스를 하나로 만들 때만 성립한다.** 인터페이스로 공통부만 뽑으면 사라진다.
+**(3) 스코프는 `XxxRepo`의 후계자다.** 이름이 바뀌는 이유는, `UserRepo`가 "저장소"라 불리지만 실제로 하는 일이 **"이 플레이어의 데이터만 보이게 하는 경계"** 이기 때문이다(`LoadFromDb`의 자동 `WHERE PlayerId`, `ListKeyFor(playerId)`의 플레이어별 캐시 버킷). 그 경계를 이름에 담은 것이고 `ScopeKey`(경계를 긋는 컬럼)라는 이름도 여기서 나온다.
 
-```csharp
-public interface IDataScope
-{
-    DataSet<T> Set<T>() where T : ModelBase, new();
-}
-
-public sealed class UserScope   : IDataScope { public int ShardId; public ulong PlayerId; }
-public sealed class AuthScope   : IDataScope { public ulong AccountId; }
-public sealed class CenterScope : IDataScope { }
 ```
-공통은 `Set<T>()` 하나 — `DataSet<T>` 코드가 재사용되는 지점 — 이고, 각 스코프는 **자기 키만** 들고 있으므로 `AuthScope`에 `PlayerId` 같은 것이 생기지 않는다. `GameDb.CommitAsync`가 `IReadOnlyList<IDataScope>`를 순회하면 **dirty flush에는 셋 다 참여**한다(3.8의 요구).
+지금                                   A안
+GlobalDbRepo                           GameDb (UoW)
+├ OwnUser : UserRepo                   ├ User(shardId, playerId) → UserScope
+├ Auth    : AuthRepo                   ├ Auth(...)               → AuthScope
+├ Center  : CenterRepo                 ├ Center()                → CenterScope
+└ AllUser : AllUserRepo                └ AllShards               (스코프 밖)
 
-**(4) 갱신된 결론**
+UserRepo : 컴포넌트 11개를 손으로 나열   UserScope : Set<T>() 하나
+RpcCtx.PlayerId 를 암묵적으로 읽음       playerId 를 인자로 받음
+```
+
+따라서 **`AuthScope(accountId)`는 `AuthRepo`에 없던 경계를 새로 긋는 일**이다. 그래서 판단이 필요했다.
+
+**(4) 갱신된 결론 — Q1은 지금 닫고, Q2만 S4로 넘긴다**
+
+두 질문을 분리해야 한다. 앞서 이 둘을 뭉쳐 통째로 S4로 미뤘는데, **Q1은 지금 답할 수 있다.**
+
+| | 질문 | 답 |
+|---|---|---|
+| **Q1** | `AuthScope(accountId)`가 존재하는가 | **그렇다. 지금 확정한다.** |
+| **Q2** | `[Entity]`에 Auth `ScopeKey`를 붙이는가 | **S4에서 판단** |
+
+**Q1을 지금 닫을 수 있는 근거 — "스코프 밖 진입점"은 이미 A안에 있는 패턴이다.** Auth의 (a)가 특별한 문제라고 봤던 것이 착각이었고, 같은 성격의 것이 이미 둘 있다.
+- `GameDb.AllShards.FindPlayerByNameAsync(name)` — `PlayerId`를 모르는 조회 (§S11)
+- `PlayerMap`으로 `shardId`를 찾아 `GameDb.User(shardId, playerId)`를 연다 (§S12, GSA `PlayerMapService.TryGetUserRepoByPlayerId` 패턴의 복원)
+
+즉 **"스코프를 여는 데 필요한 조회는 스코프 밖에 둔다"**는 규칙이 이미 있다. Auth의 기기 키·채널 키·세션 키 조회와 계정 생성은 정확히 같은 성격이므로 같은 자리에 놓으면 된다. 새 규칙이 필요 없다.
 
 - **Center** — 소유자 축이 실제로 없다(Schedule은 전체 조회). 스코프가 아니라 DB 선택이 맞다.
-- **Auth** — `AuthScope(accountId)`는 말이 된다. 다만 **(a)를 위한 스코프 밖 진입점이 따로 필요하다.**
-- **`DataScope`라는 균일한 구체 타입은 여전히 만들지 않는다.** 공유는 인터페이스 + `DataSet<T>`로 충분하다.
+- **Auth** — `AuthScope(accountId)`가 존재하고, (a)는 스코프 밖 진입점으로 간다.
 
-**(5) S1은 손대지 않는다.** `ScopeKey`를 Auth에도 붙이는 것은 생성기 규칙 한 줄과 재생성이면 되지만, **`ScopeKey`는 선언이 아니라 동작을 만든다** — 자동 `WHERE`, 쓰기 시 소유자 검증, 캐시 버킷. Auth에 붙이는 순간 (a)의 조회들과 충돌한다(기기 키 조회에 `WHERE AccountId`가 붙으면 0행이 된다). **선언보다 동작이 먼저 정해져야 한다.**
+**(5) `IDataScope` 인터페이스는 지금 만들지 않는다.**
+앞서 "공유는 인터페이스로"라고 적었으나, 그 전에 물었어야 할 것은 **"지금 공통 인터페이스가 필요한가"** 였다. 근거로 든 것은 "`GameDb.CommitAsync`가 스코프를 순회해야 한다"였는데, **`GameDb`가 dirty 엔티티를 직접 들고 있으면 그 요구가 사라진다.** 스코프는 조회 진입점이고 dirty 목록은 UoW 소유라고 보면 된다.
 
-**판단 시점은 S2가 아니라 S4다.** S4 파일럿이 바로 **Channel/Device/Account**이고, (a)/(b) 두 부류를 `DataSet<T>`로 실제로 다시 써보는 스텝이다. 거기서 (a)를 어디로 보낼지가 정해지면 Auth에 `ScopeKey`를 붙일지도 함께 답이 나온다. S2에서는 `IDataScope` 인터페이스 형태까지만 정하고 `AuthScope`의 키 유무는 열어 둔다.
+그러므로 `UserScope`/`AuthScope`/`CenterScope`는 각자 자기 키만 갖는 **독립 클래스**로 시작한다(`AuthScope`에 `PlayerId` 같은 것이 생기지 않는다는 목적은 이것으로 이미 달성된다). 공유되는 것은 `DataSet<T>` 하나다. **S2에서 실제로 공통 처리가 필요해지면 그때 인터페이스를 뽑는다**(R7).
+
+**(6) S1은 손대지 않는다 — Q2를 S4로 미루는 이유.** `ScopeKey`를 Auth에 붙이는 것은 생성기 규칙 한 줄과 재생성이면 되지만, **`ScopeKey`는 선언이 아니라 동작을 만든다** — 자동 `WHERE`, 쓰기 시 소유자 검증, 캐시 버킷. 붙이는 순간 (a)의 조회들과 충돌한다(기기 키 조회에 `WHERE AccountId`가 붙으면 0행이 된다). Q1이 정해졌어도 **어떤 조회가 스코프 안이고 어떤 것이 밖인지는 실제로 옮겨 봐야** 안다. S4 파일럿이 바로 **Channel/Device/Account**이고 (a)/(b) 두 부류를 `DataSet<T>`로 다시 써보는 스텝이다.
 
 ---
 
@@ -1113,6 +1130,39 @@ public enum ECachePolicy { None, Single, OwnerList, GlobalList }
 → **S1에는 넣지 않는다. `Cache`/`SlidingTtl`은 `[Entity]` 주석에 TODO로만 남긴다.**
 → **이 항목에서 살아남는 것은 발견이지 해법이 아니다**: "정책이 실제로 5종인데 `DataSet<T>`는 1종만 전제한다"와 "sliding TTL이 설계에 없다"는 **S2에서 `DataSet<T>`를 설계할 때 반드시 만족해야 할 제약**으로 이월한다. 형태가 코드로 확정된 뒤에 attribute로 올린다(R7).
 
+#### 5.4.1 결론 축소 (2026-08-14) — 일반화하지 않고 특화로 간다
+
+위에서 "S2가 5종을 수용하는 형태를 확정해야 한다"고 이월했는데, **그 숙제 자체가 과하다.** 코드를 다시 보면 **캐시 정책은 애초에 일반화된 적이 없다.**
+
+```csharp
+// IRepository 전부 — 정책 enum 이 없다. 전부 CacheKey 를 인자로 받을 뿐이다.
+Task<List<T>> GetListAsync<T>(CacheKey listKey, Func<IDbExecutor, Task<List<T>>> dbFetch);
+Task<T>       InsertAsync<T>(T entity, CacheKey listKey);
+Task          UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match);
+```
+
+정책은 **어떤 키를 넘기는가 + 어떤 base 메서드를 부르는가**로 표현된다. 5.3이 "완성된 T2"라고 평가한 `SessionComponent`의 포인터 캐시도 새 추상이 아니라 **키 2개 + 기존 메서드 조합**이다.
+
+```csharp
+CacheKey.For(SessionModel, "AccountBySessionKey", key)   // 포인터
+CacheKey.For(SessionModel, "AccountId", accountId)       // 값
+GetMdlWithCacheAsync<SessionModel>(..., slidingTtl)
+```
+
+따라서 `DataSet<T>`가 알아야 할 것은 **2종이면 충분하다.**
+
+| | 표현 |
+|---|---|
+| 기본 — 소유자별 리스트 | `[Entity].ScopeKey`로 키가 정해진다 |
+| 캐시 없음 | 캐시 키를 넘기지 않는 경로 하나 |
+
+나머지(Session 포인터, Schedule 전역)는 **그 엔티티 전용 코드로 남긴다.** 결과:
+- `[Entity]`에 `Cache`/`SlidingTtl`을 넣지 않아도 된다 — S1의 보류 결정이 그대로 유효해진다
+- S2 숙제가 "5종 수용 형태 확정" → **"2종만 알고 나머지는 특화"** 로 줄어든다
+- 5.3의 "Session 포인터 캐시를 잃지 않는다"가 자동으로 만족된다. 건드릴 이유가 없어지기 때문이다
+
+**경계 규칙**: **엔티티 하나에만 해당하는 캐시 동작은 일반화하지 않는다. 두 번째 엔티티가 같은 것을 요구할 때 올린다**(R7). 현재 포인터 캐시는 `Session` 하나, 전역 캐시는 `Schedule` 하나다.
+
 ### 5.5 🟠 설계 누락 — `AllUserRepo`(전 샤드 검색)가 스코프 모델에 맞지 않는다
 
 ```csharp
@@ -1209,8 +1259,8 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | **S0-4** (완료) | **커밋 경계를 유저 락 안으로 이동 (5.1)** · **락 커넥션 분리 (5.2 선결)** — §4.2 |
 | **S1** (완료) | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · **ScopeKey는 User 폴더 한정, `fk` 토큰에서 생성** · 가드 4종 · `AssertMatches` 철회, 검사를 `Init` 안으로 (§S1-D) · 5.8은 해소 |
 | **S12** | RaidServer의 등록 표면이 2 → 19로 넓어진 것을 되돌릴지 판단 (§S1-F) |
-| **S2** | **`DataSet<T>`가 캐시 정책 5종을 수용하는 형태 확정 (5.4 이월)** · **`IDataScope` 인터페이스 형태까지만 확정, `AuthScope`의 키 유무는 S4로 열어 둠 (§S1-G)** · `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
-| **S4** | `ECachePolicy.None` 경로 실증 (Account/Channel/Device는 원래 캐시 없음) · **Auth의 스코프 밖 조회(기기 키·채널 키·세션 키·계정 생성)를 어디로 보낼지 확정 → `AuthScope`에 `ScopeKey`를 붙일지 함께 결정 (§S1-G)** |
+| **S2** | **`DataSet<T>`는 캐시 2종(소유자 리스트 / 없음)만 안다. 나머지는 엔티티 전용 코드 (5.4.1)** · **`UserScope`/`AuthScope`/`CenterScope`는 공통 인터페이스 없이 독립 클래스로 시작 (§S1-G)** · `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
+| **S4** | 캐시 없는 경로 실증 (Account/Channel/Device는 원래 캐시 없음) · **Auth의 스코프 밖 조회(기기 키·채널 키·세션 키·계정 생성)를 어디로 보낼지 확정 → `[Entity]`에 Auth `ScopeKey`를 붙일지 함께 결정 (§S1-G Q2)** |
 | **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
 | **S8** | `GlobalList` 정책 실증 · `ScheduleView`가 `ServerTime`을 인자로 (5.10) |
 | **S9** | `scope.Raw` 자동 flush **와** `GameDb.Utility` 무flush 경로 구분 확정 (5.2) |

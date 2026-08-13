@@ -255,9 +255,11 @@ public partial class AccountModel : ModelBase { }
 >
 > 진짜 비대칭은 **Auth가 신원을 알아내는 계층**이라는 것이다. 기기 키·채널 키·세션 키 조회와 계정 생성은 `AccountId`를 *모르는 상태*에서 일어나므로, `GameDb.Auth(accountId)` 하나로는 로그인 첫 쿼리를 보낼 곳이 없다. User 스코프에는 이런 단계가 없다.
 >
-> "균일하게 묶으면 빈 규칙이 따라다닌다"는 반론은 **구체 클래스를 하나로 만들 때만** 성립한다. `IDataScope { DataSet<T> Set<T>(); }` 인터페이스로 공통부만 뽑으면 각 스코프가 자기 키만 들고(`UserScope`: ShardId+PlayerId, `AuthScope`: AccountId, `CenterScope`: 없음) dirty flush에는 셋 다 참여한다.
+> **`AuthScope(accountId)`는 존재한다 — 이 부분은 확정.** "스코프를 여는 데 필요한 조회는 스코프 밖에 둔다"는 규칙이 A안에 **이미 있다**(`GameDb.AllShards.FindPlayerByNameAsync`, `PlayerMap`으로 `shardId`를 찾아 `GameDb.User`를 여는 §S12 패턴). Auth의 스코프 밖 조회도 같은 자리에 놓으면 되고 새 규칙이 필요 없다.
 >
-> **판단은 S4(Channel/Device/Account 파일럿)에서 한다.** `ScopeKey`는 선언이 아니라 동작(자동 `WHERE`·쓰기 검증·캐시 버킷)을 만들기 때문에, 스코프 밖 조회를 어디로 보낼지 정해지기 전에 Auth에 붙이면 안 된다. S1은 어느 결론에도 영향받지 않는다.
+> **남은 것은 `[Entity]`에 Auth `ScopeKey`를 붙일지이며 그것은 S4(Channel/Device/Account 파일럿)에서 판단한다.** `ScopeKey`는 선언이 아니라 동작(자동 `WHERE`·쓰기 검증·캐시 버킷)을 만들기 때문에, 어떤 조회가 스코프 안이고 어떤 것이 밖인지 실제로 옮겨 보기 전에는 붙일 수 없다. S1은 어느 결론에도 영향받지 않는다.
+>
+> **세 스코프는 공통 인터페이스 없이 독립 클래스로 시작한다.** 한때 `IDataScope`로 공통부를 뽑자고 적었으나, 근거로 든 "`GameDb.CommitAsync`가 스코프를 순회해야 한다"는 요구는 **`GameDb`가 dirty 엔티티를 직접 들면 사라진다.** 공유되는 것은 `DataSet<T>` 하나이며, 실제로 공통 처리가 필요해지면 그때 인터페이스를 뽑는다(R7).
 
 실행 절차·체크리스트는 `DbLayer_A_StepByStep.md` §S1-A/B/C 참조.
 
