@@ -1,13 +1,21 @@
-:@ECHO OFF
+@ECHO OFF
+REM 미적용 changeSet 확인. 사용법: Status.bat [Auth|User|Center|All]   (기본 All)
 
-SET USER_NAME=%1
-SET USER_PASSWORD=%2
-SET DB_NAME=%3
-SET CHANGE_LOG_PATH=%4
-liquibase ^
-  --url="jdbc:mysql://localhost:3306/%DB_NAME%" ^
-  --username="%USER_NAME%" ^
-  --password="%USER_PASSWORD%" ^
-  --driver="com.mysql.cj.jdbc.Driver" ^
-  --changeLogFile="%CHANGE_LOG_PATH%" ^
-  status
+CALL "%~dp0_Env.bat"
+IF ERRORLEVEL 1 EXIT /B 1
+
+SET "TARGET=%~1"
+IF "%TARGET%"=="" SET "TARGET=All"
+
+IF /I NOT "%TARGET%"=="All" (
+    REM 블록 안에서는 %ERRORLEVEL% 이 블록 파싱 시점 값으로 굳으므로 인자 없이 EXIT /B 한다.
+    CALL "%~dp0_Liquibase.bat" %TARGET% status
+    EXIT /B
+)
+
+CALL "%~dp0_Liquibase.bat" Auth status
+IF ERRORLEVEL 1 EXIT /B 1
+CALL "%~dp0_Liquibase.bat" User status
+IF ERRORLEVEL 1 EXIT /B 1
+CALL "%~dp0_Liquibase.bat" Center status
+EXIT /B %ERRORLEVEL%

@@ -4,3 +4,6 @@ obj/
 logs
 __*
 devicekey.dat
+
+# 접속 정보. .env.example 을 복사해서 만든다.
+.env
