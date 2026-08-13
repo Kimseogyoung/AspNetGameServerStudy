@@ -260,7 +260,9 @@ CSV는 **한 줄도 새로 안 쓴다** — `fk` 토큰이 이미 있고 이미 
 
 Auth의 AccountId 조회는 전부 **인자 기반 명시 조회**이지 ambient 스코프가 아니다. 전수 조사 결과: `ChannelComponent.GetListAsync(accountId)`(비-PK 리스트 → **T2**, Channel의 PK는 `Key`), `SessionComponent.GetByAccountIdAsync`(AccountId가 PK + 자체 포인터 캐시, 5.3), `PlayerMapComponent`(AccountId가 PK 그 자체), `DeviceComponent`(**AccountId 조회 없음** — `Key`=idfv PK 조회만), `AccountComponent`(자기 Id가 PK). **소유자 축 리스트 조회는 Channel 하나뿐이고 그것은 T2다.**
 
-즉 `fk = AccountId`는 **DB 참조 무결성 선언**이지 스코프 선언이 아니다. User 폴더에서만 둘이 우연히 일치한다.
+즉 `fk = AccountId`는 지금 코드에서 **DB 참조 무결성 선언**으로만 쓰이고 스코프로는 쓰이지 않는다.
+
+> **주의 (2026-08-14 추가)**: 위 표와 이 문단은 **"지금 코드가 소유자를 ambient로 거는가"** 에 대한 서술이다. **"데이터 모델에 소유자 축이 있는가"** 와는 다른 질문이고, 그쪽 답은 Auth도 **있다**이다 — `Account.Id`가 루트이고 나머지 넷이 전부 `AccountId`를 갖는, User와 같은 모양이다. 둘을 뭉뚱그리면 "Auth엔 소유자가 없다"는 잘못된 결론이 나온다. **§S1-G 참조.** S1이 `ScopeKey`를 User 한정으로 두는 근거는 "Auth에 소유자가 없어서"가 아니라 **"Auth의 스코프 밖 조회를 어디로 보낼지 아직 안 정해서"** 다.
 
 **가드 (실행 시 1종 → 4종으로 늘었다).** 규칙이 애매한 경우는 추측하지 않고 **생성을 실패**시킨다. 조용히 틀린 컬럼을 고르면 그 값이 PK `WHERE` 절과 소유자 필터로 그대로 흘러가고, 증상은 예외 없이 "0행 매치"나 "남의 데이터 조회"로 나타나기 때문이다.
 
@@ -372,8 +374,59 @@ EntityRegistry.ScanAndRegister(typeof(PlayerModel).Assembly);
 
 **롤백**: `StartUp` 각 1줄 + `EntityRegistry.cs` + `EntityAttribute.cs` 삭제, `ModelRegistration` 충돌 검사 제거, 생성기 변경 되돌린 뒤 재생성. `Session.csv` / `KingdomMap.csv` / `KingdomDeco.xlsx` / `launchSettings.json` 수정과 Liquibase 배치 정리는 **되돌리지 않는다** — 전부 A안과 무관하게 stale을 고친 것이다.
 
-**S2로 이월되는 열린 질문 — Auth/Center는 스코프가 아니다.**
-소유자가 User에만 있다면 `GameDb.Auth()` / `GameDb.Center()`를 "스코프"라 부르는 것 자체가 과일반화다. 그건 스코프가 아니라 **DB 선택**이다. 하나는 소유자를 갖고 둘은 안 갖는 셋을 `DataScope`라는 균일한 추상으로 묶으면 Auth/Center 쪽에는 늘 의미 없는 인자와 빈 규칙이 따라다닌다. **S2에서 `GameDb`/`Scope`/`DataSet<T>` 형태를 정할 때 판단한다.** S1은 어느 쪽으로 결론이 나도 영향받지 않는다 — "User 엔티티만 ScopeKey를 갖는다"는 두 경우 모두 참이다.
+#### S1-G 이월된 열린 질문 — Auth는 스코프인가 (2026-08-14 재정리)
+
+> **먼저 적었던 것**: "소유자가 User에만 있으므로 `GameDb.Auth()`/`Center()`는 스코프가 아니라 **DB 선택**이다. 셋을 `DataScope`로 균일하게 묶으면 Auth/Center에 의미 없는 인자와 빈 규칙이 따라다닌다."
+>
+> **이 전제가 부정확하다.** 아래로 대체한다.
+
+**(1) Auth의 데이터 모델에는 소유자 축이 있다. User와 같은 모양이다.**
+
+```
+User                          Auth
+Player     Id (루트)          Account    Id (루트)
+나머지 13  PlayerId (fk)      Channel    AccountId (fk)
+                              Device     AccountId (fk)
+                              Session    AccountId (pk+fk)
+                              PlayerMap  AccountId (pk)
+```
+
+루트 하나 + 나머지 전부가 루트를 가리키는 컬럼. **구조가 동일하다.** 앞선 서술은 *데이터 모델에 소유자 축이 있는가*와 *지금 코드가 그것을 ambient로 거는가*를 구분하지 않았다. 후자만 보면 Auth는 소유자가 없지만(`AuthComponentBase`는 호출자가 준 람다를 돌릴 뿐이다), 전자는 User와 다르지 않다. §S1-B의 "왜 User 한정인가" 표는 **후자에 대한 서술로만 읽어야 한다.**
+
+**(2) 진짜 비대칭은 "Auth는 신원을 알아내는 계층"이라는 것이다.**
+
+Auth 조회 진입점은 두 부류로 갈린다.
+
+| | 진입점 | AccountId |
+|---|---|---|
+| (a) 스코프 이전 | `DeviceComponent.TryGetAsync(idfv)` · `ChannelComponent.TryGetAsync(key)` · `SessionComponent.TryGetByKeyAsync(key)` · `AccountComponent.CreateAsync()` | **모른다.** 오히려 이것으로 계정을 찾거나 만든다 |
+| (b) 스코프 안 | `ChannelComponent.GetListAsync(accountId)` · `SessionComponent.GetByAccountIdAsync` · `AccountComponent.TryGetAsync(id)` | 안다 |
+
+**User 스코프에는 (a)가 없다.** 유저 데이터를 만질 시점엔 `PlayerId`가 확정돼 있다. 그래서 `GameDb.Auth(accountId)` 하나로는 부족하다 — 로그인 첫 쿼리를 보낼 곳이 없어진다. Auth를 User와 똑같이 만들 수 없는 이유는 "소유자 컬럼이 없어서"가 아니라 **"소유자를 알아내는 단계가 있어서"** 다.
+
+**(3) "빈 규칙이 따라다닌다"는 반론은 구체 클래스를 하나로 만들 때만 성립한다.** 인터페이스로 공통부만 뽑으면 사라진다.
+
+```csharp
+public interface IDataScope
+{
+    DataSet<T> Set<T>() where T : ModelBase, new();
+}
+
+public sealed class UserScope   : IDataScope { public int ShardId; public ulong PlayerId; }
+public sealed class AuthScope   : IDataScope { public ulong AccountId; }
+public sealed class CenterScope : IDataScope { }
+```
+공통은 `Set<T>()` 하나 — `DataSet<T>` 코드가 재사용되는 지점 — 이고, 각 스코프는 **자기 키만** 들고 있으므로 `AuthScope`에 `PlayerId` 같은 것이 생기지 않는다. `GameDb.CommitAsync`가 `IReadOnlyList<IDataScope>`를 순회하면 **dirty flush에는 셋 다 참여**한다(3.8의 요구).
+
+**(4) 갱신된 결론**
+
+- **Center** — 소유자 축이 실제로 없다(Schedule은 전체 조회). 스코프가 아니라 DB 선택이 맞다.
+- **Auth** — `AuthScope(accountId)`는 말이 된다. 다만 **(a)를 위한 스코프 밖 진입점이 따로 필요하다.**
+- **`DataScope`라는 균일한 구체 타입은 여전히 만들지 않는다.** 공유는 인터페이스 + `DataSet<T>`로 충분하다.
+
+**(5) S1은 손대지 않는다.** `ScopeKey`를 Auth에도 붙이는 것은 생성기 규칙 한 줄과 재생성이면 되지만, **`ScopeKey`는 선언이 아니라 동작을 만든다** — 자동 `WHERE`, 쓰기 시 소유자 검증, 캐시 버킷. Auth에 붙이는 순간 (a)의 조회들과 충돌한다(기기 키 조회에 `WHERE AccountId`가 붙으면 0행이 된다). **선언보다 동작이 먼저 정해져야 한다.**
+
+**판단 시점은 S2가 아니라 S4다.** S4 파일럿이 바로 **Channel/Device/Account**이고, (a)/(b) 두 부류를 `DataSet<T>`로 실제로 다시 써보는 스텝이다. 거기서 (a)를 어디로 보낼지가 정해지면 Auth에 `ScopeKey`를 붙일지도 함께 답이 나온다. S2에서는 `IDataScope` 인터페이스 형태까지만 정하고 `AuthScope`의 키 유무는 열어 둔다.
 
 ---
 
@@ -1156,8 +1209,8 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | **S0-4** (완료) | **커밋 경계를 유저 락 안으로 이동 (5.1)** · **락 커넥션 분리 (5.2 선결)** — §4.2 |
 | **S1** (완료) | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · **ScopeKey는 User 폴더 한정, `fk` 토큰에서 생성** · 가드 4종 · `AssertMatches` 철회, 검사를 `Init` 안으로 (§S1-D) · 5.8은 해소 |
 | **S12** | RaidServer의 등록 표면이 2 → 19로 넓어진 것을 되돌릴지 판단 (§S1-F) |
-| **S2** | **`DataSet<T>`가 캐시 정책 5종을 수용하는 형태 확정 (5.4 이월)** · **Auth/Center를 스코프로 볼지 판단 (S1 이월)** · `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
-| **S4** | `ECachePolicy.None` 경로 실증 (Account/Channel/Device는 원래 캐시 없음) |
+| **S2** | **`DataSet<T>`가 캐시 정책 5종을 수용하는 형태 확정 (5.4 이월)** · **`IDataScope` 인터페이스 형태까지만 확정, `AuthScope`의 키 유무는 S4로 열어 둠 (§S1-G)** · `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
+| **S4** | `ECachePolicy.None` 경로 실증 (Account/Channel/Device는 원래 캐시 없음) · **Auth의 스코프 밖 조회(기기 키·채널 키·세션 키·계정 생성)를 어디로 보낼지 확정 → `AuthScope`에 `ScopeKey`를 붙일지 함께 결정 (§S1-G)** |
 | **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
 | **S8** | `GlobalList` 정책 실증 · `ScheduleView`가 `ServerTime`을 인자로 (5.10) |
 | **S9** | `scope.Raw` 자동 flush **와** `GameDb.Utility` 무flush 경로 구분 확정 (5.2) |

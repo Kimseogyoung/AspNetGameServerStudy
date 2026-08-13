@@ -251,7 +251,13 @@ public partial class AccountModel : ModelBase { }
 | `Table` **제외** | `DapperExtension.cs:31-35`가 클래스명−`Model`로 테이블명을 만들고 오버라이드 경로가 없다. 규칙 이탈 모델 현재 0개 → 지금 넣으면 추측 |
 | `Cache`/`SlidingTtl` **제외, TODO 주석만** | 3.9의 정책 열거가 아직 닫히지 않았다(아래 5종 표의 `SessionComponent` 행이 2플래그로 표현되지 않는다). 틀린 enum을 모델 20개에 먼저 박는 비용 > 나중에 필드 하나 붙이는 비용. **S2에서 `DataSet<T>` 형태가 코드로 확정된 뒤 올린다** |
 
-> **S2로 이월된 열린 질문**: 소유자가 User에만 있다면 `GameDb.Auth()` / `GameDb.Center()`는 스코프가 아니라 **DB 선택**이다. 셋을 `DataScope`라는 균일한 추상으로 묶는 것이 맞는지 S2에서 판단한다. S1은 어느 결론에도 영향받지 않는다.
+> **이월된 열린 질문 (2026-08-14 재정리 — 상세는 StepByStep §S1-G)**: 한때 "소유자가 User에만 있으므로 `GameDb.Auth()`/`Center()`는 스코프가 아니라 DB 선택"이라 적었으나 **전제가 부정확했다.** Auth의 데이터 모델에는 소유자 축이 있다 — `Account.Id`가 루트이고 `Channel`/`Device`/`Session`/`PlayerMap`이 전부 `AccountId`를 갖는, User와 **같은 모양**이다. 소유자가 없는 것은 Center뿐이다.
+>
+> 진짜 비대칭은 **Auth가 신원을 알아내는 계층**이라는 것이다. 기기 키·채널 키·세션 키 조회와 계정 생성은 `AccountId`를 *모르는 상태*에서 일어나므로, `GameDb.Auth(accountId)` 하나로는 로그인 첫 쿼리를 보낼 곳이 없다. User 스코프에는 이런 단계가 없다.
+>
+> "균일하게 묶으면 빈 규칙이 따라다닌다"는 반론은 **구체 클래스를 하나로 만들 때만** 성립한다. `IDataScope { DataSet<T> Set<T>(); }` 인터페이스로 공통부만 뽑으면 각 스코프가 자기 키만 들고(`UserScope`: ShardId+PlayerId, `AuthScope`: AccountId, `CenterScope`: 없음) dirty flush에는 셋 다 참여한다.
+>
+> **판단은 S4(Channel/Device/Account 파일럿)에서 한다.** `ScopeKey`는 선언이 아니라 동작(자동 `WHERE`·쓰기 검증·캐시 버킷)을 만들기 때문에, 스코프 밖 조회를 어디로 보낼지 정해지기 전에 Auth에 붙이면 안 된다. S1은 어느 결론에도 영향받지 않는다.
 
 실행 절차·체크리스트는 `DbLayer_A_StepByStep.md` §S1-A/B/C 참조.
 
