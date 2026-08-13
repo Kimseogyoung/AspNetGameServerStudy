@@ -189,9 +189,15 @@ _authRepo.RpcContext.SetShardId(mgrAccount.Model.ShardId);
 
 ### S1 — `[Entity]` + `EntityRegistry` (병존 검증)
 
-> **착수 준비 완료 (2026-08-12).** 아래 "실행 체크리스트"부터 그대로 진행하면 된다. 미결정 사항 없음.
+> **실행 완료 (2026-08-14).** 선결 3건 `e07b98b`, PlacedKingdomItem 정리 `7c9837a`, 본체 `111389d`.
+> 아래 체크리스트는 **실행 결과와 계획이 어긋난 곳**을 그대로 남겨 둔다. 계획대로 된 것보다 어긋난 쪽이 다음 스텝에 쓸모가 있다.
 
-**건드리는 파일**: `ClassGenerator`(생성 로직 + `ModelTemplate.txt`), `Data/Csv/Model/Auth/Session.csv`(2셀), `ClassGenerator/Properties/launchSettings.json`(경로 1개), `Model/*.generated.cs` 20개(재생성 결과), `EntityRegistry.cs`(신규), `StartUp.Resource.cs`(검증 2줄)
+**실제로 건드린 파일**: `ModelGenerator.cs`(렌더링 + 가드), `EntityAttribute.cs`(신규), `EntityRegistry.cs`(신규), `ModelRegistration.cs`(충돌 검사), `Model/*.generated.cs` 19개(재생성), `Server`/`RaidServer`의 `StartUp.Resource.cs`(각 1줄)
+
+**계획과 달랐던 것**
+- `ModelTemplate.txt`는 **건드리지 않았다.** `EntityAttribute`를 `ModelBase`와 같은 `ServerCore.Model`에 두니 템플릿의 기존 `using`으로 해결됐다.
+- 모델은 20개가 아니라 **19개**다. `PlacedKingdomItemModel`은 S1 전에 제거됐다(아래 "예상 걸림돌" 항목).
+- `StartUp`은 2줄이 아니라 **각 1줄**이다. `AssertMatches`가 철회됐다(§S1-D).
 
 ```csharp
 // Before — StartUp.Resource.cs 에만 존재. 모델 파일에는 PK 정보가 없다.
@@ -210,18 +216,24 @@ public partial class PlayerModel : ModelBase { }
 
 #### S1-A 실행 체크리스트
 
-| # | 작업 | 비고 |
+| # | 작업 | 결과 |
 |---|---|---|
-| 1 | `launchSettings.json`의 `ModelGenerater` → `--mdlOutputPath`를 `..\Server\Model` → **`..\DbModel\Model`** 로 수정 | 9d0cf53 프로젝트 분리 이후 stale. **생성기를 돌리기 전 필수** |
-| 2 | `Data/Csv/Model/Auth/Session.csv` 2셀 수정 (아래 §S1-C) | CSV만 실제 DB와 어긋나 있다 |
-| 3 | 생성기를 **먼저 한 번 그대로 돌려** diff가 비어 있는지 확인 | 비어 있지 않으면 생성 파일이 CSV에서 드리프트한 것이다. **S1 이전에 알아야 한다** |
-| 4 | `ModelGenerator`에 `[Entity]` 렌더링 추가 (`{{ClassAttribute}}` 슬롯, §S1-B 규칙) + `AMBIGUOUS_SCOPE_KEY` 가드 | `ModelTemplate.txt:7`에 슬롯이 이미 있고 `ModelGenerator.cs:225`가 `""`를 넣고 있다 |
-| 5 | 재생성 → diff가 **attribute 추가만**인지 확인 | |
-| 6 | `EntityRegistry.ScanAndRegister` — `DapperExtension.Init` + `InMemoryPkRegistry.Init` **양쪽** 등록 (5.8) | 후자 누락 시 InMemory = `ServerTest` 전멸 |
-| 7 | `StartUp.Resource.cs`에 `ScanAndRegister` + `AssertMatches` 2줄 추가, 기존 19줄 **존치** | |
-| 8 | `Server` + `RaidServer` 양쪽 부팅 + `ServerTest` 전체 통과 | 동작 변화 0이어야 한다 |
+| 1 | `launchSettings.json`의 `--mdlOutputPath`를 `..\Server\Model` → **`..\DbModel\Model`** | ✅ 실제로 stale이었다. 모르고 돌려서 `Code/Server/Model`에 19개가 생겼다 |
+| 2 | `Data/Csv/Model/Auth/Session.csv` 2셀 수정 (§S1-C) | ✅ 다만 **판단 근거가 틀렸다**(§S1-E) |
+| 3 | 생성기를 먼저 한 번 그대로 돌려 diff가 비어 있는지 확인 | ⚠️ **비어 있지 않았다. 이 게이트가 값을 했다** — 아래 |
+| 4 | `[Entity]` 렌더링 + 가드 | ✅ 가드가 1종 → **4종**이 됐다(§S1-B) |
+| 5 | 재생성 → diff가 attribute 추가만인지 확인 | ✅ 정확히 `19 files, 19 insertions, 19 deletions` |
+| 6 | `EntityRegistry.ScanAndRegister` — 두 레지스트리 양쪽 등록(5.8) | ✅ **위험이 이미 없었다** — `ModelRegistration.Init`이 원래 둘을 묶어 부른다. 그것을 리플렉션으로 부르면 누락이 불가능하다. §5.8은 해소된 것으로 본다 |
+| 7 | `StartUp`에 2줄 추가, 기존 목록 존치 | ✅ 단 **1줄**이다(§S1-D). `RaidServer`에도 같은 1줄을 넣었다 |
+| 8 | 양쪽 부팅 + `ServerTest` 통과 | ✅ 단 **"동작 변화 0"은 거짓이다**(§S1-F) |
 
-**예상 걸림돌**: `PlacedKingdomItemModel`은 `ProtocolType = Packet` 전용인데 `PlacedKingdomItemModel.generated.cs`는 존재하고 `StartUp.Resource.cs:56`에서 등록이 주석 처리되어 있다. `AssertMatches`가 "attribute는 있는데 등록이 없다"로 잡을 것이다. **예상된 결과이며, 스캔 대상에서 제외할지 등록을 살릴지 그때 판단한다.**
+**3번 게이트에서 실제로 걸린 것 — 이 게이트를 넣은 값을 했다.** 생성기를 그대로 돌렸을 때 diff가 두 군데 나왔다.
+- `KingdomMapPacket.generated.cs`가 되돌아갔다. `032f704`가 **생성 파일을 손으로 고쳐** 잡은 버그(빈 리스트가 `default`가 되어 클라 NRE)였고, 생성기를 돌릴 때마다 되살아나는 상태였다. 원인은 `KingdomMap.csv`의 `Value` 칸이 비어 있었던 것이고(`Player.csv`의 LIST 8개는 전부 `new()`), **입력을 고쳐** 드리프트를 끝냈다.
+- `PlacedKingdomItemModel.generated.cs`가 새 출력에 없었다 → 아래.
+
+**예상 걸림돌은 예상과 반대로 나타났다.** 문서는 "`AssertMatches`가 attribute는 있는데 등록이 없다로 잡을 것"이라고 적었으나, `GetModelFieldCnt == 0 → continue`(`ModelGenerator.cs:200`)라 **생성 자체가 안 되므로 attribute도 붙지 않는다.** 검증은 아무것도 못 잡는다.
+
+진짜 문제는 그게 아니라 **CSV에서 재생산 불가능한 파일에 코드가 의존한다**는 것이었다. 조사해 보니 `PlacedKingdomItemComponent`는 파일 전체가 주석 처리돼 있었고 `PlacedKingdomItemManager`는 생성자 호출부가 0이었다. Packet만 살아 있었다(`KingdomMapPacket`이 리스트로 보유). 그래서 **Model/Manager/Component/CSV를 지우고 Packet은 수기 파일로 전환**했다(`7c9837a`). `ProtoMember` 번호는 보존해야 한다 — 이 타입은 와이어뿐 아니라 `KingdomMapSnapshotPacket`에 담겨 `KingdomMap.Snapshot` 컬럼에 **직렬화되어 저장**된다.
 
 #### S1-B `[Entity]` 생성 규칙 (확정)
 
@@ -250,7 +262,20 @@ Auth의 AccountId 조회는 전부 **인자 기반 명시 조회**이지 ambient
 
 즉 `fk = AccountId`는 **DB 참조 무결성 선언**이지 스코프 선언이 아니다. User 폴더에서만 둘이 우연히 일치한다.
 
-**가드**: 한 모델에 `fk`가 2개 이상이면 `AMBIGUOUS_SCOPE_KEY:{className}`으로 **생성 실패**시킨다. (한 테이블이 Player를 두 번 참조하는 경우 — 현재 0건. 생기는 순간 조용히 틀린 컬럼을 고르는 대신 터진다.)
+**가드 (실행 시 1종 → 4종으로 늘었다).** 규칙이 애매한 경우는 추측하지 않고 **생성을 실패**시킨다. 조용히 틀린 컬럼을 고르면 그 값이 PK `WHERE` 절과 소유자 필터로 그대로 흘러가고, 증상은 예외 없이 "0행 매치"나 "남의 데이터 조회"로 나타나기 때문이다.
+
+| 가드 | 조건 | 현재 해당 |
+|---|---|---|
+| `MISSING_PK` | `pk` 토큰이 없다 | 0건 |
+| `MISSING_SCOPE_KEY` | User 폴더 / `Player` 아님 / `fk` 0개 | 0건 |
+| `AMBIGUOUS_SCOPE_KEY` | User 폴더 / `fk` 2개 이상 | 0건 |
+| `SCOPE_ROOT_COMPOSITE_PK` | `Player`의 PK가 복합키 | 0건 |
+
+**`MISSING_SCOPE_KEY`가 왜 필요한가 — 위 표의 `User/Player : fk 없음 → PK를 ScopeKey 로`를 그대로 구현하면 안 된다.** "fk가 없으면 PK를 쓴다"로 일반화하면, 나중에 **fk를 빠뜨린 User 모델이 자기 PK를 ScopeKey로 갖게 된다.** S2 이후 `DataSet<T>`가 그 컬럼으로 필터하면 소유자 필터가 사실상 사라진다 — 플레이어 간 데이터가 새는 방향의 실수다. 그래서 `Player`는 **이름으로 특수 처리**하고, 나머지 User 모델의 `fk` 0개는 실패다.
+
+**키 판정에서 `Packet` 전용 필드는 제외한다.** 테이블에 없는 컬럼이고, `GenerateLiquibaseChangeLog`도 같은 기준으로 컬럼을 고른다(`ModelGenerator.cs:282`).
+
+**애트리뷰트 문자열은 템플릿이 아니라 C#에서 만든다.** `ModelTemplate.txt`에 문법을 넣는 대안이 있었으나 기각했다 — 이 생성기는 이미 `[ProtoMember(n)]`(`ModelGenerator.cs:444`)과 `[ProtoContract]`(`:459`)를 C#에서 만들고 있어 규칙이 갈린다. 그리고 `ScopeKey` 유무 판단과 위 가드는 어차피 C#에 있어야 하므로(Scriban으로는 예외를 못 던진다), **값을 고르는 곳과 값이 없을 때 터뜨리는 곳을 붙여 둔다.**
 
 #### S1-C `Session.csv` 수정 — CSV만 틀렸다
 
@@ -264,15 +289,36 @@ Auth의 AccountId 조회는 전부 **인자 기반 명시 조회**이지 ambient
 
 | | Session PK | |
 |---|---|---|
-| 실제 DB — `Code/Liquibase/AuthDbChangeLog.yml` | **AccountId** (`primaryKey: true`), `Key`에는 `Session_Key_Index` | 정답 |
+| ~~실제 DB — `Code/Liquibase/AuthDbChangeLog.yml`~~ | ~~**AccountId**, `Key`에는 `Session_Key_Index`~~ | **거짓. §S1-E 참조** |
 | 런타임 — `StartUp.Resource.cs:46` | **AccountId** | 일치 |
 | `Session.csv` | `Key` | **혼자 어긋남** |
 
-`AuthDbChangeLog.yml`은 `create-account-table` / `add-account-age-column` / `add-session-index`처럼 버전이 매겨진 changeSet 이력을 가진 **손으로 쓴 적용 대상**이고, `CreateLog_*.json`은 생성기 출력물이다. 따라서 **스키마 마이그레이션도, 런타임 변경도 필요 없다.** CSV만 고치면 네 곳이 전부 정합해진다.
+`index` 토큰은 `ModelGenerator.cs:393-397`에서 `{className}_{FieldName}_Index` = **`Session_Key_Index`** 를 만든다.
 
-`index` 토큰은 `ModelGenerator.cs:393-397`에서 `{className}_{FieldName}_Index` = **`Session_Key_Index`** 를 만든다 — 실제 DB에 이미 있는 인덱스와 이름까지 같다.
+> **한때 이렇게 판단했다가 뒤집은 기록**: CSV(`Key`)를 정답으로 보고 런타임을 거기 맞추려 했으나, 그러면 `SessionManager.cs:18-28`의 **세션 키 회전이 조용히 깨진다**. 회전은 `Model.Key`를 새 값으로 바꾼 뒤 UPDATE하는데, PK가 `Key`면 `WHERE Key = <새 키>`가 되어 0행 매치가 된다. **런타임이 정답이고 CSV를 맞춘다** — 이 결론은 유효하다.
 
-> **한때 이렇게 판단했다가 뒤집은 기록**: CSV(`Key`)를 정답으로 보고 런타임을 거기 맞추려 했으나, 그러면 `SessionManager.cs:18-28`의 **세션 키 회전이 조용히 깨진다**. 회전은 `Model.Key`를 새 값으로 바꾼 뒤 UPDATE하는데, PK가 `Key`면 `WHERE Key = <새 키>`가 되어 0행 매치가 된다. 실제 DB를 확인해 보니 애초에 `AccountId`가 PK였고 런타임이 맞았다. **CSV 하나만 stale.**
+#### S1-E 위 판단의 근거가 틀렸다 — 실DB를 직접 조회해 정정 (2026-08-14)
+
+위 표의 "실제 DB = `AuthDbChangeLog.yml`" 이 **거짓이다.** 로컬 MySQL의 `DATABASECHANGELOG`를 조회하니 세 DB 모두 `FILENAME`이 **`CreateLog_*.json`**(생성물)이었다. 손으로 쓴 `*DbChangeLog.yml` 2개는 **한 번도 적용된 적이 없다.** `UpdateAuth/User/Center.bat`도 전부 json을 가리키고 있었고, yml은 README 예시에만 있었다. 두 파일은 삭제했다(`9caa468`).
+
+실제 스키마는 이랬다.
+```
+session  PRIMARY             1  Key         <- PK는 Key였다
+session  FK_Session_Account  1  AccountId   <- FK 제약이 만든 부산물
+```
+런타임은 `AccountId`를 PK로 등록하고 있었으므로 **런타임과 DB가 실제로 어긋나 있었다.** 조회 자체는 FK 인덱스를 타서 성능 사고는 아니었지만, **non-unique라 "계정당 세션 1개"를 DB가 강제하지 않았다.** 코드는 그것을 전제한다. 즉 S1-C의 수정은 "정합화"가 아니라 **코드의 전제를 DB에 반영하는 실제 스키마 변경**이었다.
+
+그리고 **마이그레이션이 필요 없다는 것도 거짓이다.** 생성 changelog는 `changeSet id = 테이블명`인 create-only 구조라, CSV를 고쳐 재생성하면 **이미 적용된 changeSet의 내용이 바뀐다.** liquibase는 저장된 MD5와 달라 거부한다. 실제로 그렇게 터졌다.
+```
+CreateLog_Auth.json::Session::seogyoung
+  was: 9:1c7ded9dbaf5f33f4c46713f142c5a8d
+  now: 9:3898fc668f846ecd257ead7cdf4750db
+```
+지킬 데이터가 없는 로컬 개발 DB뿐이므로 **drop 후 재생성**으로 반영했다(`Recreate.bat`, `9caa468`). `clearCheckSums`는 쓰면 안 된다 — 체크섬만 지우고 DB는 옛 스키마 그대로인데 liquibase는 "적용됨"으로 믿게 되어 드리프트가 영구히 안 보이게 된다.
+
+**남는 한계(S3 이후 스키마를 건드릴 때 다시 봐야 한다)**: 이 구조에는 증분 마이그레이션 수단이 없다. 보존해야 할 데이터가 있는 DB가 생기는 순간 drop-and-recreate는 쓸 수 없다. 손으로 쓰던 yml이 그 시도였으나 적용되지 않은 채 방치됐고(User 쪽은 모델 19개 중 5개 테이블에서 멈춰 있었다), 그 상태로 남아 있었기 때문에 이 세션에서 판단을 한 번 틀렸다.
+
+**교훈**: 저장소 안의 파일만 보고 "무엇이 실제로 적용된 상태인가"를 판단하지 말 것. `DATABASECHANGELOG` 한 번 조회로 끝나는 문제였다.
 
 **남는 사실(지금 조치 불필요)**: `Session_Key_Index`는 non-unique인데 `TryGetByKeyAsync`가 단건을 기대한다. 키가 GUID라 실질 충돌은 없지만 DB가 강제하지는 않는다.
 
@@ -284,19 +330,47 @@ Auth의 AccountId 조회는 전부 **인자 기반 명시 조회**이지 ambient
 
 **`Owner` → `ScopeKey` 개명(2026-08-12).** `Owner`는 "무엇의 소유자인가"가 드러나지 않는다. 이 필드의 실제 의미는 **User 스코프 안에서 행을 소유자별로 가르는 컬럼**이고, `GameDb.User(playerId)` → 그 컬럼으로 필터라는 연결이 이름에 드러나야 한다. `Pk`와 같이 "컬럼명을 담는 필드"라는 명명 규칙도 일치한다. `PartitionKey`는 기각 — 이 저장소에는 이미 AccountId 기준 물리 샤딩(`GlobalDbRepo._shardMap`)이 따로 있어 서로 다른 축이 같은 이름을 쓰게 된다.
 
+#### S1-D `AssertMatches` / `Snapshot()` 철회 — 검사를 `Init` 안으로 옮겼다
+
+계획은 이랬다.
 ```csharp
-// StartUp.Resource.cs — 기존 19줄은 그대로 두고 아래를 추가한다
 EntityRegistry.ScanAndRegister(typeof(CookieModel).Assembly);
-EntityRegistry.AssertMatches(ModelRegistration.Snapshot());   // 불일치 시 부팅 실패
+EntityRegistry.AssertMatches(ModelRegistration.Snapshot());   // 계획 — 철회됨
 ```
 
-**직후 가능해지는 것**
-- `Server`와 `RaidServer`의 등록 목록이 어긋나면 **부팅이 즉시 실패**한다. 지금은 조용히 어긋난 뒤 해당 요청에서 `NOT_FOUND_QUERY_PARAM`으로 터진다(5.5.4).
-- `PlayerModel`의 `ScopeKey`가 `Id`라는 사실이 **데이터로** 표현된다 → `PlayerComponent.LoadFromDb` override의 존재 이유가 메타데이터로 올라간다.
+**두 가지가 틀렸다.**
+1. `ModelRegistration.Snapshot()`은 **존재하지 않는 API**였다. `DapperExtension`은 읽기 경로가 전혀 없고 `InMemoryPkRegistry.GetKeyFields`는 미등록 시 예외를 던진다. 새로 만들어야 했다.
+2. 더 중요한 것 — **집합 비교는 `RaidServer` 부팅을 깨뜨린다.** RaidServer는 `Session`/`Player` **2개만** 등록한다. 스캔은 19개를 찾으므로 "19 vs 2"로 **항상** 불일치다.
 
-**아직 안 되는 것**: 아무것도 이 메타데이터를 소비하지 않는다. 동작 변화 0.
+그래서 검사를 `ModelRegistration.Init` 안으로 옮겼다.
+```csharp
+if (_registeredDict.TryGetValue(type, out var prev) && !prev.SequenceEqual(keyFields))
+    throw new InvalidOperationException($"PK_REGISTRATION_CONFLICT:{type.Name} [...] vs [...]");
+```
+- **타입 단위**라 부분 등록에 안전하다. 겹치는 것만 보고 나머지는 그냥 등록한다.
+- 같은 값 재등록은 허용한다 — `ServerTest`가 `WebApplicationFactory`를 여러 번 만든다.
+- 새 public API가 필요 없고, **S11에서 손목록이 사라져도 중복 등록 방어로 남는다.** `Snapshot()`/`AssertMatches`는 S11에 같이 버려야 하는 임시 API였다.
 
-**롤백**: `StartUp` 2줄 + `EntityRegistry.cs` 삭제, 생성기 변경 되돌린 뒤 재생성. `Session.csv`와 `launchSettings.json` 수정은 **되돌리지 않는다** — 둘 다 A안과 무관하게 stale을 고친 것이다.
+`ScanAndRegister`는 리플렉션 예외를 벗겨서 던진다. 감싼 채로 두면 부팅 로그에 `TargetInvocationException`만 보이고 `PK_REGISTRATION_CONFLICT`가 묻힌다.
+
+**최종 형태** — 각 호스트에 1줄씩:
+```csharp
+EntityRegistry.ScanAndRegister(typeof(PlayerModel).Assembly);
+```
+
+#### S1-F 실제로 가능해진 것 / 못 하게 된 것
+
+**가능해진 것**
+- `Server`와 `RaidServer`의 등록 목록이 **어긋날 수 없다.** 계획은 "어긋나면 감지"였는데 실제로는 **구조적으로 불가능**해졌다 — 양쪽이 같은 어셈블리를 스캔하기 때문이다. 감지보다 낫다.
+- 손목록과 attribute가 어긋나면 부팅이 즉시 실패한다. **네거티브 테스트로 확인함**: `CookieModel` 등록을 `("Num","PlayerId")`로 뒤집으니 부팅이 죽고 `ServerTest` 17/17이 실패했다. 메시지는 `PK_REGISTRATION_CONFLICT:CookieModel [Num, PlayerId] vs [PlayerId, Num]`. **순서까지 본다.**
+- `PlayerModel`의 `ScopeKey`가 `Id`라는 사실이 **데이터로** 표현된다.
+
+**"동작 변화 0"은 거짓이었다 — `RaidServer`의 등록 범위가 2개 → 19개가 된다.**
+지금까지는 RaidServer가 등록하지 않은 모델을 건드리면 `InMemoryPkRegistry`의 미등록 예외가 막아 주었다. **그 런타임 가드는 사라진다.** 등록 자체는 메타데이터 캐시라 기능적으로 해롭지 않고, 두 호스트 목록이 어긋날 수 없게 되는 것과 맞바꾼 것이다. 다만 "RaidServer는 Session/Player만 만진다"는 사실이 코드로 강제되지 않게 되었으므로, **S12(RaidServer 전환) 때 이 축소된 표면을 다시 세울지 판단해야 한다.**
+
+**아직 안 되는 것**: 아무것도 이 메타데이터를 소비하지 않는다.
+
+**롤백**: `StartUp` 각 1줄 + `EntityRegistry.cs` + `EntityAttribute.cs` 삭제, `ModelRegistration` 충돌 검사 제거, 생성기 변경 되돌린 뒤 재생성. `Session.csv` / `KingdomMap.csv` / `KingdomDeco.xlsx` / `launchSettings.json` 수정과 Liquibase 배치 정리는 **되돌리지 않는다** — 전부 A안과 무관하게 stale을 고친 것이다.
 
 **S2로 이월되는 열린 질문 — Auth/Center는 스코프가 아니다.**
 소유자가 User에만 있다면 `GameDb.Auth()` / `GameDb.Center()`를 "스코프"라 부르는 것 자체가 과일반화다. 그건 스코프가 아니라 **DB 선택**이다. 하나는 소유자를 갖고 둘은 안 갖는 셋을 `DataScope`라는 균일한 추상으로 묶으면 Auth/Center 쪽에는 늘 의미 없는 인자와 빈 규칙이 따라다닌다. **S2에서 `GameDb`/`Scope`/`DataSet<T>` 형태를 정할 때 판단한다.** S1은 어느 쪽으로 결론이 나도 영향받지 않는다 — "User 엔티티만 ScopeKey를 갖는다"는 두 경우 모두 참이다.
@@ -763,9 +837,11 @@ await _dbRepo.CommitAsync();   →   await _db.CommitAsync();
 ```
 
 ```csharp
-// S12 : StartUp.Resource.cs 최종 형태
-EntityRegistry.ScanAndRegister(typeof(CookieModel).Assembly);
-// ModelRegistration.Init 19줄 + AssertMatches 삭제
+// S12 : StartUp.Resource.cs 최종 형태 — S1 에서 이미 이 한 줄이 들어가 있다
+EntityRegistry.ScanAndRegister(typeof(PlayerModel).Assembly);
+// 여기서 지우는 것은 손 등록 목록뿐이다 (Server 19줄 / RaidServer 2줄).
+// ModelRegistration.Init 의 PK_REGISTRATION_CONFLICT 검사는 남긴다 — 손목록이
+// 사라진 뒤에도 중복 등록 방어로 유효하다 (§S1-D)
 // IGameContext 는 Transport 전용으로 축소 — 데이터 계층 소비처가 0이 되었으므로
 ```
 
@@ -1038,6 +1114,8 @@ public static void Init<T>(params string[] keyFields)
 
 S1의 `EntityRegistry.ScanAndRegister`는 **둘 다** 등록해야 한다. `InMemoryPkRegistry`를 빠뜨리면 InMemory 모드(= `ServerTest` 전체)가 `"미등록. Init<T>()를 먼저 호출하세요"`로 죽는다.
 
+> **해소 (S1 실행, 2026-08-14).** 위험이 처음부터 없었다. 위 코드에서 보듯 **`ModelRegistration.Init`이 이미 둘을 묶고 있으므로**, `ScanAndRegister`가 그것을 리플렉션으로 호출하면 한쪽만 등록되는 상태가 만들어질 수 없다. 두 레지스트리를 각각 부르는 구현을 택했다면 실재했을 위험이고, 그렇게 하지 않은 이유가 이것이다.
+
 ### 5.9 🟡 누락 — 데이터 계층이 `RpcContext`를 쓰는 곳이 Account 말고 더 있다
 
 §1.3에서 `AccountComponent.CreateAsync`만 언급했는데, 하나 더 있다:
@@ -1076,7 +1154,8 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | 스텝 | 추가되는 작업 |
 |---|---|
 | **S0-4** (완료) | **커밋 경계를 유저 락 안으로 이동 (5.1)** · **락 커넥션 분리 (5.2 선결)** — §4.2 |
-| **S1** | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · **ScopeKey는 User 폴더 한정, `fk` 토큰에서 생성** · `Session.csv` + `launchSettings.json` stale 수정 · 스캔이 `DapperExtension` + `InMemoryPkRegistry` 양쪽 등록 (5.8) |
+| **S1** (완료) | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · **ScopeKey는 User 폴더 한정, `fk` 토큰에서 생성** · 가드 4종 · `AssertMatches` 철회, 검사를 `Init` 안으로 (§S1-D) · 5.8은 해소 |
+| **S12** | RaidServer의 등록 표면이 2 → 19로 넓어진 것을 되돌릴지 판단 (§S1-F) |
 | **S2** | **`DataSet<T>`가 캐시 정책 5종을 수용하는 형태 확정 (5.4 이월)** · **Auth/Center를 스코프로 볼지 판단 (S1 이월)** · `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
 | **S4** | `ECachePolicy.None` 경로 실증 (Account/Channel/Device는 원래 캐시 없음) |
 | **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
