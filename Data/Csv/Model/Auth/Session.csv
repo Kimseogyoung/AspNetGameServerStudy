@@ -1,6 +1,6 @@
 ﻿Name,Type,Value,Desc,ProtocolType,Key
-Key,VARCHAR(50),,,,pk
-AccountId,BIGINT UNSIGNED,,,Model,fk
+Key,VARCHAR(50),,,,index
+AccountId,BIGINT UNSIGNED,,,Model,"pk, fk"
 PlayerId,BIGINT UNSIGNED,,,Model,
 ShardId,INT,,,,
 DeviceKey,VARCHAR(50),,,,

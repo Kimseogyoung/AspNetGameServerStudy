@@ -578,8 +578,21 @@
           },
           {
             "addPrimaryKey": {
-              "columnNames": "Key",
+              "columnNames": "AccountId",
               "tableName": "Session"
+            }
+          },
+          {
+            "createIndex": {
+              "indexName": "Session_Key_Index",
+              "tableName": "Session",
+              "columns": [
+                {
+                  "column": {
+                    "name": "Key"
+                  }
+                }
+              ]
             }
           },
           {

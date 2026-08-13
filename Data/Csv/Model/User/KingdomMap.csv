@@ -4,5 +4,5 @@ SizeX,INT,,,,
 SizeY,INT,,,,
 Snapshot,TEXT,,,Model,
 State,ENUM:EKingdomTileMapState,,,,
-PlacedKingdomItemList,LIST:PlacedKingdomItemPacket,,,Packet,
+PlacedKingdomItemList,LIST:PlacedKingdomItemPacket,new(),,Packet,
 

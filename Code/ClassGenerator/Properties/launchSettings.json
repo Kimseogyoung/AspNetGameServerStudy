@@ -10,7 +10,7 @@
     },
     "ModelGenerater": {
       "commandName": "Project",
-      "commandLineArgs": "--type \"Model\" --xlsxPath \"..\\..\\Data\\Excel\\Model\" --csvPath \"..\\..\\Data\\Csv\\Model\" --mdlOutputPath \"..\\Server\\Model\" --pakOutputPath \"..\\Protocol\\Packet\\Model\" --liquibaseOutputPath \"..\\Liquibase\""
+      "commandLineArgs": "--type \"Model\" --xlsxPath \"..\\..\\Data\\Excel\\Model\" --csvPath \"..\\..\\Data\\Csv\\Model\" --mdlOutputPath \"..\\DbModel\\Model\" --pakOutputPath \"..\\Protocol\\Packet\\Model\" --liquibaseOutputPath \"..\\Liquibase\""
     },
     "ProtoGenerater": {
       "commandName": "Project",
