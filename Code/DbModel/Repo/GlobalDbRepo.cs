@@ -1,6 +1,7 @@
 using ServerCore.Repo.Database;
 using ServerCore;
 using WebStudyServer.Repo;
+using WebStudyServer.Data;
 using ServerCore.Repo.Cache;
 using System.Data;
 using DbType = ServerCore.DbType;
@@ -36,7 +37,7 @@ namespace Server.Repo
                 return;
             }
 
-            var connStr = GetUserDbConnectionStr(_rpcContext.ShardId);
+            var connStr = DbConnectionResolver.User(_rpcContext.ShardId);
             var repository = CreateRepository(connStr);
             var userRepo = new UserRepo(_rpcContext, repository);
             OwnUser = userRepo;
@@ -44,16 +45,14 @@ namespace Server.Repo
 
         private AuthRepo BeginAuthRepo()
         {
-            var connStr = Config<CoreConfig>.Get().AuthDbConnectionStrList.Count > 0 ? Config<CoreConfig>.Get().AuthDbConnectionStrList[0] : InMemoryConnectionKey;
-            var repository = CreateRepository(connStr);
+            var repository = CreateRepository(DbConnectionResolver.Auth());
             var authRepo = new AuthRepo(_rpcContext, repository);
             return authRepo;
         }
 
         private CenterRepo BeginCenterRepo()
         {
-            var connStr = Config<CoreConfig>.Get().CenterDbConnectionStrList.Count > 0 ? Config<CoreConfig>.Get().CenterDbConnectionStrList[0] : InMemoryConnectionKey;
-            var repository = CreateRepository(connStr);
+            var repository = CreateRepository(DbConnectionResolver.Center());
             var centerRepo = new CenterRepo(_rpcContext, repository);
             return centerRepo;
         }
@@ -130,30 +129,6 @@ namespace Server.Repo
             }
         }
 
-        private string GetUserDbConnectionStr(int shardId)
-        {
-            var connList = Config<CoreConfig>.Get().UserDbConnectionStrList;
-            if (connList.Count == 0)
-            {
-                return InMemoryConnectionKey;
-            }
-
-            if (MaxShardCount <= shardId)
-            {
-                throw new ArgumentOutOfRangeException(nameof(shardId),
-                    $"ShardId({shardId})가 최대값({MaxShardCount})을 초과합니다.");
-            }
-
-            var shardIdx = _shardMap[shardId];
-            if (shardIdx >= connList.Count)
-            {
-                shardIdx %= connList.Count;
-            }
-
-            return connList[shardIdx];
-        }
-
-
         private IRepository CreateRepository(string dbConnectionString)
         {
             var dbSession = _dbSessionManager.Open(dbConnectionString);
@@ -179,19 +154,6 @@ namespace Server.Repo
             // 아무 처리 없이 Close
             Close();
         }
-
-        // InMemory 모드에서 모든 Repo가 단일 세션을 공유하도록 동일한 키를 사용한다.
-        private const string InMemoryConnectionKey = "__inmemory__";
-        private const int MaxShardCount = 64;
-
-        private readonly int[] _shardMap =
-        [   0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
-            0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
-            0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
-            0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
-            0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
-            0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
-            0, 1, 2, 4 ];
 
         private Lazy<AuthRepo>? _lazyAuthRepo;
         private Lazy<CenterRepo>? _lazyCenterRepo;

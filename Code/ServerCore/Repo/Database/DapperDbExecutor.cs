@@ -32,6 +32,11 @@ namespace ServerCore.Repo.Database
             return _conn.SelectListByConditionsAsync<T>(conditions, _tx);
         }
 
+        public Task<IEnumerable<T>> SelectListByColumnAsync<T>(string column, object value) where T : class
+        {
+            return _conn.SelectListByColumnAsync<T>(column, value, _tx);
+        }
+
         public Task<T> InsertAsync<T>(T entity) where T : class
         {
             return _conn.InsertAsync<T>(entity, _tx);

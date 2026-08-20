@@ -2,6 +2,7 @@ using Server.Repo;
 using Server.Service;
 using ServerCore;
 using ServerCore.Extension;
+using WebStudyServer.Data;
 using WebStudyServer.Model;
 using ServerCore.Repo.Cache;
 using ServerCore.Repo.Database;
@@ -37,6 +38,7 @@ namespace WebStudyServer
 
             services.AddScoped<DbSessionManager>();
             services.AddScoped<GlobalDbRepo>();
+            services.AddScoped<GameDb>();
             services.AddScoped<ResponseCacheService>();
 
             // Auth
@@ -68,6 +70,9 @@ namespace WebStudyServer
             // (ModelRegistration.Init 의 PK_REGISTRATION_CONFLICT). 위 목록은 검증이
             // 끝나면 제거한다.
             EntityRegistry.ScanAndRegister(typeof(PlayerModel).Assembly);
+
+            // 손으로 유지하는 캐시 태그 맵을 [Entity] 와 대조한다.
+            EntityMeta.VerifyCacheTags();
 
             if (Config<CoreConfig>.Get().DbType != DbType.InMemory)
             {

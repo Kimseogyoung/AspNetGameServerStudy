@@ -31,7 +31,7 @@ DbModel/
 
 ```
 DbModel/
-  Data/         6   GameDb, Scope, DataSet<T>, EntityRegistry, EntityAttribute, RawQuery
+  Data/         6   GameDb, Scope, OwnedSet<T>, EntityRegistry, EntityAttribute, RawQuery
     Queries/    ~5  T1 확장 메서드 — 특수 필터가 있는 엔티티만
   Domain/      ~16  CookieModel.Logic.cs 등 partial — 로직 있는 엔티티만
                     + RewardHelper.cs, ChangeSet.cs   ← ChangeSet은 서버 런타임 전용 (§3.5)
@@ -44,7 +44,7 @@ DbModel/
 
 | | Before | After |
 |---|---|---|
-| 데이터 접근 클래스 종류 | 4종 (Repo / ComponentBase / Component / Manager) | **2종** (DataSet\<T\> / Model partial) |
+| 데이터 접근 클래스 종류 | 4종 (Repo / ComponentBase / Component / Manager) | **1~3종** (OwnedSet<T> + 로드 단위가 다른 소수 / Model partial) — §S2-D |
 | 엔티티별 CRUD 클래스 | **18개** | **0개** (제네릭 1개) |
 | 엔티티별 로직 클래스 | 17개 (빈 것 포함) | ~15개 (로직 있는 것만) |
 | 계열별 베이스 클래스 | 3종 (User/Auth/Center) | **0개** (메타데이터로 통일) |
@@ -98,9 +98,9 @@ public async Task<CookieEnhanceLvResponsePacket> EnhanceCookieLvAsync(
     var cfgLvCost = 10;
 
     // ── 1) 로드 : 무엇을 읽는지 전부 드러난다
-    var cookie = await user.Set<CookieModel>().TouchAsync(req.CookieNum);
-    var detail = await user.Set<PlayerDetailModel>().GetOneAsync();
-    var point  = await user.Set<PointModel>().TouchAsync((int)EObjType.POINT_COOKIE_LV);
+    var cookie = await user.Owned<CookieModel>().TouchAsync(req.CookieNum);
+    var detail = await user.Owned<PlayerDetailModel>().GetOneAsync();
+    var point  = await user.Owned<PointModel>().TouchAsync((int)EObjType.POINT_COOKIE_LV);
 
     // ── 2) 순수 계산 : 여기서 DB 접근이 일어나지 않는다
     var deltaLv = req.AftLv - req.BefLv;
@@ -134,8 +134,7 @@ public async Task<CookieEnhanceLvResponsePacket> EnhanceCookieLvAsync(
 | 로직 테스트 | DI + DB 필요 | `cookie.EnhanceLv(1, 5)` 한 줄 |
 
 > **저장 코드가 왜 없나 — §3.8 (c) dirty 플래그.**
-> `cookie.EnhanceLv(...)` 내부의 `MarkDirty()`가 `IsDirty = true`를 세우고, `GameDb.CommitAsync`가 스코프의 dirty 엔티티를 순회하며 기존 `IRepository.UpdateAsync`(DB 쓰기 + 캐시 갱신)로 쓴다. App Service가 저장을 기억할 필요가 없다.
-> `MarkDirty()`는 자기 필드를 세우는 것뿐이므로 **Model에 DB 참조가 없다는 원칙(§0.6)은 유지**된다.
+> **주의 (2026-08-20)**: 이 예제의 `MarkDirty()` 는 §S2-H 에서 **철회된 모델**이다. 현재 형태는 `await user.Owned<CookieModel>().UpdateAsync(cookie);` 처럼 명시적 즉시 저장이다. 아래 S5 이후 예제도 같다 — S5~S13 은 §S2-I 대로 "가설"로 읽는다.
 
 `RewardHelper.Pay`가 `PointModel`을 인자로 받는 이유는 §3.6의 `Func<int, PointModel>` 지연 로드를 쓰지 않기 위해서다. 가차처럼 **보상 종류가 런타임에 정해지는 경우**는 4단으로 푼다:
 
@@ -273,7 +272,7 @@ Auth의 AccountId 조회는 전부 **인자 기반 명시 조회**이지 ambient
 | `AMBIGUOUS_SCOPE_KEY` | User 폴더 / `fk` 2개 이상 | 0건 |
 | `SCOPE_ROOT_COMPOSITE_PK` | `Player`의 PK가 복합키 | 0건 |
 
-**`MISSING_SCOPE_KEY`가 왜 필요한가 — 위 표의 `User/Player : fk 없음 → PK를 ScopeKey 로`를 그대로 구현하면 안 된다.** "fk가 없으면 PK를 쓴다"로 일반화하면, 나중에 **fk를 빠뜨린 User 모델이 자기 PK를 ScopeKey로 갖게 된다.** S2 이후 `DataSet<T>`가 그 컬럼으로 필터하면 소유자 필터가 사실상 사라진다 — 플레이어 간 데이터가 새는 방향의 실수다. 그래서 `Player`는 **이름으로 특수 처리**하고, 나머지 User 모델의 `fk` 0개는 실패다.
+**`MISSING_SCOPE_KEY`가 왜 필요한가 — 위 표의 `User/Player : fk 없음 → PK를 ScopeKey 로`를 그대로 구현하면 안 된다.** "fk가 없으면 PK를 쓴다"로 일반화하면, 나중에 **fk를 빠뜨린 User 모델이 자기 PK를 ScopeKey로 갖게 된다.** S2 이후 `OwnedSet<T>`가 그 컬럼으로 필터하면 소유자 필터가 사실상 사라진다 — 플레이어 간 데이터가 새는 방향의 실수다. 그래서 `Player`는 **이름으로 특수 처리**하고, 나머지 User 모델의 `fk` 0개는 실패다.
 
 **키 판정에서 `Packet` 전용 필드는 제외한다.** 테이블에 없는 컬럼이고, `GenerateLiquibaseChangeLog`도 같은 기준으로 컬럼을 고른다(`ModelGenerator.cs:282`).
 
@@ -328,7 +327,7 @@ CreateLog_Auth.json::Session::seogyoung
 
 **`Table`을 넣지 않는다.** `DapperExtension.cs:31-35`가 클래스명에서 `Model`을 떼어 테이블명을 만들고 **오버라이드 경로가 존재하지 않는다.** 규칙을 벗어나는 모델이 현재 0개이므로 지금 넣으면 순수 추측이다. 벗어나는 모델이 생기면 그때 추가한다(R7).
 
-**`Cache`/`SlidingTtl`도 S1에는 넣지 않는다 — TODO 주석으로만 남긴다.** 5.4가 "나중에 넣으면 20개를 두 번 손댄다"고 적었으나 **그 논거는 약하다**: attribute 20줄에 필드 하나 추가하는 것은 기계적 편집인 반면, 일반화가 맞지 않는 enum을 20개 모델에 먼저 박는 비용이 훨씬 크다. 5.4에서 살아남는 것은 **발견 자체**(정책이 실제로 5종이고 `DataSet<T>`가 1종만 전제한다 / sliding TTL이 설계에 없었다)이며, 그것은 **S2에서 `DataSet<T>`를 설계할 때의 제약**으로 이월한다.
+**`Cache`/`SlidingTtl`도 S1에는 넣지 않는다 — TODO 주석으로만 남긴다.** 5.4가 "나중에 넣으면 20개를 두 번 손댄다"고 적었으나 **그 논거는 약하다**: attribute 20줄에 필드 하나 추가하는 것은 기계적 편집인 반면, 일반화가 맞지 않는 enum을 20개 모델에 먼저 박는 비용이 훨씬 크다. 5.4에서 살아남는 것은 **발견 자체**(정책이 실제로 5종이고 `OwnedSet<T>`가 1종만 전제한다 / sliding TTL이 설계에 없었다)이며, 그것은 **S2에서 `OwnedSet<T>`를 설계할 때의 제약**으로 이월한다.
 
 **`Owner` → `ScopeKey` 개명(2026-08-12).** `Owner`는 "무엇의 소유자인가"가 드러나지 않는다. 이 필드의 실제 의미는 **User 스코프 안에서 행을 소유자별로 가르는 컬럼**이고, `GameDb.User(playerId)` → 그 컬럼으로 필터라는 연결이 이름에 드러나야 한다. `Pk`와 같이 "컬럼명을 담는 필드"라는 명명 규칙도 일치한다. `PartitionKey`는 기각 — 이 저장소에는 이미 AccountId 기준 물리 샤딩(`GlobalDbRepo._shardMap`)이 따로 있어 서로 다른 축이 같은 이름을 쓰게 된다.
 
@@ -441,13 +440,13 @@ RpcCtx.PlayerId 를 암묵적으로 읽음       playerId 를 인자로 받음
 **(5) `IDataScope` 인터페이스는 지금 만들지 않는다.**
 앞서 "공유는 인터페이스로"라고 적었으나, 그 전에 물었어야 할 것은 **"지금 공통 인터페이스가 필요한가"** 였다. 근거로 든 것은 "`GameDb.CommitAsync`가 스코프를 순회해야 한다"였는데, **`GameDb`가 dirty 엔티티를 직접 들고 있으면 그 요구가 사라진다.** 스코프는 조회 진입점이고 dirty 목록은 UoW 소유라고 보면 된다.
 
-그러므로 `UserScope`/`AuthScope`/`CenterScope`는 각자 자기 키만 갖는 **독립 클래스**로 시작한다(`AuthScope`에 `PlayerId` 같은 것이 생기지 않는다는 목적은 이것으로 이미 달성된다). 공유되는 것은 `DataSet<T>` 하나다. **S2에서 실제로 공통 처리가 필요해지면 그때 인터페이스를 뽑는다**(R7).
+그러므로 `UserScope`/`AuthScope`/`CenterScope`는 각자 자기 키만 갖는 **독립 클래스**로 시작한다(`AuthScope`에 `PlayerId` 같은 것이 생기지 않는다는 목적은 이것으로 이미 달성된다). 공유되는 것은 `OwnedSet<T>` 하나다. **S2에서 실제로 공통 처리가 필요해지면 그때 인터페이스를 뽑는다**(R7).
 
-**(6) S1은 손대지 않는다 — Q2를 S4로 미루는 이유.** `ScopeKey`를 Auth에 붙이는 것은 생성기 규칙 한 줄과 재생성이면 되지만, **`ScopeKey`는 선언이 아니라 동작을 만든다** — 자동 `WHERE`, 쓰기 시 소유자 검증, 캐시 버킷. 붙이는 순간 (a)의 조회들과 충돌한다(기기 키 조회에 `WHERE AccountId`가 붙으면 0행이 된다). Q1이 정해졌어도 **어떤 조회가 스코프 안이고 어떤 것이 밖인지는 실제로 옮겨 봐야** 안다. S4 파일럿이 바로 **Channel/Device/Account**이고 (a)/(b) 두 부류를 `DataSet<T>`로 다시 써보는 스텝이다.
+**(6) S1은 손대지 않는다 — Q2를 S4로 미루는 이유.** `ScopeKey`를 Auth에 붙이는 것은 생성기 규칙 한 줄과 재생성이면 되지만, **`ScopeKey`는 선언이 아니라 동작을 만든다** — 자동 `WHERE`, 쓰기 시 소유자 검증, 캐시 버킷. 붙이는 순간 (a)의 조회들과 충돌한다(기기 키 조회에 `WHERE AccountId`가 붙으면 0행이 된다). Q1이 정해졌어도 **어떤 조회가 스코프 안이고 어떤 것이 밖인지는 실제로 옮겨 봐야** 안다. S4 파일럿이 바로 **Channel/Device/Account**이고 (a)/(b) 두 부류를 `OwnedSet<T>`로 다시 써보는 스텝이다.
 
 ---
 
-### S2 — `GameDb` / `Scope` / `DataSet<T>` 신설 (미사용)
+### S2 — `GameDb` / `Scope` / `OwnedSet<T>` 신설 (미사용)
 
 **건드리는 파일**: `Data/*`(신규 5), `StartUp.Resource.cs`(DI 1줄)
 
@@ -462,25 +461,18 @@ public class GameDb
 {
     // GlobalDbRepo 와 동일한 DbSessionManager 인스턴스를 받으므로
     // connectionString 이 같으면 같은 IDbSession = 같은 트랜잭션 (§7.1-①)
-    public GameDb(DbSessionManager sessions, ICacheSession cache, ILogger<GameDb> logger) { ... }
+    public GameDb(DbSessionManager sessions, ICacheSession cache) { ... }   // ILogger 는 쓸 곳이 없어 뺐다
 
     public UserScope   User(int shardId, ulong playerId);
-    public AuthScope   Auth();
+    public AuthScope   Auth(ulong accountId);   // Q1 확정 - 인자를 받는다 (§S1-G)
     public CenterScope Center();
 
-    // 이관 기간에는 tx commit 을 하지 않는다 — GlobalDbRepo.CommitAsync 가 단일 커밋 주체 (§7.1-②).
-    // 단 dirty flush 는 이 시점에 이미 필요하므로, GlobalDbRepo.CommitAsync 가
-    // tx commit 직전에 GameDb.FlushDirtyAsync() 를 먼저 호출하도록 한 줄 연결한다.
-    internal async Task FlushDirtyAsync()
-    {
-        foreach (var scope in _scopes)
-            foreach (var set in scope.LoadedSets)
-                await set.FlushDirtyAsync();     // 기존 IRepository.UpdateAsync 재사용
-    }
+    // 이관 기간에는 tx 를 건드리지 않는다 — GlobalDbRepo.CommitAsync 가 단일 커밋 주체 (§7.1-②).
+    // dirty flush 는 없다. 쓰기는 즉시 반영이며 GlobalDbRepo 와의 연결선도 없다 (§S2-H).
 }
 ```
 
-`ModelBase`에 `IsDirty`/`MarkDirty()`/`ClearDirty()`를 추가하는 것이 이 스텝의 선행 작업이다(§3.8).
+**dirty 모델은 이 스텝에서 구현했다가 같은 세션에 철회했다. §S2-H 를 먼저 읽을 것.** `ModelBase` 는 손대지 않으며, 커밋 경로는 S2 이전과 동일한 두 줄로 남는다.
 
 **직후 가능해지는 것**: 없음. 컴파일만 된다.
 
@@ -490,9 +482,331 @@ public class GameDb
 
 ---
 
+#### S2-A 실행 결과 (2026-08-19~20, branch `db-refactor`)
+
+| | 계획 | 결과 |
+|---|---|---|
+| 1 | `GameDb` / 스코프 3 / `OwnedSet<T>` 신설 | ✅ `Code/DbModel/Data/` 6파일 |
+| 2 | `ModelBase`에 dirty 3종 | ⛔ **구현했다가 철회** (§S2-H). 충돌은 §S2-C ① |
+| 3 | DI 1줄 + `GlobalDbRepo.CommitAsync` 연결 | ✅ DI 만. 커밋 연결은 철회로 불필요해짐 (§S2-H) |
+| 4 | 커넥션 지연 오픈 (5.11) | ✅ `OwnedSet` 첫 조회에서 연다 |
+| 5 | `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) | ⛔ 철회. `UpdateAsync` 가 찍는다 — 오늘과 동일 |
+| 6 | 캐시 2종만 안다 (5.4.1) | ⚠ 실제로는 **1종**이다 — `ScopeKey`+`CacheTag` 둘 다 요구하며 "캐시 없음"은 `OwnedSet` 밖이다 (§S2-J) |
+| 7 | `GameDb.Utility` (5.2) | ⏸ **S10.5로 미룸** — 소비자가 거기뿐이라 지금 만들면 미사용 멤버 |
+| 8 | lazy BEGIN 판단 (5.2) | ⏸ **S11로 미룸** — S2 코드는 아무도 안 써서 실증 불가 |
+| 9 | — | ➕ 엔진에 `SelectListByColumnAsync` 추가 (§S2-C ③) |
+| 10 | — | ➕ `DbConnectionResolver` 추출 — 샤드 맵 2벌 방지 |
+
+**검증**: 빌드 0에러/신규경고 0, `ServerTest` 17/17, 생성 SQL 직접 확인(§S2-C ①).
+**검증 한계**: `SelectListByColumnAsync`의 MySQL 경로는 호출자가 없어 미검증. `GlobalDbRepo` 변경은 InMemory로만 지나갔다.
+
+#### S2-B 이 문서의 S2 코드가 두 군데 낡아 있었다 — 정정
+
+`f7f5607`이 §S1-G 서술만 고치고 코드 블록을 안 고쳤다. 위 블록은 정정된 것이고, 무엇이 틀렸었는지 남긴다.
+
+| 틀렸던 것 | 왜 |
+|---|---|
+| `public AuthScope Auth();` | Q1이 "`AuthScope(accountId)`는 존재한다"로 닫혔는데 시그니처가 인자 없는 채였다 |
+| `foreach (var scope in _scopes) foreach (var set in scope.LoadedSets)` | **`IDataScope`를 철회한 근거가 바로 이 순회였다.** "GameDb가 dirty를 직접 들면 순회 요구가 사라진다"고 적어놓고 코드는 순회하고 있었다 |
+
+두 번째가 실행에서 확인됐다. 체인이 하나로 닫힌다:
+
+```
+0.6  모델은 DB 참조를 갖지 않는다
+ ->  MarkDirty() 는 bool 만 세운다. 아무에게도 알릴 수 없다
+ ->  누군가 커밋 직전에 훑어야 한다
+ ->  S1-G  dirty 목록은 UoW 소유
+ ->  GameDb 가 로드된 OwnedSet 을 직접 든다. 스코프는 순회 대상이 아니다
+```
+
+`IDataScope`는 만들지 않았지만 **`IDirtyFlush`(메서드 1개)는 필요했다** — `_sets` 딕셔너리의 값이 이종이라 제네릭이 아닌 진입점이 없으면 순회가 불가능하다.
+
+> **이 절은 이제 이력이다 (§S2-H).** dirty 를 철회하면서 위 체인 전체가 사라졌다 — 훑을 것이 없으므로 `_sets` 도 `IDirtyFlush` 도 없앴다. 남겨두는 이유는, "모델이 DB 참조를 갖지 않는다"는 전제 하나가 어디까지 파급되는지가 여기 그대로 보이기 때문이다.
+
+#### S2-C 코드를 쓰면서 나온 것 4건
+
+**① 🔴 `IsDirty`를 프로퍼티로 넣으면 SQL이 깨진다.**
+
+`DapperExtension.SetQueryParameter`가 `type.GetProperties(Public|Instance)`로 INSERT/UPDATE 필드 목록을 만든다. 즉 **`ModelBase`에 public 프로퍼티를 추가하는 것은 곧 DB 컬럼 선언**이다. 그냥 넣었으면 `INSERT INTO Point (..., IsDirty)`로 MySQL에서 즉시 실패한다. 설계 문서 어디에도 없던 충돌이다.
+
+`ServerTest`는 InMemory라 이것을 잡지 못한다(InMemory는 conditions의 프로퍼티만 읽는다). 그래서 `SetQueryParameter`에서 이름으로 제외하고, 생성 SQL을 직접 뽑아 확인했다:
+
+```
+PointModel  FIELDS : PlayerId, Num, Amount, AccAmount, UpdateTime, CreateTime
+PlayerModel FIELDS : Id, AccountId, ... KingdomExp, UpdateTime, CreateTime
+```
+
+**dirty 철회로 이 변경은 되돌렸다.** 다만 **발견은 유효하다**: `ModelBase`에 public 프로퍼티를 추가하는 것은 곧 DB 컬럼 선언이며, InMemory 테스트가 그것을 잡지 못한다. 다음에 `ModelBase`를 건드릴 때 같은 함정이 기다린다.
+
+**② 🟠 인스턴스 동일성은 최적화가 아니라 dirty의 전제다.**
+
+```csharp
+// SqlRepository.GetListAsync
+if (cached.Hit) { return [.. cached.Value]; }   // 캐시 히트마다 새 List
+```
+
+Redis면 원소까지 매번 새 객체다. `MarkDirty()`를 찍은 인스턴스를 flush 때 찾을 수 없다. `InMemoryRepository`는 매번 전체 스캔이라 또 다르게 동작한다. 그래서 `OwnedSet<T>`가 로드분(`_tracked`)을 요청 내내 붙들어야 하는데, **이것이 없으면 dirty 모델 자체가 성립하지 않는다.** 설계 문서는 이 사실을 "스코프 내 캐싱"이라고만 적어 성능 최적화처럼 읽히게 두었다.
+
+**dirty 철회로 `_tracked` 도 없앴다** — 추적하지 않으면 인스턴스 동일성이 필요 없고, `OwnedSet` 은 무상태가 된다(§S2-H). 이 발견은 **dirty 가 왜 비싼지의 근거**로 남는다: 지연 쓰기를 하려면 읽기 의미까지 함께 바꿔야 한다.
+
+**③ 🟠 컬럼명 기반 조회를 엔진에 추가해야 했다.**
+
+`OwnedSet<T>`는 제네릭 하나라 `new { PlayerId = ... }` 같은 익명 타입을 만들 수 없다. 그리고 스코프 키 컬럼명이 엔티티마다 다르다 — User 13개는 `PlayerId`인데 `PlayerModel`만 `Id`라서, 지금도 `PlayerComponent`가 `LoadFromDb`를 **유일하게** override하고 있다.
+
+`Dictionary<string,object>`를 조건으로 넘기는 것은 안 된다. Dapper는 받지만 `InMemoryDbExecutor.MatchAll`이 조건 객체의 `GetProperties()`를 읽으므로 `Comparer`/`Count`/`Keys`를 조건으로 착각한다.
+
+→ `IDbExecutor.SelectListByColumnAsync<T>(string column, object value)`를 Dapper/InMemory 양쪽에 추가했다. 문서가 S3에 두었던 종류의 엔진 추가가 S2로 당겨진 것이다.
+
+**④ 🟡 `AuthScope`/`CenterScope`는 `Owned<T>()`를 갖지 않는다.**
+
+처음에는 던지는 `Owned<T>()`를 두었는데, §S2-E에서 Q2가 잠정 정리되면서 아예 없앴다. 여기서 조용히 동작하게 두면 **코드가 Q2를 먼저 정해버린다** — Auth에 스코프 키 없이 전체 테이블을 읽는 경로가 생기고 그것이 "정상 동작"으로 굳는다. S2에서 실제로 열리는 것은 `UserScope.Owned<T>()` 하나다.
+
+#### S2-D 타입을 가르는 축은 캐시도 DB도 아니라 **로드 단위**다
+
+`OwnedSet<T>`가 감당하는 것은 "한 소유자의 컬렉션" 하나이고, 그 전제는 **"소유자당 행 수가 유계이고 작다"** 이다. 이 문장이 없으면 통계성 엔티티가 `[Entity(ScopeKey=...)]`를 달고 조용히 들어온다 — 로그 2개가 지금 딱 그 직전 상태다.
+
+| | 로드 단위 | 대상 | 쓰기 | 스텝 |
+|---|---|---|---|---|
+| **A** | 소유자 전체 | Point / Cookie / Item / Kingdom / World … (11) | **지연**(dirty) | S5~S10 |
+| **B** | **안 함** (컬렉션 없음) | CashChangeLog / GachaLog (2) | 즉시 INSERT | S13 |
+| **C** | 키 하나 | Account / Channel / Device / Session / PlayerMap (5) | 즉시 | S4 |
+| **D** | 전역 전체 | Schedule (1) | 즉시 + 무효화 | S8 |
+| **E** | 전 샤드 | (Player 검색) | 없음 | S11 |
+
+**쓰기는 다섯 경우 모두 즉시다** (§S2-H 에서 dirty 를 철회했다). 로드 단위만 다르고 쓰기 규칙은 하나다 — 이것이 철회로 얻은 가장 큰 단순화다.
+
+B는 별도 동사를 두지 않는다. 로그도 INSERT이므로 `CreateAsync`이고, 다른 것은 **경로**다 — `scope.Owned<T>().CreateAsync`는 추적되는 컬렉션에 넣고, `scope.CreateAsync(entity)`는 컬렉션이 없는 엔티티용이다. 가드: 캐시 태그가 있는 엔티티를 후자로 넣으면 예외(캐시된 리스트가 어긋난다).
+
+**엔티티별 클래스는 어느 경우에도 생기지 않는다.** 최악이 제네릭 3종이고, 클래스 수가 엔티티 수에 비례하지 않는다는 A안의 본체는 유지된다. §1.1의 "2종"은 낙관이었다.
+
+#### S2-E Auth 5개 — Q2 잠정 = 아니오, 그리고 그 형태 (2026-08-20)
+
+S4로 넘겼던 Q2를 census로 좁혔다. **결론부터: Auth는 `OwnedSet<T>`를 쓰지 않는다.**
+
+**census (전 호출부)**
+
+| 모델 | 실제 조회 축 | 캐시 |
+|---|---|---|
+| Account | `SelectByPk(Id)` | 없음 |
+| Channel | `SelectByPk(Key)` + `SelectList(AccountId)` | 없음 |
+| Device | `SelectByPk(Key)` **만** — AccountId 조회 **0건** | 없음 |
+| Session | 키→AccountId 포인터 + 값 캐시 | **있음**(전용) |
+| PlayerMap | `SelectByPk(AccountId)` | 없음 |
+
+**Session을 빼면 Auth에 캐시가 하나도 없다.** 그리고 소유자 컬렉션이 의미 있는 것은 **Channel 하나**뿐이다 — Device는 AccountId로 조회하는 코드가 없고, Session/PlayerMap은 AccountId가 곧 PK라 "목록"이 성립하지 않고, Account는 자기 Id다.
+
+`ScopeKey`를 붙이면 `OwnedSet`의 핵심 둘(소유자 리스트 캐시 · dirty flush)이 통째로 놀면서, 기기 키/채널 키 조회는 자동 `WHERE AccountId`로 0행이 된다. **얻는 것이 없고 잃는 것이 확실하다.**
+
+**그러면 `AuthScope(accountId)`는 무엇을 하는가 (Q1이 무의미해지지 않는다)**
+
+경계를 **자동 WHERE가 아니라 인자 고정**으로 긋는다. accountId를 스코프 생성 시 묶어두고 조회 메서드가 그것을 넘기므로, **호출부가 다른 계정 것을 조회할 수 없다.** 경계의 실질은 이것이다.
+
+```
+GameDb
+├ Identity                       <- (a) AccountId 를 모르는 진입점
+│   ├ TryGetDeviceAsync(idfv)
+│   ├ TryGetChannelAsync(key)
+│   ├ TryGetSessionAsync(sessionKey)
+│   └ CreateAccountAsync()
+└ Auth(accountId) -> AuthScope   <- (b) AccountId 를 아는 것 전부
+    ├ GetAccountAsync()
+    ├ GetChannelListAsync()        (Active 필터는 T1 확장 메서드)
+    ├ GetOrCreateSessionAsync()    <- 포인터 캐시는 여기 전용 코드로 유지 (5.3)
+    ├ GetPlayerMapAsync()
+    ├ CreateDeviceAsync(idfv)
+    ├ CreateChannelAsync(type)
+    └ UpdateAsync<T>(entity)       <- 잠정 즉시 쓰기
+```
+
+이름 `Identity`는 §S1-G (2)의 규정에서 나온다 — **"Auth는 신원을 알아내는 계층"**. 계정 생성도 신원을 만들어내는 일이므로 `Lookup`보다 맞다.
+
+```csharp
+// SignIn — Before
+var (foundDevice, mgrDevice)   = await Auth.Device.TryGetAsync(idfv);
+var (foundAccount, mgrAccount) = await Auth.Account.TryGetAsync(mgrDevice.Model.AccountId);
+var (foundChannel, mgrChannel) = await Auth.Channel.TryGetActiveAsync(mgrAccount.Id);
+var mgrSession = await Auth.Session.TouchAsync(mgrAccount.Id);
+
+// SignIn — After
+var (found, device) = await _db.Identity.TryGetDeviceAsync(idfv);   // (a) 스코프 밖
+var auth    = _db.Auth(device.AccountId);                           // 여기서 경계가 열린다
+var account = await auth.GetAccountAsync();
+var channel = (await auth.GetChannelListAsync()).Active();          // T1
+var session = await auth.GetOrCreateSessionAsync();
+```
+
+```csharp
+// SignUp — Before : 데이터 계층이 RpcContext 에 쓰고, 두 줄 뒤 다른 컴포넌트가 그것을 읽는다
+var mgrAccount = await Auth.Account.CreateAsync();   // _authRepo.RpcContext.SetAccountId(...)
+_ = await Auth.Device.CreateAsync(idfv);             //  <- RpcContext.AccountId 를 읽음
+
+// SignUp — After : accountId 가 스코프를 타고 흐른다
+var account = await _db.Identity.CreateAccountAsync();
+var auth = _db.Auth(account.Id);
+await auth.GetOrCreateSessionAsync();
+await auth.CreateDeviceAsync(idfv);
+await auth.CreateChannelAsync(EChannelType.GUEST);
+```
+
+§1.3이 "특히 중요하다"고 지목한 것(데이터 계층의 `RpcContext.SetAccountId`)이 **여기서 저절로 사라진다.**
+
+**클래스 수**: Auth 데이터 접근 파일 13개(Component 5 + Manager 5 + AuthRepo + ComponentBase + ManagerBase) → **2개**(`AuthScope`, `Identity`). 새 제네릭 타입 0개. `KeyedSet<T>` 같은 것을 따로 세우는 것보다 명명 메서드 11개가 싸다 — 엔티티 5개에 조회 축이 둘뿐이라 제네릭이 오히려 인자로 다 드러난다.
+
+**감수하는 것 (명시)**: `AuthScope`는 **손으로 쓰는 표면**이다. Auth 조회가 늘면 메서드가 는다 — User에서 없앤 성질이다. 근거는 (1) Auth는 5개이고 안 늘어난다, (2) 조회가 이질적이다(키 3종 + PK + 목록), (3) 5.4.1의 경계 규칙.
+
+**열린 것 — 언젠가 dirty 로 돌아갈 것인가.** 즉시 쓰기의 이유를 "identity map 이 없어서"라고 적었으나 정확하지 않다. **identity map 은 소유자 리스트 로드를 요구하지 않는다** — EF 는 컬렉션을 통째로 읽지 않고 엔티티 단위로 추적한다. 즉 Auth 든 User 든 기술적으로는 추적이 가능하다. 다만 §S2-H 에서 **dirty 자체를 철회**했으므로 지금은 논점이 아니다. 되돌린다면 User/Auth 를 같이 판단해야 하고, 그때 걸리는 것은 `SessionComponent.UpdateAsync(befSessionKey, ...)` 가 **UPDATE 와 캐시 포인터 무효화의 순서에 의존**한다는 점이다.
+
+**S4가 검증할 것**: 위 형태로 Channel/Device/Account를 실제로 옮겨 (a)/(b) 분류가 맞는지, `Identity` 4개로 충분한지, `UpdateAsync`를 dirty로 돌릴지. Session/PlayerMap은 S7/S12이므로 S4에서는 자리만 잡는다.
+
+#### S2-F 네이밍 규칙 (2026-08-20 확정)
+
+기존 데이터 계층 메서드 이름을 세어보니 규칙이 없었다:
+
+```
+11  TouchAsync            <- 최다 동사인데 CRUD 어디에도 대응 안 됨. "없으면 INSERT" 가 이름에 없다
+ 6  TryGetInternalAsync   <- "Internal" 이 무엇인지 이름에 없음
+ 4  GetMdlListAsync       <- base 접두사. base 가 사라지면 소멸
+ 4  GetAsync / 2 TryGetAsync / 1 GetActiveAsync   <- 실패 시 동작이 이름으로 안 갈림
+ 2  GetAllListAsync       <- "All" 이 전 샤드인지 전체 테이블인지 불명
+ 1  UpdateAccountAsync    <- 다른 곳은 UpdateAsync
+```
+
+**이름은 축 3개로 조립한다: 동사(실패 시 동작) + 대상 + `By<컬럼>`(기본이 아닌 조회 축).**
+
+| 동사 | 뜻 | 반환 | 없을 때 |
+|---|---|---|---|
+| `Get` | 있어야 한다 | `T` / `List<T>` | **예외** |
+| `TryGet` | 없을 수 있다 | `(bool Found, T Value)` | `(false, null)` |
+| `GetList` | 목록 | `List<T>` | 빈 목록 |
+| `GetOne` | 소유자당 1행인 엔티티 | `T` | 예외 |
+| `GetOrCreate` | 없으면 만든다 | `T` | — |
+| `Create` | 새로 만든다 | 생성된 `T` | — |
+| `Update` | **즉시** 쓴다 | — | — |
+| `Delete` | 지운다 | — | — |
+
+정리되는 것: `TouchAsync` → **`GetOrCreateAsync`**(11곳 — 읽기인 줄 알고 부르면 INSERT가 나가던 이름) · `TryGetInternalAsync`·`*Mdl*` → 소멸 · `GetAllListAsync` → `AllShards`로 이동 · `UpdateAccountAsync` → `UpdateAsync` · `Find*`는 쓰지 않는다(`TryGet*`과 중복).
+
+**두 타입의 표면**
+
+| | 읽기 | 생성 | 변경 |
+|---|---|---|---|
+| `OwnedSet<T>` | `GetListAsync` / `TryGetAsync` / `GetOneAsync` | `CreateAsync` | `UpdateAsync(entity)` — 즉시 |
+| `AuthScope` | `GetAccountAsync` 등 | `CreateDeviceAsync` | `UpdateAsync<T>(entity)` — 즉시 |
+
+**쓰기 규칙은 하나다 — 전부 `Update`, 전부 즉시.** 한때 "추적되는 것은 `MarkDirty`, 아닌 것은 `Update`"로 갈랐으나 dirty 를 철회하면서 그 분기가 사라졌다(§S2-H). 읽는 사람이 외울 규칙이 하나 줄었다.
+
+#### S2-G 타입 이름 — `DataSet`을 버렸다
+
+`DataSet<T>` → `OwnedDataSet<T>` → **`OwnedSet<T>`**, 접근자 `scope.Set<T>()` → **`scope.Owned<T>()`**.
+
+| 후보 | 왜 탈락 |
+|---|---|
+| `DataSet<T>` | `System.Data.DataSet`이 BCL에 있고 이 저장소에 `using System.Data;`가 이미 있다. 그리고 "모든 데이터 접근의 제네릭"으로 읽히는데 19개 중 11개에만 해당한다 |
+| `UserDbScopedDataSet<T>` | 좁은 축이 DB가 아니라 로드 단위다. Q2가 "예"로 뒤집히면 거짓이 된다 |
+| `OwnedList<T>` | `GetListAsync`와 헷갈린다 |
+| `TrackedSet<T>` | 추적은 **보편화될 수 있다**(§S2-E의 열린 항목). 구분 이름으로 못 쓴다 |
+
+`Owned`는 변하지 않는 축(로드 단위)을 말하고, 메서드가 명사라 `Set<T>()`처럼 "설정한다"로 오독되지 않는다.
+
+---
+
+#### S2-H dirty 모델을 철회한다 (2026-08-20) — S0-1 결정 번복
+
+**S0-1은 "(c) dirty 플래그 + 커밋 시 flush"로 확정돼 있었고, S2에서 실제로 구현했다가 같은 세션에 걷어냈다.** 무엇이 판단을 뒤집었는지 남긴다.
+
+**바뀐 것은 근거가 아니라 증거다.** S0-1을 정할 때의 논거("명시적 Save는 N개 호출부에 실수 표면을 만든다")는 지금도 맞다. 다만 S2를 실제로 짜보니 **파생 비용이 사용처보다 먼저 쌓였다.**
+
+| | dirty가 만든 것 | 상태 |
+|---|---|---|
+| 1 | S0-4 슬라이스 전체 — 커밋 경계를 유저 락 안으로 (쓰기가 락 밖으로 나가 lost update) | 커밋됨 (`7aba510`) |
+| 2 | `MySqlLockService` 전용 커넥션 — 1의 선결 조건 | 커밋됨 (`1bf5a39`) |
+| 3 | `IsDirty`가 INSERT/UPDATE 필드 목록에 섞이는 충돌 (§S2-C ①) | S2에서 발견 |
+| 4 | 요청 단위 identity map 강제 → 읽기 의미 변화 (§S2-C ②) | S2에서 발견 |
+| 5 | INSERT 즉시 / UPDATE 지연이라는 비대칭 | 설계에 있었음 |
+| 6 | T3 raw 쿼리 실행 전 flush 규칙 | 설계에 있었음 |
+| 7 | Session 키 회전의 UPDATE-무효화 순서 문제 | 미해결 |
+
+**7개가 나왔는데 dirty를 쓰는 코드는 한 줄도 없었다.** 이 비율은 시간이 지나도 좋아지지 않는다 — 앞으로 들어오는 기능마다 이 규칙을 학습해야 하므로 오히려 늘어난다.
+
+**두 번째 근거: 이 저장소는 `889d398`에서 EF Core를 지웠다.** dirty 모델은 EF의 change tracking을 손으로 다시 만드는 것인데, EF가 함께 주는 것(스냅샷 비교, FK 순서 정렬, 관계 fixup, 동시성 토큰)은 가져오지 않는다. ORM에서 가장 미묘한 기능만 떼어다 직접 구현하는 모양이 된다.
+
+**세 번째 근거 — 거래의 방향이 틀렸다.**
+
+| | 실수 | 드러나는 방식 |
+|---|---|---|
+| dirty가 막으려는 것 | 저장을 깜빡한다 | **시끄럽다** — 값이 안 남으므로 테스트 한 번에 드러난다 |
+| dirty가 만드는 것 | 쓰기가 락 밖에서 일어난다 / raw 쿼리가 옛 값을 본다 / 캐시 무효화 순서가 어긋난다 | **조용하다** — 동시성 조건에서만 나오고 재현이 어렵다 |
+
+**시끄러운 버그를 조용한 버그로 바꾸는 거래는 나쁘다.** 이것이 핵심 근거다.
+
+**철회하면 연쇄적으로 단순해진다.** 추적이 없으면 identity map이 필요 없고 → `OwnedSet`이 무상태가 되고 → `GameDb`의 `_sets`가 없어지고 → `IDirtyFlush`가 없어지고 → **`GlobalDbRepo`가 `GameDb`를 참조할 이유가 사라진다.** 커밋 경로는 원래의 두 줄로 돌아간다.
+
+```csharp
+// 철회 후 GlobalDbRepo.CommitAsync — S2 이전과 동일하다
+_dbSessionManager.Commit();
+await _cacheSession.FlushPendingWritesAsync();
+```
+
+**남는 것**: `OwnedSet<T>.UpdateAsync(entity)` — 오늘 `UserComponentBase.UpdateMdlAsync`와 같다. 새 개념이 0개다.
+
+**잃는 것 (정직하게)**: 같은 행을 한 요청에서 여러 번 고치면 UPDATE가 여러 번 나간다(오늘도 그렇다). InMemory 원자성 개선(테스트 환경 한정). 그리고 §3.7이 지적한 문제 — 도메인 메서드가 모델을 고쳤는데 아무도 저장하지 않는 것 — 이 남는다. **이것은 오늘 코드가 이미 안고 사는 위험이고 새로 생기는 것이 아니다.**
+
+**되돌리지 않는 것**: S0-4(커밋 경계 이동, `7aba510`)와 락 커넥션 분리(`1bf5a39`)는 유지한다. 동기는 dirty였지만 그 자체로 틀린 코드가 아니고 이미 커밋됐다. 이 둘을 나눠 커밋해둔 판단(§4.2)이 여기서 값을 했다.
+
+**다시 넣는 조건**: S5에서 재화 4종을 옮길 때 명시적 저장 호출이 실제로 문제를 일으키면 그때 붙인다. 그때는 붙일 근거가 코드에 있을 것이다 — 지금은 없었다.
+
+#### S2-I 계획 자체에 대한 판단 (2026-08-20)
+
+설계 문서 두 개가 **151KB**인데 실행된 스텝은 S1, S2 둘이다. S3~S13이 코드 한 줄 없이 미리 설계돼 있다.
+
+이번 세션이 그 비용을 보여줬다 — S2를 실제로 짜자마자 문서 두 군데가 낡은 것이 드러났고(§S2-B), `IsDirty`/SQL 충돌은 어떤 설계 문서에도 없었고(§S2-C ①), Auth 5개의 형태는 census를 다시 돌리고 나서야 정해졌고(§S2-E), S0-1은 통째로 뒤집혔다(§S2-H). **코드가 문서보다 빠르게 답을 준다.**
+
+따라서:
+
+- **S3~S13은 "예정"이 아니라 "가설"로 읽는다.** S4를 실행한 뒤 다시 쓴다.
+- **다음 행동은 S4다.** S4는 원래부터 "여기서 아니면 A안 중단"으로 못 박아둔 게이트이고, dirty가 빠진 지금 S4는 `OwnedSet`과 Auth 형태만 검증하면 된다 — 검증 대상이 줄었다.
+- S3(엔진 `DeleteAsync`)은 소비자가 생길 때 함께 한다.
+
+---
+
+#### S2-J 커밋 전 리뷰 — `OwnedSet<T>`는 캐시되는 소유자 리스트 전용이다 (2026-08-20)
+
+S2를 커밋하기 전에 코드를 다시 읽다가 **주석과 코드가 서로 다른 말을 하고 있는 것**을 찾았다. 둘 중 무엇이 맞는지가 곧 결정이었으므로 남긴다.
+
+`OwnedSet<T>` 주석은 리뷰 5.4.1을 받아 이렇게 적혀 있었다.
+
+> 캐시 정책은 2종뿐이다: 소유자 리스트 캐시 / 캐시 없음. 둘 중 어디인지는 `[Entity].ScopeKey` 유무로 갈리며 따로 선언하지 않는다.
+
+그런데 생성자는 `ScopeKey`와 `CacheTag`를 **둘 다** 요구하고 하나라도 없으면 던진다. 즉 코드에는 "캐시 없음" 모드가 없다. 그리고 이 차이에 걸리는 엔티티가 이미 존재한다.
+
+| | 수 | 비고 |
+|---|---|---|
+| `[Entity].ScopeKey` 가 있는 모델 | 13 | User 폴더 전체 |
+| `CacheKeyTags.ByModelType` 에 있는 User 모델 | 11 | |
+| 차이 | **2** | `CashChangeLogModel`, `GachaLogModel` |
+
+호출부가 0개라 오늘 터지지는 않지만, S5에서 `ChangeSet`과 함께 감사 로그 쓰기를 붙이는 순간 정면으로 부딪힌다.
+
+**두 선택지와 판단:**
+
+| | 내용 | 비용 |
+|---|---|---|
+| (a) 주석대로 | `CacheTag` 가 없으면 캐시를 건너뛰고 DB 직행 | `IRepository`에 캐시 없는 경로가 없다 → 엔진 변경(S3급) |
+| (b) 코드대로 | `OwnedSet<T>`는 캐시되는 소유자 리스트 전용, 로그류는 밖 | 주석 수정만 |
+
+**(b)를 택했다.** 근거는 §S2-I와 같다 — 소비자가 없는데 엔진에 분기를 먼저 넣지 않는다. S3(`DeleteAsync`)을 "소비자가 생길 때"로 미룬 것과 같은 판단이고, 감사 로그는 애초에 **로드 단위가 다르다**(append-only라 소유자 리스트로 읽지 않는다). §S2-D가 "타입을 가르는 축은 캐시도 DB도 아니라 로드 단위다"라고 적어놓고, 정작 이 두 개를 로드 단위가 아니라 캐시 유무로 밀어내려 했던 것이 앞뒤가 맞지 않았다.
+
+**리뷰 5.4.1의 "캐시 2종"은 이제 이렇게 읽는다**: 캐시 없음은 `OwnedSet<T>`의 두 번째 모드가 아니라 **`OwnedSet<T>` 밖**이라는 뜻이다.
+
+**남는 구멍 (S4에서 같이 본다)**: `EntityMeta.VerifyCacheTags`는 맵→엔티티 방향만 검사한다. 새 User 모델에 `[Entity]`만 붙이고 태그를 빠뜨리면 부팅은 통과하고 첫 `Owned<T>()`에서 터진다. S1이 세운 "어긋나면 부팅을 실패시킨다"와 어긋나지만, 역방향 검사는 "ScopeKey 는 있으나 캐시는 안 쓴다"를 선언할 자리가 있어야 짤 수 있다. 지금 그 자리를 만들면 (a)를 반쯤 도입하는 것이 되므로, **감사 로그의 실제 쓰기 경로가 생기는 S5까지 미룬다.**
+
+**같이 고친 것**: 코드 주석 4곳이 `DataSet<T>` / `EntityMeta.Verify` 라는 옛 이름을 달고 있었다(`CacheKeyTags.cs` 3곳, `IDbExecutor.cs` 1곳). §S2-G의 리네임이 주석에 반영되지 않은 것으로, 이 문서가 §S2-B에서 겪은 드리프트와 같은 종류다.
+
+---
+
 ### S3 — 엔진 계층 `DeleteAsync`
 
-**건드리는 파일**: `ServerCore/Repo/Database/IDbExecutor.cs`, `DapperExtension.cs`, `DataSet.cs`, `Server.Tests/`(신규)
+**건드리는 파일**: `ServerCore/Repo/Database/IDbExecutor.cs`, `DapperExtension.cs`, `OwnedSet.cs`, `Server.Tests/`(신규)
 
 ```csharp
 // IDbExecutor — Create/Read/Update 만 있고 Delete 가 없던 상태 (5.6)
@@ -507,6 +821,8 @@ Task<int> DeleteAsync<T>(T entity) where T : ModelBase;
 
 ### S4 — Channel / Device / Account ← **의사결정 게이트**
 
+> **형태는 §S2-E 가 기준이다 (2026-08-20).** 이 절의 코드 예제는 Auth 가 `OwnedSet<T>` 를 쓴다는 전제로 쓰였는데, S2 에서 census 를 다시 돌린 결과 **Q2 잠정 = 아니오**로 정리됐다. Auth 는 `GameDb.Identity`(스코프 밖 진입점)와 `AuthScope`(명명 메서드)로 간다. 아래 예제는 그에 맞게 고쳤다.
+
 **건드리는 파일**
 - 삭제: `Component/{Channel,Device,Account}Component.cs`, `Manager/{Channel,Device,Account}Manager.cs` (6)
 - 수정: `Repo/AuthRepo.cs`(PrepareComp 3줄 제거), `Server/Service/AuthService.cs`
@@ -518,7 +834,7 @@ public class ChannelManager : AuthManagerBase<ChannelModel>
 {
     public ChannelManager(AuthRepo authRepo, ChannelModel model) : base(authRepo, model) { }
 }
-// After : 파일 삭제. Set<ChannelModel>() 이 ChannelModel 을 그대로 반환한다.
+// After : 파일 삭제. auth.GetChannelListAsync() 가 ChannelModel 을 그대로 반환한다.
 ```
 
 ```csharp
@@ -550,12 +866,10 @@ public async Task<AccountManager> CreateAsync()
 }
 
 // ── After : AuthService (Transport 인접) 로 이동
-var account = await auth.Set<AccountModel>().CreateAsync(new AccountModel
-{
-    ShardId = 0, State = EAccountState.ACTIVE, AdditionalPlayerCnt = 0, ClientSecret = ""
-});
-RpcContext.SetAccountId(account.Id);          // 컨텍스트 변경은 컨텍스트 소유자가 한다
-RpcContext.SetShardId(account.ShardId);
+var account = await _db.Identity.CreateAccountAsync();   // (a) AccountId 를 만들어내는 진입점
+var auth = _db.Auth(account.Id);                         // 여기서 경계가 열린다
+// RpcContext.SetAccountId 호출 자체가 사라진다 — accountId 가 반환값 → 스코프 인자로
+// 흐르므로 컨텍스트를 경유할 이유가 없다 (§S2-E). §1.3 이 "특히 중요하다"고 지목한 것.
 ```
 
 ```csharp
@@ -564,14 +878,10 @@ var (found, mgrAccount) = await TryGetAsync(accountId);
 ReqHelper.ValidContext(found, "NOT_FOUND_ACCOUNT", () => new { AccountId = accountId });
 ReqHelper.ValidContext(mgrAccount.IsActive(), "NOT_ACTIVE_ACCOUNT", () => new { ... });
 
-// ── After : Data/Queries/AccountQueries.cs — T1 확장 메서드 (새 SQL 없음, §3.3)
-public static async Task<AccountModel> GetActiveAsync(this DataSet<AccountModel> set, ulong accountId)
-{
-    var (found, account) = await set.TryGetAsync(new { Id = accountId });
-    ReqHelper.ValidContext(found, "NOT_FOUND_ACCOUNT", () => new { AccountId = accountId });
-    ReqHelper.ValidContext(account.IsActive(), "NOT_ACTIVE_ACCOUNT", () => new { AccountId = accountId, account.State });
-    return account;
-}
+// ── After : AuthScope.GetAccountAsync() + 도메인 가드
+// 조회는 스코프가 accountId 를 이미 들고 있으므로 인자가 없다.
+// 활성 검증은 조회가 아니라 도메인 규칙이므로 모델 partial 로 간다.
+var account = (await auth.GetAccountAsync()).EnsureActive();
 ```
 
 ```csharp
@@ -584,13 +894,13 @@ PlayerMap = new PlayerMapComponent(this, Repository); // 유지 (S8)
 ```
 
 **직후 가능해지는 것**
-- 세 엔티티에 한해 `auth.Set<AccountModel>()`로 접근. **클래스를 만들지 않고** 새 엔티티를 쓸 수 있다는 것이 실증된다.
+- 세 엔티티에 한해 `_db.Identity` + `auth.*` 로 접근. Component/Manager 6개가 메서드 몇 개로 대체된다.
 - 빈 Manager 2개가 실제로 사라진다(5.1.1).
 - `AuthService`가 `GlobalDbRepo`와 `GameDb`를 **동시에** 쓰는 상태가 된다 — 같은 트랜잭션이므로 정상이다.
 
 **아직 안 되는 것**: Session/PlayerMap은 그대로. User 계열 전부 그대로. 재화·로직 이관 없음.
 
-**롤백 비용**: 클래스 3쌍 복원. **여기서 `DataSet<T>` 설계가 맞지 않으면 A안을 중단하고 B안을 재검토한다.**
+**롤백 비용**: 클래스 3쌍 복원. **여기서 `OwnedSet<T>` 설계가 맞지 않으면 A안을 중단하고 B안을 재검토한다.**
 
 ---
 
@@ -671,7 +981,7 @@ public static ChgObjPacket ToPacket(this ChangeSet c)
 
 ```csharp
 // ── CookieComponent.TouchAsync (없으면 생성) 는 T1 확장 메서드로
-public static async Task<CookieModel> TouchAsync(this DataSet<CookieModel> set, int cookieNum)
+public static async Task<CookieModel> TouchAsync(this OwnedSet<CookieModel> set, int cookieNum)
 {
     var (found, cookie) = await set.TryGetAsync(new { Num = cookieNum });
     return found ? cookie : await set.CreateAsync(new CookieModel
@@ -791,9 +1101,9 @@ dbRepo.BeginOwnUserRepo();                                   // 인자 없음
 var playerModel = (await dbRepo.OwnUser.Player.GetAsync()).Model;
 
 // ── After : 대상을 직접 연다 (GSA InitUserRepo 패턴 복원)
-var session = await _db.Auth().Set<SessionModel>().ByKeyAsync(req.SessionKey);
-var shardId = await _db.Auth().Set<PlayerMapModel>().ShardOfAsync(session.PlayerId);
-var player  = await _db.User(shardId, session.PlayerId).Set<PlayerModel>().GetOneAsync();
+var (found, session) = await _db.Identity.TryGetSessionAsync(req.SessionKey);      // (a) 스코프 밖
+var shardId = (await _db.Auth(session.AccountId).GetPlayerMapAsync()).ShardId;   // (b) 스코프 안
+var player  = await _db.User(shardId, session.PlayerId).Owned<PlayerModel>().GetOneAsync();
 ```
 
 ```csharp
@@ -804,7 +1114,7 @@ public partial class PlayerModel : ModelBase { }
 
 // Before : PlayerComponent.TryGetByAccountIdAsync — DbSession 직접 접근 + 캐시 없음
 // After  : 이름 있는 정식 경로. 동작은 동일(DB 직접), 포인터 캐시는 미도입
-var (found, player) = await user.Set<PlayerModel>().ByIndexAsync(nameof(PlayerModel.AccountId), accountId);
+var (found, player) = await user.Owned<PlayerModel>().ByIndexAsync(nameof(PlayerModel.AccountId), accountId);
 ```
 
 **직후 가능해지는 것**
@@ -827,7 +1137,7 @@ var mdlList = await DbSession.ExecuteAsync(async db =>
 [Entity(Pk = ["Num"], Cache = ECachePolicy.GlobalList)]   // Cache는 S2에서 형태 확정 후 부착
 public partial class ScheduleModel : ModelBase { }        // ScopeKey 없음 → WHERE 없음
 
-var schedules = await center.Set<ScheduleModel>().GetListAsync();   // 전역 리스트 캐시
+var schedules = await center.Owned<ScheduleModel>().GetListAsync();   // 전역 리스트 캐시
 ```
 
 **`GlobalList` 캐싱 도입 확정.** 현재 Center 계열은 캐시가 전혀 없어 **매 요청마다 Schedule 전량 조회**다. 스케줄은 거의 변하지 않으므로 이득이 크다. 대신 이 스텝에 무효화를 함께 넣는다:
@@ -865,7 +1175,7 @@ var totalStar = await user.Raw<int>(
     new { WorldNum = worldNum });      // PlayerId 는 스코프가 채운다
 ```
 
-**직후**: 집계 쿼리가 `scope.Raw`라는 이름으로 드러난다. `DataSet<T>` 확장 메서드로 감싸지 않으므로 코드 리뷰에서 보인다.
+**직후**: 집계 쿼리가 `scope.Raw`라는 이름으로 드러난다. `OwnedSet<T>` 확장 메서드로 감싸지 않으므로 코드 리뷰에서 보인다.
 
 **주의**: dirty 모델에서 변경은 커밋까지 DB에 없다. `Raw`가 실행 전 flush를 하지 않으면 방금 변경한 값이 집계에서 빠진다. **이 규칙을 `Raw` 도입과 동시에 넣는다** — 나중에 붙이면 이미 쓰인 호출부가 조용히 틀린 값을 본다.
 
@@ -941,7 +1251,7 @@ public class AuthService : ServiceBase
 
     public async Task<AuthSignUpResponsePacket> SignUpAsync(...)
     {
-        var account = await _db.Auth().Set<AccountModel>().CreateAsync(...);   // 신 경로
+        var account = await _db.Identity.CreateAccountAsync();                 // 신 경로
         var session = await _dbRepo.Auth.Session.CreateAsync(...);             // 구 경로
         // 같은 DbSessionManager → 같은 IDbSession → 같은 트랜잭션. 원자성 유지.
         await _dbRepo.CommitAsync();
@@ -965,7 +1275,7 @@ public class AuthService : ServiceBase
 
 | | 항목 | 상태 | 이 문서에서 영향받는 곳 |
 |---|---|---|---|
-| **S0-1** | 저장 모델 | **확정 — (c) dirty 플래그 + 커밋 시 flush** (§3.8) | 1.2 3)블록, S2 `ModelBase`, S5 전체, S9 Raw flush |
+| **S0-1** | 저장 모델 | ⛔ **번복 — dirty 철회, 즉시 쓰기 유지** (§S2-H). 한때 "(c) dirty 플래그 + 커밋 시 flush"로 확정돼 있었다 | S5 에서 재판단 |
 | **S0-2** | `ClassGenerator`가 `[Entity]`를 찍을 수 있는가 | **미확인** | S1 (불가하면 모델 20개 수작업 — 작업량만 영향) |
 | **S0-3** | 감사·반환 타입 | **확정 — `ChangeSet` 존치(근거: 와이어 계약 분리), 감사는 싱크별 개별 조립** | S5 도메인 메서드 반환형, S13 |
 | **S0-4** | 커밋 경계를 유저 락 안으로 | **완료 — 선행 커밋 2개로 반영** | 리뷰 5.1, 5.2 |
@@ -1100,7 +1410,7 @@ LogoutAsync(mdl)                             // 두 키 즉시 제거
 
 **수정**: 3.9의 T2 결정을 **"신규 도입하지 않는다"로 한정**하고, **이미 구현된 Session의 포인터 캐시는 그대로 유지**한다고 명시. `TryGetByAccountIdAsync`(Player)만 캐시 없이 간다.
 
-### 5.4 🟠 설계 누락 — 캐시 정책이 실제로는 5종인데 `DataSet<T>`는 1종만 전제한다
+### 5.4 🟠 설계 누락 — 캐시 정책이 실제로는 5종인데 `OwnedSet<T>`는 1종만 전제한다
 
 | 현재 위치 | 정책 |
 |---|---|
@@ -1110,7 +1420,7 @@ LogoutAsync(mdl)                             // 두 키 즉시 제거
 | `CenterComponentBase` | **캐시 없음** |
 | `SessionComponent` | 단건 + **포인터** |
 
-§3.3의 `DataSet<T>`는 리스트 캐시 하나만 전제한다. 5.3.2를 "메타데이터로 통일"한다고 했지만 **어떤 정책들이 존재해야 하는지 열거가 없다.**
+§3.3의 `OwnedSet<T>`는 리스트 캐시 하나만 전제한다. 5.3.2를 "메타데이터로 통일"한다고 했지만 **어떤 정책들이 존재해야 하는지 열거가 없다.**
 
 **최초 수정안**: `[Entity]`에 캐시 정책을 명시적으로 열거한다.
 
@@ -1128,9 +1438,11 @@ public enum ECachePolicy { None, Single, OwnerList, GlobalList }
 **결론 정정 (2026-08-12)** — 원래 "S1의 attribute 설계에 `Cache`/`SlidingTtl`을 포함한다. 나중에 추가하면 20개 모델을 두 번 손댄다"였는데, **이 논거를 철회한다.** attribute 20줄에 필드 하나를 나중에 붙이는 것은 기계적 편집이다. 반면 위 4종 열거가 실제 구현에서 깔끔하게 일반화되지 않으면 **틀린 enum이 20개 모델에 박힌 채로 시작**하게 되고, 그 되돌리기 비용이 훨씬 크다. 특히 5.3에서 확인된 `Session`의 포인터 캐시는 `Single`+`SlidingTtl` 두 플래그로 표현되지 않는 **다섯 번째 형태**이고, 이건 이 enum이 아직 닫히지 않았다는 증거다.
 
 → **S1에는 넣지 않는다. `Cache`/`SlidingTtl`은 `[Entity]` 주석에 TODO로만 남긴다.**
-→ **이 항목에서 살아남는 것은 발견이지 해법이 아니다**: "정책이 실제로 5종인데 `DataSet<T>`는 1종만 전제한다"와 "sliding TTL이 설계에 없다"는 **S2에서 `DataSet<T>`를 설계할 때 반드시 만족해야 할 제약**으로 이월한다. 형태가 코드로 확정된 뒤에 attribute로 올린다(R7).
+→ **이 항목에서 살아남는 것은 발견이지 해법이 아니다**: "정책이 실제로 5종인데 `OwnedSet<T>`는 1종만 전제한다"와 "sliding TTL이 설계에 없다"는 **S2에서 `OwnedSet<T>`를 설계할 때 반드시 만족해야 할 제약**으로 이월한다. 형태가 코드로 확정된 뒤에 attribute로 올린다(R7).
 
 #### 5.4.1 결론 축소 (2026-08-14) — 일반화하지 않고 특화로 간다
+
+> **정정 (2026-08-20, §S2-J)**: 아래가 말하는 "캐시 2종(소유자 리스트 / 캐시 없음)"은 `OwnedSet<T>`의 두 모드가 아니다. `OwnedSet<T>`는 앞에 해당하는 한 종류만 다루고, 뒤는 `OwnedSet` 밖이다.
 
 위에서 "S2가 5종을 수용하는 형태를 확정해야 한다"고 이월했는데, **그 숙제 자체가 과하다.** 코드를 다시 보면 **캐시 정책은 애초에 일반화된 적이 없다.**
 
@@ -1149,7 +1461,7 @@ CacheKey.For(SessionModel, "AccountId", accountId)       // 값
 GetMdlWithCacheAsync<SessionModel>(..., slidingTtl)
 ```
 
-따라서 `DataSet<T>`가 알아야 할 것은 **2종이면 충분하다.**
+따라서 `OwnedSet<T>`가 알아야 할 것은 **2종이면 충분하다.**
 
 | | 표현 |
 |---|---|
@@ -1244,7 +1556,7 @@ mgrSchedule.IsActivePeriod(RpcCtx.ServerTime)
 `RepoBase` 생성자가 `PrepareComp()`를 호출하고, `GlobalDbRepo.CreateRepository`가 `_dbSessionManager.Open(connStr)`을 부른다 → **Repo 참조 시점에 커넥션이 열린다**(`20260720` 이슈 ②, 여전히 열려 있음).
 
 A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 **문서에 없다.**
-→ **`DataSet<T>`의 첫 조회 시점까지 지연**하도록 명시한다. 스코프를 만들기만 하고 안 쓰는 경로(예: 조건 분기)에서 커넥션 낭비가 사라진다. A안이 아니면 고치기 어려운 지점이므로 기회를 살린다.
+→ **`OwnedSet<T>`의 첫 조회 시점까지 지연**하도록 명시한다. 스코프를 만들기만 하고 안 쓰는 경로(예: 조건 분기)에서 커넥션 낭비가 사라진다. A안이 아니면 고치기 어려운 지점이므로 기회를 살린다.
 
 ### 5.12 🟢 미개선 — T1 확장 메서드는 전체 로드 후 메모리 필터다
 
@@ -1259,7 +1571,7 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | **S0-4** (완료) | **커밋 경계를 유저 락 안으로 이동 (5.1)** · **락 커넥션 분리 (5.2 선결)** — §4.2 |
 | **S1** (완료) | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · **ScopeKey는 User 폴더 한정, `fk` 토큰에서 생성** · 가드 4종 · `AssertMatches` 철회, 검사를 `Init` 안으로 (§S1-D) · 5.8은 해소 |
 | **S12** | RaidServer의 등록 표면이 2 → 19로 넓어진 것을 되돌릴지 판단 (§S1-F) |
-| **S2** | **`DataSet<T>`는 캐시 2종(소유자 리스트 / 없음)만 안다. 나머지는 엔티티 전용 코드 (5.4.1)** · **`UserScope`/`AuthScope`/`CenterScope`는 공통 인터페이스 없이 독립 클래스로 시작 (§S1-G)** · `GameDb.Utility` 추가 (5.2) · `MarkDirty()`가 `UpdateTime` 스탬프 (5.6) · 커넥션 지연 오픈 (5.11) · lazy BEGIN 판단 (5.2 열린 질문) |
+| **S2** (완료) | `OwnedSet<T>`는 캐시되는 소유자 리스트 전용 (5.4.1 → §S2-J) · 스코프 3종은 독립 클래스 (§S1-G) · 커넥션 지연 오픈 (5.11) · **dirty 철회 (§S2-H)** · `GameDb.Utility` 는 S10.5 로, lazy BEGIN 은 S11 로 이월 · 네이밍 규칙 확정 (§S2-F) · Auth 형태 확정 (§S2-E) |
 | **S4** | 캐시 없는 경로 실증 (Account/Channel/Device는 원래 캐시 없음) · **Auth의 스코프 밖 조회(기기 키·채널 키·세션 키·계정 생성)를 어디로 보낼지 확정 → `[Entity]`에 Auth `ScopeKey`를 붙일지 함께 결정 (§S1-G Q2)** |
 | **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
 | **S8** | `GlobalList` 정책 실증 · `ScheduleView`가 `ServerTime`을 인자로 (5.10) |

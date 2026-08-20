@@ -46,6 +46,19 @@ namespace ServerCore.Repo.Database
             return Task.FromResult(ScanAll<T>(conditions));
         }
 
+        public Task<IEnumerable<T>> SelectListByColumnAsync<T>(string column, object value) where T : class
+        {
+            var prop = EntityPropCache.GetOrAdd((typeof(T), column), k => k.Item1.GetProperty(k.Item2));
+            if (prop == null)
+            {
+                throw new InvalidOperationException($"NOT_FOUND_ENTITY_PROPERTY:{typeof(T).Name}.{column}");
+            }
+
+            var matched = _store.GetAll(typeof(T)).Cast<T>()
+                .Where(e => ValuesEqual(value, prop.GetValue(e), prop.PropertyType));
+            return Task.FromResult(matched);
+        }
+
         public Task<T> InsertAsync<T>(T entity) where T : class
         {
             // SQL의 AUTO_INCREMENT 동작 모방:

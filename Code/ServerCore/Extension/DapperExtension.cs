@@ -19,6 +19,9 @@ namespace ServerCore.Extension
         private static readonly ConcurrentDictionary<(Type entity, Type cond), string> CondSingleSqlCache = new();
         private static readonly ConcurrentDictionary<(Type entity, Type cond), string> CondListSqlCache = new();
 
+        // 엔티티 타입 + 컬럼명 기준 SQL 캐시 (SelectListByColumnAsync 전용)
+        private static readonly ConcurrentDictionary<(Type entity, string column), string> ColumnListSqlCache = new();
+
         // Insert 시 Id 자동증가 여부 판단용 PropertyInfo 캐시
         private static readonly ConcurrentDictionary<Type, PropertyInfo> IdPropCache = new();
 
@@ -139,6 +142,19 @@ namespace ServerCore.Extension
                 });
 
             return await connection.QueryAsync<T>(sql, keyValues, transaction);
+        }
+
+        // 컬럼 이름을 인자로 받는 조회. OwnedSet<T> 는 제네릭 하나뿐이라
+        // new { PlayerId = ... } 같은 익명 타입을 만들 수 없고, 스코프 키 컬럼명도
+        // 엔티티마다 다르다(User 13개는 PlayerId, PlayerModel 은 Id).
+        // 그래서 이름으로 조건을 거는 경로가 필요하다.
+        public static async Task<IEnumerable<T>> SelectListByColumnAsync<T>(this IDbConnection connection, string column, object value, IDbTransaction transaction)
+        {
+            var sql = ColumnListSqlCache.GetOrAdd(
+                (typeof(T), column),
+                k => $"SELECT * FROM {GetTableName<T>()} WHERE `{k.column}` = @value");
+
+            return await connection.QueryAsync<T>(sql, new { value }, transaction);
         }
 
         private static void SetPKWhereClause<T>(params string[] keyFields)

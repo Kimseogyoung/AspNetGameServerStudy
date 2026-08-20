@@ -22,7 +22,7 @@
 |---|---|---|
 | **Gen1 — GSA(서버참고2)** | Controller → Service → Repo(EF Core) | 노트 3.1~3.4 |
 | **Gen2 — GameAsp(현재)** | GlobalDbRepo → Auth/Center/UserRepo → Component → Manager | 노트 5.1~5.6 |
-| **Gen3 — A안** | GameDb(UoW) → Scope → `DataSet<T>` / 순수 Model / 도메인 서비스 / App Service | 이 문서 |
+| **Gen3 — A안** | GameDb(UoW) → Scope → `OwnedSet<T>` / 순수 Model / 도메인 서비스 / App Service | 이 문서 |
 
 ### 0.2 Gen2의 해법 4개가 각각 무엇을 가정했는가
 
@@ -41,7 +41,7 @@ Gen1의 불편 4개에 Gen2가 해법 4개를 냈다. 그런데 **각 해법이 
 
 | A안 해법 | 이 해법이 까는 **새 전제** | 그 전제가 깨지는 곳 | 대응 |
 |---|---|---|---|
-| `DataSet<T>` + ScopeKey 자동 스코핑 | *모든 조회는 스코프 컬렉션 안에서 끝난다* | 비-ScopeKey 컬럼 조회, 집계 쿼리, ScopeKey 없는 엔티티 | **3.9** 4티어 분류 |
+| `OwnedSet<T>` + ScopeKey 자동 스코핑 | *모든 조회는 스코프 컬렉션 안에서 끝난다* | 비-ScopeKey 컬럼 조회, 집계 쿼리, ScopeKey 없는 엔티티 | **3.9** 4티어 분류 |
 
 Gen3가 다음 세대에 넘길 뻔한 문제를 R2로 미리 잡은 사례다. 이후에도 A안의 각 요소에 대해 같은 질문을 반복한다.
 
@@ -68,7 +68,7 @@ protected ICacheSession CacheLayer => _repo.Cache;
 
 | A안 | (a) 언제 | (b) 무엇을 아는가 | (c) 몇 개 |
 |---|---|---|---|
-| `DataSet<T>` | 자동 (등록만 되면) | 스코프의 `shardId`/`ownerId` + 엔티티 메타데이터만 | **0개** (제네릭 1개) |
+| `OwnedSet<T>` | 자동 (등록만 되면) | 스코프의 `shardId`/`ownerId` + 엔티티 메타데이터만 | **0개** (제네릭 1개) |
 | Model partial | 로직이 있을 때만 | 자기 필드만 (DB 참조 없음) | 최대 1개 |
 | 도메인 서비스 | 여러 Model 불변식이 있을 때만 | 주입받은 Model들만 | 개념 수만큼 |
 
@@ -146,7 +146,7 @@ Gen1은 EF Core였다. `DbContext`가 하던 일과 Gen2의 처분:
 | DI 시점 Repository 스왑 | Gen1 3.4 | — | Gen2 것 **계승** (후속 문제 0) |
 | `ICacheSession` + 커밋 시 flush | Gen2 신규 | EF 아이덴티티맵 대체물 | **계승** |
 | `[Entity]` + 어셈블리 스캔 | Gen2 5.2.1 | 리플렉션 CRUD 도입으로 메타데이터가 코드 밖으로 나갔기 때문 | Gen2 해법의 **수정** |
-| `DataSet<T>` | Gen2 5.2.2 / 5.2.3 | Component가 "엔티티마다 클래스 1개"를 전제 | Gen2 Component의 **일반화** |
+| `OwnedSet<T>` | Gen2 5.2.2 / 5.2.3 | Component가 "엔티티마다 클래스 1개"를 전제 | Gen2 Component의 **일반화** |
 | Model partial 메서드 | **Gen1 3.3의 목적** | Gen2는 같은 목적을 Manager 래퍼로 달성 → 1:1 부작용 | **목적 계승, 수단 교체** |
 | `GameDb.User(shardId, playerId)` | Gen1 `InitUserRepo` | Gen2가 "특수 경로"로 오해하고 일반화하지 않음 | Gen1에서 **회수** |
 | UoW 루트 | Gen1 (EF `DbContext`) | Gen2가 커밋 경계만 가져옴 | Gen1에서 **부분 회수** |
@@ -215,7 +215,7 @@ Gen1은 EF Core였다. `DbContext`가 하던 일과 Gen2의 처분:
  Domain             Model partial 메서드 (순수)  +  도메인 서비스 (여러 Model 불변식)
                     · DB/캐시/컨텍스트를 전혀 모름   · 변경 사실을 반환
                             ↓ (App Service가 저장을 지시)
- Data               GameDb (Unit of Work)  →  DataScope  →  DataSet<T>
+ Data               GameDb (Unit of Work)  →  DataScope  →  OwnedSet<T>
                             ↓
  Engine             IDbSession / IDbExecutor / ICacheSession        ← 기존 코드 그대로 재사용
 ```
@@ -249,7 +249,7 @@ public partial class AccountModel : ModelBase { }
 | `ScopeKey`는 **User 폴더 한정** | 소유자 개념(ambient owner + 자동 `WHERE` + 소유자별 캐시 버킷)이 있는 건 `UserComponentBase`뿐이다. `AuthComponentBase`/`CenterComponentBase`에는 소유자 개념이 전무하고, Auth의 AccountId 조회는 전부 **인자 기반 명시 조회**다(소유자 축 리스트 조회는 `ChannelComponent.GetListAsync` 하나뿐 — **T2**). `fk = AccountId`는 참조 무결성 선언이지 스코프 선언이 아니다 |
 | 출처는 **기존 `fk` 토큰** | CSV에 `fk`가 이미 있고 이미 소비된다(`ModelGenerator.cs:376` → Liquibase FK). `scope` 같은 새 토큰을 넣으면 같은 사실이 두 군데 선언되어 드리프트한다. `User/Player`만 `fk`가 없으므로(스코프 루트) PK를 ScopeKey로 쓴다. `fk` 2개 이상이면 생성 실패 |
 | `Table` **제외** | `DapperExtension.cs:31-35`가 클래스명−`Model`로 테이블명을 만들고 오버라이드 경로가 없다. 규칙 이탈 모델 현재 0개 → 지금 넣으면 추측 |
-| `Cache`/`SlidingTtl` **제외, TODO 주석만** | 3.9의 정책 열거가 아직 닫히지 않았다(아래 5종 표의 `SessionComponent` 행이 2플래그로 표현되지 않는다). 틀린 enum을 모델 20개에 먼저 박는 비용 > 나중에 필드 하나 붙이는 비용. **S2에서 `DataSet<T>` 형태가 코드로 확정된 뒤 올린다** |
+| `Cache`/`SlidingTtl` **제외, TODO 주석만** | 3.9의 정책 열거가 아직 닫히지 않았다(아래 5종 표의 `SessionComponent` 행이 2플래그로 표현되지 않는다). 틀린 enum을 모델 20개에 먼저 박는 비용 > 나중에 필드 하나 붙이는 비용. **S2에서 `OwnedSet<T>` 형태가 코드로 확정된 뒤 올린다** |
 
 > **이월된 열린 질문 (2026-08-14 재정리 — 상세는 StepByStep §S1-G)**: 한때 "소유자가 User에만 있으므로 `GameDb.Auth()`/`Center()`는 스코프가 아니라 DB 선택"이라 적었으나 **전제가 부정확했다.** Auth의 데이터 모델에는 소유자 축이 있다 — `Account.Id`가 루트이고 `Channel`/`Device`/`Session`/`PlayerMap`이 전부 `AccountId`를 갖는, User와 **같은 모양**이다. 소유자가 없는 것은 Center뿐이다.
 >
@@ -259,7 +259,7 @@ public partial class AccountModel : ModelBase { }
 >
 > **남은 것은 `[Entity]`에 Auth `ScopeKey`를 붙일지이며 그것은 S4(Channel/Device/Account 파일럿)에서 판단한다.** `ScopeKey`는 선언이 아니라 동작(자동 `WHERE`·쓰기 검증·캐시 버킷)을 만들기 때문에, 어떤 조회가 스코프 안이고 어떤 것이 밖인지 실제로 옮겨 보기 전에는 붙일 수 없다. S1은 어느 결론에도 영향받지 않는다.
 >
-> **세 스코프는 공통 인터페이스 없이 독립 클래스로 시작한다.** 한때 `IDataScope`로 공통부를 뽑자고 적었으나, 근거로 든 "`GameDb.CommitAsync`가 스코프를 순회해야 한다"는 요구는 **`GameDb`가 dirty 엔티티를 직접 들면 사라진다.** 공유되는 것은 `DataSet<T>` 하나이며, 실제로 공통 처리가 필요해지면 그때 인터페이스를 뽑는다(R7).
+> **세 스코프는 공통 인터페이스 없이 독립 클래스로 시작한다.** 한때 `IDataScope`로 공통부를 뽑자고 적었으나, 근거로 든 "`GameDb.CommitAsync`가 스코프를 순회해야 한다"는 요구는 **`GameDb`가 dirty 엔티티를 직접 들면 사라진다.** 공유되는 것은 `OwnedSet<T>` 하나이며, 실제로 공통 처리가 필요해지면 그때 인터페이스를 뽑는다(R7).
 
 실행 절차·체크리스트는 `DbLayer_A_StepByStep.md` §S1-A/B/C 참조.
 
@@ -282,7 +282,7 @@ public class GameDb : IAsyncDisposable
 - `User(shardId, playerId)`를 여러 번 다른 값으로 호출할 수 있다 → 길드, 우편 발송, 거래, 레이드 보상처럼 **다중 플레이어 연산이 자연스럽게 성립**한다. (현재 `BeginOwnUserRepo()`는 요청당 1명 고정.)
 - 커넥션/트랜잭션 추적은 기존 `DbSessionManager`가 그대로 담당.
 
-### 3.3 `DataScope` / `DataSet<T>` — 유일한 데이터 접근 타입
+### 3.3 `DataScope` / `OwnedSet<T>` — 유일한 데이터 접근 타입
 
 ```csharp
 public class UserScope          // AuthScope / CenterScope 도 동형
@@ -290,10 +290,10 @@ public class UserScope          // AuthScope / CenterScope 도 동형
     public int   ShardId  { get; }
     public ulong PlayerId { get; }        // ScopeKey 값
 
-    public DataSet<T> Set<T>() where T : ModelBase, new();   // 스코프 내 캐싱
+    public OwnedSet<T> Set<T>() where T : ModelBase, new();   // 스코프 내 캐싱
 }
 
-public class DataSet<T> where T : ModelBase, new()
+public class OwnedSet<T> where T : ModelBase, new()
 {
     public Task<List<T>>                GetListAsync(object conditions = null);
     public Task<(bool Found, T? Value)> TryGetAsync(object pk);
@@ -303,7 +303,7 @@ public class DataSet<T> where T : ModelBase, new()
 }
 ```
 
-- **`XxxComponent` 클래스가 존재하지 않는다.** 등록된 엔티티면 `user.Set<ItemModel>()`로 바로 쓴다.
+- **`XxxComponent` 클래스가 존재하지 않는다.** 등록된 엔티티면 `user.Owned<ItemModel>()`로 바로 쓴다.
 - `ScopeKey`가 지정된 엔티티는 `GetListAsync`가 **자동으로 `WHERE PlayerId = scope.PlayerId`를 붙인다.** 스코프 밖 데이터를 실수로 읽을 수 없다.
 - `CreateAsync`/`UpdateAsync`는 `entity`의 ScopeKey 필드가 `scope.PlayerId`와 다르면 **즉시 예외**. → 5.5.1에서 지적한 "DB엔 정상 저장, 캐시는 엉뚱한 버킷"이라는 조용한 정합성 버그를 구조적으로 차단.
 - 스코프 컬렉션 안에서 끝나는 조회는 클래스를 새로 만들지 않고 **확장 메서드**로 붙인다:
@@ -311,14 +311,14 @@ public class DataSet<T> where T : ModelBase, new()
 ```csharp
 public static class ChannelQueries
 {
-    public static async Task<ChannelModel?> FindActiveAsync(this DataSet<ChannelModel> set, ulong accountId)
+    public static async Task<ChannelModel?> FindActiveAsync(this OwnedSet<ChannelModel> set, ulong accountId)
         => (await set.GetListAsync(new { AccountId = accountId }))
            .FirstOrDefault(x => x.State == EChannelState.ACTIVE);
 }
 ```
 
 > **확장 메서드 규칙 — SQL을 새로 쓰지 않는다.**
-> `DataSet<T>` 확장 메서드는 `GetListAsync` 결과를 **거르기만** 한다. 위 예제가 이 규칙을 지키고 있다(새 쿼리가 아니라 이미 로드된 컬렉션 필터).
+> `OwnedSet<T>` 확장 메서드는 `GetListAsync` 결과를 **거르기만** 한다. 위 예제가 이 규칙을 지키고 있다(새 쿼리가 아니라 이미 로드된 컬렉션 필터).
 > 새 SQL이 필요한 순간 그것은 확장 메서드가 아니라 **3.9의 T2 또는 T3**이다. 이 경계를 지켜야 캐시 사본이 하나로 유지된다.
 > 표준 CRUD 밖 조회 전반의 분류와 캐시 규칙은 **3.9**를 따른다.
 
@@ -433,8 +433,8 @@ public async Task<GachaNormalResponsePacket> GachaNormalAsync(int shardId, ulong
     var center = _db.Center();
 
     // 1) 로드
-    var detail   = await user.Set<PlayerDetailModel>().GetOneAsync();
-    var schedule = await center.Set<ScheduleModel>().FindAsync(req.ScheduleNum);
+    var detail   = await user.Owned<PlayerDetailModel>().GetOneAsync();
+    var schedule = await center.Owned<ScheduleModel>().FindAsync(req.ScheduleNum);
     var prt      = ProtoDb.Get<ScheduleProto>(req.ScheduleNum);
 
     // 2) 순수 도메인 — 여기서 DB 접근 없음
@@ -451,7 +451,9 @@ public async Task<GachaNormalResponsePacket> GachaNormalAsync(int shardId, ulong
 
 로드 → 순수 계산 → 저장의 3단이 눈에 보인다. "이 요청이 무슨 일을 하는가"가 App Service 한 메서드에서 읽힌다 (5.4에서 지적한 "Manager로 로직을 몰면 Service에서 한눈에 안 보인다"는 문제의 대응).
 
-### 3.8 저장 모델 — dirty 플래그 + 커밋 시 flush **(확정)**
+### 3.8 저장 모델 — ⛔ **철회됨. StepByStep §S2-H 를 먼저 읽을 것 (2026-08-20)**
+
+> 아래는 한때 확정이었던 dirty 플래그 모델이다. S2 에서 실제로 구현했다가 같은 세션에 걷어냈다 — 파생 비용 7건이 사용처보다 먼저 쌓였고, "시끄러운 버그(저장 깜빡)를 조용한 버그(락 밖 쓰기·순서 문제)로 바꾸는 거래"였기 때문이다. 현재 쓰기는 전부 즉시이며 `OwnedSet<T>.UpdateAsync(entity)` 하나다. 이 절은 판단 이력으로 남긴다.
 
 0.5에서 정리했듯 Gen2는 EF의 변경 추적을 처분 결정 없이 잃었고, 그 결과가 5.1.4/5.4다. A안은 이 결정을 정면으로 한다. 검토한 세 안:
 
@@ -496,7 +498,7 @@ public async Task CommitAsync()          // GameDb
     await _cache.FlushPendingWritesAsync();
 }
 
-internal async Task FlushDirtyAsync()    // DataSet<T> — T가 컴파일 타임 확정 → 리플렉션 불필요
+internal async Task FlushDirtyAsync()    // OwnedSet<T> — T가 컴파일 타임 확정 → 리플렉션 불필요
 {
     foreach (var e in _loaded.Where(x => x.IsDirty))
     {
@@ -518,7 +520,7 @@ internal async Task FlushDirtyAsync()    // DataSet<T> — T가 컴파일 타임
 ```
 
 `SqlRepository.UpdateAsync`가 둘을 한 메서드에서 하므로 커밋 시점에 부르면 자동으로 맞는다. **캐시 계층은 구조 변경이 없다.**
-같은 요청 내 읽기도 문제없다 — `DataSet<T>`가 스코프 내 로드 인스턴스를 캐싱해 돌려주므로(3.3) dirty 상태의 **같은 객체**를 본다.
+같은 요청 내 읽기도 문제없다 — `OwnedSet<T>`가 스코프 내 로드 인스턴스를 캐싱해 돌려주므로(3.3) dirty 상태의 **같은 객체**를 본다.
 
 **InMemory 모드 — flush 주체가 `GameDb`여야 하는 이유.**
 
@@ -563,14 +565,14 @@ A commit → 90 기록 / B commit → 90 기록
 
 ### 3.9 표준 CRUD 밖 조회 — 4티어 분류
 
-`DataSet<T>`는 *"모든 조회는 스코프 컬렉션 안에서 끝난다"*를 전제한다(0.2 형식으로 말하면 A안이 까는 새 전제다). 이 전제가 깨지는 조회가 실제로 존재하므로, **문법(확장 메서드)이 아니라 캐시 사본 관리로 분류한다.**
+`OwnedSet<T>`는 *"모든 조회는 스코프 컬렉션 안에서 끝난다"*를 전제한다(0.2 형식으로 말하면 A안이 까는 새 전제다). 이 전제가 깨지는 조회가 실제로 존재하므로, **문법(확장 메서드)이 아니라 캐시 사본 관리로 분류한다.**
 
 **근본 제약**: 현재 `UserComponentBase`는 "플레이어당 T 전체 리스트 캐시 1개" 모델이고, 모든 조회가 그 리스트를 통과하므로 엔티티 사본이 하나다. 그래서 무효화가 단순하다. **특화 쿼리가 이 모델을 깨는 이유는 별도 SQL 결과가 그 리스트와 별개 사본이 되기 때문**이며, 무효화 조건을 시스템이 추론할 수 없다. 현 코드가 특수 쿼리마다 캐시를 포기한 이유가 이것이다(`ScheduleComponent` "일반화가 어려운 부분이라", `WorldStageComponent` "TODO: 캐시", `PlayerComponent` "컬렉션 밖의 조회 → DB 직접 접근").
 
 | 티어 | 언제 | 캐시 | 진입점 | 선언 |
 |---|---|---|---|---|
 | **T0** 메타데이터 | ScopeKey 컬럼명이 다름 / ScopeKey 없음 | 기본 리스트 캐시 | 없음(자동) | `[Entity(ScopeKey=…)]` |
-| **T1** 스코프 필터 | 로드된 컬렉션에서 고르기 | 기본 리스트 캐시 **재사용** | `DataSet<T>` 확장 메서드 | **새 SQL 금지**(3.3) |
+| **T1** 스코프 필터 | 로드된 컬렉션에서 고르기 | 기본 리스트 캐시 **재사용** | `OwnedSet<T>` 확장 메서드 | **새 SQL 금지**(3.3) |
 | **T2** 보조 인덱스 | 비-ScopeKey 컬럼으로 **엔티티** 찾기 | **현 단계 캐시 없음** (아래) | `set.ByIndexAsync(...)` | `[SecondaryIndex("AccountId")]` |
 | **T3** 원시 쿼리 | 집계 / 조인 / 스칼라 | **금지**가 기본 | `scope.Raw<T>(sql)` — 감추지 않음 | 호출부 주석 필수 |
 
@@ -587,7 +589,7 @@ A commit → 90 기록 / B commit → 90 기록
 
 **캐시 정책은 5종이며 `[Entity]`가 선언한다.**
 
-현재 계열별 베이스 클래스가 서로 다른 정책을 갖고 있다(5.3.2). 이를 메타데이터로 통일하되, **정책 종류를 명시적으로 열거**한다 — `DataSet<T>`가 리스트 캐시 하나만 전제하면 Auth/Center 계열이 표현되지 않는다.
+현재 계열별 베이스 클래스가 서로 다른 정책을 갖고 있다(5.3.2). 이를 메타데이터로 통일하되, **정책 종류를 명시적으로 열거**한다 — `OwnedSet<T>`가 리스트 캐시 하나만 전제하면 Auth/Center 계열이 표현되지 않는다.
 
 | 현재 위치 | 정책 | `[Entity]` 표현 |
 |---|---|---|
@@ -603,7 +605,7 @@ public enum ECachePolicy { None, Single, OwnerList, GlobalList }
 
 **sliding TTL은 세션 유지에 필수**다(`GetMdlWithCacheAsync`의 `slidingTtl` 인자 — 캐시 히트 시 TTL 갱신).
 
-**단, 이 5종을 attribute로 올리는 시점은 S1이 아니라 S2다 (2026-08-12 정정).** 위 표의 마지막 행(`SessionComponent` = 단건 + 포인터 캐시)이 `Cache`/`SlidingTtl` 두 플래그로 표현되지 않는다는 것이 **열거가 아직 닫히지 않았다는 증거**다. `DataSet<T>`가 5종을 실제로 수용하는 형태를 코드로 확정한 뒤 attribute로 올린다. 그때까지 `[Entity]`에는 TODO 주석만 둔다. 이 표 자체는 **S2 설계가 만족해야 할 제약 목록**으로 유효하다.
+**단, 이 5종을 attribute로 올리는 시점은 S1이 아니라 S2다 (2026-08-12 정정).** 위 표의 마지막 행(`SessionComponent` = 단건 + 포인터 캐시)이 `Cache`/`SlidingTtl` 두 플래그로 표현되지 않는다는 것이 **열거가 아직 닫히지 않았다는 증거**다. `OwnedSet<T>`가 5종을 실제로 수용하는 형태를 코드로 확정한 뒤 attribute로 올린다. 그때까지 `[Entity]`에는 TODO 주석만 둔다. 이 표 자체는 **S2 설계가 만족해야 할 제약 목록**으로 유효하다.
 
 **T2 — 신규 도입은 하지 않되, 이미 구현된 것은 유지한다.**
 `TryGetByAccountIdAsync`의 결과는 T1 리스트 캐시와 **같은 엔티티**다. 여기에 값을 캐싱하면 사본이 둘이 된다. 정석 해법은 값이 아니라 **키만 캐싱**하는 것이다:
@@ -622,15 +624,15 @@ Set<PlayerModel>() 리스트 캐시         ← 엔티티 사본은 여전히 �
 > 관계가 **가변**인 보조 인덱스(예: 길드원 목록)는 무효화 훅이 필요하므로 T2가 아니라 T3으로 분류한다. attribute에 이 구분을 명시한다.
 
 **T3 — 캐시 금지가 기본, 그리고 숨기지 않는다.**
-`SUM(RewardAmount)`는 `WorldStage` 행 하나만 바뀌어도 무효인데 `DataSet<WorldStageModel>.UpdateAsync`가 그것을 알 방법이 없다. **무효화 조건을 시스템이 추론할 수 없으면 캐싱하지 않는다.** 정말 필요하면 무효화 태그를 손으로 선언하게 한다:
+`SUM(RewardAmount)`는 `WorldStage` 행 하나만 바뀌어도 무효인데 `OwnedSet<WorldStageModel>.UpdateAsync`가 그것을 알 방법이 없다. **무효화 조건을 시스템이 추론할 수 없으면 캐싱하지 않는다.** 정말 필요하면 무효화 태그를 손으로 선언하게 한다:
 
 ```csharp
 scope.Raw<int>(sql, args).CachedBy(CacheKeyTags.WorldStageModel, playerId)
 ```
 
-T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출부가 평범한 조회로 착각한다. `scope.Raw`라는 별도 진입점으로 노출해 코드 리뷰에서 드러나게 하는 것이 목적이다.
+T3을 `OwnedSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출부가 평범한 조회로 착각한다. `scope.Raw`라는 별도 진입점으로 노출해 코드 리뷰에서 드러나게 하는 것이 목적이다.
 
-> **T3 실행 전 스코프 flush (필수).** 3.8의 dirty 모델에서 변경은 커밋까지 DB에 반영되지 않는다. `DataSet<T>` 조회는 스코프가 캐싱한 같은 인스턴스를 돌려주므로 무관하지만, **`scope.Raw`는 DB로 직행하므로 dirty 상태를 보지 못한다**:
+> **T3 실행 전 스코프 flush (필수).** 3.8의 dirty 모델에서 변경은 커밋까지 DB에 반영되지 않는다. `OwnedSet<T>` 조회는 스코프가 캐싱한 같은 인스턴스를 돌려주므로 무관하지만, **`scope.Raw`는 DB로 직행하므로 dirty 상태를 보지 못한다**:
 >
 > ```csharp
 > worldStage.AddStar(3);                                   // 메모리에서만 변경 (dirty)
@@ -649,27 +651,27 @@ T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출
 | # | 불편함 | A안에서 어떻게 되는가 |
 |---|---|---|
 | 5.1.1 | Manager 유무 불균형 (14줄~412줄) | **Manager 개념 자체가 없음.** 로직 없는 엔티티는 파일도 없고, 로직 있는 엔티티는 Model partial 파일만 생긴다. 판단할 게 없어짐 |
-| 5.1.2 | 모든 로드가 Manager 경유 → 1:1 가정이 리스트/운영툴과 충돌 | `DataSet<T>.GetListAsync()`가 `List<T>`(Model)를 그대로 반환. 래핑 개념이 없으므로 N개 벌크 처리에 아무 마찰 없음 |
-| 5.1.3 | `Model` public getter로 캡슐화 미강제 | **부분 해소.** 필드 직접 대입은 여전히 가능(Dapper 리플렉션·직렬화 때문에 public setter 필요). 다만 "저장"은 반드시 `DataSet.UpdateAsync`를 거치고, ScopeKey 가드가 걸리므로 잘못된 저장은 막힌다. 완전 캡슐화는 비목표(8.5 참고) |
+| 5.1.2 | 모든 로드가 Manager 경유 → 1:1 가정이 리스트/운영툴과 충돌 | `OwnedSet<T>.GetListAsync()`가 `List<T>`(Model)를 그대로 반환. 래핑 개념이 없으므로 N개 벌크 처리에 아무 마찰 없음 |
+| 5.1.3 | `Model` public getter로 캡슐화 미강제 | **부분 해소.** 필드 직접 대입은 여전히 가능(Dapper 리플렉션·직렬화 때문에 public setter 필요). 다만 "저장"은 반드시 `model.MarkDirty()` → 커밋 시 flush 를 거치고(3.8), ScopeKey 가드가 걸리므로 잘못된 저장은 막힌다. 완전 캡슐화는 비목표(8.5 참고) |
 | 5.1.4 | Manager가 전체 Repo를 들고 있음 | Model은 DB 참조가 아예 없어 다른 엔티티에 접근 불가. 다중 Model 규칙은 `ObjectLedger` 같은 **이름 있는 도메인 서비스**로 승격 |
 | 5.2.1 | 등록 누락이 런타임에만 터짐 | `[Entity]` attribute + 어셈블리 스캔. 등록이라는 수동 단계가 사라짐 |
-| 5.2.2 | Component 4형식을 모델마다 손으로 반복 | `DataSet<T>` 하나로 끝. 서브클래스 불필요 |
+| 5.2.2 | Component 4형식을 모델마다 손으로 반복 | `OwnedSet<T>` 하나로 끝. 서브클래스 불필요 |
 | 5.2.3 | 표준 CRUD 밖 쿼리마다 캡슐화가 뚫림 | **3.9의 4티어로 분류.** 현 탈출구 4건 중 2건(`PlayerComponent.LoadFromDb` override, `ScheduleComponent.GetListAsync`)은 특수 쿼리가 아니라 메타데이터 부족이라 `[Entity]` 도입만으로 소멸(T0). 남는 2건은 T2(`TryGetByAccountIdAsync` — 보조 인덱스, 현 단계 캐시 없음)와 T3(`GetTotalStarAsync` — 집계, 캐시 금지 기본 + `scope.Raw`로 노출). **탈출구를 없애는 게 아니라 티어별로 이름과 캐시 규칙을 부여하는 것** |
 | 5.3.1 | 인프라 그루핑 vs 도메인 그루핑 혼재 | `UserScope`/`AuthScope`/`CenterScope`는 **"어느 DB + 누구 소유"만 표현**한다고 정의. 도메인 그루핑 역할을 명시적으로 제거 → 처리 주체 후보에서 빠짐 |
-| 5.3.2 | Auth/User 캐싱 정책 불일치 | `DataSet<T>`가 캐시 정책을 엔티티 메타데이터(`[Entity(Cache = ...)]`)로 통일 처리. 계열별로 다른 베이스 클래스가 없으므로 불일치 자체가 성립 불가 |
+| 5.3.2 | Auth/User 캐싱 정책 불일치 | `OwnedSet<T>`가 캐시 정책을 엔티티 메타데이터(`[Entity(Cache = ...)]`)로 통일 처리. 계열별로 다른 베이스 클래스가 없으므로 불일치 자체가 성립 불가 |
 | 5.4 | **비즈니스 로직 처리 주체 불명확** | 3.6의 3줄 판정표 + Model에 DB 참조가 없다는 타입 제약으로 기계적으로 결정 |
 | 5.5.1 | Get/Create/Update가 `RpcCtx.PlayerId`에 암묵 결속 | `GameDb.User(shardId, playerId)` — 대상이 명시적 인자. 운영툴/레이드/배치가 본편과 **완전히 같은 API** 사용 |
 | 5.5.2 | `IGameContext`가 Component/Manager 깊숙이 박힘 | 데이터 계층이 `IGameContext`를 아예 모름. `RaidGameContext`가 인터페이스를 구현할 필요 자체가 없어지고, `Ip=""` 같은 스텁 문제도 소멸 |
 | 5.5.3 | 네임스페이스가 `Server.*`/`WebStudyServer.*` | 신규 어셈블리(`GameData` 등 중립 이름)로 재구성하며 자연 해소 |
 | 5.5.4 | 모델 등록이 프로세스마다 중복 | 어셈블리 스캔 1회. 프로세스별 목록 자체가 없음 |
-| 5.6 | Delete 없음 / 부분 업데이트 없음 | `DataSet<T>.DeleteAsync` 추가. 부분 업데이트는 API 경계 문제로 보고 GSA의 `JsonPutEntity.ApplyTo` 패턴을 운영툴 계층에서 채택 |
+| 5.6 | Delete 없음 / 부분 업데이트 없음 | `OwnedSet<T>.DeleteAsync` 추가. 부분 업데이트는 API 경계 문제로 보고 GSA의 `JsonPutEntity.ApplyTo` 패턴을 운영툴 계층에서 채택 |
 | 5.7 | mdl/mgr 접두사 의존 | `mgr` 개념이 사라져 접두사가 1종(`mdl`)으로 줄거나 불필요해짐. (원래 무시하기로 한 항목) |
 
 ## 5. GSA(서버참고2) 불편점 — 항목별 해소
 
 | # | GSA 문제 | A안에서 어떻게 되는가 |
 |---|---|---|
-| 3.1 | Repo가 "동사 축"으로 쪼개진 God 클래스 (`UserRepo.Update.cs` 2,425줄) | 엔티티별 CRUD 코드가 **아예 존재하지 않음**(`DataSet<T>` 제네릭 1개). 커질 파일 자체가 없음 |
+| 3.1 | Repo가 "동사 축"으로 쪼개진 God 클래스 (`UserRepo.Update.cs` 2,425줄) | 엔티티별 CRUD 코드가 **아예 존재하지 않음**(`OwnedSet<T>` 제네릭 1개). 커질 파일 자체가 없음 |
 | 3.2 | 모델마다 손으로 쓴 CRUD 중복, 필드 추가 시 2곳 수동 동기화 | 필드 매핑 코드 없음. 코드젠 모델 + attribute 메타데이터만으로 CRUD 성립 |
 | 3.3 | Service가 raw Model+Proto를 파라미터로 실어나름 (파라미터 6~7개) | 로직이 Model 메서드/도메인 서비스로 이동해 파라미터 뭉치가 사라짐. Proto는 필요한 메서드에만 인자로 등장 |
 | 3.4 | DbType 분기가 메서드마다 반복 | DI 시점 1회 스왑(현재 구조에서 이미 해결됨). A안도 엔진 계층을 그대로 재사용하므로 유지 |
@@ -685,7 +687,7 @@ T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출
 - **App Service의 오케스트레이션 실수는 여전히 사람 책임이다.** 순서를 잘못 짜거나 원자성이 필요한 연산을 쪼개는 것 자체는 타입이 막지 못한다. 도메인 이벤트/사가 같은 장치는 이 규모에 과하다고 보고 도입하지 않는다.
 - **비-Cash 재화의 DB 감사 원장은 비목표다.** DB 원장은 유료 재화(`FREE_CASH`/`REAL_CASH`/`TOTAL_CASH`)에만 둔다 — 환불·차지백·CS 분쟁이 걸리는 축이기 때문이다. EXP/GOLD/POINT/TICKET/ITEM/COOKIE 변동은 `ChangeSet`으로 반환되고 구조화 로그까지만 간다. 재검토 조건은 S0-3에 기록.
 - **로직 많은 엔티티의 partial 파일은 여전히 커진다.** `KingdomMapModel.cs`는 지금 `KingdomMapManager`(412줄)와 비슷한 크기가 될 것이다. 나빠지진 않지만 해결되지도 않는다.
-- **`DataSet<T>` 제네릭 + attribute 메타데이터는 리플렉션 의존도를 더 높인다.** 지금도 `DapperExtension`이 리플렉션 기반이지만, A안은 ScopeKey 스코핑·쓰기 가드까지 메타데이터로 처리하므로 "컴파일 타임에 안 보이는 규칙"이 늘어난다. 부팅 시 전량 검증(등록 누락·ScopeKey 필드 부재 즉시 실패)으로 완화한다.
+- **`OwnedSet<T>` 제네릭 + attribute 메타데이터는 리플렉션 의존도를 더 높인다.** 지금도 `DapperExtension`이 리플렉션 기반이지만, A안은 ScopeKey 스코핑·쓰기 가드까지 메타데이터로 처리하므로 "컴파일 타임에 안 보이는 규칙"이 늘어난다. 부팅 시 전량 검증(등록 누락·ScopeKey 필드 부재 즉시 실패)으로 완화한다.
 
 ---
 
@@ -700,13 +702,13 @@ T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출
 
 **① 트랜잭션이 자동으로 하나로 유지된다.**
 `DbSessionManager`는 열린 세션을 `Dictionary<string, IDbSession>`(키 = connectionString)로 관리한다. 따라서 `GameDb`와 `GlobalDbRepo`가 **같은 `DbSessionManager` 인스턴스를 주입받으면 같은 커넥션에 대해 같은 `IDbSession`을 받는다.**
-→ 이관 중 한 요청이 구 경로(Component)와 신 경로(`DataSet<T>`)를 **섞어 써도 원자성이 깨지지 않는다.** 이것이 엔티티 단위 이관을 가능하게 하는 핵심 조건이며, 이미 충족돼 있다.
+→ 이관 중 한 요청이 구 경로(Component)와 신 경로(`OwnedSet<T>`)를 **섞어 써도 원자성이 깨지지 않는다.** 이것이 엔티티 단위 이관을 가능하게 하는 핵심 조건이며, 이미 충족돼 있다.
 
 **② 커밋 지점은 이관 기간 내내 하나다.**
 `GlobalDbRepo.CommitAsync`(DB 커밋 → 캐시 flush)가 계속 단일 커밋 주체다. `GameDb`는 이 기간 동안 **자체 커밋을 하지 않고 위임**한다. 주체 역전은 마지막 철거 단계(S11)에서 한 번에 한다.
 
 **③ 캐시 키 포맷을 바꾸지 않는다.**
-`DataSet<T>`는 이관 기간 동안 기존 `ListKeyFor` 포맷을 그대로 사용한다. → 스텝을 되돌려도 캐시 무효화가 필요 없다.
+`OwnedSet<T>`는 이관 기간 동안 기존 `ListKeyFor` 포맷을 그대로 사용한다. → 스텝을 되돌려도 캐시 무효화가 필요 없다.
 
 **④ 안전망이 데이터 계층에 결합돼 있지 않다.**
 `ServerTest` 7파일 1,218줄이 전부 `WebApplicationFactory` + `POST /rpc/{protocol}` 방식이다. Repo/Component/Manager를 통째로 들어내도 테스트 코드는 한 줄도 바뀌지 않는다.
@@ -743,7 +745,7 @@ T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출
 | | S0-3 | **확정** — `ChangeSet` 존치(근거 교체: 와이어 계약 분리), 감사는 싱크별 개별 처리, 이름 `RewardHelper` | 3.5 재작성 완료 | — |
 | | S0-4 | **완료** — 락 커넥션 분리(1bf5a39) + 커밋 경계를 유저 락 안으로(7aba510) | 빌드 + 전체 통과 | 순서 복원 |
 | **1 기반** | S1 | `[Entity(Pk, ScopeKey)]` + `EntityRegistry` (기존 등록과 **병존·비교**) | 양 프로세스 부팅 + 전체 통과 | attribute 삭제 |
-| | S2 | `GameDb`/`Scope`/`DataSet<T>`/`Utility` 신설 · **캐시 정책 5종 수용 형태 확정** · `ModelBase` dirty | 빌드 + 전체 통과 | 신규 파일 삭제 |
+| | S2 | `GameDb`/`Scope`/`OwnedSet<T>`/`Utility` 신설 · **캐시 정책 5종 수용 형태 확정** · `ModelBase` dirty | 빌드 + 전체 통과 | 신규 파일 삭제 |
 | | S3 | 엔진 계층 `DeleteAsync` 추가 (5.6) | 신규 단위 테스트 | 메서드 삭제 |
 | **2 파일럿** | S4 | **Channel / Device / Account** | `AuthTest`+`GameEnterTest`, 구 클래스 3쌍 삭제 | **클래스 3쌍** ← 게이트 |
 | **3 재화** | S5 | Point / Ticket / Item / Cookie + `ChangeSet` | `CookieTest` | 클래스 4쌍 |
@@ -765,7 +767,7 @@ T3을 `DataSet<T>` 확장 메서드로 **감싸지 않는다.** 감추면 호출
 도메인 메서드가 `MarkDirty()`로 자기 변경을 표시하고, `GameDb.CommitAsync`가 스코프의 dirty 엔티티를 순회하며 기존 `IRepository.UpdateAsync`로 쓴 뒤 tx commit → 캐시 flush 한다. 상세·근거·한계는 3.8 참조.
 
 이 확정이 S2와 S5의 형태를 결정한다:
-- **S2** — `DataSet<T>`에 `_loaded` 추적과 `FlushDirtyAsync`가 처음부터 들어간다.
+- **S2** — `OwnedSet<T>`에 `_loaded` 추적과 `FlushDirtyAsync`가 처음부터 들어간다.
 - **S5** — 도메인 메서드가 저장 대신 `MarkDirty()`를 호출한다. App Service에 저장 코드가 없다.
 - **S9** — `scope.Raw` 도입 시 실행 전 flush 규칙을 함께 넣는다(3.9).
 - `ModelBase`에 `IsDirty`/`MarkDirty()`/`ClearDirty()` 추가가 **S2의 선행 작업**으로 들어간다.
@@ -810,13 +812,13 @@ PK/ScopeKey를 attribute로 함께 찍을 수 있으면 S1이 자동화된다. �
 기존 `ModelRegistration.Init<T>` 목록을 **지우지 않고 병존**시킨다. 부팅 시 스캔 결과와 수동 목록을 비교해 불일치하면 즉시 실패시킨다.
 → 이 비교 자체가 **5.5.4(Server와 RaidServer의 목록이 조용히 어긋남)를 즉시 검출하는 장치**다. 스캔이 정답이라는 게 요점이 아니라, 두 목록이 다르다는 사실이 곧 버그 리포트다. 수동 목록은 S12에서 지운다.
 
-**S2. `GameDb` / `Scope` / `DataSet<T>` / `Utility` 신설**
+**S2. `GameDb` / `Scope` / `OwnedSet<T>` / `Utility` 신설**
 아무도 사용하지 않는 상태로 추가한다. `DbSessionManager`·`ICacheSession`을 `GlobalDbRepo`와 **같은 DI 스코프에서 공유**하도록 등록한다(7.1-①). tx commit은 `GlobalDbRepo`에 위임하고, dirty flush만 `GlobalDbRepo.CommitAsync` 직전에 연결한다.
 
 함께 들어가는 것:
 - `ModelBase`에 `IsDirty`/`MarkDirty()`/`ClearDirty()` — `MarkDirty()`가 `UpdateTime`도 찍는다(StepByStep 5.6)
 - `GameDb.Utility` — 락 등 엔티티와 무관한 쿼리 전용, **flush하지 않는 경로**(StepByStep 5.2)
-- **커넥션 지연 오픈 (결정됨)** — `GameDb.User(shardId, playerId)`는 스코프만 만들고, `DataSet<T>`의 **첫 조회 시점에** `DbSessionManager.Open`을 호출한다. 현재 `RepoBase` 생성자가 `PrepareComp()`를 부르며 즉시 여는 구조(`20260720` 이슈 ②)를 여기서 해소한다. 스코프를 만들고 쓰지 않는 분기에서 커넥션 낭비가 사라진다.
+- **커넥션 지연 오픈 (결정됨)** — `GameDb.User(shardId, playerId)`는 스코프만 만들고, `OwnedSet<T>`의 **첫 조회 시점에** `DbSessionManager.Open`을 호출한다. 현재 `RepoBase` 생성자가 `PrepareComp()`를 부르며 즉시 여는 구조(`20260720` 이슈 ②)를 여기서 해소한다. 스코프를 만들고 쓰지 않는 분기에서 커넥션 낭비가 사라진다.
 
 **S3. 엔진 계층 `DeleteAsync`**
 5.6의 절반. `Server.Tests` 프로젝트가 현재 비어 있으므로 **여기서 첫 단위 테스트를 만든다.**
@@ -826,7 +828,7 @@ PK/ScopeKey를 attribute로 함께 찍을 수 있으면 S1이 자동화된다. �
 **S4. Channel / Device / Account ← 의사결정 게이트**
 가장 단순한 셋을 고른다: Manager가 각각 14/14/20줄로 본문이 사실상 없고, `AuthComponentBase`는 캐시를 건드리지 않아(DB only, 5.3.2) 캐시 호환 리스크가 0이다. 호출부는 `AuthService` 107줄뿐이다.
 
-**이 스텝의 목적은 이관이 아니라 `DataSet<T>` 설계의 실전 검증이다.** 설계가 안 맞으면 여기서 A안을 중단하고 B안을 재검토한다 — 손실은 클래스 3쌍이다.
+**이 스텝의 목적은 이관이 아니라 `OwnedSet<T>` 설계의 실전 검증이다.** 설계가 안 맞으면 여기서 A안을 중단하고 B안을 재검토한다 — 손실은 클래스 3쌍이다.
 
 #### Phase 3 — 재화 축 (A안 핵심의 검증)
 
@@ -858,7 +860,7 @@ Manager 43/42/38/83줄. 이들의 로직은 전부 "검증 → 필드 변경 →
 - **운영툴처럼 다른 프로세스가 DB를 직접 고치면 캐시가 어긋난다.** TTL(`CacheDefaultTtl`)을 상한으로 두고, 즉시 반영이 필요하면 명시적 무효화 API를 노출한다. 이 한계를 문서에 남긴다.
 
 **S9. World / WorldStage — T3 확정**
-`WorldStageComponent.GetTotalStarAsync`(`SELECT SUM(...)`, 현재 `TODO: 캐시`)는 **T3(원시 쿼리)**의 대표 사례다. `scope.Raw<T>(sql)` 진입점을 여기서 도입하고 **캐시 금지를 기본값으로 확정**한다. `DataSet<T>` 확장 메서드로 감싸지 않는다(3.9).
+`WorldStageComponent.GetTotalStarAsync`(`SELECT SUM(...)`, 현재 `TODO: 캐시`)는 **T3(원시 쿼리)**의 대표 사례다. `scope.Raw<T>(sql)` 진입점을 여기서 도입하고 **캐시 금지를 기본값으로 확정**한다. `OwnedSet<T>` 확장 메서드로 감싸지 않는다(3.9).
 
 **S10. Kingdom 4종 (628줄, 최대)**
 `KingdomMapManager.ConstructStructureAsync(KingdomStructureManager, ...)`처럼 **다른 Manager를 인자로 받는 메서드**가 있다 — 여러 Model에 걸친 불변식이므로 도메인 서비스 후보다(3.6 판정표 적용 사례).

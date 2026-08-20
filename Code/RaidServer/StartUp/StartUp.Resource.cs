@@ -3,6 +3,7 @@ using RaidServer.Context;
 using Server.Repo;
 using ServerCore;
 using ServerCore.Extension;
+using WebStudyServer.Data;
 using ServerCore.Repo.Cache;
 using ServerCore.Repo.Database;
 using WebStudyServer.Model;
@@ -33,6 +34,7 @@ namespace RaidServer
 
             services.AddScoped<DbSessionManager>();
             services.AddScoped<GlobalDbRepo>();
+            services.AddScoped<GameDb>();
 
             services.AddScoped<RaidGameContext>();
             services.AddScoped<IGameContext>(sp => sp.GetRequiredService<RaidGameContext>());
@@ -47,6 +49,9 @@ namespace RaidServer
             // 않은 모델을 건드리면 InMemoryPkRegistry 의 미등록 예외로 막혔는데,
             // 그 런타임 가드는 사라진다. 대신 두 호스트의 목록이 어긋날 수 없게 된다.
             EntityRegistry.ScanAndRegister(typeof(PlayerModel).Assembly);
+
+            // 손으로 유지하는 캐시 태그 맵을 [Entity] 와 대조한다.
+            EntityMeta.VerifyCacheTags();
         }
     }
 }
