@@ -2,12 +2,10 @@ using ServerCore;
 
 namespace WebStudyServer.Data
 {
-    // 샤드 -> 커넥션 문자열 결정. GlobalDbRepo 가 private 으로 갖고 있던 것을
-    // 꺼낸 것이다. GameDb 가 같은 판단을 해야 하는데 샤드 맵을 두 벌 두면
-    // 조용히 갈라질 수 있어서, 이관 기간 동안 양쪽이 이 하나를 본다.
+    // 샤드 -> 커넥션 문자열. GameDb와 GlobalDbRepo가 이 하나를 봄.
     public static class DbConnectionResolver
     {
-        // InMemory 모드에서 모든 Repo 가 단일 세션을 공유하도록 동일한 키를 쓴다.
+        // InMemory 모드에서 모든 Repo가 단일 세션을 공유하도록 동일한 키 사용
         public const string InMemoryConnectionKey = "__inmemory__";
 
         public const int MaxShardCount = 64;

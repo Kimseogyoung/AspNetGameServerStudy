@@ -144,10 +144,8 @@ namespace ServerCore.Extension
             return await connection.QueryAsync<T>(sql, keyValues, transaction);
         }
 
-        // 컬럼 이름을 인자로 받는 조회. OwnedSet<T> 는 제네릭 하나뿐이라
-        // new { PlayerId = ... } 같은 익명 타입을 만들 수 없고, 스코프 키 컬럼명도
-        // 엔티티마다 다르다(User 13개는 PlayerId, PlayerModel 은 Id).
-        // 그래서 이름으로 조건을 거는 경로가 필요하다.
+        // 컬럼 이름을 인자로 받는 조회. 제네릭 안에서는 new { PlayerId = ... } 같은 익명 타입을
+        // 못 만들고 컬럼명도 엔티티마다 다름.
         public static async Task<IEnumerable<T>> SelectListByColumnAsync<T>(this IDbConnection connection, string column, object value, IDbTransaction transaction)
         {
             var sql = ColumnListSqlCache.GetOrAdd(

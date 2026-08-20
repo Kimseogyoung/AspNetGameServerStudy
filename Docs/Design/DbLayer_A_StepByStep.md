@@ -695,6 +695,26 @@ await auth.CreateChannelAsync(EChannelType.GUEST);
 
 **쓰기 규칙은 하나다 — 전부 `Update`, 전부 즉시.** 한때 "추적되는 것은 `MarkDirty`, 아닌 것은 `Update`"로 갈랐으나 dirty 를 철회하면서 그 분기가 사라졌다(§S2-H). 읽는 사람이 외울 규칙이 하나 줄었다.
 
+**지역변수 (2026-08-20 추가 — S4 스케치에서 나왔다)**
+
+메서드 이름 규칙만 정해뒀는데, S4 혼재 코드를 그려보니 호출부에서 **스코프인지 모델인지 이름으로 안 갈리는** 문제가 먼저 걸렸다. 스코프 객체가 데이터 프로퍼티를 노출하기 때문이다 — `authScope.AccountId` 와 `account.Id`, `userScope.PlayerId` 와 `player.Id` 가 호출부에서는 둘 다 "값 든 객체"로 읽힌다.
+
+| 규칙 | 예 |
+|---|---|
+| 스코프 변수는 **`Scope` 접미사** | `authScope`, `userScope`, `centerScope` |
+| 모델 변수는 접미사 없음 | `account`, `channel`, `device`, `player` |
+| 옛 경로(Manager)는 기존 `mgr` 접두사 유지 | `mgrSession` |
+| **접두사는 같은 종류가 한 메서드에 둘 이상일 때만** | `device` (1개라 없음) / `foundAccount`·`newAccount` (2개) |
+| 구분 접두사는 `found` / `new` | `origin` 은 쓰지 않는다 |
+
+`mgr` 을 남기는 것은 이관 기간 한정으로 값이 있다 — **`mgr` 이 붙어 있으면 옛 경로**라는 표시가 되어, 한 메서드 안에서 신/구가 섞인 것이 눈에 보인다. S11 에서 Manager 가 사라지면 같이 사라진다.
+
+`origin` 을 버리는 이유: 지금 `AuthService.cs:27,30,33` 의 `originMgrAccount` 계열은 **의미가 아니라 C# 스코프 회피용**이다(안쪽 블록과 바깥 블록이 같은 이름을 못 쓴다 — CS0136). 이름이 아무것도 말하지 않으므로 `found`/`new` 로 바꾼다.
+
+**정렬 금지**: `=` 나 값을 세로로 맞추려고 공백을 채우지 않는다. 이름 하나만 길어져도 주변 줄을 전부 건드리게 되어 diff 가 부풀고, 실제 변경과 정렬 변경이 한 커밋에 섞인다.
+
+**남은 불편, 일부러 안 고쳤다**: `SignUpAsync` 는 한 메서드에 두 흐름이 있어 `foundAuthScope` / `newAuthScope` 가 된다. 스코프는 의미상 "찾은" 것도 "새" 것도 아니므로(`_db.Auth(id)` 는 항상 성공하는 경계 핸들이고 found/new 가 걸리는 것은 그것이 감싸는 **계정**이다) 접두사가 정확히는 거짓말을 한다. 메서드를 둘로 쪼개면 사라지지만 그것은 S4 범위 밖이다. **S4 를 끝내고 실물을 본 뒤 다시 본다** — 미리 정하지 않는다(§S2-I).
+
 #### S2-G 타입 이름 — `DataSet`을 버렸다
 
 `DataSet<T>` → `OwnedDataSet<T>` → **`OwnedSet<T>`**, 접근자 `scope.Set<T>()` → **`scope.Owned<T>()`**.
@@ -901,6 +921,77 @@ PlayerMap = new PlayerMapComponent(this, Repository); // 유지 (S8)
 **아직 안 되는 것**: Session/PlayerMap은 그대로. User 계열 전부 그대로. 재화·로직 이관 없음.
 
 **롤백 비용**: 클래스 3쌍 복원. **여기서 `OwnedSet<T>` 설계가 맞지 않으면 A안을 중단하고 B안을 재검토한다.**
+
+#### S4-A 실행 결과 (2026-08-20, branch `db-refactor`)
+
+| # | 계획 | 결과 |
+|---|---|---|
+| 1 | `Identity` / `AuthScope` 신설 | ✅ 새 제네릭 0개. 표면은 계획보다 2개 늘었다 (§S4-C) |
+| 2 | `Domain/AccountModel.Logic.cs` | ✅ `IsActive()` + `EnsureActive()` |
+| 3 | `Data/Queries/ChannelQueries.cs` | ✅ `Active()` 1개 (T1) |
+| 4 | `AuthService` 두 흐름 이관 | ✅ 혼재 형태 (§S4-D) |
+| 5 | Component/Manager 6개 삭제 | ✅ 217줄 |
+| 6 | `AuthRepo.PrepareComp` 5줄 → 2줄 | ✅ 프로퍼티 3개도 같이 |
+| 7 | — | ➕ `AuthScope.UpdateAsync<T>` 는 **안 만들었다** (§S4-E) |
+
+14파일 +244/-261. **검증**: 리빌드 0에러/신규 경고 0, `ServerTest` 17/17. `TestBase.CreateDummyPlayerAsync` 가 SignUp 을 타므로 17개 전부가 이 경로를 지난다.
+
+#### S4-B 이 게이트는 `OwnedSet<T>` 를 검증하지 못한다 — 게이트가 S5 로 옮겨간다
+
+위에 "여기서 `OwnedSet<T>` 설계가 맞지 않으면 중단한다"고 적어뒀는데, **S4 는 `OwnedSet<T>` 를 한 번도 지나가지 않는다.** §S2-E 에서 Q2 를 "아니오"로 정하면서 Auth 가 `OwnedSet` 을 쓰지 않게 됐기 때문이다. 그 결정이 게이트의 검증 대상을 통째로 들어냈는데 게이트 문구는 그대로 남아 있었다.
+
+| S4 가 확인한 것 | S4 가 확인 못 한 것 |
+|---|---|
+| `Identity`(스코프 밖) / `AuthScope`(스코프 안) 분류가 실제 호출부에서 성립한다 | `OwnedSet<T>` — 코드가 지나가지 않는다 |
+| 손으로 쓰는 Auth 표면이 감당된다 (11메서드) | `[Entity].ScopeKey` 자동 WHERE — Auth 는 안 쓴다 |
+| Component/Manager 삭제가 실제로 된다 | 소유자 리스트 캐시 — Auth 는 캐시가 0이다 |
+| 데이터 계층의 `RpcContext` 결합이 풀린다 | `SelectListByColumnAsync` — 여전히 호출부 0 |
+| 신/구 혼재가 한 서비스에서 성립한다 | |
+
+**따라서 A안 중단 여부를 묻는 진짜 게이트는 S5(Point/Ticket/Item/Cookie)다.** S4 는 "Auth 형태가 맞는가"만 답했고, 그 답은 예다. S5 는 처음으로 User 계열 · `OwnedSet<T>` · 캐시 · `ScopeKey` 를 동시에 지나간다.
+
+이것은 §S2-I 가 말한 것의 세 번째 사례다 — 앞선 결정(§S2-E)이 뒤 스텝의 전제를 조용히 바꿔놓았고, 코드를 써보고 나서야 드러났다.
+
+#### S4-C census 는 조회 축만 봤고 "못 찾으면 어떻게 되는가"를 안 봤다
+
+§S2-E 가 확정한 표면으로는 두 흐름이 컴파일되지 않는다. 같은 축에 **던지는 것과 안 던지는 것이 둘 다** 필요했다.
+
+| 추가 | 왜 |
+|---|---|
+| `Identity.GetChannelAsync(key)` | `SignIn` — 채널이 없으면 `NOT_FOUND_CHANNEL` 로 실패한다 |
+| `AuthScope.TryGetAccountAsync()` | `SignUp` — 기기만 남고 계정이 없는 상태를 신규 가입으로 흘려보낸다 |
+
+census 가 "어느 컬럼으로 조회하는가"를 셌기 때문에 놓쳤다. §S2-F 가 동사를 **실패 시 동작**으로 갈라놨으므로 쌍이 필요한 것은 규칙대로다. 다음에 표면을 census 로 도출할 때는 축과 함께 **실패 처리**를 같이 세야 한다.
+
+#### S4-D 혼재 형태 — `SetShardId` 는 저절로 안 사라진다
+
+`AuthService` 는 `GlobalDbRepo` 와 `GameDb` 를 동시에 든다. Session(S7) 과 PlayerMap(S12) 이 남아 있기 때문이다. 5개 엔티티 중 **3 신 / 2 구**다.
+
+```csharp
+SessionKey = mgrSession.Model.Key,   // 구 - .Model 을 거친다
+ChannelKey = channel.Key,            // 신 - 모델 직접
+```
+
+한 응답 조립부에 두 세대가 나란히 놓인다. 이것이 이관 기간 코드의 실물이고, S5~S10 에서 같은 모양이 반복된다. **`mgr` 접두사가 "옛 경로"의 표시로 기능한다** — 의도한 것은 아니지만 혼재 상태에서 값이 있어 §S2-F 에 규칙으로 넣었다.
+
+**`RpcContext` 두 세터의 운명이 갈린다.** 옛 `AccountComponent.CreateAsync:45-46` 은 둘을 썼는데,
+
+| | 읽던 곳 | S4 후 |
+|---|---|---|
+| `SetAccountId` | `DeviceComponent.CreateAsync:29` | **소멸** — Device 가 신 경로로 가면서 스코프가 accountId 를 든다 |
+| `SetShardId` | **`SessionComponent.TouchAsync:85`** | **남는다** — Session 이 구 경로라 읽는 쪽이 살아있다 |
+
+그래서 `AuthService` 에 `RpcContext.SetShardId(newAccount.ShardId)` 를 **명시적으로** 뒀다. 컨텍스트 쓰기는 원래 Transport 인접 계층의 일이므로(§S2-E) 데이터 계층에 숨어 있던 것을 드러낸 것이고, `// S7 에서 제거` 로 표시했다.
+
+**오늘은 없어도 안 터진다** — `RpcContext.ShardId` 기본값이 `0`이고 `Identity.CreateAccountAsync` 도 `ShardId = 0 // TODO` 라 no-op 이다. 그래서 더 위험하다. 그 `TODO` 가 풀리는 날 새 계정의 세션이 잘못된 샤드로 들어가고, `ServerTest` 는 못 잡는다.
+
+**`SetAccountId` 제거가 안전한지는 읽는 쪽을 전부 세어 확인했다**: `RpcService.cs:84` 의 `RunAtomicAsync(_rpcCtx.AccountId, ...)` 는 인자가 **핸들러 실행 전에** 평가되므로 SignUp 에서는 예나 지금이나 `0` 이고, `ResponseCacheService.MakeKey` 는 `SessionKey`+`Seq` 로만 키를 만들며, `AuthPolicy` 검사는 핸들러 앞이다. **요청 안에서 값이 달라지는 독자가 없다.**
+
+#### S4-E 만들지 않은 것
+
+`AuthScope.UpdateAsync<T>` 는 §S2-E 표면에 있었으나 **짓지 않았다.** 옛 `AccountComponent.UpdateAccountAsync` / `DeviceComponent.UpdateAsync` / `ChannelComponent.UpdateAsync` 셋 다 **호출부가 0개**였다. 소비자가 생길 때 만든다 — §S2-I · §S2-J · S3 와 같은 판단이다.
+
+§S4 계획이 적어둔 `Data/Queries/ChannelQueries.cs` 는 만들었지만, "Auth 데이터 접근 13 → 2" 는 **S4 가 아니라 S7/S12 까지 끝난 뒤**의 숫자다. 지금은 `SessionComponent`(122) · `PlayerMapComponent`(29) 와 그것들이 쓰는 `AuthComponentBase`(64) · `AuthManagerBase`(15) · `AuthRepo`(29) 가 그대로 남아 있다.
 
 ---
 
@@ -1572,6 +1663,7 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | **S1** (완료) | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · **ScopeKey는 User 폴더 한정, `fk` 토큰에서 생성** · 가드 4종 · `AssertMatches` 철회, 검사를 `Init` 안으로 (§S1-D) · 5.8은 해소 |
 | **S12** | RaidServer의 등록 표면이 2 → 19로 넓어진 것을 되돌릴지 판단 (§S1-F) |
 | **S2** (완료) | `OwnedSet<T>`는 캐시되는 소유자 리스트 전용 (5.4.1 → §S2-J) · 스코프 3종은 독립 클래스 (§S1-G) · 커넥션 지연 오픈 (5.11) · **dirty 철회 (§S2-H)** · `GameDb.Utility` 는 S10.5 로, lazy BEGIN 은 S11 로 이월 · 네이밍 규칙 확정 (§S2-F) · Auth 형태 확정 (§S2-E) |
+| **S4** (완료) | Auth 형태 확정 · `Identity`/`AuthScope` 2클래스 · Component/Manager 6개 삭제 · **게이트는 S5 로 옮겨간다** (§S4-B) · `SetShardId` 다리 (§S4-D) |
 | **S4** | 캐시 없는 경로 실증 (Account/Channel/Device는 원래 캐시 없음) · **Auth의 스코프 밖 조회(기기 키·채널 키·세션 키·계정 생성)를 어디로 보낼지 확정 → `[Entity]`에 Auth `ScopeKey`를 붙일지 함께 결정 (§S1-G Q2)** |
 | **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
 | **S8** | `GlobalList` 정책 실증 · `ScheduleView`가 `ServerTime`을 인자로 (5.10) |
