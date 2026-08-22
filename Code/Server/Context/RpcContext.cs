@@ -178,10 +178,9 @@ namespace WebStudyServer
             if (reqHeaders.ContainsKey(forwardedHeaderKey))
             {
                 var forwardIpStr = reqHeaders[forwardedHeaderKey].FirstOrDefault();
-                var forwardIps = forwardIpStr.Split(","); // ip1, ip2, ..."
-                if (forwardIps.Length > 0)
+                if (!string.IsNullOrEmpty(forwardIpStr))
                 {
-                    var forwardIp = forwardIps[0];
+                    var forwardIp = forwardIpStr.Split(",")[0]; // ip1, ip2, ..."
                     if (!string.IsNullOrEmpty(forwardIp))
                     {
                         return forwardIp;
@@ -189,8 +188,9 @@ namespace WebStudyServer
                 }
             }
 
+            // RemoteIpAddress는 원격 IP가 없는 호출(테스트 호스트 등)에서 null. Ip는 non-nullable이다.
             var remoteIp = httpCtx.Connection.RemoteIpAddress?.ToString();
-            return remoteIp;
+            return remoteIp ?? string.Empty;
         }
 
         private string GetQueryValue(HttpContext httpContext, string key)
