@@ -5,7 +5,7 @@ using ServerCore.Model;
 namespace WebStudyServer.Model
 {
 	[Entity(Pk = ["SfId"], ScopeKey = "PlayerId")]
-	public partial class CashChangeLogModel : ModelBase
+	public partial class CashChangeLogModel : ModelBase, IScopedModel
 	{
     
     		
@@ -62,5 +62,13 @@ namespace WebStudyServer.Model
     		
     		public ulong IapActionId { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is CashChangeLogModel otherModel
+				&& SfId == otherModel.SfId;
+		}
+
+		public ulong GetScopeKey() => PlayerId;
+		public void SetScopeKey(ulong value) => PlayerId = value;
 	}
 }

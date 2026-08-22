@@ -1,12 +1,13 @@
 using Protocol;
 using WebStudyServer;
 using WebStudyServer.Base;
+using WebStudyServer.Data;
 using WebStudyServer.Repo;
 namespace WebStudyServer.Service
 {
     public class CommonService : ServiceBase
     {
-        public CommonService(RpcContext rpcContext, ILogger<CommonService> logger) : base(rpcContext, logger)
+        public CommonService(GameDb db, RpcContext rpcContext, ILogger<CommonService> logger) : base(db, rpcContext, logger)
         {
         }
 

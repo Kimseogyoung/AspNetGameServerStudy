@@ -5,6 +5,7 @@ using Server.Repo;
 using WebStudyServer;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
+using WebStudyServer.Data;
 using WebStudyServer.Repo;
 using WebStudyServer.Service;
 
@@ -12,7 +13,7 @@ namespace Server.Service
 {
     public class GameService : ServiceBase
     {
-        public GameService(GlobalDbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(rpcContext, logger)
+        public GameService(GlobalDbRepo dbRepo, GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(db, rpcContext, logger)
         {
             _dbRepo = dbRepo;
             _mapper = mapper;
@@ -25,7 +26,7 @@ namespace Server.Service
             if (mgrPlayer.Model.State >= Proto.EPlayerState.PREPARED)
             {
                 // Prepare 이후 접속시마다 처리해줘야할 것이 있으면 여기서 처리
-                var pakPlayer = await mgrPlayer.LoadPlayerAsync(_mapper);
+                var pakPlayer = await mgrPlayer.LoadPlayerAsync(_mapper, OwnScope);
                 return new GameEnterResponsePacket
                 {
                     Player = pakPlayer,
@@ -33,7 +34,7 @@ namespace Server.Service
             }
             else
             {
-                var pakPlayer = await mgrPlayer.PreparePlayerAsync(_mapper);
+                var pakPlayer = await mgrPlayer.PreparePlayerAsync(_mapper, OwnScope);
 
                 var accountId = mgrPlayer.Model.AccountId;
                 var authRepo = _dbRepo.Auth;

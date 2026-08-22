@@ -5,7 +5,7 @@ using ServerCore.Model;
 namespace WebStudyServer.Model
 {
 	[Entity(Pk = ["PlayerId", "Num"], ScopeKey = "PlayerId")]
-	public partial class WorldStageModel : ModelBase
+	public partial class WorldStageModel : ModelBase, IScopedModel
 	{
     
     		
@@ -20,5 +20,14 @@ namespace WebStudyServer.Model
     		
     		public int Star { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is WorldStageModel otherModel
+				&& PlayerId == otherModel.PlayerId
+				&& Num == otherModel.Num;
+		}
+
+		public ulong GetScopeKey() => PlayerId;
+		public void SetScopeKey(ulong value) => PlayerId = value;
 	}
 }

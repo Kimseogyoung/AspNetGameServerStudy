@@ -5,6 +5,7 @@ using Server.Repo;
 using WebStudyServer;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
+using WebStudyServer.Data;
 using WebStudyServer.Repo;
 using WebStudyServer.Service;
 
@@ -12,7 +13,7 @@ namespace Server.Service
 {
     public class CheatService : ServiceBase
     {
-        public CheatService(GlobalDbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<CheatService> logger) : base(rpcContext, logger)
+        public CheatService(GlobalDbRepo dbRepo, GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<CheatService> logger) : base(db, rpcContext, logger)
         {
             _dbRepo = dbRepo;
             _mapper = mapper;
@@ -20,7 +21,7 @@ namespace Server.Service
 
         public async Task<CheatRewardResponsePacket> RewardAsync(CheatRewardRequestPacket req)
         {
-            var mgrPlayerDetail = await _dbRepo.OwnUser.PlayerDetail.TouchAsync();
+            var mgrPlayerDetail = await _dbRepo.OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var chgObjList = await mgrPlayerDetail.IncRewardListAsync(req.RewardList, "CHEAT");
             return new CheatRewardResponsePacket
             {

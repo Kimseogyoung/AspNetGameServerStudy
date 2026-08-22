@@ -5,6 +5,7 @@ using Server.Extension;
 using Server.Repo;
 using WebStudyServer;
 using WebStudyServer.Helper;
+using WebStudyServer.Data;
 using WebStudyServer.Repo;
 using WebStudyServer.Service;
 
@@ -12,7 +13,7 @@ namespace Server.Service
 {
     public class WorldService : ServiceBase
     {
-        public WorldService(GlobalDbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<WorldService> logger) : base(rpcContext, logger)
+        public WorldService(GlobalDbRepo dbRepo, GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<WorldService> logger) : base(db, rpcContext, logger)
         {
             _dbRepo = dbRepo;
             _mapper = mapper;
@@ -45,7 +46,7 @@ namespace Server.Service
             var valRewardList = ReqHelper.ValidRewardList(req.RewardValueList, prtRewardList, reason);
 
             // 처리
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var chgObjList = await mgrPlayerDetail.IncRewardListAsync(valRewardList, reason);
 
             await mgrWorld.FinishStageAsync(mgrWorldStage.Prt);
@@ -85,7 +86,7 @@ namespace Server.Service
             var valRewardList = ReqHelper.ValidRewardList(req.RewardValueList, prtRewardList, reason);
 
             // 처리
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var chgObjList = await mgrPlayerDetail.IncRewardListAsync(valRewardList, reason);
             await mgrWorld.FinishStageAsync(mgrWorldStage.Prt);
             await mgrWorldStage.SetStarAsync(valStar);
@@ -118,7 +119,7 @@ namespace Server.Service
             var valReward = ReqHelper.ValidReward(req.RewardValue, prtReward, reason);
 
             // 처리
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             await mgrWorld.RewardStarAsync(req.AftRewardStar, valTotalStar);
             var chgObj = await mgrPlayerDetail.IncRewardAsync(valReward, reason);
 

@@ -26,5 +26,10 @@ namespace WebStudyServer.Model
     		
     		public int State { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is ScheduleModel otherModel
+				&& Num == otherModel.Num;
+		}
 	}
 }

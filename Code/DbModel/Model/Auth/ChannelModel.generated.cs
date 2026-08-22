@@ -23,5 +23,10 @@ namespace WebStudyServer.Model
     		
     		public EChannelState State { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is ChannelModel otherModel
+				&& Key == otherModel.Key;
+		}
 	}
 }

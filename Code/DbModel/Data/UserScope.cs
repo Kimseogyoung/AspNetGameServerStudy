@@ -18,7 +18,7 @@ namespace WebStudyServer.Data
             PlayerId = playerId;
         }
 
-        public OwnedSet<T> Owned<T>() where T : ModelBase, new()
+        public OwnedSet<T> Owned<T>() where T : ModelBase, IScopedModel, new()
         {
             return new OwnedSet<T>(() => _db.UserRepository(ShardId), PlayerId);
         }

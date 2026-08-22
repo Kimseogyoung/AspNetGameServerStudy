@@ -29,5 +29,10 @@ namespace WebStudyServer.Model
     		
     		public EDeviceState State { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is DeviceModel otherModel
+				&& Key == otherModel.Key;
+		}
 	}
 }

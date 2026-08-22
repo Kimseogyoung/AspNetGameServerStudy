@@ -2,6 +2,8 @@ using Proto;
 using Protocol;
 using ServerCore;
 using ServerCore.Extension;
+using WebStudyServer.Data;
+using WebStudyServer.Data.Queries;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -12,8 +14,9 @@ namespace WebStudyServer.Manager
     {
         public ulong Id => Model.PlayerId;
 
-        public PlayerDetailManager(UserRepo userRepo, PlayerDetailModel model/*, PointComponent*/) : base(userRepo, model)
+        public PlayerDetailManager(UserRepo userRepo, UserScope userScope, PlayerDetailModel model) : base(userRepo, model)
         {
+            _userScope = userScope;
         }
 
         public CashPacket GetCashPacket()
@@ -264,15 +267,19 @@ namespace WebStudyServer.Manager
         #region POINT
         private async Task<double> DecPointInternalAsync(int pointNum, double amount, string reason)
         {
-            var mgrPoint = await _userRepo.Point.TouchAsync((EObjType)pointNum);
-            var pointAmount = await mgrPoint.DecAmountAsync(amount, reason);
+            var pointSet = _userScope.Owned<PointModel>();
+            var point = await pointSet.GetOrCreateAsync(pointNum);
+            var pointAmount = point.DecAmount(amount, reason);
+            await pointSet.UpdateAsync(point);
             return pointAmount;
         }
 
         private async Task<double> IncPointInternalAsync(int pointNum, double amount, string reason)
         {
-            var mgrPoint = await _userRepo.Point.TouchAsync((EObjType)pointNum);
-            var pointAmount = await mgrPoint.IncAmountAsync(amount, reason);
+            var pointSet = _userScope.Owned<PointModel>();
+            var point = await pointSet.GetOrCreateAsync(pointNum);
+            var pointAmount = point.IncAmount(amount);
+            await pointSet.UpdateAsync(point);
             return pointAmount;
         }
         #endregion
@@ -280,31 +287,39 @@ namespace WebStudyServer.Manager
         #region TICKET
         private async Task<double> DecTicketInternalAsync(int ticketNum, double amount, string reason)
         {
-            var mgrPoint = await _userRepo.Ticket.TouchAsync((EObjType)ticketNum);
-            var pointAmount = await mgrPoint.DecAmountAsync(amount, reason);
-            return pointAmount;
+            var ticketSet = _userScope.Owned<TicketModel>();
+            var ticket = await ticketSet.GetOrCreateAsync(ticketNum);
+            var ticketAmount = ticket.DecAmount(amount, reason);
+            await ticketSet.UpdateAsync(ticket);
+            return ticketAmount;
         }
 
         private async Task<double> IncTicketInternalAsync(int ticketNum, double amount, string reason)
         {
-            var mgrPoint = await _userRepo.Ticket.TouchAsync((EObjType)ticketNum);
-            var pointAmount = await mgrPoint.IncAmountAsync(amount, reason);
-            return pointAmount;
+            var ticketSet = _userScope.Owned<TicketModel>();
+            var ticket = await ticketSet.GetOrCreateAsync(ticketNum);
+            var ticketAmount = ticket.IncAmount(amount);
+            await ticketSet.UpdateAsync(ticket);
+            return ticketAmount;
         }
         #endregion
 
         #region COOKIE
         private async Task<double> IncCookieInternalAsync(int cookieNum, int amount, string reason)
         {
-            var mgrCookie = await _userRepo.Cookie.TouchAsync(cookieNum);
-            var soulStone = await mgrCookie.IncCookieAsync(amount, reason);
+            var cookieSet = _userScope.Owned<CookieModel>();
+            var cookie = await cookieSet.GetOrCreateAsync(cookieNum);
+            var soulStone = cookie.IncCookie(amount, ProtoDb.Get<CookieProto>(cookieNum));
+            await cookieSet.UpdateAsync(cookie);
             return soulStone;
         }
 
         private async Task<double> IncSoulStoneInternalAsync(int soulStoneNum, int amount, string reason)
         {
-            var mgrCookie = await _userRepo.Cookie.TouchBySoulStoneAsync(soulStoneNum);
-            var soulStone = await mgrCookie.IncSoulStoneAsync(amount, reason);
+            var cookieSet = _userScope.Owned<CookieModel>();
+            var cookie = await cookieSet.GetOrCreateBySoulStoneAsync(soulStoneNum);
+            var soulStone = cookie.IncSoulStone(amount);
+            await cookieSet.UpdateAsync(cookie);
             return soulStone;
         }
         #endregion
@@ -312,19 +327,23 @@ namespace WebStudyServer.Manager
         #region ITEM
         private async Task<double> DecItemInternalAsync(int itemNum, double amount, string reason)
         {
-            var mgrItem = await _userRepo.Item.TouchAsync(itemNum);
-            var itemAmount = await mgrItem.DecAmountAsync(amount, reason);
+            var itemSet = _userScope.Owned<ItemModel>();
+            var item = await itemSet.GetOrCreateAsync(itemNum);
+            var itemAmount = item.DecAmount(amount, reason);
+            await itemSet.UpdateAsync(item);
             return itemAmount;
         }
 
         private async Task<double> IncItemInternalAsync(int itemNum, double amount, string reason)
         {
-            var mgrItem = await _userRepo.Item.TouchAsync(itemNum);
-            var itemAmount = await mgrItem.IncAmountAsync(amount, reason);
+            var itemSet = _userScope.Owned<ItemModel>();
+            var item = await itemSet.GetOrCreateAsync(itemNum);
+            var itemAmount = item.IncAmount(amount);
+            await itemSet.UpdateAsync(item);
             return itemAmount;
         }
         #endregion
 
-
+        private readonly UserScope _userScope;
     }
 }

@@ -29,5 +29,10 @@ namespace WebStudyServer.Model
     		
     		public int Age { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is AccountModel otherModel
+				&& Id == otherModel.Id;
+		}
 	}
 }

@@ -5,7 +5,7 @@ using ServerCore.Model;
 namespace WebStudyServer.Model
 {
 	[Entity(Pk = ["SfId"], ScopeKey = "PlayerId")]
-	public partial class KingdomStructureModel : ModelBase
+	public partial class KingdomStructureModel : ModelBase, IScopedModel
 	{
     
     		
@@ -26,5 +26,13 @@ namespace WebStudyServer.Model
     		
     		public DateTime EndTime { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is KingdomStructureModel otherModel
+				&& SfId == otherModel.SfId;
+		}
+
+		public ulong GetScopeKey() => PlayerId;
+		public void SetScopeKey(ulong value) => PlayerId = value;
 	}
 }

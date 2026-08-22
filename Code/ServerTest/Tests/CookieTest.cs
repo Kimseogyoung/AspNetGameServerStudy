@@ -16,6 +16,7 @@ namespace ServerTest.Tests
         private const int CookieNum = 1010;          // DefaultPlayer에 포함된 쿠키
         private const int SoulStoneNum = 1011;        // Cookie 1010의 소울스톤 번호
         private const int SoulStoneForStar0To1 = 20;  // Star 0→1 필요 소울스톤
+        private const int NotOwnedCookieNum = 1020;   // 프로토에는 있으나 DefaultPlayer에 없는 쿠키
 
         public CookieTest(GameServerFactory factory) : base(factory) { }
 
@@ -176,6 +177,19 @@ namespace ServerTest.Tests
                         beflv: 5,
                         aftlv: 3,
                         costobj: new CostObjPacket { Type = EObjType.POINT_COOKIE_LV, Num = 0, Amount = 0 }
+                    ));
+
+                Assert.NotEqual((int)EErrorCode.OK, res.Info.ResultCode);
+            }
+
+            // [실패] 보유하지 않은 쿠키 강화 - 통과하면 포인트로 쿠키를 만들어내는 셈이 된다
+            {
+                var res = await Api.PostAsync<CookieEnhanceLvRequestPacket, CookieEnhanceLvResponsePacket>(
+                    new CookieEnhanceLvRequestPacket(
+                        cookienum: NotOwnedCookieNum,
+                        beflv: 1,
+                        aftlv: 2,
+                        costobj: new CostObjPacket { Type = EObjType.POINT_COOKIE_LV, Num = 0, Amount = 10 }
                     ));
 
                 Assert.NotEqual((int)EErrorCode.OK, res.Info.ResultCode);

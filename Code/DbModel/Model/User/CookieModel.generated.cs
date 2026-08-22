@@ -5,7 +5,7 @@ using ServerCore.Model;
 namespace WebStudyServer.Model
 {
 	[Entity(Pk = ["PlayerId", "Num"], ScopeKey = "PlayerId")]
-	public partial class CookieModel : ModelBase
+	public partial class CookieModel : ModelBase, IScopedModel
 	{
     
     		
@@ -35,5 +35,14 @@ namespace WebStudyServer.Model
     		
     		public ECookieState State { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is CookieModel otherModel
+				&& PlayerId == otherModel.PlayerId
+				&& Num == otherModel.Num;
+		}
+
+		public ulong GetScopeKey() => PlayerId;
+		public void SetScopeKey(ulong value) => PlayerId = value;
 	}
 }

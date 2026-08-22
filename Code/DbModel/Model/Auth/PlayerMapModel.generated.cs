@@ -17,5 +17,10 @@ namespace WebStudyServer.Model
     		
     		public int ShardId { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is PlayerMapModel otherModel
+				&& AccountId == otherModel.AccountId;
+		}
 	}
 }

@@ -7,6 +7,7 @@ using Server.Repo;
 using ServerCore;
 using WebStudyServer;
 using WebStudyServer.Model;
+using WebStudyServer.Data;
 using WebStudyServer.Repo;
 using WebStudyServer.Service;
 
@@ -14,7 +15,7 @@ namespace Server.Service
 {
     public class GachaService : ServiceBase
     {
-        public GachaService(GlobalDbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<GachaService> logger) : base(rpcContext, logger)
+        public GachaService(GlobalDbRepo dbRepo, GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<GachaService> logger) : base(db, rpcContext, logger)
         {
             _dbRepo = dbRepo;
             _mapper = mapper;
@@ -34,7 +35,7 @@ namespace Server.Service
         {
             var centerRepo = _dbRepo.Center;
             var scheduleMgr = await centerRepo.Schedule.GetAsync(req.ScheduleNum, EScheduleTimeType.TOTAL);
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
 
             // Cost일치하는지 체크
             var valCnt = scheduleMgr.ValidGachaCnt(req.Cnt);

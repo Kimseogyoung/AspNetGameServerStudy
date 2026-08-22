@@ -9,11 +9,11 @@ namespace WebStudyServer.Data
     //
     // 무상태. 쓰기는 즉시 반영.
     //
-    // 캐시되는 소유자 리스트 전용. ScopeKey와 CacheTag 둘 다 필요하고 하나라도 없으면 생성 시 예외.
+    // 캐시되는 소유자 리스트 전용. 소유자가 없는 엔티티는 IScopedModel이 아니라서 컴파일이 안 됨.
     // 감사 로그(CashChangeLog/GachaLog)나 Session 포인터 캐시처럼 로드 단위가 다른 건 여기로 안 묶음.
-    public class OwnedSet<T> where T : ModelBase, new()
+    public class OwnedSet<T> where T : ModelBase, IScopedModel, new()
     {
-        internal OwnedSet(Func<IRepository> repository, object scopeKeyValue)
+        internal OwnedSet(Func<IRepository> repository, ulong scopeKeyValue)
         {
             if (!EntityMeta<T>.HasScopeKey)
             {
@@ -43,8 +43,10 @@ namespace WebStudyServer.Data
             return (found != null, found);
         }
 
+        // 소유자는 스코프가 정하므로 호출부가 넣은 ScopeKey 값은 덮어씀
         public Task<T> CreateAsync(T entity)
         {
+            entity.SetScopeKey(_scopeKeyValue);
             entity.CreateTime = entity.UpdateTime = DateTime.UtcNow;
             return _repository().InsertAsync(entity, _listKey);
         }
@@ -52,8 +54,19 @@ namespace WebStudyServer.Data
         // IRepository.UpdateAsync가 DB 쓰기와 캐시 갱신을 한 단위로 처리
         public Task UpdateAsync(T entity)
         {
+            EnsureOwned(entity);
             entity.UpdateTime = DateTime.UtcNow;
-            return _repository().UpdateAsync(entity, _listKey, EntityMeta<T>.PkMatcher(entity));
+            return _repository().UpdateAsync(entity, _listKey, x => x.PkEquals(entity));
+        }
+
+        // 다른 소유자의 엔티티를 이 스코프로 저장하면 DB와 캐시 버킷이 어긋난다
+        private void EnsureOwned(T entity)
+        {
+            var owner = entity.GetScopeKey();
+            if (owner != _scopeKeyValue)
+            {
+                throw new InvalidOperationException($"NOT_OWNED_ENTITY:{typeof(T).Name}:{owner}:{_scopeKeyValue}");
+            }
         }
 
         // 자동 WHERE. 컬럼명은 [Entity].ScopeKey에서
@@ -64,7 +77,7 @@ namespace WebStudyServer.Data
         }
 
         private readonly Func<IRepository> _repository;
-        private readonly object _scopeKeyValue;
+        private readonly ulong _scopeKeyValue;
         private readonly CacheKey _listKey;
     }
 }

@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Scriban;
@@ -219,10 +220,13 @@ namespace ClassGenerator
                     fieldList.Add(field);
                 }
                 var classNameWithMdl = $"{className}Model";
+                var keys = ResolveModelKeys(className, defList);
                 var scriptObject = new Dictionary<string, object>
                 {
                     { "ClassName",  classNameWithMdl},
-                    { "ClassAttribute", BuildEntityAttribute(className, defList)},
+                    { "ClassAttribute", BuildEntityAttribute(keys)},
+                    { "BaseTypes", BuildBaseTypes(keys)},
+                    { "Members", BuildMembers(classNameWithMdl, keys)},
                     { "Fields", fieldList},
                 };
 
@@ -242,12 +246,12 @@ namespace ClassGenerator
             }
         }
 
-        // 모델 클래스에 붙는 [Entity] 를 만든다.
+        // 모델의 키 규칙을 한 번 푼다. [Entity] / 상속 목록 / 생성 멤버가 모두 이 결과를 쓴다.
         //
         // 규칙이 애매한 경우는 추측하지 않고 생성을 실패시킨다. 여기서 조용히 틀린
         // 컬럼을 고르면 그 값이 PK WHERE 절과 소유자 필터로 그대로 흘러가고,
         // 증상은 "0행 매치"나 "남의 데이터 조회"처럼 예외 없이 나타난다.
-        private static string BuildEntityAttribute(string className, List<ModelDefinition> defList)
+        private static ModelKeys ResolveModelKeys(string className, List<ModelDefinition> defList)
         {
             // Packet 전용 필드는 테이블에 없으므로 키 판정에서 제외한다.
             // (GenerateLiquibaseChangeLog 도 같은 기준으로 컬럼을 고른다)
@@ -259,40 +263,89 @@ namespace ClassGenerator
                 throw new Exception($"MISSING_PK:{className}");
             }
 
-            var pkArg = string.Join(", ", pkList.Select(x => $"\"{x}\""));
-
-            // 소유자 개념이 있는 것은 User 계열뿐이다. UserComponentBase.LoadFromDb 만
-            // 모든 조회에 WHERE PlayerId 를 자동으로 걸고, Auth/Center 에는 그런 축이 없다.
+            // 소유자 개념이 있는 것은 User 계열뿐이다. Auth/Center 에는 그런 축이 없다.
             var folderName = defList[0].FolderName;
             if (folderName != "User")
             {
-                return $"[Entity(Pk = [{pkArg}])]";
+                return new ModelKeys(pkList, null);
             }
 
             // Player 는 스코프 루트라 fk 가 없는 것이 정상이고, 자기 PK 가 곧 스코프 키다.
-            // 이름으로 특수 처리한다 — "fk 가 없으면 PK 를 쓴다"로 일반화하면 fk 를
+            // 이름으로 특수 처리한다 - "fk 가 없으면 PK 를 쓴다"로 일반화하면 fk 를
             // 빠뜨린 User 모델이 자기 PK 를 스코프 키로 갖게 되어 소유자 필터가 사라진다.
+            string scopeKey;
             if (className == "Player")
             {
                 if (pkList.Count != 1)
                 {
                     throw new Exception($"SCOPE_ROOT_COMPOSITE_PK:{className}");
                 }
-                return $"[Entity(Pk = [{pkArg}], ScopeKey = \"{pkList[0]}\")]";
+
+                scopeKey = pkList[0];
+            }
+            else
+            {
+                var fkList = mdlDefList.Where(x => x.KeyList.Contains("fk")).Select(x => x.FieldName).ToList();
+                if (fkList.Count == 0)
+                {
+                    throw new Exception($"MISSING_SCOPE_KEY:{className}");
+                }
+                if (fkList.Count > 1)
+                {
+                    throw new Exception($"AMBIGUOUS_SCOPE_KEY:{className}");
+                }
+
+                scopeKey = fkList[0];
             }
 
-            var fkList = mdlDefList.Where(x => x.KeyList.Contains("fk")).Select(x => x.FieldName).ToList();
-            if (fkList.Count == 0)
+            // IScopedModel 의 접근자가 ulong 하나로 고정돼 있다. 다른 타입이면 안 맞으므로 실패시킨다.
+            var scopeKeyType = mdlDefList.First(x => x.FieldName == scopeKey).FieldCodeType;
+            if (scopeKeyType != "ulong")
             {
-                throw new Exception($"MISSING_SCOPE_KEY:{className}");
-            }
-            if (fkList.Count > 1)
-            {
-                throw new Exception($"AMBIGUOUS_SCOPE_KEY:{className}");
+                throw new Exception($"NOT_ULONG_SCOPE_KEY:{className}.{scopeKey}:{scopeKeyType}");
             }
 
-            return $"[Entity(Pk = [{pkArg}], ScopeKey = \"{fkList[0]}\")]";
+            return new ModelKeys(pkList, scopeKey);
         }
+
+        private static string BuildEntityAttribute(ModelKeys keys)
+        {
+            var pkArg = string.Join(", ", keys.PkList.Select(x => $"\"{x}\""));
+            return keys.ScopeKey == null
+                ? $"[Entity(Pk = [{pkArg}])]"
+                : $"[Entity(Pk = [{pkArg}], ScopeKey = \"{keys.ScopeKey}\")]";
+        }
+
+        private static string BuildBaseTypes(ModelKeys keys)
+        {
+            return keys.ScopeKey == null ? "ModelBase" : "ModelBase, IScopedModel";
+        }
+
+        // PkEquals 는 캐시 리스트의 항목 교체에, GetScopeKey/SetScopeKey 는 소유자 확인과
+        // 생성 시 소유자 채움에 쓴다. 찍어낼 수 있는 정보를 문자열로 흘린 뒤
+        // 리플렉션으로 되사오지 않으려고 여기서 코드로 만든다.
+        private static string BuildMembers(string classNameWithMdl, ModelKeys keys)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("\t\tpublic override bool PkEquals(ModelBase other)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine($"\t\t\treturn other is {classNameWithMdl} otherModel");
+            sb.AppendLine(string.Join(Environment.NewLine, keys.PkList.Select(x => $"\t\t\t\t&& {x} == otherModel.{x}")) + ";");
+            sb.AppendLine("\t\t}");
+
+            if (keys.ScopeKey != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"\t\tpublic ulong GetScopeKey() => {keys.ScopeKey};");
+                sb.AppendLine($"\t\tpublic void SetScopeKey(ulong value) => {keys.ScopeKey} = value;");
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
+        // ScopeKey: 소유자 컬럼명. Auth/Center 계열은 null.
+        private record ModelKeys(List<string> PkList, string? ScopeKey);
 
         public static void GenerateLiquibaseChangeLog(Dictionary<string, List<ModelDefinition>> modelDefListDict, string mdlOutputPath)
         {

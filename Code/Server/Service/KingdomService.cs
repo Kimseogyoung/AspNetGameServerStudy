@@ -4,6 +4,7 @@ using Protocol;
 using Server.Repo;
 using WebStudyServer;
 using WebStudyServer.Helper;
+using WebStudyServer.Data;
 using WebStudyServer.Repo;
 using WebStudyServer.Service;
 
@@ -11,7 +12,7 @@ namespace Server.Service
 {
     public class KingdomService : ServiceBase
     {
-        public KingdomService(GlobalDbRepo dbRepo, IMapper mapper, RpcContext rpcContext, ILogger<KingdomService> logger) : base(rpcContext, logger)
+        public KingdomService(GlobalDbRepo dbRepo, GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<KingdomService> logger) : base(db, rpcContext, logger)
         {
             _dbRepo = dbRepo;
             _mapper = mapper;
@@ -22,7 +23,7 @@ namespace Server.Service
             var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var hasItemCnt = await OwnUser.KingdomStructure.GetKingdomStructureCntAsync(prtKingdomItem.Num);
             ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
@@ -46,7 +47,7 @@ namespace Server.Service
             var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var mgrKingdomDeco = await OwnUser.KingdomDeco.TouchAsync(prtKingdomItem.Num);
             ReqHelper.ValidContext(mgrKingdomDeco.Model.TotalCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_DECO_CNT",
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = mgrKingdomDeco.Model.TotalCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
@@ -67,7 +68,7 @@ namespace Server.Service
         public async Task<KingdomConstructStructureResponsePacket> KingdomConstructStructureAsync(KingdomConstructStructureRequestPacket req)
         {
             var mgrKingdomStructure = await OwnUser.KingdomStructure.GetAsync(req.KingdomStructureId);
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var mgrKingdomMap = await OwnUser.KingdomMap.TouchAsync();
 
             // Tile 위치 중복 체크
@@ -100,7 +101,7 @@ namespace Server.Service
         {
             var mgrKingdomDeco = await OwnUser.KingdomDeco.TouchAsync(req.KingdomItemNum);
 
-            _ = await OwnUser.PlayerDetail.TouchAsync();
+            _ = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var mgrKingdomMap = await OwnUser.KingdomMap.TouchAsync();
 
             // Tile 위치 중복 체크
@@ -196,7 +197,7 @@ namespace Server.Service
         public async Task<KingdomDecTimeStructureResponsePacket> KingdomStructureDecTimeAsync(KingdomDecTimeStructureRequestPacket req)
         {
             var mgrKingdomItem = await OwnUser.KingdomStructure.GetAsync(req.KingdomStructureId);
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync();
+            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
 
 
             // TODO: 남은 시간, 캐시 보유량 일치하는지 검증

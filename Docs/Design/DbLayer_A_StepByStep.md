@@ -134,7 +134,7 @@ public async Task<CookieEnhanceLvResponsePacket> EnhanceCookieLvAsync(
 | 로직 테스트 | DI + DB 필요 | `cookie.EnhanceLv(1, 5)` 한 줄 |
 
 > **저장 코드가 왜 없나 — §3.8 (c) dirty 플래그.**
-> **주의 (2026-08-20)**: 이 예제의 `MarkDirty()` 는 §S2-H 에서 **철회된 모델**이다. 현재 형태는 `await user.Owned<CookieModel>().UpdateAsync(cookie);` 처럼 명시적 즉시 저장이다. 아래 S5 이후 예제도 같다 — S5~S13 은 §S2-I 대로 "가설"로 읽는다.
+> **주의 (2026-08-20)**: 이 예제의 `MarkDirty()` 는 §S2-H 에서 **철회된 모델**이다. 현재 형태는 `await user.Owned<CookieModel>().UpdateAsync(cookie);` 처럼 명시적 즉시 저장이다. 아래 예제도 같다 — S6~S13 은 §S2-I 대로 "가설"로 읽는다(S5 는 2026-08-23 에 재도출됐다).
 
 `RewardHelper.Pay`가 `PointModel`을 인자로 받는 이유는 §3.6의 `Func<int, PointModel>` 지연 로드를 쓰지 않기 위해서다. 가차처럼 **보상 종류가 런타임에 정해지는 경우**는 4단으로 푼다:
 
@@ -567,7 +567,7 @@ Redis면 원소까지 매번 새 객체다. `MarkDirty()`를 찍은 인스턴스
 
 | | 로드 단위 | 대상 | 쓰기 | 스텝 |
 |---|---|---|---|---|
-| **A** | 소유자 전체 | Point / Cookie / Item / Kingdom / World … (11) | **지연**(dirty) | S5~S10 |
+| **A** | 소유자 전체 | Point / Cookie / Item / Kingdom / World … (11) | 즉시(§S2-H 에서 dirty 철회) | S5~S10 |
 | **B** | **안 함** (컬렉션 없음) | CashChangeLog / GachaLog (2) | 즉시 INSERT | S13 |
 | **C** | 키 하나 | Account / Channel / Device / Session / PlayerMap (5) | 즉시 | S4 |
 | **D** | 전역 전체 | Schedule (1) | 즉시 + 무효화 | S8 |
@@ -995,9 +995,27 @@ ChannelKey = channel.Key,            // 신 - 모델 직접
 
 ---
 
-### S5 — Point / Ticket / Item / Cookie + `ChangeSet`
+### S5 — Point / Ticket / Item / Cookie ← **A안 의사결정 게이트**
 
-**건드리는 파일**: Component 4 + Manager 4 삭제, `Domain/{Point,Ticket,Item,Cookie}Model.Logic.cs` 추가, `Domain/ChangeSet.cs` 추가, `UserRepo.PrepareComp()` 4줄 제거, `CookieService`
+> **2026-08-23 전면 재도출.** 옛 본문은 폐기했다. 코드와 어긋난 곳이 6개였고 그중 하나는 자기모순이었다 — "Component 4 삭제"와 "`PlayerDetailManager`가 여전히 `_userRepo.Point`를 찌른다"가 한 절 안에 같이 있었다. 나머지 5개는 `MarkDirty()`(§S2-H에서 철회), `TouchAsync`(§S2-F에서 `GetOrCreateAsync`로 개명), `TryGetAsync(new { Num = ... })`(실제 시그니처는 술어), `Domain/ChangeSet.cs`(아래에서 S6으로 미룬다), "`PlayerId`는 스코프가 채운다"(그 동작이 코드에 없었다 — 아래 신규 결정). §S2-I의 "S3~S13은 예정이 아니라 가설"이 여기서 네 번째로 확인됐다.
+
+**census — Point/Ticket/Item의 소비자는 서비스가 아니다**
+
+옛 본문이 소비자로 `CookieService`만 적은 것은, census를 조회 축이 아니라 **서비스 파일 이름**으로 돌렸기 때문이다. §S4-C와 같은 종류의 누락이다.
+
+| 엔티티 | 서비스 소비자 | 실제 소비자 |
+|---|---|---|
+| Point | 0 | `PlayerDetailManager` POINT region (265~277) |
+| Ticket | 0 | `PlayerDetailManager` TICKET region (281~293) |
+| Item | 0 | `PlayerDetailManager` ITEM region (313~325) |
+| Cookie | `CookieService` 2곳 | + `PlayerDetailManager` COOKIE region (297~309) |
+
+따라서 **S5는 `PlayerDetailManager`를 피해갈 수 없다.** 다만 그 클래스의 *공개* 표면(`DecCostAsync` / `IncRewardAsync` / `IncRewardListAsync` / `DecCashAsync` / `GetCashPacket`)은 5개 서비스 12곳이 쓰고 있고 **S6에서 통째로 사라질 것**이다. 그래서 S5는 **안쪽 region 4개만 갈아끼우고 공개 표면은 건드리지 않는다** — 곧 지울 시그니처를 지금 바꾸지 않는다.
+
+**건드리는 파일**
+- 삭제: `Component/{Point,Ticket,Cookie,Item}Component.cs`, `Manager/{Point,Ticket,Cookie,Item}Manager.cs` (8개, 약 370줄)
+- 추가: `Domain/{Point,Ticket,Item,Cookie}Model.Logic.cs`, `Data/Queries/`의 `GetOrCreateAsync` 확장
+- 수정: `Repo/UserRepo.cs`(프로퍼티 4 + `PrepareComp()` 4줄), `Component/PlayerDetailComponent.cs`(`TouchAsync(UserScope)`), `Manager/PlayerDetailManager.cs`(region 4개), `Service/{Cookie,Cheat,Gacha,Kingdom,World}Service.cs`(스코프 생성 + 인자 전달)
 
 ```csharp
 // ── Before : CookieManager.EnhanceStarAsync — 검증 + 변경 + 저장이 한 메서드에
@@ -1009,10 +1027,10 @@ public async Task EnhanceStarAsync(int aftStar, int usedSoulStone)
 
     _model.Star = aftStar;
     _model.SoulStone -= usedSoulStone;
-    await _userRepo.Cookie.UpdateMdlAsync(_model);      // ← 저장. 이것 때문에 _userRepo 가 필요하다
+    await _userRepo.Cookie.UpdateMdlAsync(_model);      // ← 이것 때문에 _userRepo 가 필요했다
 }
 
-// ── After : Domain/CookieModel.Logic.cs — 저장이 MarkDirty 로 바뀌면 그대로 순수해진다
+// ── After : Domain/CookieModel.Logic.cs — DB 참조가 없다
 public partial class CookieModel
 {
     public void EnhanceStar(int aftStar, int usedSoulStone, CookieProto prt)
@@ -1020,79 +1038,316 @@ public partial class CookieModel
         ReqHelper.ValidEnough(usedSoulStone, SoulStone, $"COOKIE_SOUL_STONE:{prt.Num}", "ENHANCE_STAR");
         Star = aftStar;
         SoulStone -= usedSoulStone;
-        MarkDirty();                       // ← await _userRepo.Cookie.UpdateMdlAsync(_model); 의 자리
     }
 }
 ```
 
-바뀐 것은 **세 가지뿐**이다: ① `_model.` 접두사 제거 ② 저장 호출 → `MarkDirty()` ③ Proto를 필드가 아니라 **인자로** 받음(시그니처가 의존성을 문서화한다, §3.4). 의미가 없어 보이는 `_ = _model.Star;` 같은 discard 줄도 함께 정리된다(원래 의도는 불명).
+바뀐 것은 넷이다: ① `_model.` 접두사 제거 ② **저장 호출 삭제** ③ Proto를 필드가 아니라 인자로(§3.4) ④ 의미 없는 `_ = _model.X;` discard 제거(4개 Manager 합계 14줄, 원래 의도는 불명). `_userRepo`가 필요했던 유일한 이유가 ②였으므로, **Model이 DB를 참조할 이유가 사라진다.** 이것이 §0.6의 유일한 신규 결정이 실제로 성립하는 지점이다.
 
-`_userRepo`가 필요했던 유일한 이유가 저장이었으므로, ②만으로 **Model이 DB를 참조할 이유가 사라진다.** 이것이 §0.6의 유일한 신규 결정이 실제로 성립하는 지점이다.
+**저장 규칙 — 도메인 메서드는 저장하지 않는다**
+
+dirty를 철회했으므로(§S2-H) 저장은 명시 호출이다. 규칙은 하나다: **도메인 메서드를 부른 쪽이 바로 다음 줄에서 `UpdateAsync`를 한다.** 저장을 빠뜨리면 테스트가 즉시 잡는 "시끄러운 버그"가 되는 것이 §S2-H가 선택한 거래다.
 
 ```csharp
-// ── 재화 메서드는 ChangeSet 을 반환한다
-public partial class CookieModel
+// ── Data/Queries/PointQueries.cs — Component.TouchAsync 의 자리
+public static async Task<PointModel> GetOrCreateAsync(this OwnedSet<PointModel> set, int num)
 {
-    public ChangeSet IncSoulStone(int amount)
-    {
-        var before = SoulStone;
-        SoulStone    += amount;
-        AccSoulStone += amount;
-        MarkDirty();
-        return ChangeSet.Of(EObjType.SOUL_STONE, Num, before, SoulStone);
-    }
+    var (found, point) = await set.TryGetAsync(x => x.Num == num);
+    return found ? point : await set.CreateAsync(new PointModel { Num = num });
+}
+
+// ── PlayerDetailManager POINT region — 공개 표면은 그대로, 안쪽만 바뀐다
+private async Task<double> DecPointInternalAsync(int pointNum, double amount, string reason)
+{
+    var pointSet = _userScope.Owned<PointModel>();
+    var point = await pointSet.GetOrCreateAsync(pointNum);
+    var pointAmount = point.DecAmount(amount, reason);
+    await pointSet.UpdateAsync(point);
+    return pointAmount;
 }
 ```
 
+`Dec`는 `ReqHelper.ValidEnough`가 쓰므로 `reason`을 받고, `Inc`는 검증이 없으므로 받지 않는다 — 시그니처가 의존성을 문서화한다(§3.4).
+
+**스코프 전달 — `PlayerDetail.TouchAsync(userScope)` (결정)**
+
+`PlayerDetailManager`가 `UserScope`를 얻는 길은 셋이었다. ① 리워드 메서드 인자로 받기 — S6의 `RewardHelper.Pay(detail, loaded, cost)` 모양에 가깝지만 곧 지울 시그니처 12곳을 지금 바꾸는 것이다. ② `UserRepo`에 `GameDb` 주입 — 서비스는 무변경이지만 **구 경로가 신 경로를 참조하게 되어** §S2-H에서 끊어낸 `GlobalDbRepo → GameDb` 방향이 되살아난다. ③ `PlayerDetailComponent.TouchAsync(userScope)`가 생성 시 넘겨주고 Manager가 필드로 보관.
+
+**③으로 간다.** 리워드 API 시그니처가 불변이고, ②의 역방향 참조를 만들지 않으며, 서비스가 스코프를 드는 것은 어차피 S6에서 필요한 형태다. 이관 기간 동안 `PlayerDetailManager`는 `_userRepo`와 `_userScope`를 동시에 든다 — §S4-E가 받아들인 "두 세대가 나란히 놓인 코드"의 반복이다.
+
 ```csharp
-// ── ModelBase 에 추가 (S2 선행 작업) — 외부 참조 0
-public abstract class ModelBase
+// ── Service — 스코프를 한 번 만들어 양쪽에 쓴다
+var userScope = _db.User(RpcContext.ShardId, RpcContext.PlayerId);
+var cookieSet = userScope.Owned<CookieModel>();
+var cookie = await cookieSet.GetOrCreateAsync(req.CookieNum);
+var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(userScope);
+```
+
+**신규 결정 — ScopeKey 쓰기 규칙: 생성은 채우고, 수정은 확인한다**
+
+`[Entity].ScopeKey`가 오늘 실제로 쓰이는 곳은 **읽기 한 군데뿐**이다(`OwnedSet.LoadFromDbAsync`의 자동 WHERE). `CreateAsync` / `UpdateAsync`는 ScopeKey를 보지 않는다. 그래서 5.5.1이 지목한 버그가 그대로 열려 있다:
+
+```csharp
+var userScope = _db.User(shardId, 100);
+await userScope.Owned<PointModel>().CreateAsync(new PointModel { Num = 5 });   // PlayerId 를 안 넣었다
+// DB   : INSERT ... (PlayerId = 0)          ← 0번 플레이어의 행
+// Cache: "PointModel:100" 버킷에 append     ← 100번 플레이어의 리스트
+```
+
+**이 버그는 DB 종류에 따라 다르게 나타난다.** MySQL에서는 캐시가 살아 있는 동안 100번이 그 행을 자기 것으로 읽고 캐시가 만료되면 사라진다 — 예외도 로그도 없다. InMemory에서는 캐시를 안 지나가므로 다음 조회에서 못 찾고 다시 INSERT → PK(0,5) 충돌로 시끄럽게 터진다. **즉 ServerTest가 이 버그를 만나는 방식과 프로덕션에서 나타나는 방식이 다르다.**
+
+따라서 S5에서 `OwnedSet`에 다음을 넣는다:
+
+```csharp
+public Task<T> CreateAsync(T entity)
 {
-    public bool IsDirty { get; private set; }
-    public void MarkDirty()  => IsDirty = true;
-    public void ClearDirty() => IsDirty = false;
+    EntityMeta<T>.SetScopeKeyValue(entity, _scopeKeyValue);
+    entity.CreateTime = entity.UpdateTime = DateTime.UtcNow;
+    return _repository().InsertAsync(entity, _listKey);
+}
+
+public Task UpdateAsync(T entity)
+{
+    EnsureOwned(entity);   // GetScopeKeyValue 가 _scopeKeyValue 와 다르면 예외
+    entity.UpdateTime = DateTime.UtcNow;
+    return _repository().UpdateAsync(entity, _listKey, EntityMeta<T>.PkMatcher(entity));
 }
 ```
 
-```csharp
-// ── Domain/ChangeSet.cs — 서버 런타임 전용. 직렬화 대상이 아니다.
-public readonly record struct ChangeSet(EObjType Type, int Num, double Before, double After)
-{
-    public double Delta => After - Before;
-    public static ChangeSet Of(EObjType t, int n, double b, double a) => new(t, n, b, a);
-}
+추가 비용은 `EntityMeta<T>`에 컴파일 세터 하나(`CompileGetter` 옆에 `CompileSetter`)다. 규칙은 한 문장으로 말할 수 있다: **소유자는 스코프가 정한다. 생성은 스코프가 채우고, 수정은 스코프가 확인한다.**
 
-// 응답 경계 매핑 — 도메인은 ChgObjPacket 을 모른다
-public static ChgObjPacket ToPacket(this ChangeSet c)
-    => new() { Type = c.Type, Num = c.Num, Amount = c.Delta, TotalAmount = c.After };
-```
+생성 쪽을 검증이 아니라 자동 채움으로 한 이유는 둘이다. ① 호출부가 넣은 ScopeKey 값은 "스코프가 소유자를 정한다"는 규칙 아래에서 애초에 의미가 없다 — 말없이 덮어도 잃는 정보가 없다. ② 검증만 하면 `GetOrCreateAsync` 확장이 소유자 값을 알아야 하는데, `OwnedSet`이 `_scopeKeyValue`를 private으로 들고 있어 **`public object ScopeKeyValue`를 열거나 확장 시그니처를 `(this UserScope scope, ...)`로 바꿔야 한다.** 규칙 하나의 단순함을 그 대가로 사기에는 비싸다.
 
-> **`ChangeSet`의 근거는 "세 싱크의 단일 출처"가 아니다 (S0-3에서 교체).**
-> 그 주장은 철회됐다 — 싱크마다 범위·shape이 다르다. 존치 근거는 **와이어 계약 분리**다: `ChgObjPacket`은 `[ProtoContract]` 직렬화 계약이므로 도메인이 반환하면 와이어 변경이 도메인까지 파급된다. 그리고 이 프로젝트는 이미 `_mapper.Map<CookiePacket>(model)`로 런타임→패킷 매핑을 서비스 경계에서 하므로, ChangeSet을 두는 쪽이 **기존 스타일과 일관**된다. `Reason`과 `Acc*`는 넣지 않는다(액션당 1개 / 파생 상태). 상세는 §3.5.
+부수 효과: 오늘 그 자리에 있던 줄이 `PlayerId = _userRepo.RpcContext.PlayerId`(4곳)다. **§1.3이 없애려는 앰비언트 컨텍스트 참조가 같이 사라진다.**
 
-```csharp
-// ── CookieComponent.TouchAsync (없으면 생성) 는 T1 확장 메서드로
-public static async Task<CookieModel> TouchAsync(this OwnedSet<CookieModel> set, int cookieNum)
-{
-    var (found, cookie) = await set.TryGetAsync(new { Num = cookieNum });
-    return found ? cookie : await set.CreateAsync(new CookieModel
-    {
-        Num = cookieNum, Lv = DEF.DEFAULT_LV, SkillLv = DEF.DEFAULT_LV,
-        // PlayerId 는 스코프가 채운다 — 손으로 RpcContext.PlayerId 를 넣지 않는다
-    });
-}
-```
+**`ChangeSet`은 S6으로 미룬다**
+
+옛 본문은 S5에서 `Domain/ChangeSet.cs`를 만들고 도메인 메서드가 그것을 반환하게 했다. 그러나 S5에서 그 반환값의 소비자는 `PlayerDetailManager` 하나이고, 그것은 즉시 `double`로 되돌린다 — **소비자가 사실상 0이다.** 소비자 없는 것은 짓지 않는다는 §S2-I · §S2-J · S3와 같은 판단이다. 실제 소비자는 S6의 `RewardHelper`이므로 거기서 만든다.
+
+**S5에서 고치지 않고 기록만 하는 것 — `ChgObjPacket`의 두 필드가 의미가 섞여 있다**
+
+`IncRewardAsync`는 `Amount`를 **요청값**에서, `TotalAmount`를 **모델**에서 가져온다. COOKIE 타입일 때 `IncCookieAsync`가 `soulStoneCnt -= prt.InitSoulStone`으로 내부 조정을 하는데 `Amount`는 요청한 쿠키 수 그대로이고, `TotalAmount`는 현재 소울스톤이 아니라 `AccSoulStone`(누적)이다. `ChangeSet`이 생기면 `Delta` / `After`로 정리될 자리지만 **와이어 동작 변경**이므로 S5 범위 밖이다. S6에서 다시 본다.
+
+**검증 계획, 그리고 그 한계**
+
+- 리빌드 0에러 / 신규 경고 0 (`-t:Rebuild` 기준. 저장소 기존 경고 35건은 §S2 기록 참조)
+- ServerTest 17/17. 4개 엔티티를 실제로 지나가는 테스트: `CookieTest`(Cheat → SOUL_STONE → Cookie, POINT_COOKIE_LV → Point), `GachaTest`(DecCost, IncRewardList), `WorldTest`(IncRewardList), `KingdomTest`(DecCost)
+
+**한계 2개 — 이대로면 게이트 판정이 반쪽이다.**
+
+1. `InMemoryRepository.GetListAsync`는 `Db.ExecuteAsync(dbFetch)`로 직행한다. **캐시 경로를 통째로 건너뛴다.** ServerTest는 InMemory 전용이므로 `OwnedSet`의 리스트 캐시 · Insert 시 append · Update 시 교체가 **하나도 검증되지 않는다.** S5는 "`OwnedSet` · `ScopeKey` · 캐시를 처음 동시에 지나가는 스텝"인데 테스트로는 캐시를 못 지나간다.
+2. `SelectListByColumnAsync`의 MySQL 경로는 §S2에서 "호출자가 없어 안 지나갔다"로 남았고 **S5가 그 첫 소비자**다.
+
+→ **MySQL 1회 수동 실측을 검증 항목에 넣는다 (결정).** `Code/Server/appsettings.yaml` 은 이미 `Db.Type: MySql` + `Cache.Type: Redis` + `UseUserLock: true` 이므로 로컬 MySQL·Redis 를 띄우고 서버를 그대로 실행하면 된다. 볼 것은 네 가지다:
+>
+> 1. `SelectListByColumnAsync` 가 만드는 SQL 이 실제로 나가고 행을 가져오는가 (§S2 이후 첫 실행)
+> 2. 리스트 캐시 키가 옛 경로와 같은 `"<Tag>:<playerId>"` 로 나오는가 — 달라지면 배포 직후 전체 캐시 미스가 된다
+> 3. `InsertAsync` 의 리스트 append 와 `UpdateAsync` 의 항목 교체가 같은 요청 안에서 보이는가
+> 4. `UseUserLock: true` 경로와 섞여도 커넥션이 깨지지 않는가 (§4.2 의 락 커넥션 분리가 유지되는지)
+>
+> ServerTest 는 이 네 가지를 하나도 못 본다. 그래서 실측 없이는 게이트를 "통과"로 적지 않는다.
 
 **직후 가능해지는 것**
-- 재화 로직이 **DB 없이 단위 테스트 가능**해진다: `new CookieModel{SoulStone=10}.EnhanceStar(3, 5, prt)`
-- `ChangeSet`이 존재한다 → S13의 감사 로그가 소비만 하면 되는 상태
-- `PlayerId`를 손으로 채우던 코드가 사라진다 → 5.5.1의 캐시 버킷 불일치 버그 경로가 4개 엔티티에서 닫힌다
+- 재화 · 쿠키 로직이 **DB 없이 단위 테스트 가능**해진다: `new CookieModel { SoulStone = 10 }.EnhanceStar(3, 5, prt)`
+- `_userRepo`를 드는 클래스가 8개 줄어든다(Component 4 + Manager 4 소멸)
+- 데이터 계층에서 `RpcContext.PlayerId`를 읽던 4곳이 사라진다(§1.3)
+- `OwnedSet<T>` · 자동 WHERE · 소유자 리스트 캐시 · 쓰기 검증이 **처음으로 동시에 실동작한다** → 게이트 판정이 가능해진다
 
 **아직 안 되는 것**
-- `PlayerDetailManager`가 여전히 `_userRepo.Point/.Ticket/.Cookie/.Item`을 찌른다 — **5.1.4/5.4는 S6까지 미해결**
-- 감사 로그 기록 없음
+- `PlayerDetailManager` 존치. Gold/Exp/Cash는 여전히 `_userRepo.PlayerDetail` 경유 — **5.1.4 / 5.4는 S6까지 미해결**
+- 감사 로그 쓰기 경로 없음. `CashChangeLogModel` / `GachaLogModel`은 여전히 소비자 0이다. 따라서 **§S2-J가 S5로 미룬 `EntityMeta.VerifyCacheTags` 역방향 검사는 여기서도 앵커가 없다 — S13(감사 로그)으로 다시 미룬다.** "ScopeKey는 있으나 캐시는 안 쓴다"를 선언할 자리는 실제 쓰기 경로가 생길 때 만든다
+- `ChangeSet` 없음 → 위 `ChgObjPacket` 항목 그대로
 
-**전제**: **S0-1(저장 모델)이 확정되어 있어야 한다.** 저장을 걷어낸 로직이 어디에 착지하는지가 여기서 처음 결정된다.
+**전제**: S0-1(저장 모델)은 §S2-H에서 "즉시 쓰기"로 확정됐다. 열린 전제는 없다.
+
+#### S5-A 실행 결과 (2026-08-23, branch `db-refactor`)
+
+사양대로 실행했다. 확정된 결정 4개는 그대로 성립했고 코드가 사양을 되받아친 곳은 아래 §S5-B 하나다.
+
+- 삭제 8: `Component/{Point,Ticket,Cookie,Item}Component.cs`, `Manager/{Point,Ticket,Cookie,Item}Manager.cs`
+- 추가 8: `Domain/{Point,Ticket,Item,Cookie}Model.Logic.cs`, `Data/Queries/{Point,Ticket,Item,Cookie}Queries.cs`
+- 수정 9: `Data/EntityMeta.cs`(`CompileSetter`/`SetScopeKeyValue`), `Data/OwnedSet.cs`(생성 채움·수정 검증), `Repo/UserRepo.cs`, `Component/PlayerDetailComponent.cs`, `Manager/PlayerDetailManager.cs`, `Manager/PlayerManager.cs`, `Service/{Cookie,Cheat,Gacha,Kingdom,World,Game}Service.cs`
+
+검증: `Code.sln` 리빌드 0에러 · unique warning **35건 = 기존 baseline 그대로**(신규 0) · ServerTest **17/17**.
+
+#### S5-B census 가 또 틀렸다 — `PlayerManager` 를 놓쳤다
+
+사양의 census 표는 Point/Ticket/Item 의 소비자를 `PlayerDetailManager` 하나로 적었으나, 빌드가 `PlayerManager` 에서 6개 에러를 냈다. 실제로는 두 곳이었다:
+
+- `PreparePlayerAsync` — 기본 플레이어 생성 시 쿠키를 `_userRepo.Cookie.CreateMdlAsync` 로 만든다
+- `LoadPlayerAsync` — Cookie/Point/Ticket/Item **4종 리스트를 전부 조회**한다
+
+원인은 census 를 돌릴 때 `Code/DbModel/Manager` 디렉터리를 grep 결과에서 **제외**한 것이다. Manager 안에서 다른 Manager 의 Component 를 부르는 호출이 통째로 안 보였다. §S4-C 는 "조회 축만 세고 실패 처리를 안 셌다"였고, 여기서는 **탐색 범위 자체를 좁혀놓고 census 라고 불렀다** — census 실패가 두 스텝 연속이다. 규칙으로 적어둔다: **census 의 grep 에서 디렉터리를 제외하지 않는다. 좁히려면 제외가 아니라 결과를 분류한다.**
+
+#### S5-C 스코프를 *언제* 읽느냐가 함정이다
+
+`PlayerComponent.TouchAsync` 는 신규 플레이어일 때 그 안에서 `RpcContext.SetPlayerId(accountId * 10)` 를 호출한다. 즉 **`Player.TouchAsync()` 전에는 `RpcContext.PlayerId` 가 0** 이고, 그때 만든 스코프는 0번 플레이어를 가리킨다.
+
+그래서 `PlayerManager` 는 `UserScope` 를 **필드로 들지 않고 `PreparePlayerAsync(mapper, userScope)` / `LoadPlayerAsync(mapper, userScope)` 인자로만 받는다.** 서비스 쪽 `OwnScope` 는 계산 프로퍼티라 호출 시점에 `RpcContext.PlayerId` 를 읽으므로, `Player.TouchAsync()` 뒤에 평가되면 올바른 값이 들어온다. `GameService` 에 그 순서 의존을 주석으로 명시했다.
+
+`PlayerDetailManager` 는 반대로 필드로 든다 — 생성 시점(`PlayerDetail.TouchAsync(userScope)`)이 이미 PlayerId 확정 이후이기 때문이다. **두 Manager 의 처리가 다른 이유가 이것이고, 우연이 아니다.** `SetPlayerId` 이동(5.9, S7)이 끝나면 이 비대칭도 사라진다.
+
+#### S5-D MySQL 실측 — **게이트 통과.** 막고 있던 기존 결함 2개를 잡았다
+
+실측은 로컬 MySQL 8.0 + Redis 에 `ServerTest` 를 붙여 돌렸다(설정은 임시 변경 후 되돌림). 처음엔 3 통과 / 14 실패였고, S5 이전 커밋(`c888ec7`)을 별도 워크트리에 꺼내 같은 설정으로 돌려 **똑같이 3 / 14** 임을 확인했다 — **S5 의 회귀는 0이다.** 막고 있던 것은 S5 밖의 기존 결함 2개였고, 둘 다 원인을 잡아 고쳤다.
+
+| 구성 | 결함 수정 전 | 수정 후 |
+|---|---|---|
+| InMemory DB + InMemory 캐시 (커밋된 테스트 구성) | 17 / 17 | 17 / 17 |
+| MySQL + InMemory 캐시 + `UseUserLock: true` | 3 / 14 | **17 / 17** |
+| **MySQL + Redis + `UseUserLock: true`** | 3 / 14 | **17 / 17** |
+
+**결함 ① `RpcContext.Ip` 가 null 이 될 수 있었다.** `GetIp` 의 마지막 줄이 `httpCtx.Connection.RemoteIpAddress?.ToString()` 이라 원격 IP 가 없으면 null 을 돌려주는데, `Ip` 는 `= string.Empty` 로 선언된 non-nullable `string` 이었다. 그 값이 `SessionManager.StartAsync` → `Session.PublicIp`(NOT NULL)로 들어가 **SignUp 이 500 으로 죽었다.** InMemory 는 NOT NULL 을 강제하지 않아 안 걸린다. `?? string.Empty` 로 막았고, 같은 메서드에서 `X-Forwarded-For` 값이 빈 문자열일 때 `Split` 이 NRE 를 내는 경로도 함께 막았다.
+
+**결함 ② 응답 캐시가 SignUp 응답으로 오염됐다.**
+
+```
+AuthService.SignUpAsync
+  → SessionManager.StartAsync() 가 세션 키를 새로 뽑고 RpcContext.SetSessionKey(신규키)
+  → RpcService: _responseCache.SetAsync(_rpcCtx, signUpRes)
+     키 = RpcResponseCache:{신규키}:0            ← 클라이언트가 다음에 쓸 키다
+클라이언트: 그 신규키로 첫 인증 요청(GameEnter, Seq=0)
+  → _responseCache.TryGetAsync 가 HIT
+  → 핸들러가 아예 실행되지 않고, SignUp 응답 JSON 이 GameEnterResponsePacket 으로 역직렬화된다
+```
+
+증거 셋: 새 세션의 `RpcResponseCache:{sessionKey}:0` 값을 Redis 에서 직접 꺼내면 `{"info":...,"result":{"sessionKey":...,"channelKey":...}}` — **SignUp 응답**이다. `GameService.EnterAsync` 첫 줄에 임시 `throw` 를 넣어도 터지지 않는다(핸들러 미실행). `Cache.Type` 만 InMemory 로 바꾸면 즉시 정상 동작한다. 결과는 **200 OK + 빈 Player 패킷 + UserDb 에 아무 행도 안 남음** — 조용한 데이터 유실이다.
+
+도입 시점은 `d89d3ed`("Seq 재전송 시 재실행 없이 캐시된 응답을 반환하도록 구현")다. S5 와 무관한 기존 회귀다.
+
+**터지는 조건은 둘 다 만족해야 한다.** ① `ResponseCacheService._enabled` 가 `CacheType == Redis` 일 때만 켜진다 — **ServerTest 는 InMemory 전용이라 이 결함을 구조적으로 못 잡는다.** ② 호출자가 `seq` 를 안 보내야 한다. Unity 클라이언트는 `RpcSystem` 이 `Seq = ++_seq` 로 단조 증가시켜 URL 에 실으므로 **오늘 프로덕션에서 실제로 터지지는 않는다 — 잠재 결함이었다.** 반면 `seq` 쿼리를 안 붙이는 호출자(테스트 클라이언트, 운영툴, curl)는 `RpcContext.SetSeq` 가 0 으로 채우므로 **모든 요청이 Seq=0** 이 되어 반드시 터진다.
+
+**수정: `Seq == 0` 이면 응답 캐시를 쓰지 않는다.** `Seq` 는 재전송을 식별하는 토큰이고 0 은 "호출자가 안 보냈다"는 뜻이라 애초에 구분할 근거가 없다. 캐시하면 한 세션의 모든 요청이 같은 키를 공유하게 된다. `ResponseCacheService.IsUsable` 한 곳에 조건을 모았다.
+
+> 남은 것(이번 범위 밖): 응답 캐시 키에 **프로토콜 이름이 없다.** 그래서 SignUp 응답이 GameEnter 응답 자리에 앉을 수 있었다. `Seq == 0` 가드로 관측된 경로는 막혔지만, 키가 요청을 식별하지 못한다는 성질 자체는 남아 있다. 그리고 `RpcContext.Seq` 는 **쿼리스트링에서만** 읽는다 — 요청 바디의 `Info.Seq` 는 무시된다.
+
+**게이트 판정 — 통과.** MySQL + Redis + 유저락 전 구성에서 **17 / 17** 이고, 실측 후 실제 데이터가 남았다: MySQL 에 Player 33 · Cookie 33 · Point 6 · Item 6 행, Redis 에 `CookieModel:{playerId}` · `PointModel:{playerId}` 소유자 리스트 키. 캐시 값도 확인했다 — `[{"playerId":1050,"num":1010,...,"lv":5,...}]` 로 **강화 결과가 반영된 리스트**가 들어 있다(Update 시 항목 교체 동작 확인). 따라서 `OwnedSet<T>` 의 `SelectListByColumnAsync` MySQL SQL · 소유자 리스트 캐시(Redis 직렬화 왕복 포함) · Insert append · Update 교체 · 생성 시 ScopeKey 채움 · 수정 시 소유자 검증이 **전부 실동작으로 확인됐다.** §S2 가 "호출자가 없어 안 지나갔다"고 남긴 `SelectListByColumnAsync` 의 MySQL 경로도 여기서 처음 지나갔다. **A안의 형태는 실측으로 성립한다.**
+
+부수 기록: `RaidServerLauncher.StopAsync:37` 이 테스트 종료 때마다 NRE 를 던진다(`[Test Collection Cleanup Failure]`). 결과에는 영향이 없지만 매 실행마다 찍힌다. 그리고 `Code/ServerTest/appsettings.yaml` 은 `IsShowErrorDetail` 을 루트에 두는데 코드는 `Game:` 아래에서 읽는다 — 테스트에서 서버 에러가 나면 원문 대신 6자리 해시만 보여서 진단이 한 번 막혔다.
+
+#### S5-E `GetOrCreateAsync` 는 엔티티별 확장으로 유지한다 (2026-08-23 확정)
+
+`PointQueries`/`TicketQueries` 가 타입 이름만 다른 동일 코드라 `OwnedSet<T>` 에 제네릭 `GetOrCreateAsync(predicate, factory)` 를 두는 안을 검토했다. **기각.** 근거는 호출부 수다: 엔티티당 호출부가 2곳(Dec/Inc)이라 제네릭으로 바꾸면 `new ItemModel { Num, Type = prt.Type }` 같은 **기본 행 정의가 2곳에 복사된다.** 확장 파일이 존재하는 이유가 정확히 그것 — **엔티티의 기본 행은 한 곳에만 정의된다.** `PlayerId + Num` 모양은 13개 User 모델 중 7개(Point/Ticket/Item/Cookie/World/WorldStage/KingdomDeco)라 S9·S10 에서 3개가 더 붙는다.
+
+#### S5-F 식 트리를 걷어내고 생성기가 접근자를 찍게 했다 (2026-08-23)
+
+`EntityMeta<T>` 가 `[Entity]` 의 문자열을 식 트리로 컴파일해 접근자를 만들고 있었다. 사용자가 "이게 꼭 필요한가, 인터페이스는 별로인가"를 물었고, **인터페이스가 맞다**로 결론냈다. 근거는 성능이 아니다.
+
+**우리가 모델을 생성한다.** 식 트리는 "런타임에 문자열밖에 없다"를 메우는 도구인데, 그 문자열을 우리 생성기가 직접 찍고 있었다. `ScopeKey = "PlayerId"` 를 쓸 수 있으면 `public ulong GetScopeKey() => PlayerId;` 도 쓸 수 있다. **스스로 지운 정보를 리플렉션으로 되사오고 있었던 것이다.**
+
+**놓는 자리는 둘로 갈린다.** PK 는 모든 모델이 갖고(Auth 의 `Session.Key` 도 PK 다), 소유자는 User 계열에만 있다. 그래서 축이 다르다.
+
+- `ModelBase` (abstract) ← `PkEquals(ModelBase other)` — **보편**
+- `IScopedModel` (신설, `ServerCore.Model`) ← `GetScopeKey()` / `SetScopeKey(ulong)` — **User 한정**
+
+```csharp
+// 생성물 — Point (PK 2컬럼 + 소유자)
+public partial class PointModel : ModelBase, IScopedModel
+{
+    public override bool PkEquals(ModelBase other)
+    {
+        return other is PointModel otherModel
+            && PlayerId == otherModel.PlayerId
+            && Num == otherModel.Num;
+    }
+
+    public ulong GetScopeKey() => PlayerId;
+    public void SetScopeKey(ulong value) => PlayerId = value;
+}
+
+// 생성물 — Session (PK 1컬럼, 소유자 없음)
+public partial class SessionModel : ModelBase
+{
+    public override bool PkEquals(ModelBase other)
+    {
+        return other is SessionModel otherModel
+            && AccountId == otherModel.AccountId;
+    }
+}
+```
+
+**프로퍼티가 아니라 메서드인 것이 핵심이다.** `DapperExtension` 과 `InMemoryDbExecutor` 가 `GetProperties(Public|Instance)` 로 INSERT/UPDATE 컬럼 목록을 만든다. `public ulong ScopeKey { get; set; }` 를 붙였으면 **없는 컬럼이 SQL 에 들어간다** — §S2 에 기록해 둔 "`ModelBase` 에 public 프로퍼티를 추가하는 것은 곧 DB 컬럼 선언이다" 함정에 그대로 걸린다. 메서드는 그 리플렉션에 안 걸린다.
+
+**`abstract` 이지 `virtual` 이 아니다.** 기본 구현(참조 비교)을 두면 생성기가 빠뜨린 모델이 **조용히** 참조 비교로 떨어져 캐시 리스트에 중복 행이 쌓인다. 모델 20개가 전부 생성물이고 `new ModelBase()` 도 없어서 abstract 로 강제해도 손으로 채울 것이 없다.
+
+**제네릭으로 만들지 않았다.** `IScopedModel<TKey>` 는 소비자 0 인 일반화다(§S1-G 의 `IDataScope` 철회, §S2-I 와 같은 판단). 13개 스코프 키가 전부 `ulong` 이라 `ulong` 으로 못 박았고, 생성기가 **다른 타입이면 `NOT_ULONG_SCOPE_KEY` 로 생성을 실패시킨다.**
+
+**결과**
+- `EntityMeta<T>` 145 → 74 줄. `Pk`(외부 소비자 0 이었다) · `_pkGetters` · `PkMatcher` · `CompileGetter` · `CompileSetter` · `GetScopeKeyValue` · `SetScopeKeyValue` 소멸. `System.Linq.Expressions` 의존 제거. 남은 것은 **코드로 표현할 수 없는 문자열뿐**이다 — 자동 WHERE 에 넣을 SQL 컬럼명(`ScopeKey`)과 캐시 태그.
+- `OwnedSet<T>` 의 `_scopeKeyValue` 가 `object` → `ulong`. 박싱과 `Equals(object, object)` 비교가 사라졌다. 업데이트마다 만들던 `object[]` + 클로저도 사라지고 `x => x.PkEquals(entity)` 하나만 남는다.
+- 제약이 `where T : ModelBase, IScopedModel, new()` 가 됐다.
+
+**제약이 실제로 막는 범위를 정확히 적는다.** 소유자 축이 아예 없는 **Auth/Center 6종**(Account/Channel/Device/Session/PlayerMap/Schedule)은 이제 `Owned<T>()` 에 **넘기면 컴파일이 안 된다.** 그러나 **감사 로그 2종(`CashChangeLog`/`GachaLog`)은 `ScopeKey` 가 있어서 `IScopedModel` 을 구현하고, 여전히 컴파일된다** — 이들을 막는 것은 캐시 태그가 없다는 런타임 검사(`HasCacheTag`)다. 즉 §S2-J 가 지적한 두 구멍 중 **하나만** 컴파일 타임으로 옮겨졌다. 나머지 하나(태그 누락)는 여전히 첫 `Owned<T>()` 에서 터지고, §S13 의 역방향 검사 과제로 남는다.
+
+**재생성 결과**: 모델 20개만 바뀌었다. CSV · Liquibase 체인지로그 · 패킷은 무변경 — 생성기 입력이 커밋된 상태와 일치한다는 뜻이라, §S1 이 겪은 stale 입력 문제는 지금 없다.
+
+**검증**: `Code.sln` 리빌드 0 에러 · unique warning 35 = 기존 baseline · ServerTest 17/17 (InMemory) · **MySQL + Redis + `UseUserLock: true` 에서도 17/17**.
+
+**안 한 것**: `IRepository.UpdateAsync<T>(entity, listKey, Func<T,bool> match)` 에서 `match` 인자를 없애고 리포지토리가 `x.PkEquals(entity)` 를 직접 부르게 하는 안. 그 3인자 오버로드의 호출부가 둘인데 — `OwnedSet.UpdateAsync`(PK 비교)와 `UserComponentBase.UpdateMdlAsync`(**캐시 키 문자열 비교**) — 옛 경로가 다른 방식으로 매칭 중이라 이관 도중에 합치면 의미 변경 위험이 붙는다. 게다가 `IRepository` 는 XPDProject 포팅 표면이다. **Component 가 전부 사라지는 S10~S13 이후에 다시 본다.**
+
+---
+
+#### S5-G 커밋 전 리뷰 — 개명이 버그를 드러냈다 (2026-08-23)
+
+**`EnhanceCookieLv` 로 보유하지 않은 쿠키를 포인트로 만들어낼 수 있었다.**
+
+```csharp
+var cookie = await cookieSet.GetOrCreateAsync(req.CookieNum);   // 없으면 생성 (Lv=1, State=NONE)
+ReqHelper.ValidContext(req.BefLv == cookie.Lv, ...);            // BefLv=1 이면 통과
+var resultCostObj = await mgrPlayerDetail.DecCostAsync(valCostObj, reason);
+cookie.EnhanceLv(req.AftLv);
+await cookieSet.UpdateAsync(cookie);                            // 커밋된다
+```
+
+보유 여부를 아무도 검사하지 않았다. `ECookieState` 는 `NONE = 0` / `AVAILABLE = 1` 이고 `IncCookie` 가 획득 시 `AVAILABLE` 로 올린다 — **모델에 소유 신호가 이미 있는데 안 보고 있었다.** 게다가 이 경로는 `CookieProto` 를 한 번도 조회하지 않아 **프로토에 없는 번호까지 행이 생겼다**(`CookieQueries.GetOrCreateAsync` 에 번호 검증이 없다). `EnhanceCookieStar` 는 새로 만든 쿠키의 소울스톤이 0 이라 `ValidEnough` 에서 막히지만 그것은 우연히 막히는 것이지 의도된 검사가 아니다.
+
+**S5 가 만든 버그가 아니다.** 옛 `CookieComponent.TouchAsync` 도 똑같이 생성했다. 그런데 §S2-F 가 `TouchAsync` → `GetOrCreateAsync` 로 개명한 이유가 정확히 *"읽기인 줄 알고 부르면 INSERT 가 나가는 것을 보이게 하자"* 였고, **이름이 바뀌자 커밋 전 리뷰에서 바로 보였다.** 개명의 값이 여기서 회수됐다.
+
+수정: 강화 두 경로 모두 조회로 바꾸고 소유를 검사한다.
+
+```csharp
+// 강화는 보유한 쿠키에만 한다. GetOrCreate 로 열면 안 가진 쿠키가 강화 요청만으로 생긴다.
+private static async Task<CookieModel> GetOwnedCookieAsync(OwnedSet<CookieModel> cookieSet, int cookieNum)
+{
+    var (found, cookie) = await cookieSet.TryGetAsync(x => x.Num == cookieNum);
+    ReqHelper.ValidContext(found && cookie.State == ECookieState.AVAILABLE, "NOT_OWNED_COOKIE",
+        () => new { CookieNum = cookieNum });
+    return cookie;
+}
+```
+
+`CookieTest.CookieEnhanceLv_Test` 에 회귀 케이스를 넣었다(프로토에는 있으나 DefaultPlayer 에 없는 쿠키 1020 강화 → 실패해야 한다). **수정을 일시 되돌리면 이 테스트가 실제로 실패하는 것을 확인했다** — 통과만 보고 넘어가면 아무것도 안 지키는 테스트를 넣게 된다.
+
+#### S5-H `OwnScope` 중복을 `ServiceBase` 로 올렸다
+
+S5 가 서비스 6개에 같은 3줄(`GameDb _db` 필드 + `OwnScope` 프로퍼티 + 주석)을 복사해 넣었다. `ServiceBase` 가 이미 `RpcContext` 를 들고 있으므로 거기로 올린다.
+
+```csharp
+public class ServiceBase
+{
+    protected GameDb Db { get; private set; }
+
+    // 요청 주체의 스코프. 계산 프로퍼티인 이유는 PlayerId 가 요청 도중 정해지기 때문이다.
+    protected UserScope OwnScope => Db.User(RpcContext.ShardId, RpcContext.PlayerId);
+}
+```
+
+`AuthService` 도 자기 `_db` 필드를 버리고 `Db` 를 쓴다. `CommonService`(헬스체크)까지 `GameDb` 를 받게 되는 것이 유일한 비용인데, `GameDb` 는 커넥션을 첫 조회에서야 여는 지연 구조(§S2)라 실비용이 0 이다.
+
+같이 고친 것: `EnhanceCookieLvAsync` 가 `OwnScope` 를 두 번 평가해 `UserScope` 인스턴스를 둘 만들던 것을 지역 변수 하나로 합쳤다.
+
+#### S5-I 리뷰에서 나왔으나 **일부러 안 고친 것**
+
+- **신규 행에 INSERT 직후 UPDATE 가 한 번 더 나간다.** 첫 재화 획득이면 `GetOrCreateAsync` 가 `{Num, Amount=0}` 을 INSERT 하고 이어서 `UpdateAsync` 가 UPDATE 한다. DB 2 왕복 + 캐시 2 회 쓰기다. 옛 경로도 같았으므로 회귀는 아니고, **저장 경로를 정리하는 S6 에서 `ChangeSet` 과 함께 본다.**
+- **`reason` 인자가 Inc 계열 5곳에서 미사용이다**(`IncPoint`/`IncTicket`/`IncItem`/`IncCookie`/`IncSoulStone`). 도메인 메서드가 검증을 안 하므로 안 받는다. S13 감사 로그가 쓸 자리라 남겼다.
+- **`PlayerDetailManager` 의 Dec/Inc × Point/Ticket/Item 6 블록이 구조적으로 동일하다.** 제네릭 헬퍼로 묶고 싶어지지만 **S6 에서 이 클래스가 통째로 사라진다.** 곧 지울 코드의 중복을 없애는 것은 손해다.
+- **`Owned<T>()` 가 호출마다 `OwnedSet` + `CacheKey` 문자열을 새로 만든다.** `IncRewardListAsync` 루프에서 보상 개수만큼 반복된다. §S2-H 가 무상태를 택한 대가이고, 프로파일에 잡히면 그때 스코프별로 메모이즈한다.
+
+#### S5-J `PlayerDetail.TouchAsync(userScope)` 는 이관 기간 전용 다리다
+
+`PlayerDetailComponent.TouchAsync` 가 `UserScope` 를 인자로 받는 모양은 **S6 에서 통째로 사라진다.** S6 이 `PlayerDetailManager`(330줄)를 `Domain/PlayerDetailModel.Logic.cs` + `Domain/RewardHelper.cs` 로 분해하면서 `PlayerDetailComponent` 자체가 삭제되기 때문이다. 그때 App Service 는 자기가 든 스코프에서 직접 `PlayerDetailModel` 을 꺼내고, Manager 에 스코프를 넘겨주는 단계가 사라진다.
+
+즉 이 인자는 **"구 경로 객체가 신 경로 데이터를 필요로 하는" 혼재 상태의 표시**이고, §S4-D 의 `SetShardId` 다리와 같은 종류다. 남은 수명은 S6 한 스텝이다.
 
 ---
 
@@ -1665,6 +1920,7 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | **S2** (완료) | `OwnedSet<T>`는 캐시되는 소유자 리스트 전용 (5.4.1 → §S2-J) · 스코프 3종은 독립 클래스 (§S1-G) · 커넥션 지연 오픈 (5.11) · **dirty 철회 (§S2-H)** · `GameDb.Utility` 는 S10.5 로, lazy BEGIN 은 S11 로 이월 · 네이밍 규칙 확정 (§S2-F) · Auth 형태 확정 (§S2-E) |
 | **S4** (완료) | Auth 형태 확정 · `Identity`/`AuthScope` 2클래스 · Component/Manager 6개 삭제 · **게이트는 S5 로 옮겨간다** (§S4-B) · `SetShardId` 다리 (§S4-D) |
 | **S4** | 캐시 없는 경로 실증 (Account/Channel/Device는 원래 캐시 없음) · **Auth의 스코프 밖 조회(기기 키·채널 키·세션 키·계정 생성)를 어디로 보낼지 확정 → `[Entity]`에 Auth `ScopeKey`를 붙일지 함께 결정 (§S1-G Q2)** |
+| **S5** (완료, **게이트 통과**) | `PlayerManager` 도 소비자였다(§S5-B) · 스코프를 읽는 *시점*이 함정(§S5-C) · **MySQL+Redis 실측 17/17 — 막고 있던 기존 결함 2개(Ip null, 응답 캐시 오염)를 잡았다(§S5-D)** · `GetOrCreateAsync` 는 엔티티별 확장 유지(§S5-E) · **식 트리 제거, 생성기가 `PkEquals`/`IScopedModel` 접근자를 찍는다(§S5-F)** · 커밋 전 리뷰에서 미보유 쿠키 강화 버그를 잡았다(§S5-G) · `OwnScope` 를 `ServiceBase` 로(§S5-H) · `PlayerDetailManager` 의 region 4개를 같이 고친다(census 재도출) · 스코프는 `PlayerDetail.TouchAsync(userScope)` 로 전달 · **ScopeKey 쓰기 규칙 신설 — 생성은 채우고 수정은 확인한다** · `ChangeSet` 은 S6 으로 · `VerifyCacheTags` 역방향 검사는 S13 으로 재이월 · **캐시·MySQL 경로는 ServerTest 가 못 지나간다** |
 | **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
 | **S8** | `GlobalList` 정책 실증 · `ScheduleView`가 `ServerTime`을 인자로 (5.10) |
 | **S9** | `scope.Raw` 자동 flush **와** `GameDb.Utility` 무flush 경로 구분 확정 (5.2) |

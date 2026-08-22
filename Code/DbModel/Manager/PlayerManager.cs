@@ -4,6 +4,7 @@ using Protocol;
 using Protocol.Packet.Custom;
 using ServerCore;
 using ServerCore.Helper;
+using WebStudyServer.Data;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -18,7 +19,7 @@ namespace WebStudyServer.Manager
         {
         }
 
-        public async Task<PlayerPacket> PreparePlayerAsync(IMapper mapper)
+        public async Task<PlayerPacket> PreparePlayerAsync(IMapper mapper, UserScope userScope)
         {
             // Player 초기 세팅
             var pakDefaultPlayer = Config<GameConfig>.Get().PakDefaultPlayer;
@@ -30,12 +31,12 @@ namespace WebStudyServer.Manager
             var mdlPlayerDetail = await _userRepo.PlayerDetail.CreateMdlAsync(newMdlPlayerDetail);
 
             // Cookie
+            var cookieSet = userScope.Owned<CookieModel>();
             var mdlCookieList = new List<CookieModel>();
             foreach (var pakCookie in pakDefaultPlayer.CookieList)
             {
                 var newMdlCookie = mapper.Map<CookieModel>(pakCookie);
-                newMdlCookie.PlayerId = RpcCtx.PlayerId;
-                var mdlCookie = await _userRepo.Cookie.CreateMdlAsync(newMdlCookie);
+                var mdlCookie = await cookieSet.CreateAsync(newMdlCookie);
                 mdlCookieList.Add(mdlCookie);
             }
 
@@ -99,11 +100,11 @@ namespace WebStudyServer.Manager
             return pakPlayer;
         }
 
-        public async Task<PlayerPacket> LoadPlayerAsync(IMapper mapper)
+        public async Task<PlayerPacket> LoadPlayerAsync(IMapper mapper, UserScope userScope)
         {
             var pakPlayer = mapper.Map<PlayerPacket>(_model);
 
-            var mdlPlayerDetail = await _userRepo.PlayerDetail.TouchAsync();
+            var mdlPlayerDetail = await _userRepo.PlayerDetail.TouchAsync(userScope);
             pakPlayer.Gold = mdlPlayerDetail.Model.Gold;
             pakPlayer.AccGold = mdlPlayerDetail.Model.AccGold;
             pakPlayer.RealCash = mdlPlayerDetail.Model.RealCash;
@@ -111,10 +112,10 @@ namespace WebStudyServer.Manager
             pakPlayer.AccRealCash = mdlPlayerDetail.Model.AccRealCash;
             pakPlayer.AccFreeCash = mdlPlayerDetail.Model.AccFreeCash;
 
-            pakPlayer.CookieList = mapper.Map<List<CookiePacket>>(await _userRepo.Cookie.GetMdlListAsync());
-            pakPlayer.PointList = mapper.Map<List<PointPacket>>(await _userRepo.Point.GetMdlListAsync());
-            pakPlayer.TicketList = mapper.Map<List<TicketPacket>>(await _userRepo.Ticket.GetMdlListAsync());
-            pakPlayer.ItemList = mapper.Map<List<ItemPacket>>(await _userRepo.Item.GetMdlListAsync());
+            pakPlayer.CookieList = mapper.Map<List<CookiePacket>>(await userScope.Owned<CookieModel>().GetListAsync());
+            pakPlayer.PointList = mapper.Map<List<PointPacket>>(await userScope.Owned<PointModel>().GetListAsync());
+            pakPlayer.TicketList = mapper.Map<List<TicketPacket>>(await userScope.Owned<TicketModel>().GetListAsync());
+            pakPlayer.ItemList = mapper.Map<List<ItemPacket>>(await userScope.Owned<ItemModel>().GetListAsync());
             pakPlayer.KingdomStructureList = mapper.Map<List<KingdomStructurePacket>>(await _userRepo.KingdomStructure.GetMdlListAsync());
             pakPlayer.KingdomDecoList = mapper.Map<List<KingdomDecoPacket>>(await _userRepo.KingdomDeco.GetMdlListAsync());
 

@@ -41,5 +41,10 @@ namespace WebStudyServer.Model
     		
     		public string PublicIp { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is SessionModel otherModel
+				&& AccountId == otherModel.AccountId;
+		}
 	}
 }

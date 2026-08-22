@@ -5,7 +5,7 @@ using ServerCore.Model;
 namespace WebStudyServer.Model
 {
 	[Entity(Pk = ["PlayerId", "Num"], ScopeKey = "PlayerId")]
-	public partial class KingdomDecoModel : ModelBase
+	public partial class KingdomDecoModel : ModelBase, IScopedModel
 	{
     
     		
@@ -23,5 +23,14 @@ namespace WebStudyServer.Model
     		
     		public EKingdomItemState State { get; set; } = default; //
         
+		public override bool PkEquals(ModelBase other)
+		{
+			return other is KingdomDecoModel otherModel
+				&& PlayerId == otherModel.PlayerId
+				&& Num == otherModel.Num;
+		}
+
+		public ulong GetScopeKey() => PlayerId;
+		public void SetScopeKey(ulong value) => PlayerId = value;
 	}
 }

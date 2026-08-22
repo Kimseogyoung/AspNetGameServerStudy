@@ -5,11 +5,12 @@ using ServerCore.Model;
 namespace WebStudyServer.Model
 {
 	{{ClassAttribute}}
-	public partial class {{ClassName}} : ModelBase
+	public partial class {{ClassName}} : {{BaseTypes}}
 	{
     {{ for field in Fields }}
 		{{field.Attribute}}
 		public {{field.Type}} {{field.Name}} { get; set; } = {{field.Value}}; //{{field.Desc}}
     {{ end }}
+{{Members}}
 	}
 }

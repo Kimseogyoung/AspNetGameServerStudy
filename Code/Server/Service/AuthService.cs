@@ -13,20 +13,19 @@ namespace WebStudyServer.Service
     public class AuthService : ServiceBase
     {
         // 이관 기간에는 두 진입점을 동시에 듦. 같은 DbSessionManager라 같은 트랜잭션.
-        public AuthService(GlobalDbRepo dbRepo, GameDb db, RpcContext rpcContext, ILogger<AuthService> logger) : base(rpcContext, logger)
+        public AuthService(GlobalDbRepo dbRepo, GameDb db, RpcContext rpcContext, ILogger<AuthService> logger) : base(db, rpcContext, logger)
         {
             _dbRepo = dbRepo;
-            _db = db;
         }
 
         public async Task<AuthSignUpResponsePacket> SignUpAsync(string idfv)
         {
             // idfv 찾기.
-            var (foundDevice, device) = await _db.Identity.TryGetDeviceAsync(idfv);
+            var (foundDevice, device) = await Db.Identity.TryGetDeviceAsync(idfv);
             if (foundDevice)
             {
                 // 일치하는 idfv가 이미 있다면 해당 계정 정보 리턴
-                var foundAuthScope = _db.Auth(device.AccountId);
+                var foundAuthScope = Db.Auth(device.AccountId);
 
                 // 계정 찾기
                 var (hasAccount, foundAccount) = await foundAuthScope.TryGetAccountAsync();
@@ -57,8 +56,8 @@ namespace WebStudyServer.Service
             // ~idfv가 없다면
 
             // Account 생성
-            var newAccount = await _db.Identity.CreateAccountAsync();
-            var newAuthScope = _db.Auth(newAccount.Id);
+            var newAccount = await Db.Identity.CreateAccountAsync();
+            var newAuthScope = Db.Auth(newAccount.Id);
 
             // SessionComponent가 RpcContext.ShardId를 읽음. Session 이관 시 함께 제거.
             RpcContext.SetShardId(newAccount.ShardId);
@@ -89,10 +88,10 @@ namespace WebStudyServer.Service
         public async Task<AuthSignInResponsePacket> SignInAsync(string channelId)
         {
             // 채널 찾기
-            var channel = await _db.Identity.GetChannelAsync(channelId);
+            var channel = await Db.Identity.GetChannelAsync(channelId);
 
             // 채널 -> Account 찾기
-            var authScope = _db.Auth(channel.AccountId);
+            var authScope = Db.Auth(channel.AccountId);
             var account = (await authScope.GetAccountAsync()).EnsureActive();
 
             // 세션 갱신 및 리턴
@@ -113,7 +112,6 @@ namespace WebStudyServer.Service
         }
 
         private readonly GlobalDbRepo _dbRepo;
-        private readonly GameDb _db;
         private AuthRepo Auth => _dbRepo.Auth;
     }
 }
