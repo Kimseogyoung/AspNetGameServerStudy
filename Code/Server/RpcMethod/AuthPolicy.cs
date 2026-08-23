@@ -10,7 +10,6 @@ namespace Server
     {
         public static readonly AccountAuthPolicy Instance = new();
 
-        public bool RequiresUserRepo => true;
 
         public void Validate(RpcContext rpcCtx)
         {
@@ -42,7 +41,6 @@ namespace Server
     {
         public static readonly PlayerAuthPolicy Instance = new();
 
-        public bool RequiresUserRepo => true;
 
         public void Validate(RpcContext rpcCtx)
         {
@@ -56,7 +54,6 @@ namespace Server
     {
         public static readonly OpsAuthPolicy Instance = new();
 
-        public bool RequiresUserRepo => false;
 
         public void Validate(RpcContext rpcCtx) { }
     }

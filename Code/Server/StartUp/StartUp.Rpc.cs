@@ -1,4 +1,4 @@
-
+﻿
 using Protocol;
 using Server;
 using Server.Service;
@@ -31,6 +31,7 @@ namespace WebStudyServer
                 new RpcGameMethod<KingdomService, KingdomBuyDecoRequestPacket, KingdomBuyDecoResponsePacket>(KingdomBuyDecoRequestPacket.NAME, (kingdomSvc, req) => { return kingdomSvc.KingdomDecoBuyAsync(req); }),
                 new RpcGameMethod<KingdomService, KingdomConstructDecoRequestPacket, KingdomConstructDecoResponsePacket>(KingdomConstructDecoRequestPacket.NAME, (kingdomSvc, req) => { return kingdomSvc.KingdomConstructDecoAsync(req); }),
                 new RpcGameMethod<KingdomService, KingdomFinishCraftStructureRequestPacket, KingdomFinishCraftStructureResponsePacket>(KingdomFinishCraftStructureRequestPacket.NAME, (kingdomSvc, req) => { return kingdomSvc.KingdomFinishCraftStructureAsync(req); }),
+                new RpcGameMethod<KingdomService, KingdomChangeItemRequestPacket, KingdomChangeItemResponsePacket>(KingdomChangeItemRequestPacket.NAME, (kingdomSvc, req) => { return kingdomSvc.KingdomItemChangeAsync(req); }),
                 new RpcGameMethod<CookieService, CookieEnhanceStarRequestPacket, CookieEnhanceStarResponsePacket>(CookieEnhanceStarRequestPacket.NAME, (cookieSvc, req) => { return cookieSvc.EnhanceCookieStarAsync(req); }),
                 new RpcGameMethod<CookieService, CookieEnhanceLvRequestPacket, CookieEnhanceLvResponsePacket>(CookieEnhanceLvRequestPacket.NAME, (cookieSvc, req) => { return cookieSvc.EnhanceCookieLvAsync(req); }),
                 new RpcGameMethod<GachaService, GachaNormalRequestPacket, GachaNormalResponsePacket>(GachaNormalRequestPacket.NAME, (gachaSvc, req) => { return gachaSvc.GachaNormalAsync(req); }),

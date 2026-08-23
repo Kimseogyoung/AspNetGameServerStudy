@@ -1,7 +1,6 @@
 
 using AutoMapper;
 using Protocol;
-using WebStudyServer.Manager;
 using WebStudyServer.Model;
 namespace WebStudyServer
 {

@@ -10,8 +10,6 @@ namespace Server.Repo
 {
     public class GlobalDbRepo : IDisposable
     {
-        public UserRepo OwnUser { get; private set; } = null;
-
         // Lazy Loading. Auth / Center 는 GameDb 로 옮겨져 여기 없다(S4~S8).
         public AllUserRepo AllUser => _lazyAllUserRepo?.Value ?? throw new ObjectDisposedException(nameof(GlobalDbRepo));
 
@@ -24,19 +22,6 @@ namespace Server.Repo
             _logger = logger;
 
             _lazyAllUserRepo = new Lazy<AllUserRepo>(BeginAllUserRepo);
-        }
-
-        public void BeginOwnUserRepo()
-        {
-            if (OwnUser != null)
-            {
-                return;
-            }
-
-            var connStr = DbConnectionResolver.User(_rpcContext.ShardId);
-            var repository = CreateRepository(connStr);
-            var userRepo = new UserRepo(_rpcContext, repository);
-            OwnUser = userRepo;
         }
 
         private AllUserRepo BeginAllUserRepo()
@@ -98,8 +83,6 @@ namespace Server.Repo
                 _dbSessionManager.Close();
 
                 _lazyAllUserRepo = null;
-
-                OwnUser = null;
             }
             catch (Exception e)
             {

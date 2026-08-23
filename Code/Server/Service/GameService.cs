@@ -8,7 +8,6 @@ using WebStudyServer;
 using WebStudyServer.Data;
 using WebStudyServer.Data.Queries;
 using WebStudyServer.Helper;
-using WebStudyServer.Manager;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
 
@@ -48,7 +47,7 @@ namespace Server.Service
                 var pakPlayer = await PreparePlayerAsync(mdlPlayer);
 
                 var accountId = mdlPlayer.AccountId;
-                await Db.Auth(accountId).CreatePlayerMapAsync(mdlPlayer.Id, OwnUser.ShardId);
+                await Db.Auth(accountId).CreatePlayerMapAsync(mdlPlayer.Id, RpcContext.ShardId);
 
                 var (foundSession, mdlSession) = await Db.Sessions.TryGetByAccountIdAsync(accountId);
                 if (foundSession && mdlSession.SetPlayerId(mdlPlayer.Id))
@@ -109,29 +108,26 @@ namespace Server.Service
             }
 
             // KingdomStructure
+            var structureSet = userScope.Owned<KingdomStructureModel>();
             var mdlKindgomStructureList = new List<KingdomStructureModel>();
             foreach (var pakKingdomStructure in pakDefaultPlayer.KingdomStructureList)
             {
                 var newMdlKingdomStructure = _mapper.Map<KingdomStructureModel>(pakKingdomStructure);
-                newMdlKingdomStructure.PlayerId = RpcContext.PlayerId;
-                var mdlKingdomStructure = await OwnUser.KingdomStructure.CreateMdlAsync(newMdlKingdomStructure);
-                mdlKindgomStructureList.Add(mdlKingdomStructure);
+                mdlKindgomStructureList.Add(await structureSet.CreateAsync(newMdlKingdomStructure));
             }
 
             // KingdomDeco
+            var decoSet = userScope.Owned<KingdomDecoModel>();
             var mdlKindgomDecoList = new List<KingdomDecoModel>();
             foreach (var pakKingdomDeco in pakDefaultPlayer.KingdomDecoList)
             {
                 var newMdlKingdomDeco = _mapper.Map<KingdomDecoModel>(pakKingdomDeco);
-                newMdlKingdomDeco.PlayerId = RpcContext.PlayerId;
-                var mdlKingdomDeco = await OwnUser.KingdomDeco.CreateMdlAsync(newMdlKingdomDeco);
-                mdlKindgomDecoList.Add(mdlKingdomDeco);
+                mdlKindgomDecoList.Add(await decoSet.CreateAsync(newMdlKingdomDeco));
             }
 
             // KingdomMap
-            var (newMdlKingdomMap, kingdomSnapshot) = KingdomMapManager.CreateKingdomMapModelDummy(pakDefaultPlayer.KingdomMap, mdlKindgomStructureList);
-            newMdlKingdomMap.PlayerId = RpcContext.PlayerId;
-            var mdlKingdomMap = await OwnUser.KingdomMap.CreateMdlAsync(newMdlKingdomMap);
+            var (mdlKingdomMap, kingdomSnapshot) = await KingdomMapService.CreateInitialAsync(
+                userScope, pakDefaultPlayer.KingdomMap, mdlKindgomStructureList);
 
             mdlPlayer.Lv = pakDefaultPlayer.Lv;
             mdlPlayer.CastleLv = pakDefaultPlayer.CastleLv;
@@ -186,11 +182,10 @@ namespace Server.Service
             pakPlayer.PointList = _mapper.Map<List<PointPacket>>(await userScope.Owned<PointModel>().GetListAsync());
             pakPlayer.TicketList = _mapper.Map<List<TicketPacket>>(await userScope.Owned<TicketModel>().GetListAsync());
             pakPlayer.ItemList = _mapper.Map<List<ItemPacket>>(await userScope.Owned<ItemModel>().GetListAsync());
-            pakPlayer.KingdomStructureList = _mapper.Map<List<KingdomStructurePacket>>(await OwnUser.KingdomStructure.GetMdlListAsync());
-            pakPlayer.KingdomDecoList = _mapper.Map<List<KingdomDecoPacket>>(await OwnUser.KingdomDeco.GetMdlListAsync());
+            pakPlayer.KingdomStructureList = _mapper.Map<List<KingdomStructurePacket>>(await userScope.Owned<KingdomStructureModel>().GetListAsync());
+            pakPlayer.KingdomDecoList = _mapper.Map<List<KingdomDecoPacket>>(await userScope.Owned<KingdomDecoModel>().GetListAsync());
 
-            // 읽기만 하므로 Manager 가 필요 없다. 배치/저장이 걸린 KingdomService 쪽은 S10 까지 Manager 를 쓴다.
-            var mdlKingdomMap = await userScope.Owned<KingdomMapModel>().GetOrCreateAsync();
+            var mdlKingdomMap = await userScope.Owned<KingdomMapModel>().GetOrCreateMapAsync();
             pakPlayer.KingdomMap = new KingdomMapPacket
             {
                 State = mdlKingdomMap.State,
@@ -201,8 +196,6 @@ namespace Server.Service
 
             return pakPlayer;
         }
-
-        private UserRepo OwnUser => _dbRepo.OwnUser;
 
         private readonly GlobalDbRepo _dbRepo;
         private readonly IMapper _mapper;

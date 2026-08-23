@@ -1,5 +1,7 @@
-using Proto;
+﻿using Proto;
 using Protocol;
+using ServerCore;
+using WebStudyServer.Model;
 using Xunit;
 
 namespace ServerTest.Tests
@@ -196,22 +198,55 @@ namespace ServerTest.Tests
                     new TilePosPacket { X = 0, Y = 0 }
                 ));
 
-            // [성공] 건설 완료
-            // 생성자: (ulong id, int kingdomItemNum)
-            {
-                var res = await Api.PostAsync<KingdomFinishConstructStructureRequestPacket, KingdomFinishConstructStructureResponsePacket>(
-                    new KingdomFinishConstructStructureRequestPacket(structureId, StructureItemNum));
-
-                Assert.Equal((int)EErrorCode.OK, res.Info.ResultCode);
-                Assert.NotNull(res.KingdomStructure);
-            }
-
-            // [실패] 이미 완료된 구조물에 다시 완료 요청 (상태 불일치)
+            // [실패] 건설 시간(10초)이 남았는데 완료 요청.
+            // 이 단언은 예전에 Assert.Equal(OK) 였다. SetReady 의 부등호가 반대여서
+            // 즉시 완료가 통과했고, 테스트가 그 동작을 굳혀두고 있었다.
             {
                 var res = await Api.PostAsync<KingdomFinishConstructStructureRequestPacket, KingdomFinishConstructStructureResponsePacket>(
                     new KingdomFinishConstructStructureRequestPacket(structureId, StructureItemNum));
 
                 Assert.NotEqual((int)EErrorCode.OK, res.Info.ResultCode);
+            }
+
+            // [실패] 없는 구조물 ID
+            {
+                var res = await Api.PostAsync<KingdomFinishConstructStructureRequestPacket, KingdomFinishConstructStructureResponsePacket>(
+                    new KingdomFinishConstructStructureRequestPacket(9999999ul, StructureItemNum));
+
+                Assert.NotEqual((int)EErrorCode.OK, res.Info.ResultCode);
+            }
+        }
+
+        // 완료 성공까지는 API 로 못 간다 - 건설이 끝나기를 10초 기다려야 한다.
+        // 모델을 직접 불러 시간/상태 경계만 확인한다.
+        [Fact]
+        public void KingdomStructureSetReady_Test()
+        {
+            var now = DateTime.UtcNow;
+
+            // [성공] 건설 시간이 지났다
+            {
+                var mdl = new KingdomStructureModel { State = EKingdomItemState.CONSTRUCTING, EndTime = now.AddSeconds(-1) };
+                mdl.SetReady(EKingdomItemState.CONSTRUCTING, now);
+
+                Assert.Equal(EKingdomItemState.READY, mdl.State);
+                Assert.Equal(DateTime.MinValue, mdl.EndTime);
+            }
+
+            // [실패] 아직 건설 중이다
+            {
+                var mdl = new KingdomStructureModel { State = EKingdomItemState.CONSTRUCTING, EndTime = now.AddSeconds(10) };
+                var ex = Assert.Throws<GameException>(() => mdl.SetReady(EKingdomItemState.CONSTRUCTING, now));
+
+                Assert.Equal("NOT_FINISHED_KINGDOM_STRUCTURE", ex.Message);
+            }
+
+            // [실패] 상태가 다르다
+            {
+                var mdl = new KingdomStructureModel { State = EKingdomItemState.READY, EndTime = DateTime.MinValue };
+                var ex = Assert.Throws<GameException>(() => mdl.SetReady(EKingdomItemState.CONSTRUCTING, now));
+
+                Assert.Equal("NOT_EQUAL_CORRECT_BEF_KINGDOM_STRUCTURE_STATE", ex.Message);
             }
         }
 
@@ -286,15 +321,92 @@ namespace ServerTest.Tests
         }
 
         [Fact]
+        public async Task KingdomChangeItemStoreDeco_Test()
+        {
+            await CreateDummyPlayerAsync();
+            await GiveGoldAsync(100000);
+
+            await Api.PostAsync<KingdomBuyDecoRequestPacket, KingdomBuyDecoResponsePacket>(
+                new KingdomBuyDecoRequestPacket(
+                    DecoItemNum,
+                    new CostObjPacket { Type = EObjType.GOLD, Num = 0, Amount = DecoBuyCost }
+                ));
+
+            var placeRes = await Api.PostAsync<KingdomConstructDecoRequestPacket, KingdomConstructDecoResponsePacket>(
+                new KingdomConstructDecoRequestPacket(DecoItemNum, new TilePosPacket { X = 10, Y = 10 }));
+            Assert.Equal((int)EErrorCode.OK, placeRes.Info.ResultCode);
+
+            var placedItem = placeRes.PlacedKingdomItemList.Find(x => x.StartTileX == 10 && x.StartTileY == 10);
+            Assert.NotNull(placedItem);
+            Assert.Equal(EKingdomItemType.DECO, placedItem.Type);
+
+            // [성공] 방금 놓은 데코를 보관한다.
+            // 단건 배치가 타입을 STRUCTURE 로 박아 넣던 시절에는 보관이 구조물 조회로 새어
+            // NOT_EQUAL_KINGDOM_ITEM_LIST 로 막혔다.
+            {
+                var res = await Api.PostAsync<KingdomChangeItemRequestPacket, KingdomChangeItemResponsePacket>(
+                    new KingdomChangeItemRequestPacket([placedItem.Id], [], []));
+
+                Assert.Equal((int)EErrorCode.OK, res.Info.ResultCode);
+                Assert.DoesNotContain(res.PlacedKingdomItemList, x => x.Id == placedItem.Id);
+            }
+        }
+
+        [Fact]
+        public async Task KingdomChangeItemOverlap_Test()
+        {
+            await CreateDummyPlayerAsync();
+            await GiveGoldAsync(100000);
+
+            for (var i = 0; i < 2; i++)
+            {
+                var buyRes = await Api.PostAsync<KingdomBuyDecoRequestPacket, KingdomBuyDecoResponsePacket>(
+                    new KingdomBuyDecoRequestPacket(
+                        DecoItemNum,
+                        new CostObjPacket { Type = EObjType.GOLD, Num = 0, Amount = DecoBuyCost }
+                    ));
+                Assert.Equal((int)EErrorCode.OK, buyRes.Info.ResultCode);
+            }
+
+            // 하나를 (10,10) 에 놓는다. 2x2 라 (10,10)~(11,11) 을 차지한다.
+            {
+                var res = await Api.PostAsync<KingdomChangeItemRequestPacket, KingdomChangeItemResponsePacket>(
+                    new KingdomChangeItemRequestPacket([], [], [MakePlaceReq(10, 10)]));
+
+                Assert.Equal((int)EErrorCode.OK, res.Info.ResultCode);
+            }
+
+            // [실패] 다음 요청에서 (11,11) 에 겹쳐 놓기.
+            // 배치가 시작 칸 하나만 마킹해 저장되던 시절에는 나머지 칸이 빈 칸으로 남아 통과했다.
+            {
+                var res = await Api.PostAsync<KingdomChangeItemRequestPacket, KingdomChangeItemResponsePacket>(
+                    new KingdomChangeItemRequestPacket([], [], [MakePlaceReq(11, 11)]));
+
+                Assert.NotEqual((int)EErrorCode.OK, res.Info.ResultCode);
+            }
+        }
+
+        private static ChgKingdomItemPacket MakePlaceReq(int x, int y)
+        {
+            return new ChgKingdomItemPacket
+            {
+                PlacedItemId = 0,
+                StructureId = 0,
+                Num = DecoItemNum,
+                TilePos = new TilePosPacket { X = x, Y = y },
+            };
+        }
+
+        [Fact]
         public async Task KingdomFinishCraftStructure_Test()
         {
             await CreateDummyPlayerAsync();
             await GiveGoldAsync(100000);
             await GiveConstructItemAsync(100);
 
-            // 구매 → 건설 → 건설완료 (state: READY)
-            // NOTE: StartCraft API가 없으므로 CRAFTING 상태 진입 불가.
-            //       현재는 READY 상태에서 호출하는 실패 케이스만 검증 가능.
+            // 구매 → 건설 (state: CONSTRUCTING)
+            // NOTE: StartCraft API 가 없어 CRAFTING 상태로는 못 간다.
+            //       CRAFTING 이 아닌 상태에서 거절되는지만 본다.
             var buyRes = await Api.PostAsync<KingdomBuyStructureRequestPacket, KingdomBuyStructureResponsePacket>(
                 new KingdomBuyStructureRequestPacket(
                     StructureItemNum,
@@ -314,11 +426,7 @@ namespace ServerTest.Tests
                     new TilePosPacket { X = 0, Y = 0 }
                 ));
 
-            var finishConstructRes = await Api.PostAsync<KingdomFinishConstructStructureRequestPacket, KingdomFinishConstructStructureResponsePacket>(
-                new KingdomFinishConstructStructureRequestPacket(structureId, StructureItemNum));
-            Assert.Equal((int)EErrorCode.OK, finishConstructRes.Info.ResultCode);
-
-            // [실패] READY 상태 구조물에 FinishCraft 요청 (CRAFTING 상태 필요)
+            // [실패] CONSTRUCTING 상태 구조물에 FinishCraft 요청 (CRAFTING 상태 필요)
             {
                 var res = await Api.PostAsync<KingdomFinishCraftStructureRequestPacket, KingdomFinishCraftStructureResponsePacket>(
                     new KingdomFinishCraftStructureRequestPacket(structureId, StructureItemNum));

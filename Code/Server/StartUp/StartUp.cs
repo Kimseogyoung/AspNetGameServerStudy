@@ -3,7 +3,6 @@ using Microsoft.OpenApi.Models;
 using ProtoBuf.Meta;
 using Server;
 using Server.Service;
-using WebStudyServer.Manager;
 
 namespace WebStudyServer
 {

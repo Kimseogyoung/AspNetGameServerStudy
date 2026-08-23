@@ -42,10 +42,6 @@ namespace Server
         public async Task<object> RunAsync(RpcContext rpcCtx, HttpContext httpCtx, GlobalDbRepo dbRepo, object rpcReq)
         {
             _authPolicy?.Validate(rpcCtx);
-            if (_authPolicy?.RequiresUserRepo == true)
-            {
-                dbRepo.BeginOwnUserRepo();
-            }
 
             var rpcSvc = httpCtx.RequestServices.GetRequiredService<TSvc>();
             if (_runAsync == null)

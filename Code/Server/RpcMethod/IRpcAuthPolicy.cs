@@ -9,7 +9,5 @@ namespace Server
         // 검증만 한다. 실패 시 GameException을 던진다. 부수효과(DB 리포 오픈 등)는 없다.
         void Validate(RpcContext rpcCtx);
 
-        // 검증 통과 후 유저 개인 DB 리포(GlobalDbRepo.OwnUser)를 열어야 하는 정책인지.
-        bool RequiresUserRepo { get; }
     }
 }
