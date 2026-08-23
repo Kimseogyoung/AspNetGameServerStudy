@@ -11,13 +11,13 @@ namespace Protocol
         public ResponseInfoPacket Info { get; set; } = new ResponseInfoPacket();
         
         [ProtoMember(2)]
-        public List<ChgObjPacket> GachaResultChgObjList { get; set; } = new List<ChgObjPacket>();
+        public List<CookiePacket> CookieList { get; set; } = new List<CookiePacket>();
         
         [ProtoMember(3)]
         public List<GachaResultPacket> GachaResultList { get; set; } = new List<GachaResultPacket>();
         
         [ProtoMember(4)]
-        public ChgObjPacket CostChgObj { get; set; } = new ChgObjPacket();
+        public List<ChgObjPacket> CostChgObjList { get; set; } = new List<ChgObjPacket>();
         
 	}
 }

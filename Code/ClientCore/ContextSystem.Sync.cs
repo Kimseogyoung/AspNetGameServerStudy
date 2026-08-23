@@ -26,12 +26,6 @@ namespace ClientCore
                 case EObjType.REAL_CASH:
                     Player.RealCash = pakChgObj.TotalAmount;
                     break;
-                case EObjType.TOTAL_CASH:
-                    var realCashCost = Math.Min(Player.RealCash, pakChgObj.TotalAmount);
-                    Player.RealCash -= realCashCost;
-                    var freeCashCost = Math.Min(Player.FreeCash, pakChgObj.TotalAmount - realCashCost);
-                    Player.FreeCash = freeCashCost;
-                    break;
                 case EObjType.POINT_START:
                     var pointType = pakChgObj.Type;
                     var pakPoint = GetPointForce(pointType);
@@ -43,12 +37,12 @@ namespace ClientCore
                     pakTicket.Amount = pakChgObj.TotalAmount;
                     break;
                 case EObjType.COOKIE:
-                    // 소울스톤 환산은 서버가 한다. TotalAmount 가 환산 뒤의 현재 소울스톤이다.
+                    // 쿠키 보유 수량. 중복분은 소울스톤으로 가므로 0 아니면 1이다.
                     var pakCookie = GetCookieForce(pakChgObj.Num);
-                    pakCookie.State = ECookieState.AVAILABLE;
-                    pakCookie.SoulStone = (int)pakChgObj.TotalAmount;
+                    pakCookie.State = pakChgObj.TotalAmount > 0 ? ECookieState.AVAILABLE : ECookieState.NONE;
                     break;
                 case EObjType.SOUL_STONE:
+                    // 쿠키 행의 수량은 전부 이쪽으로 온다. 쿠키를 뽑아 환산된 것도 포함이다.
                     var prtCookieSoulStone = ProtoDb.Get<CookieSoulStoneProto>(pakChgObj.Num);
                     var pakCookie2 = GetCookieForce(prtCookieSoulStone.CookieNum);
                     pakCookie2.SoulStone = (int)pakChgObj.TotalAmount;
@@ -133,6 +127,14 @@ namespace ClientCore
             }
 
             RefreshKingdom();
+        }
+
+        public void SyncCookieList(List<CookiePacket> pakCookieList)
+        {
+            foreach (var pakCookie in pakCookieList)
+            {
+                SyncCookie(pakCookie);
+            }
         }
 
         public void SyncCookie(CookiePacket pakCookie)

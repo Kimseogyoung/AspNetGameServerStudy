@@ -67,6 +67,39 @@ namespace ServerCore.Repo.Database
             await Cache.SetAsync(listKey, newList, CacheTtl);
         }
 
+        // ── UpsertList: DB 업서트 한 문장 → 캐시 리스트 한 번 갱신 ───────
+        public async Task UpsertListAsync<T>(IReadOnlyList<T> entityList, CacheKey listKey) where T : ModelBase
+        {
+            if (entityList.Count == 0)
+            {
+                return;
+            }
+
+            await Db.ExecuteAsync(db => db.UpsertListAsync(entityList));
+
+            var cached = await Cache.TryGetAsync<List<T>>(listKey);
+            if (!cached.Hit)
+            {
+                return;
+            }
+
+            var newList = cached.Value!.ToList();
+            foreach (var entity in entityList)
+            {
+                var idx = newList.FindIndex(x => x.PkEquals(entity));
+                if (idx >= 0)
+                {
+                    newList[idx] = entity;
+                }
+                else
+                {
+                    newList.Add(entity);
+                }
+            }
+
+            await Cache.SetAsync(listKey, newList, CacheTtl);
+        }
+
         private static TimeSpan CacheTtl => Config<CoreConfig>.Get().CacheDefaultTtl;
     }
 }

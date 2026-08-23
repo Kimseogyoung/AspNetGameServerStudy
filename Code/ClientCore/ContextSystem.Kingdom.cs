@@ -18,7 +18,7 @@ namespace ClientCore
             var res = await RpcSystem.RequestAsync<KingdomBuyStructureRequestPacket, KingdomBuyStructureResponsePacket>(req);
 
             SyncKingdomStructure(res.KingdomStructure);
-            SyncChgObj(res.ChgObj);
+            SyncChgObjList(res.ChgObjList);
             return res;
         }
 
@@ -59,7 +59,7 @@ namespace ClientCore
             var res = await RpcSystem.RequestAsync<KingdomBuyDecoRequestPacket, KingdomBuyDecoResponsePacket>(req);
 
             SyncKingdomDeco(res.KingdomDeco);
-            SyncChgObj(res.ChgObj);
+            SyncChgObjList(res.ChgObjList);
             return res;
         }
 

@@ -117,12 +117,12 @@ namespace Server.Service
 
             // 처리
             await mgrWorld.RewardStarAsync(req.AftRewardStar, valTotalStar);
-            var change = await RewardService.GrantAsync(OwnScope, valReward, reason);
+            var changeList = await RewardService.GrantAsync(OwnScope, valReward, reason);
 
             return new WorldRewardStarResponsePacket
             {
                 World = _mapper.Map<WorldPacket>(mgrWorld.Model),
-                ChgObj = change.ToPacket()
+                ChgObjList = changeList.ToPacketList(),
             };
         }
 

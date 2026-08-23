@@ -5,8 +5,11 @@ using Server.Extension;
 using Server.Helper;
 using Server.Repo;
 using ServerCore;
+using ServerCore.Repo.Cache;
 using WebStudyServer;
 using WebStudyServer.Data;
+using WebStudyServer.Data.Queries;
+using WebStudyServer.Model;
 
 namespace Server.Service
 {
@@ -38,51 +41,100 @@ namespace Server.Service
             var valCost = scheduleMgr.ValidGachaCost(req.CostObj, valCnt);
 
             // 재화 소모
-            var costChange = await RewardService.PayAsync(OwnScope, valCost, scheduleMgr.MakeGachaReason(valCnt));
+            var costChangeList = await RewardService.PayAsync(OwnScope, valCost, scheduleMgr.MakeGachaReason(valCnt));
+
+            // 가챠 보상은 COOKIE / SOUL_STONE 뿐이고 둘 다 CookieModel 로 간다. 뽑을 때마다 이 리스트에
+            // 바로 적용하고 저장은 마지막에 업서트 한 번만 한다.
+            //
+            // 결과는 바뀐 쿠키를 통째로 보낸다. 한 행에 소울스톤과 보유 여부가 같이 걸려 있어서
+            // ChgObj 로 쪼개 보내면 클라가 다시 합쳐야 한다. ObjType 을 가리지 않는 지급 경로
+            // (우편함 등)는 ChgObj 를 써야 하고 그건 RewardService.IncCookieAsync 가 맡는다.
+            var cookieSet = OwnScope.Owned<CookieModel>();
+            var existCookieList = await cookieSet.GetListAsync();
+            var touchedCookieList = new List<CookieModel>();
 
             var gachaRandom = new GachaRandom(scheduleMgr.GachaPrt, RpcContext.ServerTime);
-            var rewardObjValList = new List<ObjValue>();
-            var gachaResultList = new List<GachaResultPacket>();
+            var gachaResultList = new List<GachaResultPacket>(valCnt);
             for (var i = 0; i < valCnt; i++)
             {
-                var resultObjValue = gachaRandom.Roll(isNormal: true);
-                rewardObjValList.AddOrInc(resultObjValue);
+                var objValue = gachaRandom.Roll(isNormal: true);
+                var amount = (int)objValue.Value;
 
-                GachaResultPacket gachaResult;
-                switch (resultObjValue.Key.Type)
-                {
-                    case EObjType.COOKIE:
-                        var prtCookie = ProtoDb.Get<CookieProto>(resultObjValue.Key.Num);
-                        gachaResult = new GachaResultPacket
-                        {
-                            ResultObjValue = resultObjValue,
-                            SoulStoneNum = prtCookie.SoulStoneNum,
-                            SoulStoneAmount = prtCookie.InitSoulStone * (int)resultObjValue.Value
-                        };
-                        break;
-                    case EObjType.SOUL_STONE:
-                        gachaResult = new GachaResultPacket
-                        {
-                            ResultObjValue = resultObjValue,
-                            SoulStoneNum = resultObjValue.Key.Num,
-                            SoulStoneAmount = (int)resultObjValue.Value
-                        };
-                        break;
-                    default:
-                        throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NO_HANDLING_GACHA_RESULT", new { ObjType = resultObjValue.Key.Type });
-                }
+                var (prtCookie, gachaResult) = ResolveGachaResult(objValue, amount);
+                var mdlCookie = TouchCookie(prtCookie.Num);
+                ApplyGachaResult(mdlCookie, prtCookie, objValue);
+
                 gachaResultList.Add(gachaResult);
             }
 
-            // TODO: 가챠 전용 Inc로 ㄱㄱ
-            var changeList = await RewardService.GrantListAsync(OwnScope, rewardObjValList, scheduleMgr.MakeGachaReason(valCnt));
+            await cookieSet.UpsertListAsync(touchedCookieList);
 
             return new GachaNormalResponsePacket
             {
-                CostChgObj = costChange.ToPacket(),
-                GachaResultChgObjList = changeList.ToPacketList(),
+                CostChgObjList = costChangeList.ToPacketList(),
+                CookieList = _mapper.Map<List<CookiePacket>>(touchedCookieList),
                 GachaResultList = gachaResultList,
             };
+
+            // 같은 쿠키를 또 뽑으면 같은 인스턴스를 준다. 그래야 누적이 맞고 같은 행을 두 번 쓰지 않는다.
+            CookieModel TouchCookie(int cookieNum)
+            {
+                var cookie = existCookieList.Find(x => x.Num == cookieNum);
+                if (cookie == null)
+                {
+                    // 여기서 저장하지 않는다. GetOrCreateAsync 는 신규를 즉시 INSERT 해서 벌크로 묶을 게 없어진다.
+                    cookie = CookieQueries.GetDefaultCookieModel(cookieNum);
+                    existCookieList.Add(cookie);
+                }
+
+                if (!touchedCookieList.Contains(cookie))
+                {
+                    touchedCookieList.Add(cookie);
+                }
+
+                return cookie;
+            }
+        }
+
+        // 뽑은 것 하나를 해석한다. COOKIE 는 쿠키 번호가, SOUL_STONE 은 소울스톤 번호가 키라 대상 쿠키가 갈린다.
+        private static (CookieProto CookiePrt, GachaResultPacket Result) ResolveGachaResult(ObjValue objValue, int amount)
+        {
+            CookieProto prtCookie;
+            switch (objValue.Key.Type)
+            {
+                case EObjType.COOKIE:
+                    prtCookie = ProtoDb.Get<CookieProto>(objValue.Key.Num);
+                    return (prtCookie, new GachaResultPacket
+                    {
+                        ResultObjValue = objValue,
+                        SoulStoneNum = prtCookie.SoulStoneNum,
+                        SoulStoneAmount = prtCookie.InitSoulStone * amount,
+                    });
+                case EObjType.SOUL_STONE:
+                    var prtSoulStone = ProtoDb.Get<CookieSoulStoneProto>(objValue.Key.Num);
+                    prtCookie = ProtoDb.Get<CookieProto>(prtSoulStone.CookieNum);
+                    return (prtCookie, new GachaResultPacket
+                    {
+                        ResultObjValue = objValue,
+                        SoulStoneNum = objValue.Key.Num,
+                        SoulStoneAmount = amount,
+                    });
+                default:
+                    throw new GameException(EErrorCode.NO_HANDLING_ERROR, "NO_HANDLING_GACHA_RESULT", new { ObjType = objValue.Key.Type });
+            }
+        }
+
+        // 뽑은 것을 쿠키에 적용한다. 무엇이 얼마나 바뀌었는지는 호출부가 모델에서 읽는다.
+        private static void ApplyGachaResult(CookieModel mdlCookie, CookieProto prtCookie, ObjValue objValue)
+        {
+            var amount = (int)objValue.Value;
+            if (objValue.Key.Type == EObjType.COOKIE)
+            {
+                mdlCookie.IncCookie(amount, prtCookie);
+                return;
+            }
+
+            mdlCookie.IncSoulStone(amount);
         }
 
         private readonly GlobalDbRepo _dbRepo;

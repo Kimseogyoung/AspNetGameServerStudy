@@ -19,5 +19,9 @@ namespace ServerCore.Repo.Database
 
         // ── Update: DB Update → Cache.Set(listKey, entity, match) ─────────
         Task UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase;
+
+        // ── UpsertList: DB 한 문장 → 캐시 리스트 한 번 갱신 ────────────────
+        // 신규/기존을 구분하지 않으므로 GetOrCreate 왕복 없이 여러 행을 저장한다.
+        Task UpsertListAsync<T>(IReadOnlyList<T> entityList, CacheKey listKey) where T : ModelBase;
     }
 }

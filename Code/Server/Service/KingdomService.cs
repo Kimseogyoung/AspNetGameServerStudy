@@ -33,13 +33,13 @@ namespace Server.Service
             var reason = $"BUY_KINGDOM_STRUCTURE:{req.KingdomItemNum}";
             var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
 
-            var costChange = await RewardService.PayAsync(OwnScope, valCostObj, reason);
+            var costChangeList = await RewardService.PayAsync(OwnScope, valCostObj, reason);
 
             var mgrKingdomStructure = await OwnUser.KingdomStructure.CreateAsync(prtKingdomItem);
             return new KingdomBuyStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
-                ChgObj = costChange.ToPacket(),
+                ChgObjList = costChangeList.ToPacketList(),
             };
         }
 
@@ -56,12 +56,12 @@ namespace Server.Service
             var reason = $"BUY_KINGDOM_DECO:{req.KingdomItemNum}";
             var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
 
-            var costChange = await RewardService.PayAsync(OwnScope, valCostObj, reason);
+            var costChangeList = await RewardService.PayAsync(OwnScope, valCostObj, reason);
             await mgrKingdomDeco.IncAsync(1, reason);
             return new KingdomBuyDecoResponsePacket
             {
                 KingdomDeco = _mapper.Map<KingdomDecoPacket>(mgrKingdomDeco.Model),
-                ChgObj = costChange.ToPacket(),
+                ChgObjList = costChangeList.ToPacketList(),
             };
         }
 
@@ -80,7 +80,7 @@ namespace Server.Service
             var valCostObj = ReqHelper.ValidCost(req.CostObjList[0], prtKingdomItem.ConstructObjType, prtKingdomItem.ConstructObjNum, prtKingdomItem.ConstructObjAmount, reason);
 
             // 처리: 건설 재료 소모
-            var costChange = await RewardService.PayAsync(OwnScope, valCostObj, reason);
+            var costChangeList = await RewardService.PayAsync(OwnScope, valCostObj, reason);
 
             // DELETEME: Map 형태로 저장 형식 변경            // 처리: 타일 설치
             // var placedKingdomItem = OwnUser.PlacedKingdomItem.Create(mgrKingdomStructure.Prt, reqStartTilePos.X, reqStartTilePos.Y, mgrKingdomStructure);
@@ -92,7 +92,7 @@ namespace Server.Service
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
                 PlacedKingdomItemList = [.. mgrKingdomMap.Snapshot.PlacedObjDict.Values],
-                ChgObjList = [costChange.ToPacket()],
+                ChgObjList = costChangeList.ToPacketList(),
             };
         }
 

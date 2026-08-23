@@ -9,6 +9,8 @@ namespace ServerCore.Repo.Database
         Task<IEnumerable<T>> SelectListByColumnAsync<T>(string column, object value) where T : class;
         Task<T> InsertAsync<T>(T entity) where T : class;
         Task UpdateAsync<T>(T entity) where T : class;
+        // 여러 행을 한 문장으로 저장 - PK 가 자연키인 엔티티 전용
+        Task UpsertListAsync<T>(IReadOnlyList<T> entityList) where T : class;
         // 집계 등 로우 SQL 전용 — InMemory 모드 미지원 (NotSupportedException)
         Task<T> QuerySingleAsync<T>(string sql, object param);
     }

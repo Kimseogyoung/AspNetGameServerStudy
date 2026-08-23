@@ -61,7 +61,7 @@ namespace ClientCore
             var res = await RpcSystem.RequestAsync<WorldRewardStarRequestPacket, WorldRewardStarResponsePacket>(req);
 
             SyncWorld(res.World);
-            SyncChgObj(res.ChgObj);
+            SyncChgObjList(res.ChgObjList);
             return res;
         }
 

@@ -14,7 +14,7 @@ namespace Protocol
         public KingdomStructurePacket KingdomStructure { get; set; } = new KingdomStructurePacket();
         
         [ProtoMember(3)]
-        public ChgObjPacket ChgObj { get; set; } = new ChgObjPacket();
+        public List<ChgObjPacket> ChgObjList { get; set; } = new List<ChgObjPacket>();
         
 	}
 }

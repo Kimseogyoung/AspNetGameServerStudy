@@ -30,5 +30,10 @@ namespace ServerCore.Repo.Database
         {
             await Db.ExecuteAsync(db => db.UpdateAsync<T>(entity));
         }
+
+        public async Task UpsertListAsync<T>(IReadOnlyList<T> entityList, CacheKey listKey) where T : ModelBase
+        {
+            await Db.ExecuteAsync(db => db.UpsertListAsync(entityList));
+        }
     }
 }

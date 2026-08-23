@@ -47,6 +47,11 @@ namespace ServerCore.Repo.Database
             return _conn.UpdateAsync(entity, _tx);
         }
 
+        public Task UpsertListAsync<T>(IReadOnlyList<T> entityList) where T : class
+        {
+            return _conn.UpsertListAsync(entityList, _tx);
+        }
+
         public Task<T> QuerySingleAsync<T>(string sql, object param)
         {
             return _conn.QuerySingleOrDefaultAsync<T>(sql, param, transaction: _tx);

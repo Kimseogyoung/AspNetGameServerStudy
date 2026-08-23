@@ -59,6 +59,25 @@ namespace WebStudyServer.Data
             return _repository().UpdateAsync(entity, _listKey, x => x.PkEquals(entity));
         }
 
+        // 여러 행을 한 번에 저장. 신규/기존을 구분하지 않으므로 GetOrCreate 왕복이 사라진다.
+        // 소유자는 CreateAsync와 같이 스코프가 정한다.
+        public Task UpsertListAsync(IReadOnlyList<T> entityList)
+        {
+            var now = DateTime.UtcNow;
+            foreach (var entity in entityList)
+            {
+                entity.SetScopeKey(_scopeKeyValue);
+                if (entity.CreateTime == default)
+                {
+                    entity.CreateTime = now;
+                }
+
+                entity.UpdateTime = now;
+            }
+
+            return _repository().UpsertListAsync(entityList, _listKey);
+        }
+
         // 다른 소유자의 엔티티를 이 스코프로 저장하면 DB와 캐시 버킷이 어긋난다
         private void EnsureOwned(T entity)
         {

@@ -50,7 +50,8 @@ namespace WebStudyServer.Model
         }
 
         // RealCash 를 먼저 소모하고 모자란 만큼 FreeCash 에서 뺀다.
-        public double DecCash(double amount, string reason)
+        // 두 컬럼이 바뀌므로 값을 반환하지 않는다. 바뀐 값은 호출부가 두 프로퍼티에서 읽는다.
+        public void DecCash(double amount, string reason)
         {
             ReqHelper.ValidUnderFlowParam(amount, reason);
             ReqHelper.ValidEnough(amount, TotalCash(), "PLAYER_TOTAL_CASH", reason);
@@ -58,7 +59,6 @@ namespace WebStudyServer.Model
             var realCashCost = Math.Min(RealCash, amount);
             RealCash -= realCashCost;
             FreeCash -= amount - realCashCost;
-            return TotalCash();
         }
 
         public double IncFreeCash(double amount)

@@ -89,6 +89,41 @@ namespace ServerCore.Extension
             await connection.ExecuteAsync(updateSql, entity, transaction);
         }
 
+        // 여러 행을 INSERT ... ON DUPLICATE KEY UPDATE 한 문장으로 저장한다.
+        // PK 가 자연키인 엔티티 전용 - auto increment Id 를 돌려받아야 하면 InsertAsync 를 써야 한다.
+        public static async Task UpsertListAsync<T>(this IDbConnection connection, IReadOnlyList<T> entityList, IDbTransaction transaction)
+        {
+            if (entityList.Count == 0)
+            {
+                return;
+            }
+
+            var queryParam = GetQueryParameter<T>();
+            var properties = queryParam.Properties;
+
+            var valuesClause = new StringBuilder();
+            var param = new DynamicParameters();
+            for (var row = 0; row < entityList.Count; row++)
+            {
+                valuesClause.Append(row == 0 ? "(" : ", (");
+                for (var col = 0; col < properties.Length; col++)
+                {
+                    var name = $"{properties[col].Name}{row}";
+                    valuesClause.Append(col == 0 ? "@" : ", @").Append(name);
+                    param.Add(name, properties[col].GetValue(entityList[row]));
+                }
+
+                valuesClause.Append(')');
+            }
+
+            var upsertSql = $@"
+            INSERT INTO {queryParam.TableName} ({queryParam.Fields})
+            VALUES {valuesClause}
+            ON DUPLICATE KEY UPDATE {queryParam.UpsertSet};";
+
+            await connection.ExecuteAsync(upsertSql, param, transaction);
+        }
+
         public static Task<T> SelectByPkAsync<T>(this IDbConnection connection, object keyValues, IDbTransaction transaction)
         {
             var tableName = GetTableName<T>();
@@ -183,7 +218,12 @@ namespace ServerCore.Extension
                 .Where(p => !keyFields.Contains(p.Name))
                 .Select(p => $"`{p.Name}` = @{p.Name}"));
 
-            var queryParam = new QueryParam(tableName, fields, parameters, updateSet);
+            // 업서트에서는 키와 CreateTime 을 갱신하지 않는다. 기존 행의 생성 시각이 덮이면 안 된다.
+            var upsertSet = string.Join(", ", properties
+                .Where(p => !keyFields.Contains(p.Name) && p.Name != "CreateTime")
+                .Select(p => $"`{p.Name}` = VALUES(`{p.Name}`)"));
+
+            var queryParam = new QueryParam(tableName, fields, parameters, updateSet, properties, upsertSet);
 
             // 캐시된 필드와 파라미터 정보 가져오기 또는 새로 생성
             QueryParamDict[typeof(T)] = queryParam;
@@ -228,13 +268,18 @@ namespace ServerCore.Extension
             public string Fields { get; private set; }
             public string Parameters { get; private set; }
             public string UpdateSet { get; private set; }
+            // 다중 행 업서트용. Properties 는 VALUES 절 파라미터를 행마다 만들 때 쓴다.
+            public PropertyInfo[] Properties { get; private set; }
+            public string UpsertSet { get; private set; }
 
-            public QueryParam(string tableName, string fields, string parameters, string updateSet)
+            public QueryParam(string tableName, string fields, string parameters, string updateSet, PropertyInfo[] properties, string upsertSet)
             {
                 TableName = tableName;
                 Fields = fields;
                 Parameters = parameters;
                 UpdateSet = updateSet;
+                Properties = properties;
+                UpsertSet = upsertSet;
             }
         }
     }

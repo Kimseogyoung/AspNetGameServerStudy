@@ -81,6 +81,17 @@ namespace ServerCore.Repo.Database
             return Task.CompletedTask;
         }
 
+        // 업서트는 InMemoryStore의 Set이 이미 같은 의미다 - PK가 같으면 덮어쓴다.
+        public Task UpsertListAsync<T>(IReadOnlyList<T> entityList) where T : class
+        {
+            foreach (var entity in entityList)
+            {
+                _store.Set(typeof(T), InMemoryPkRegistry.ComputePkKey(entity), entity);
+            }
+
+            return Task.CompletedTask;
+        }
+
         // InMemory 모드에서는 집계 SQL을 실행할 수 없으므로 NotSupportedException.
         public Task<T> QuerySingleAsync<T>(string sql, object param)
         {

@@ -36,8 +36,8 @@ namespace ClientCore
             var req = new GachaNormalRequestPacket(scheduleNum, cnt, new CostObjPacket { Type = costType, Num = 0, Amount = costAmount * cnt });
             var res = await RpcSystem.RequestAsync<GachaNormalRequestPacket, GachaNormalResponsePacket>(req);
 
-            SyncChgObjList(res.GachaResultChgObjList);
-            SyncChgObj(res.CostChgObj);
+            SyncCookieList(res.CookieList);
+            SyncChgObjList(res.CostChgObjList);
             return res;
         }
 
@@ -81,7 +81,7 @@ namespace ClientCore
             var res = await RpcSystem.RequestAsync<CookieEnhanceLvRequestPacket, CookieEnhanceLvResponsePacket>(req);
 
             SyncCookie(res.Cookie);
-            SyncChgObj(res.ChgObj);
+            SyncChgObjList(res.ChgObjList);
             return res;
         }
     }

@@ -17,7 +17,8 @@ namespace WebStudyServer.Data
     public static class RewardService
     {
         // ── 라우팅 ────────────────────────────────────────────────────────
-        public static async Task<ChangeSet> PayAsync(UserScope userScope, ObjValue cost, string reason)
+        // 리스트를 반환하는 이유는 TOTAL_CASH 뿐이다. 나머지는 항상 1개다.
+        public static async Task<List<ChangeSet>> PayAsync(UserScope userScope, ObjValue cost, string reason)
         {
             ReqHelper.ValidUnderFlowParam(cost.Value, reason);
             var amount = ReqHelper.ValidWithoutDecimal(cost.Value, reason);
@@ -25,17 +26,17 @@ namespace WebStudyServer.Data
             switch (cost.Key.Type.ToObjTyeCategory())
             {
                 case EObjType.EXP:
-                    return await DecExpAsync(userScope, amount, reason);
+                    return [await DecExpAsync(userScope, amount, reason)];
                 case EObjType.GOLD:
-                    return await DecGoldAsync(userScope, amount, reason);
+                    return [await DecGoldAsync(userScope, amount, reason)];
                 case EObjType.TOTAL_CASH:
                     return await DecCashAsync(userScope, amount, reason);
                 case EObjType.POINT_START:
-                    return await DecPointAsync(userScope, cost.Key, amount, reason);
+                    return [await DecPointAsync(userScope, cost.Key, amount, reason)];
                 case EObjType.TICKET_START:
-                    return await DecTicketAsync(userScope, cost.Key, amount, reason);
+                    return [await DecTicketAsync(userScope, cost.Key, amount, reason)];
                 case EObjType.ITEM:
-                    return await DecItemAsync(userScope, cost.Key, amount, reason);
+                    return [await DecItemAsync(userScope, cost.Key, amount, reason)];
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_COST_OBJ_TYPE", new { cost.Key.Type });
             }
@@ -46,13 +47,15 @@ namespace WebStudyServer.Data
             var changeList = new List<ChangeSet>(rewardList.Count);
             foreach (var reward in rewardList)
             {
-                changeList.Add(await GrantAsync(userScope, reward, reason));
+                changeList.AddRange(await GrantAsync(userScope, reward, reason));
             }
 
             return changeList;
         }
 
-        public static async Task<ChangeSet> GrantAsync(UserScope userScope, ObjValue reward, string reason)
+        // 리스트를 반환하는 이유는 쿠키뿐이다. 한 장을 받으면 소울스톤 수량과 보유 수량이 같이 바뀐다.
+        // PayAsync 가 TOTAL_CASH 때문에 리스트인 것과 같은 이유다.
+        public static async Task<List<ChangeSet>> GrantAsync(UserScope userScope, ObjValue reward, string reason)
         {
             ReqHelper.ValidUnderFlowParam(reward.Value, reason);
             var amount = ReqHelper.ValidWithoutDecimal(reward.Value, reason);
@@ -60,23 +63,23 @@ namespace WebStudyServer.Data
             switch (reward.Key.Type.ToObjTyeCategory())
             {
                 case EObjType.GOLD:
-                    return await IncGoldAsync(userScope, amount);
+                    return [await IncGoldAsync(userScope, amount)];
                 case EObjType.EXP:
-                    return await IncExpAsync(userScope, amount);
+                    return [await IncExpAsync(userScope, amount)];
                 case EObjType.REAL_CASH:
-                    return await IncRealCashAsync(userScope, amount);
+                    return [await IncRealCashAsync(userScope, amount)];
                 case EObjType.FREE_CASH:
-                    return await IncFreeCashAsync(userScope, amount);
+                    return [await IncFreeCashAsync(userScope, amount)];
                 case EObjType.POINT_START:
-                    return await IncPointAsync(userScope, reward.Key, amount);
+                    return [await IncPointAsync(userScope, reward.Key, amount)];
                 case EObjType.TICKET_START:
-                    return await IncTicketAsync(userScope, reward.Key, amount);
+                    return [await IncTicketAsync(userScope, reward.Key, amount)];
                 case EObjType.ITEM:
-                    return await IncItemAsync(userScope, reward.Key, amount);
+                    return [await IncItemAsync(userScope, reward.Key, amount)];
                 case EObjType.COOKIE:
                     return await IncCookieAsync(userScope, reward.Key, (int)amount);
                 case EObjType.SOUL_STONE:
-                    return await IncSoulStoneAsync(userScope, reward.Key, (int)amount);
+                    return [await IncSoulStoneAsync(userScope, reward.Key, (int)amount)];
                 default:
                     throw new GameException(EErrorCode.PARAM, "NO_HANDLING_REWARD_OBJ_TYPE", new { reward.Key.Type });
             }
@@ -123,14 +126,30 @@ namespace WebStudyServer.Data
             return ChangeSet.Of(EObjType.EXP, 0, before, after);
         }
 
-        public static async Task<ChangeSet> DecCashAsync(UserScope userScope, double amount, string reason)
+        // TOTAL_CASH 는 RealCash + FreeCash 라서 ChgObj 하나에 담기지 않는다.
+        // 실제로 바뀐 컬럼만 REAL_CASH / FREE_CASH 로 돌려준다. TOTAL_CASH 는 와이어에 안 나간다.
+        public static async Task<List<ChangeSet>> DecCashAsync(UserScope userScope, double amount, string reason)
         {
             var detailSet = userScope.Owned<PlayerDetailModel>();
             var detail = await detailSet.GetOrCreateAsync();
-            var before = detail.TotalCash();
-            var after = detail.DecCash(amount, reason);
+
+            var befReal = detail.RealCash;
+            var befFree = detail.FreeCash;
+            detail.DecCash(amount, reason);
             await detailSet.UpdateAsync(detail);
-            return ChangeSet.Of(EObjType.TOTAL_CASH, 0, before, after);
+
+            var changeList = new List<ChangeSet>(2);
+            if (detail.RealCash != befReal)
+            {
+                changeList.Add(ChangeSet.Of(EObjType.REAL_CASH, 0, befReal, detail.RealCash));
+            }
+
+            if (detail.FreeCash != befFree)
+            {
+                changeList.Add(ChangeSet.Of(EObjType.FREE_CASH, 0, befFree, detail.FreeCash));
+            }
+
+            return changeList;
         }
 
         public static async Task<ChangeSet> IncFreeCashAsync(UserScope userScope, double amount)
@@ -214,18 +233,31 @@ namespace WebStudyServer.Data
             return ChangeSet.Of(key.Type, key.Num, before, after);
         }
 
-        // 쿠키는 획득해도 바뀌는 값이 소울스톤이라 Before/After 가 소울스톤이다.
-        public static async Task<ChangeSet> IncCookieAsync(UserScope userScope, ObjKey key, int amount)
+        // 쿠키 행은 수량이 둘이다. 소울스톤은 SOUL_STONE 번호로, 보유 수량은 COOKIE 번호로 나간다.
+        // 쿠키를 뽑아 소울스톤으로 환산된 몫도 SOUL_STONE 쪽에 실린다.
+        public static async Task<List<ChangeSet>> IncCookieAsync(UserScope userScope, ObjKey key, int amount)
         {
+            var changeList = new List<ChangeSet>(2);
+
+            var prtCookie = ProtoDb.Get<CookieProto>(key.Num);
             var cookieSet = userScope.Owned<CookieModel>();
             var cookie = await cookieSet.GetOrCreateAsync(key.Num);
-            var before = (double)cookie.SoulStone;
-            var after = cookie.IncCookie(amount, ProtoDb.Get<CookieProto>(key.Num));
+
+            // 보유 수량이 바뀌는 건 첫 획득 때만.
+            if (cookie.State != ECookieState.AVAILABLE)
+            {
+                changeList.Add(ChangeSet.Of(EObjType.COOKIE, prtCookie.Num, 0, 1));
+            }
+
+            var befSoulStone = (double)cookie.SoulStone;
+            cookie.IncCookie(amount, prtCookie);
             await cookieSet.UpdateAsync(cookie);
-            return ChangeSet.Of(key.Type, key.Num, before, after);
+
+            changeList.Add(ChangeSet.Of(EObjType.SOUL_STONE, prtCookie.SoulStoneNum, befSoulStone, cookie.SoulStone));
+            return changeList;
         }
 
-        // 소울스톤 번호로 대상 쿠키를 찾지만, 응답에는 요청이 지목한 소울스톤 번호가 실린다.
+        // 소울스톤만 늘어난다. 보유 수량은 IncCookie 만 바꾸므로 여기선 나올 수 없다.
         public static async Task<ChangeSet> IncSoulStoneAsync(UserScope userScope, ObjKey key, int amount)
         {
             var cookieSet = userScope.Owned<CookieModel>();

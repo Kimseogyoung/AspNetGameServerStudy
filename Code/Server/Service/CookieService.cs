@@ -50,14 +50,14 @@ namespace Server.Service
             ReqHelper.ValidContext(req.BefLv == cookie.Lv, "NOT_EQUAL_COOKIE_Lv", () => new { cookie.Num, req.BefLv, CookieLv = cookie.Lv });
             var valCostObj = ReqHelper.ValidCost(req.CostObj, Proto.EObjType.POINT_COOKIE_LV, 0, deltaLv * cfgLvCost, reason);
 
-            var costChange = await RewardService.PayAsync(userScope, valCostObj, reason);
+            var costChangeList = await RewardService.PayAsync(userScope, valCostObj, reason);
             cookie.EnhanceLv(req.AftLv);
             await cookieSet.UpdateAsync(cookie);
 
             return new CookieEnhanceLvResponsePacket
             {
                 Cookie = _mapper.Map<CookiePacket>(cookie),
-                ChgObj = costChange.ToPacket(),
+                ChgObjList = costChangeList.ToPacketList(),
             };
         }
 
