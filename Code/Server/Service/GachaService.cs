@@ -22,25 +22,38 @@ namespace Server.Service
 
         public async Task<ScheduleLoadResponsePacket> LoadScheduleAsync(ScheduleLoadRequestPacket req)
         {
-            var centerRepo = _dbRepo.Center;
-            var mgrScheduleList = await centerRepo.Schedule.GetListAsync();
+            var viewList = await Db.Center().GetScheduleListAsync();
             return new ScheduleLoadResponsePacket
             {
-                ScheduleList = _mapper.Map<List<SchedulePacket>>(mgrScheduleList),
+                ScheduleList = viewList.ConvertAll(ToPacket),
+            };
+        }
+
+        // 필드 6개뿐이라 AutoMapper 설정을 두지 않는다.
+        private static SchedulePacket ToPacket(ScheduleView view)
+        {
+            return new SchedulePacket
+            {
+                Num = view.Num,
+                State = view.State,
+                ActiveStartTime = view.ActiveStartTime,
+                ActiveEndTime = view.ActiveEndTime,
+                ContentStartTime = view.ContentStartTime,
+                ContentEndTime = view.ContentEndTime,
             };
         }
 
         public async Task<GachaNormalResponsePacket> GachaNormalAsync(GachaNormalRequestPacket req)
         {
-            var centerRepo = _dbRepo.Center;
-            var scheduleMgr = await centerRepo.Schedule.GetAsync(req.ScheduleNum, EScheduleTimeType.TOTAL);
+            var scheduleView = await Db.Center().GetScheduleAsync(req.ScheduleNum);
+            scheduleView.ValidPeriod(EScheduleTimeType.TOTAL, RpcContext.ServerTime);
 
             // Cost일치하는지 체크
-            var valCnt = scheduleMgr.ValidGachaCnt(req.Cnt);
-            var valCost = scheduleMgr.ValidGachaCost(req.CostObj, valCnt);
+            var valCnt = scheduleView.ValidGachaCnt(req.Cnt);
+            var valCost = scheduleView.ValidGachaCost(req.CostObj, valCnt);
 
             // 재화 소모
-            var costChangeList = await RewardService.PayAsync(OwnScope, valCost, scheduleMgr.MakeGachaReason(valCnt));
+            var costChangeList = await RewardService.PayAsync(OwnScope, valCost, scheduleView.MakeGachaReason(valCnt));
 
             // 가챠 보상은 COOKIE / SOUL_STONE 뿐이고 둘 다 CookieModel 로 간다. 뽑을 때마다 이 리스트에
             // 바로 적용하고 저장은 마지막에 업서트 한 번만 한다.
@@ -52,7 +65,7 @@ namespace Server.Service
             var existCookieList = await cookieSet.GetListAsync();
             var touchedCookieList = new List<CookieModel>();
 
-            var gachaRandom = new GachaRandom(scheduleMgr.GachaPrt, RpcContext.ServerTime);
+            var gachaRandom = new GachaRandom(scheduleView.GachaPrt, RpcContext.ServerTime);
             var gachaResultList = new List<GachaResultPacket>(valCnt);
             for (var i = 0; i < valCnt; i++)
             {

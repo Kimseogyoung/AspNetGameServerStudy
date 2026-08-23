@@ -48,13 +48,7 @@ namespace Server.Service
                 var pakPlayer = await PreparePlayerAsync(mdlPlayer);
 
                 var accountId = mdlPlayer.AccountId;
-                var authRepo = _dbRepo.Auth;
-                await authRepo.PlayerMap.CreateAsync(new PlayerMapModel
-                {
-                    AccountId = accountId,
-                    PlayerId = mdlPlayer.Id,
-                    ShardId = OwnUser.ShardId,
-                });
+                await Db.Auth(accountId).CreatePlayerMapAsync(mdlPlayer.Id, OwnUser.ShardId);
 
                 var (foundSession, mdlSession) = await Db.Sessions.TryGetByAccountIdAsync(accountId);
                 if (foundSession && mdlSession.SetPlayerId(mdlPlayer.Id))

@@ -13,7 +13,7 @@ namespace WebStudyServer.Data
     // User와 달리 [Entity].ScopeKey 자동 WHERE 안 씀. 기기 키/채널 키 조회에
     // WHERE AccountId가 붙으면 0행이 되기 때문.
     //
-    // PlayerMap은 아직 AuthRepo에 있음(S12).
+    // 여기가 Auth 데이터 전부다. Session만 캐시를 써서 GameDb.Sessions로 분리돼 있음.
     public class AuthScope
     {
         public ulong AccountId { get; }
@@ -54,6 +54,17 @@ namespace WebStudyServer.Data
                 Country = "",
                 GeoIpCountry = "",
                 Language = "",
+            });
+        }
+
+        // 계정 -> 플레이어 인덱스. 샤드를 모르는 상태에서 플레이어를 찾을 때 쓴다.
+        public Task<PlayerMapModel> CreatePlayerMapAsync(ulong playerId, int shardId)
+        {
+            return CreateAsync(new PlayerMapModel
+            {
+                AccountId = AccountId,
+                PlayerId = playerId,
+                ShardId = shardId,
             });
         }
 

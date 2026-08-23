@@ -12,9 +12,7 @@ namespace Server.Repo
     {
         public UserRepo OwnUser { get; private set; } = null;
 
-        // Lazy Loading
-        public AuthRepo Auth => _lazyAuthRepo?.Value ?? throw new ObjectDisposedException(nameof(GlobalDbRepo));
-        public CenterRepo Center => _lazyCenterRepo?.Value ?? throw new ObjectDisposedException(nameof(GlobalDbRepo));
+        // Lazy Loading. Auth / Center 는 GameDb 로 옮겨져 여기 없다(S4~S8).
         public AllUserRepo AllUser => _lazyAllUserRepo?.Value ?? throw new ObjectDisposedException(nameof(GlobalDbRepo));
 
         // TODO: 추후 cacheSession도 CacheSessionManager통해서 만들도록
@@ -25,8 +23,6 @@ namespace Server.Repo
             _dbSessionManager = dbScope;
             _logger = logger;
 
-            _lazyAuthRepo = new Lazy<AuthRepo>(BeginAuthRepo);
-            _lazyCenterRepo = new Lazy<CenterRepo>(BeginCenterRepo);
             _lazyAllUserRepo = new Lazy<AllUserRepo>(BeginAllUserRepo);
         }
 
@@ -41,20 +37,6 @@ namespace Server.Repo
             var repository = CreateRepository(connStr);
             var userRepo = new UserRepo(_rpcContext, repository);
             OwnUser = userRepo;
-        }
-
-        private AuthRepo BeginAuthRepo()
-        {
-            var repository = CreateRepository(DbConnectionResolver.Auth());
-            var authRepo = new AuthRepo(_rpcContext, repository);
-            return authRepo;
-        }
-
-        private CenterRepo BeginCenterRepo()
-        {
-            var repository = CreateRepository(DbConnectionResolver.Center());
-            var centerRepo = new CenterRepo(_rpcContext, repository);
-            return centerRepo;
         }
 
         private AllUserRepo BeginAllUserRepo()
@@ -115,8 +97,6 @@ namespace Server.Repo
             {
                 _dbSessionManager.Close();
 
-                _lazyAuthRepo = null;
-                _lazyCenterRepo = null;
                 _lazyAllUserRepo = null;
 
                 OwnUser = null;
@@ -155,8 +135,6 @@ namespace Server.Repo
             Close();
         }
 
-        private Lazy<AuthRepo>? _lazyAuthRepo;
-        private Lazy<CenterRepo>? _lazyCenterRepo;
         private Lazy<AllUserRepo>? _lazyAllUserRepo;
 
         private readonly IGameContext _rpcContext;

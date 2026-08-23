@@ -115,6 +115,5 @@ namespace WebStudyServer.Service
         }
 
         private readonly GlobalDbRepo _dbRepo;
-        private AuthRepo Auth => _dbRepo.Auth;
     }
 }

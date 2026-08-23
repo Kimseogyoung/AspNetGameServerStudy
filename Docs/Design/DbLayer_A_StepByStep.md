@@ -1712,34 +1712,40 @@ SessionManager     ServerTime ×2 · Ip · DeviceKey ×2 · SetSessionKey(쓰기
 
 ### S8 — Schedule / PlayerMap · T0 확정
 
-```csharp
-// ── Before : ScheduleComponent.GetListAsync
-// 주석: "전체 조회 — 캐시 -> DB조회 일반화가 어려운 부분이라 DbSession 직접 사용"
-var mdlList = await DbSession.ExecuteAsync(async db =>
-    (await db.SelectListByConditionsAsync<ScheduleModel>(null)).ToList());
+#### S8-계획-A 착수 전 census 가 정정한 것
 
-// ── After : 특수 쿼리가 아니었다. ScopeKey 없는 엔티티일 뿐 (§3.9 T0)
-[Entity(Pk = ["Num"], Cache = ECachePolicy.GlobalList)]   // Cache는 S2에서 형태 확정 후 부착
-public partial class ScheduleModel : ModelBase { }        // ScopeKey 없음 → WHERE 없음
-
-var schedules = await center.Owned<ScheduleModel>().GetListAsync();   // 전역 리스트 캐시
-```
-
-**`GlobalList` 캐싱 도입 확정.** 현재 Center 계열은 캐시가 전혀 없어 **매 요청마다 Schedule 전량 조회**다. 스케줄은 거의 변하지 않으므로 이득이 크다. 대신 이 스텝에 무효화를 함께 넣는다:
-- 전역 키(샤드·오너 무관) 정의
-- `Create/Update/Delete`가 전역 리스트를 갱신 또는 무효화
-- **한계**: 운영툴/배치가 DB를 직접 고치면 캐시가 어긋난다. `CacheDefaultTtl`이 상한이며, 즉시 반영이 필요하면 명시적 무효화 API를 노출한다. 문서에 남긴다.
-
-`ScheduleManager`가 Model+Proto를 묶던 부분은 **읽기 전용 뷰**로 바뀐다(§3.4):
+**① 옛 §S8 의 예제는 컴파일되지 않는다.**
 
 ```csharp
-public readonly record struct ScheduleView(ScheduleProto Prt, ScheduleModel Mdl)
-{
-    public bool IsActivePeriod(DateTime now) => ...;
-}
+var schedules = await center.Owned<ScheduleModel>().GetListAsync();   // 옛 문서
 ```
 
-**직후**: `DbSession` 직접 사용 1건 소멸 + 캐시가 적용된다(현재는 매 요청 DB 전체 조회).
+`CenterScope` 에는 `Owned<T>` 가 없고, `OwnedSet<T>` 는 `where T : ModelBase, IScopedModel, new()` 다. `ScheduleModel` 은 `[Entity(Pk = ["Num"])]` 뿐이라 `IScopedModel` 이 아니고 `CacheKeyTags` 에도 없다 — 생성자에서 `NOT_FOUND_SCOPE_KEY` / `NOT_FOUND_CACHE_TAG` 로 던진다. **소유자 축이 없는 엔티티를 `OwnedSet` 으로 다루려던 것이 애초에 모순이다**(§5.4.1 이 "소유자 리스트 / 캐시 없음 2종만" 으로 좁힌 이유).
+
+**② "매 요청마다 Schedule 전량 조회" 는 사실이 아니다.** 호출부는 둘뿐이다.
+
+```
+GachaService:26  centerRepo.Schedule.GetListAsync()   -> ScheduleLoad RPC 에서만. 전량 조회.
+GachaService:36  centerRepo.Schedule.GetAsync(num)    -> 가챠. SelectByPkAsync 단건 조회.
+```
+
+가챠는 PK 단건이다. 전량 조회는 클라가 스케줄 목록을 받을 때뿐이다. `GlobalList` 캐시의 이득은 옛 문서가 적은 것보다 **작다** — 무효화 설계를 얹을 값이 있는지 먼저 따져야 한다.
+
+**③ `PlayerMapComponent.TryGetPlayerMapAsync` 는 호출부가 0이다.** `CreateAsync` 만 `GameService:52` 에서 쓴다. S7a 의 `TryGetByAccountIdAsync`, S7b 의 `LogoutAsync` 에 이어 **세 번째**다. 옮기지 말고 지운다.
+
+**④ `PlayerMapComponent` 는 29줄이고 실제 기능은 INSERT 하나다.** `AuthScope` 에 메서드 하나로 들어간다. 옛 문서가 S8 을 "Schedule / PlayerMap" 으로 묶은 것은 크기 때문이 아니라 둘 다 남은 찌꺼기여서다.
+
+**⑤ `ScheduleManager` 는 Manager 지만 DB 를 안 탄다.** 생성자에서 Proto + Model 을 겹쳐 필드를 채우고 기간 판정 메서드만 갖는다. `CenterManagerBase` 를 상속하지만 `_centerRepo` 를 쓰지 않는다 — §3.4 가 말한 "읽기 전용 뷰" 가 맞다.
+
+**⑥ `AutoMapperProfile` 이 `ScheduleManager -> SchedulePacket` 을 매핑한다.** 뷰로 바꾸면 이 매핑도 같이 바뀐다. record struct 로 만들면 AutoMapper 설정이 필요 없게 손으로 조립하는 편이 짧다(필드 6개).
+
+#### S8-계획-B 열린 결정
+
+**Q1. `GlobalList` 캐시를 이번에 넣는가.** ②를 보면 이득이 큰 자리는 `ScheduleLoad` 하나다. 넣는다면 무효화(운영툴이 DB 를 직접 고치는 경우)까지 같이 와야 하고, 지금 그 운영툴은 없다. **캐시 없이 옮기고 `GlobalList` 는 수요가 생길 때** 라는 선택지가 있다 — §S7a 의 `[SecondaryIndex]` 를 안 만든 것과 같은 판단이다.
+
+**Q2. 스케줄 뷰의 자리.** `ScheduleView(ScheduleProto Prt, ScheduleModel Mdl)` 를 `Data/` 에 둘지 `Domain/` 에 둘지. Proto 를 아는 타입이라 모델 파샬은 아니다.
+
+**Q3. `CenterScope` 의 모양.** 지금은 빈 껍데기다. Schedule 이 들어가면 `Identity`/`AuthScope` 처럼 `IDbSession` 직행이 되는데, 그러면 캐시가 없다는 점에서 Auth 와 같아진다.
 
 ---
 
