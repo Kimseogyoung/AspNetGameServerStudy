@@ -22,7 +22,7 @@ namespace Server.Service
 
         public async Task<ScheduleLoadResponsePacket> LoadScheduleAsync(ScheduleLoadRequestPacket req)
         {
-            var viewList = await Db.Center().GetScheduleListAsync();
+            var viewList = await Db.Center().GetFilledScheduleListAsync();
             return new ScheduleLoadResponsePacket
             {
                 ScheduleList = viewList.ConvertAll(ToPacket),

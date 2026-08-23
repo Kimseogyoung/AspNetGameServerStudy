@@ -20,9 +20,19 @@ namespace WebStudyServer.Data
         public DateTime ContentStartTime => Mdl?.ContentStartTime ?? Prt.ContentStartTime;
         public DateTime ContentEndTime => Mdl?.ContentEndTime ?? Prt.ContentEndTime;
 
-        // 가챠 스케줄일 때만 있다. 아니면 null.
-        public GachaScheduleProto GachaPrt =>
-            Prt.Type == EScheduleType.GACHA ? ProtoDb.Get<GachaScheduleProto>(Prt.Num) : null;
+        // 가챠 스케줄일 때만 쓸 수 있다. 다른 타입에 가챠 API 를 부르면 NRE 대신 여기서 걸린다.
+        // ScheduleNum 은 클라가 보내므로 출석 스케줄 번호가 가챠 API 로 올 수 있다.
+        public GachaScheduleProto GachaPrt
+        {
+            get
+            {
+                var num = Num;
+                var scheduleType = Prt.Type;
+                ReqHelper.ValidContext(scheduleType == EScheduleType.GACHA, "NOT_GACHA_SCHEDULE",
+                    () => new { ScheduleNum = num, ScheduleType = scheduleType });
+                return ProtoDb.Get<GachaScheduleProto>(num);
+            }
+        }
 
         public bool IsActivePeriod(DateTime nowTime) => TimeHelper.IsValidDateTime(nowTime, ActiveStartTime, ActiveEndTime);
         public bool IsContentPeriod(DateTime nowTime) => TimeHelper.IsValidDateTime(nowTime, ContentStartTime, ContentEndTime);
@@ -32,10 +42,11 @@ namespace WebStudyServer.Data
         public int ValidGachaCnt(int reqCnt)
         {
             var num = Num;
-            var findIdx = GachaPrt.CntList.FindIndex(x => x == reqCnt);
+            var prtGacha = GachaPrt;
+            var findIdx = prtGacha.CntList.FindIndex(x => x == reqCnt);
             ReqHelper.ValidContext(findIdx != -1, "NOT_EQUAL_GACHA_CNT", () => new { ScheduleNum = num, ReqCnt = reqCnt });
 
-            return GachaPrt.CntList[findIdx];
+            return prtGacha.CntList[findIdx];
         }
 
         public ObjValue ValidGachaCost(CostObjPacket reqCostObj, int valCnt)
@@ -46,12 +57,18 @@ namespace WebStudyServer.Data
             ReqHelper.ValidContext(costIdx != -1, "NOT_EQUAL_GACHA_COST_TYPE", () => new { ScheduleNum = num, ReqCostObj = reqCostObj });
 
             var valCostAmount = prtGacha.CostAmountList[costIdx] * valCnt;
-            return ReqHelper.ValidCost(reqCostObj, prtGacha.CostTypeList[costIdx], 0, valCostAmount, MakeGachaReason(valCnt));
+            return ReqHelper.ValidCost(reqCostObj, prtGacha.CostTypeList[costIdx], 0, valCostAmount, MakeGachaReason(prtGacha, cnt: valCnt));
         }
 
         public string MakeGachaReason(int cnt)
         {
-            return $"GACHA:{Num}:{GachaPrt.Tag}:{cnt}";
+            return MakeGachaReason(GachaPrt, cnt);
+        }
+
+        // 프로토를 이미 들고 있는 호출부용. 메서드 하나가 ProtoDb 를 두 번 뒤지지 않게 한다.
+        private string MakeGachaReason(GachaScheduleProto prtGacha, int cnt)
+        {
+            return $"GACHA:{Num}:{prtGacha.Tag}:{cnt}";
         }
 
         // 서버 시각은 호출부가 넣는다. 데이터 계층이 컨텍스트를 읽지 않게 하려는 것이다.

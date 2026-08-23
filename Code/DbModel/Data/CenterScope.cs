@@ -17,8 +17,9 @@ namespace WebStudyServer.Data
             _db = db;
         }
 
-        // 프로토에 있는 스케줄 전부. DB 행이 있으면 그 값이 이긴다.
-        public async Task<List<ScheduleView>> GetScheduleListAsync()
+        // 프로토에 있는 스케줄 전부를 돌려주고, DB 행이 없는 것은 프로토 값으로 채운다.
+        // 행이 있어야만 찾은 것으로 치는 TryGetScheduleAsync 와 기준이 다르므로 이름으로 구분한다.
+        public async Task<List<ScheduleView>> GetFilledScheduleListAsync()
         {
             var mdlList = await Db.ExecuteAsync(async db => (await db.SelectListByConditionsAsync<ScheduleModel>(null)).ToList());
 
