@@ -8,7 +8,7 @@ namespace WebStudyServer.Data
     // accountId를 모르는 Auth 조회. 기기 키/채널 키로 accountId를 얻거나 계정을 새로 만듦.
     // 얻은 accountId로 GameDb.Auth() 호출.
     //
-    // 세션 키 조회는 아직 SessionComponent에 있음.
+    // 세션도 accountId를 모르는 조회지만 유일하게 캐시를 쓰므로 GameDb.Sessions로 분리.
     public class Identity
     {
         internal Identity(GameDb db)

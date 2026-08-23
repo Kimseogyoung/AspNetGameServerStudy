@@ -12,6 +12,9 @@ namespace WebStudyServer
         // (신규 플레이어는 Player.TouchAsync 안에서 정해진다). 미리 담아두면 0인 스코프가 된다.
         protected UserScope OwnScope => Db.User(RpcContext.ShardId, RpcContext.PlayerId);
 
+        // 세션에 찍히는 요청 값. 데이터 계층이 컨텍스트를 직접 읽지 않게 값으로 넘긴다.
+        protected SessionStamp Stamp => new(RpcContext.ServerTime, RpcContext.Ip, RpcContext.DeviceKey);
+
         public ServiceBase(GameDb db, RpcContext rpcContext, ILogger logger)
         {
             Db = db;

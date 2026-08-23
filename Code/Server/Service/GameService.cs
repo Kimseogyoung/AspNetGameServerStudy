@@ -56,10 +56,10 @@ namespace Server.Service
                     ShardId = OwnUser.ShardId,
                 });
 
-                var mdlSession = await authRepo.Session.TryGetByAccountIdAsync(accountId);
-                if (mdlSession != null)
+                var (foundSession, mdlSession) = await Db.Sessions.TryGetByAccountIdAsync(accountId);
+                if (foundSession && mdlSession.SetPlayerId(mdlPlayer.Id))
                 {
-                    await mdlSession.SetPlayerIdAsync(mdlPlayer.Id);
+                    await Db.Sessions.SaveAsync(mdlSession);
                 }
 
 

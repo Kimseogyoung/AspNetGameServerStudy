@@ -1649,6 +1649,65 @@ var mdlPlayer = await userScope.Owned<PlayerModel>().GetAsync();
 - **`[SecondaryIndex]` / `ByIndexAsync`**(수요 발생 시). 정정 ①
 - **`AllUserRepo.TryGetPlayerByNameAsync`**(S11). `ChangeNameFirstAsync` 가 유일 호출부이고 그것이 미등록이다
 
+#### S7-A S7a 실행 결과 (2026-08-23, 커밋 7094407)
+
+계획이 코드에 또 뒤집혔다. **③(`PlayerManager` 는 S10 까지 남는다)이 틀렸다** — 패킷 조립을 `GameService` 로 옮기면서 Kingdom 결합이 서비스로 따라갔고 `PlayerManager` 는 껍데기만 남아 통째로 사라졌다. 결합이 없어진 게 아니라 **이동**한 것이라 `GameService` 가 지금 `OwnUser.KingdomStructure`·`KingdomDeco`·`KingdomMap` 을 직접 든다. S10 에서 정리할 자리다.
+
+**실행 중 잡은 버그 2건.**
+
+첫째, **신규 플레이어의 `Id` 가 0 으로 덮였다.** `OwnedSet.CreateAsync` 는 `SetScopeKey(_scopeKeyValue)` 를 하는데 `PlayerModel` 의 ScopeKey 는 `Id` 자신이다. `PlayerId = 0` 인 스코프로 만들면 호출부가 넣은 Id 가 0 으로 덮인다. **Player 는 스코프에 속한 것이 아니라 스코프의 소유자 자신이라 다른 엔티티와 순서가 반대다** — Id 를 먼저 정하고 그 Id 로 스코프를 연다.
+
+둘째, **`KingdomMapModel.Logic.cs` 가 `PointModel` 을 열고 있었다.** `Snapshot` 이라는 public 프로퍼티가 `PointModel` 에 생겨 Dapper 가 DB 컬럼으로 보고 던졌다. §S2 에서 발견하고 §S6-B 에서 재확인한 "`.Logic.cs` 파샬에는 프로퍼티를 만들지 않는다" 를 세 번째로 밟았다. **InMemory 는 Dapper 를 안 타서 17/17 로 통과했고 MySQL 에서만 드러났다.**
+
+푼 스냅샷을 모델이 들고 있지 않기로 한 이유는 Dapper 만이 아니다. 들고 있으면 **고친 뒤 다시 직렬화하는 걸 잊어도 컴파일이 되고 조용히 저장되지 않는다.** 읽는 쪽은 그때그때 풀고(`ParseSnapshot()`), 고쳐 쓰는 쪽은 `KingdomMapManager` 로 남긴다(S10).
+
+`OwnedSet.TryGetAsync` 에 `predicate = null` 기본값을 넣었다가 되돌렸다. 조건 없는 조회를 열면 소유자 리스트형(Cookie/Item/Point/Ticket)에서 "아무거나 하나"가 합법이 된다. 그리고 C# 은 확장 메서드보다 인스턴스 메서드를 먼저 고르므로 `PlayerQueries.TryGetAsync` 가 도달 불가 코드가 돼 있었다.
+
+**검증**: 리빌드 0에러 · InMemory 17/17 · MySQL+Redis+유저락 17/17 · 임시 테스트로 `ChangeNameFirst`(변경→재입장 저장 확인→중복 차단)와 `ChangeName_DoesNotCreatePlayer`(`CONTEXT_PLAYER`) 확인. `_userRepo` 14 → **12**(예측과 일치).
+
+**검증하지 못한 것**: RaidServer 소켓 인증 경로. `ServerTest` 는 HTTP 만 태운다. 빌드만 통과한 상태다.
+
+---
+
+### S7b — Session · 착수 전 census (2026-08-23)
+
+#### S7b-계획-A census 가 정정한 것
+
+**① `SessionComponent.LogoutAsync` 는 호출부가 0이다.** §5.3 이 "이미 완성된 T2 포인터 캐시"의 근거로 든 네 동작 중 하나가 실제로는 죽어 있다. 옮기지 말고 지운다. S7a 의 `TryGetByAccountIdAsync` 와 같은 패턴이라 **census 없이 문서만 보고 착수하면 또 안 쓰는 것을 이식한다.**
+
+**② S7b 의 무게중심은 캐시가 아니라 컨텍스트다.** §5.3 은 포인터 캐시 유지만 경고했는데, 실제로 더 얽힌 것은 데이터 계층이 `RpcContext` 를 **읽기 7곳 + 쓰기 1곳**으로 쓰고 있다는 점이다.
+
+```
+SessionComponent   Ip · ShardId
+SessionManager     ServerTime ×2 · Ip · DeviceKey ×2 · SetSessionKey(쓰기)
+```
+
+`AuthService` 의 `RpcContext.SetShardId` 가 남아 있는 이유는 `SessionComponent:85` **한 줄**이다. S7a 가 PlayerId 로 푼 것과 같은 문제인데 범위가 넓다.
+
+**③ Auth 는 캐시가 없는 구조인데 Session 만 캐시를 쓴다.** `AuthScope`/`Identity` 는 `IDbSession` 직행이고 주석이 "Auth DB는 캐시를 안 쓰므로 IRepository의 캐시 경로를 안 지남" 이라고 못 박고 있다. Session 을 `AuthScope` 에 넣으면 캐시가 사라져 §5.3 이 경고한 후퇴가 일어나고, 안 넣으면 Auth 안에 캐시 있는 것과 없는 것이 공존한다. **어느 쪽이든 규칙을 하나 고쳐야 한다.**
+
+**④ `Identity` 가 이미 자리를 비워두고 있다.** 주석에 `// 세션 키 조회는 아직 SessionComponent에 있음` 이 적혀 있다. 세션 키 조회는 accountId 를 모르는 상태의 조회라 §S1-G 의 "스코프를 여는 데 필요한 조회는 스코프 밖" 에 해당한다.
+
+**⑤ `AuthComponentBase`(64) / `AuthManagerBase`(15) 는 S7b 에서 안 사라진다.** `PlayerMapComponent` 가 `AuthComponentBase` 를 상속한다. PlayerMap 은 S12 다.
+
+#### S7b-계획-B 갈라야 하는 세 가지
+
+`SessionManager`(118) 는 순수 판단과 IO 와 컨텍스트가 한 덩어리다.
+
+| 무엇 | 지금 | 가야 할 곳 |
+|---|---|---|
+| 만료됐나 · 절반 지났나 · grace 안인가 · `IsExpire` | `SessionManager` | `SessionModel.Logic.cs` (순수, 시각은 인자로) |
+| 2키 캐시 로드 · 키 로테이션 저장 | `SessionComponent` | 특화 store (엔티티 전용, §5.4.1) |
+| ServerTime · Ip · DeviceKey 주입 · `SetSessionKey` | 데이터 계층이 직접 | 호출부(`AuthService`/`RpcContext`) |
+
+#### S7b-계획-C 열린 결정
+
+**Q1. 세션 store 의 자리.** `Identity` 에 합칠지(④의 주석이 그 의도), 아니면 `Data/SessionStore.cs` 로 따로 둘지. 캐시 정책이 `Identity`(무캐시)와 정반대라 **따로 두는 쪽**이 "Auth 는 캐시 없음" 규칙을 지킨다.
+
+**Q2. `StartAsync` 의 키 로테이션을 누가 하는가.** 지금은 데이터 계층이 새 키를 만들고 `RpcContext.SetSessionKey` 까지 한다. 호출부로 올리면 `AuthService` 가 키를 만들어 넘기고 자기 컨텍스트를 갱신한다(§S2-E: 컨텍스트 쓰기는 Transport 인접 계층의 일).
+
+**Q3. `ExtendAsync` 를 소켓 인증에도 붙일지.** 안 붙인다 — 이미 결정돼 있다. RaidServer 는 읽기만 한다.
+
 ---
 
 ### S8 — Schedule / PlayerMap · T0 확정

@@ -5,9 +5,11 @@ using Proto;
 using Protocol;
 using ServerCore;
 using Server.Repo;
-using WebStudyServer.Component;
 using ServerCore.Extension;
+using WebStudyServer;
+using WebStudyServer.Data;
 using WebStudyServer.Helper;
+using WebStudyServer.Model;
 using WebStudyServer.Repo;
 
 namespace WebStudyServer
@@ -97,32 +99,52 @@ namespace WebStudyServer
             // TODO: 점검 상태일때 세션 만료
             //
 
-            var dbRepo = httpContext.RequestServices.GetService<GlobalDbRepo>();
-            var authRepo = dbRepo.Auth;
-            var sessionComp = authRepo.Session;
+            var db = httpContext.RequestServices.GetService<GameDb>();
 
-            var mgrSession = await sessionComp.TryGetByKeyAsync(sessionKey);
-            if (mgrSession == null)
+            var (found, mdlSession) = await db.Sessions.TryGetByKeyAsync(sessionKey);
+            if (!found)
             {
                 _logger.Error("NOT_FOUND_SESSION Key({Key})", sessionKey);
                 SessionLoadState = ESessionLoadState.NOT_FOUND;
                 return;
             }
 
-            _ = await mgrSession.ExtendAsync();
+            await ExtendSessionAsync(db, mdlSession);
 
-            if (mgrSession.IsExpire())
+            if (mdlSession.IsExpire())
             {
                 SessionLoadState = ESessionLoadState.EXPIRED;
                 return;
             }
 
             // 세션 정보 저장
-            SetPlayerId(mgrSession.Model.PlayerId);
-            SetAccountId(mgrSession.Model.AccountId);
-            SetShardId(mgrSession.Model.ShardId);
-            /*
-                        authRepo.Commit();*/
+            SetPlayerId(mdlSession.PlayerId);
+            SetAccountId(mdlSession.AccountId);
+            SetShardId(mdlSession.ShardId);
+        }
+
+        // 만료됐으면 되살리기를 먼저 본다. 첫 만료 요청을 왕복 한 번으로 끝내려는 것이다.
+        // 아직 살아 있으면 남은 시간이 절반 이하일 때만 늘린다.
+        private async Task ExtendSessionAsync(GameDb db, SessionModel mdlSession)
+        {
+            var gameConfig = Config<GameConfig>.Get();
+            var stamp = new SessionStamp(ServerTime, Ip, DeviceKey);
+
+            if (mdlSession.IsPastExpireTime(ServerTime))
+            {
+                if (mdlSession.TryRevive(stamp, gameConfig.SessionExpireSpan, gameConfig.SessionGracePeriodSpan)
+                    || mdlSession.Expire())
+                {
+                    await db.Sessions.SaveAsync(mdlSession);
+                }
+
+                return;
+            }
+
+            if (mdlSession.TryExtend(stamp, gameConfig.SessionExpireSpan))
+            {
+                await db.Sessions.SaveAsync(mdlSession);
+            }
         }
 
         // 요청 정보

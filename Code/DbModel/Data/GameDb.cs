@@ -23,6 +23,9 @@ namespace WebStudyServer.Data
         // accountId를 모르는 Auth 조회
         public Identity Identity => _identity ??= new Identity(this);
 
+        // 세션. Auth 에서 유일하게 캐시를 쓰므로 Identity 와 분리돼 있다.
+        public SessionStore Sessions => _sessionStore ??= new SessionStore(this);
+
         // 어느 샤드의 누구든 열 수 있음. 스코프 객체만 만들고 커넥션은 첫 조회에서 열림.
         public UserScope User(int shardId, ulong playerId)
         {
@@ -84,6 +87,7 @@ namespace WebStudyServer.Data
         private readonly ICacheSession _cache;
 
         private Identity _identity;
+        private SessionStore _sessionStore;
 
         private readonly Dictionary<string, IRepository> _repositories = [];
     }

@@ -6,6 +6,7 @@ using WebStudyServer;
 using WebStudyServer.Base;
 using WebStudyServer.Data;
 using WebStudyServer.Data.Queries;
+using WebStudyServer.Model;
 using WebStudyServer.Repo;
 
 namespace WebStudyServer.Service
@@ -34,15 +35,14 @@ namespace WebStudyServer.Service
                     var foundChannel = (await foundAuthScope.GetChannelListAsync()).Active();
                     if (foundChannel != null)
                     {
-                        var foundMgrSession = await Auth.Session.TouchAsync(foundAccount.Id);
-                        await foundMgrSession.ExpireAsync(); // 기존 세션 무효화
-                        await foundMgrSession.StartAsync();
+                        var foundMdlSession = await TouchSessionAsync(foundAccount.Id, foundAccount.ShardId);
+                        RpcContext.SetSessionKey(await Db.Sessions.StartAsync(foundMdlSession, Stamp));
 
                         return new AuthSignUpResponsePacket
                         {
                             Result = new SignInResultPacket
                             {
-                                SessionKey = foundMgrSession.Model.Key,
+                                SessionKey = foundMdlSession.Key,
                                 ChannelKey = foundChannel.Key,
                                 AccountState = foundAccount.State,
                                 AccountEnv = Config<CoreConfig>.Get().EnvName,
@@ -59,24 +59,21 @@ namespace WebStudyServer.Service
             var newAccount = await Db.Identity.CreateAccountAsync();
             var newAuthScope = Db.Auth(newAccount.Id);
 
-            // SessionComponent가 RpcContext.ShardId를 읽음. Session 이관 시 함께 제거.
-            RpcContext.SetShardId(newAccount.ShardId);
-
             // Session 생성
-            var newMgrSession = await Auth.Session.TouchAsync(newAccount.Id);
+            var newMdlSession = await TouchSessionAsync(newAccount.Id, newAccount.ShardId);
             // Device 정보 생성
             _ = await newAuthScope.CreateDeviceAsync(idfv);
             // 채널 생성
             var newChannel = await newAuthScope.CreateChannelAsync(EChannelType.GUEST);
 
             // 세션 갱신 및 리턴
-            await newMgrSession.StartAsync();
+            RpcContext.SetSessionKey(await Db.Sessions.StartAsync(newMdlSession, Stamp));
 
             return new AuthSignUpResponsePacket
             {
                 Result = new SignInResultPacket
                 {
-                    SessionKey = newMgrSession.Model.Key,
+                    SessionKey = newMdlSession.Key,
                     ChannelKey = newChannel.Key,
                     AccountState = newAccount.State,
                     AccountEnv = Config<CoreConfig>.Get().EnvName,
@@ -95,20 +92,26 @@ namespace WebStudyServer.Service
             var account = (await authScope.GetAccountAsync()).EnsureActive();
 
             // 세션 갱신 및 리턴
-            var mgrSession = await Auth.Session.TouchAsync(account.Id);
-            await mgrSession.ExpireAsync(); // 기존 세션 무효화
-            await mgrSession.StartAsync();
+            var mdlSession = await TouchSessionAsync(account.Id, account.ShardId);
+            RpcContext.SetSessionKey(await Db.Sessions.StartAsync(mdlSession, Stamp));
             return new AuthSignInResponsePacket
             {
                 Result = new SignInResultPacket
                 {
-                    SessionKey = mgrSession.Model.Key,
+                    SessionKey = mdlSession.Key,
                     ChannelKey = channel.Key,
                     AccountState = account.State,
                     AccountEnv = Config<CoreConfig>.Get().EnvName,
                     ClientSecret = ""
                 }
             };
+        }
+
+        // 없으면 만든다. StartAsync 가 어차피 상태를 ACTIVE 로 덮으므로 따로 만료시키지 않는다.
+        private async Task<SessionModel> TouchSessionAsync(ulong accountId, int shardId)
+        {
+            var (found, mdlSession) = await Db.Sessions.TryGetByAccountIdAsync(accountId);
+            return found ? mdlSession : await Db.Sessions.CreateAsync(accountId, shardId, Stamp);
         }
 
         private readonly GlobalDbRepo _dbRepo;

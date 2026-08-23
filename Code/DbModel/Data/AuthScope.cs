@@ -13,7 +13,7 @@ namespace WebStudyServer.Data
     // User와 달리 [Entity].ScopeKey 자동 WHERE 안 씀. 기기 키/채널 키 조회에
     // WHERE AccountId가 붙으면 0행이 되기 때문.
     //
-    // Session/PlayerMap은 아직 AuthRepo에 있음.
+    // PlayerMap은 아직 AuthRepo에 있음(S12).
     public class AuthScope
     {
         public ulong AccountId { get; }

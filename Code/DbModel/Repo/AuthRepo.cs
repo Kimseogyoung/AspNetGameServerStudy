@@ -9,7 +9,6 @@ namespace WebStudyServer.Repo
 {
     public class AuthRepo : RepoBase
     {
-        public SessionComponent Session { get; private set; }
         public PlayerMapComponent PlayerMap { get; private set; }
 
         public IGameContext RpcContext { get; private set; }
@@ -21,7 +20,6 @@ namespace WebStudyServer.Repo
         protected override void PrepareComp()
         {
             // TODO: Lazy
-            Session = new SessionComponent(this, Repository);
             PlayerMap = new PlayerMapComponent(this, Repository);
         }
 

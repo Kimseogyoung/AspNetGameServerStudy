@@ -42,23 +42,24 @@ namespace RaidServer.Services
             var db = scope.ServiceProvider.GetRequiredService<GameDb>();
             try
             {
-                var mgrSession = await dbRepo.Auth.Session.TryGetByKeyAsync(req.SessionKey);
-                if (mgrSession == null)
+                var (foundSession, mdlSession) = await db.Sessions.TryGetByKeyAsync(req.SessionKey);
+                if (!foundSession)
                 {
                     return new AuthResponsePacket { Result = EAuthResult.SessionNotFound };
                 }
 
-                if (mgrSession.IsExpire())
+                // 소켓 인증에서는 세션을 연장하지 않는다. 읽기만 한다.
+                if (mdlSession.IsExpire())
                 {
                     return new AuthResponsePacket { Result = EAuthResult.SessionExpired };
                 }
 
-                raidContext.SetAccountId(mgrSession.Model.AccountId);
-                raidContext.SetPlayerId(mgrSession.Model.PlayerId);
-                raidContext.SetShardId(mgrSession.Model.ShardId);
+                raidContext.SetAccountId(mdlSession.AccountId);
+                raidContext.SetPlayerId(mdlSession.PlayerId);
+                raidContext.SetShardId(mdlSession.ShardId);
 
                 // 세션이 ShardId 를 들고 있으므로 대상을 바로 연다. 앰비언트("나")에 묶이지 않는다.
-                var userScope = db.User(mgrSession.Model.ShardId, mgrSession.Model.PlayerId);
+                var userScope = db.User(mdlSession.ShardId, mdlSession.PlayerId);
                 var playerModel = await userScope.Owned<PlayerModel>().GetAsync();
 
                 // 재접속: 기존 세션 교체
@@ -71,7 +72,7 @@ namespace RaidServer.Services
                 var raidSession = new PlayerRaidSession
                 {
                     SessionId = sessionId,
-                    ShardId = mgrSession.Model.ShardId,
+                    ShardId = mdlSession.ShardId,
                     Player = playerModel,
                 };
                 _bySessionId[sessionId] = raidSession;
