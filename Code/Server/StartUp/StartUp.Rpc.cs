@@ -22,6 +22,8 @@ namespace WebStudyServer
                 // enter는 Player가 안생겨있을 수 있으므로 includePlayer를 false로 설정
                 new RpcGameMethod<GameService, GameEnterRequestPacket, GameEnterResponsePacket>(GameEnterRequestPacket.NAME, (gameSvc, req) => { return gameSvc.EnterAsync(req); }, includePlayer: false),
 
+                new RpcGameMethod<GameService, GameChangeNameRequestPacket, GameChangeNameResponsePacket>(GameChangeNameRequestPacket.NAME, (gameSvc, req) => { return gameSvc.ChangeNameFirstAsync(req); }),
+
                 // game api들은 RpcGameMethod를 사용해서 인증된 사용자만 사용할 수 있도록 함
                 new RpcGameMethod<KingdomService, KingdomBuyStructureRequestPacket, KingdomBuyStructureResponsePacket>(KingdomBuyStructureRequestPacket.NAME, (kingdomSvc, req) => { return kingdomSvc.KingdomStructureBuyAsync(req); }),
                 new RpcGameMethod<KingdomService, KingdomConstructStructureRequestPacket, KingdomConstructStructureResponsePacket>(KingdomConstructStructureRequestPacket.NAME, (kingdomSvc, req) => { return kingdomSvc.KingdomConstructStructureAsync(req); }),

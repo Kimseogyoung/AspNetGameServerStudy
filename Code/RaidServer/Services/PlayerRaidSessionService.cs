@@ -5,6 +5,8 @@ using Protocol.Raid;
 using RaidServer.Context;
 using RaidServer.Network;
 using Server.Repo;
+using WebStudyServer.Data;
+using WebStudyServer.Data.Queries;
 using WebStudyServer.Model;
 
 namespace RaidServer.Services
@@ -37,6 +39,7 @@ namespace RaidServer.Services
             raidContext.Init(req.DeviceKey);
 
             using var dbRepo = scope.ServiceProvider.GetRequiredService<GlobalDbRepo>();
+            var db = scope.ServiceProvider.GetRequiredService<GameDb>();
             try
             {
                 var mgrSession = await dbRepo.Auth.Session.TryGetByKeyAsync(req.SessionKey);
@@ -54,8 +57,9 @@ namespace RaidServer.Services
                 raidContext.SetPlayerId(mgrSession.Model.PlayerId);
                 raidContext.SetShardId(mgrSession.Model.ShardId);
 
-                dbRepo.BeginOwnUserRepo();
-                var playerModel = (await dbRepo.OwnUser.Player.GetAsync()).Model;
+                // 세션이 ShardId 를 들고 있으므로 대상을 바로 연다. 앰비언트("나")에 묶이지 않는다.
+                var userScope = db.User(mgrSession.Model.ShardId, mgrSession.Model.PlayerId);
+                var playerModel = await userScope.Owned<PlayerModel>().GetAsync();
 
                 // 재접속: 기존 세션 교체
                 if (_byPlayerId.TryGetValue(playerModel.Id, out var existing))

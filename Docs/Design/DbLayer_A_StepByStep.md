@@ -1566,36 +1566,88 @@ DecCash(-100)  ->  ValidEnough(-100, total)          통과 (-100 <= total)
 
 ### S7 — Player / Session (+ RaidServer) · T2 확정
 
-**건드리는 파일**: Component 2 + Manager 2, `RaidServer/Services/PlayerRaidSessionService.cs`, `AuthService`
+**S7a(Player + RaidServer) / S7b(Session) 로 쪼갠다** (사양 재도출 2026-08-23). 두 작업은 성격이 다르다 — Player 는 `OwnedSet` 으로 옮기는 이관이고, Session 은 §5.3 이 경고한 포인터 캐시를 어떤 특화 클래스로 남기느냐는 설계 문제다. S5·S6 에서 한 스텝에 두 성격을 넣었다가 계획이 코드에 뒤집힌 전례를 반복하지 않는다.
+
+#### S7-계획-A 착수 전 census 가 정정한 것
+
+census 는 디렉터리를 제외하지 않고 전수로 세고 결과를 분류했다(§S5-B 규칙).
+
+**① `PlayerComponent.TryGetByAccountIdAsync` 는 호출부가 0이다.** 옛 §S7 은 이 메서드를 위해 T2 보조 인덱스(`[SecondaryIndex("AccountId")]` + `ByIndexAsync`)를 설계해뒀는데, **아무도 안 쓰는 메서드를 위한 인프라**였다. 만들지 않고 메서드를 지운다. `[SecondaryIndex]` 는 실수요가 생기는 날 만든다.
+
+**② T2 선언은 이미 끝나 있다.** `PlayerModel.generated.cs:7` 에 `[Entity(Pk = ["Id"], ScopeKey = "Id")]` 가 S1 에서 붙었다. 옛 §S7 이 "선언한다"고 적은 것은 완료된 작업이다.
+
+**③ `PlayerManager`(150줄)는 S7 에서 사라지지 않는다.** `PreparePlayerAsync`/`LoadPlayerAsync` 가 `_userRepo.KingdomStructure`·`KingdomDeco`·`KingdomMap` 을 직접 부른다 — S10 영역이다. 옛 문서의 "Component 2 + Manager 2" 는 틀렸다. S6 의 `PlayerDetailManager` 는 통째로 사라졌지만 이쪽은 아니다. **지울 파일이 아니므로 구조 투자를 하지 않는다**(§S6-C 교훈): `_userRepo.Player` 참조만 스코프 경유로 바꾸고 나머지는 S10 까지 둔다.
+
+**④ 옛 §S7 의 "After" 예제가 PlayerMap 을 거친다.** `SessionModel` 이 이미 `ShardId` 를 갖고 있고(`Data/Csv/Model/Auth/Session.csv`) 실제 코드 두 곳이 그렇게 읽는다(`RpcContext.cs:123`, `PlayerRaidSessionService.cs:55`). PlayerMap(S12)을 S7 으로 끌어오면서 왕복만 하나 늘어난다. (b)단계는 삭제한다.
+
+**⑤ `Ip=""` 스텁 제거의 효과가 과장돼 있다.** `PublicIp` 를 쓰는 곳은 `SessionComponent.TouchAsync`(세션 **생성**) 하나인데 RaidServer 에는 생성 경로가 없다 — 읽기만 한다. S6 의 `KingdomStructureDecTimeAsync` 와 같은 계열로 **실재하지만 도달 불가**다. "PublicIp 수동 확인" 은 확인할 대상이 없다.
+
+**⑥ `AuthService` 의 `// S7 에서 제거` 는 S7b 다.** `RpcContext.SetShardId` 가 남아 있는 이유는 `SessionComponent.TouchAsync:85` 가 그것을 읽기 때문이고, Session 은 S7b 이므로 S7a 에서는 뺄 수 없다.
+
+**⑦ `ZERO_PLAYER_ID` 는 이중 검사다.** `PlayerAuthPolicy.Validate` 가 이미 `PlayerId != 0` 을 `CONTEXT_PLAYER` 로 막는다(`AuthPolicy.cs:50`). 등록된 엔드포인트는 전부 이 정책을 지나므로 데이터 계층의 재검사는 옮기지 않고 없앤다.
+
+#### S7-계획-B S7a 범위
+
+```
+삭제   Component/PlayerComponent.cs (70줄)   TryGetByAccountIdAsync 는 호출부 0 이라 같이 소멸
+신규   Data/Queries/PlayerQueries.cs         PlayerDetailQueries 와 같은 "행 하나" 모양
+수정   Server/Service/GameService.cs         PlayerId 생성을 서비스로 · ChangeName 은 Get 으로
+       Manager/PlayerManager.cs             _userRepo.Player -> 스코프 경유 (Kingdom 은 S10 까지 존치)
+       Repo/UserRepo.cs                      Player 프로퍼티 제거
+       RaidServer/Services/PlayerRaidSessionService.cs   앰비언트 제거
+```
+
+`_userRepo` 를 드는 클래스는 **14 → 12**(Base 2 + Component 5 + Manager 5). Player 만 빠지고 Kingdom×3 · World×2 는 S9·S10 이다.
+
+#### S7-계획-C PlayerId 생성을 데이터 계층 밖으로 (§5.9)
+
+지금은 `PlayerComponent.TouchAsync` 안에서 컨텍스트를 쓴다.
 
 ```csharp
-// ── Before : RaidServer — 앰비언트에 묶여 "나"만 열 수 있다
-var mgrSession  = await dbRepo.Auth.Session.TryGetByKeyAsync(req.SessionKey);
-dbRepo.BeginOwnUserRepo();                                   // 인자 없음
+// Before — 데이터 계층이 RpcContext 에 쓴다. ID 생성 규칙도 Component 안에 숨어 있다.
+if (playerId == 0)
+{
+    _userRepo.RpcContext.SetPlayerId(accountId * 10);
+    ...
+}
+```
+
+```csharp
+// After — 서비스가 정하고 컨텍스트에 반영한다. 데이터 계층은 읽지도 쓰지도 않는다.
+var playerId = RpcContext.PlayerId;
+if (playerId == 0)
+{
+    playerId = IdHelper.MakePlayerId(RpcContext.AccountId);   // 지금의 accountId * 10
+    RpcContext.SetPlayerId(playerId);
+}
+```
+
+`accountId * 10` 규칙은 의미를 바꾸지 않고 이름만 붙인다. 이것이 끝나면 `ServiceBase.OwnScope` 의 "요청 도중 PlayerId 가 정해진다"는 전제가 `EnterAsync` 한 곳으로 좁혀진다.
+
+#### S7-계획-D ChangeNameFirstAsync 의 Touch 는 버그다
+
+`ChangeNameFirstAsync` 가 `Player.TouchAsync()` 를 부른다 — **이름 변경 요청이 플레이어를 만들 수 있다.** 조회여야 한다(사용자 확인). RPC 미등록이라 오늘 도달 불가지만(§S6-C 의 3개 중 하나), S7a 에서 `Get` 으로 고친다.
+
+#### S7-계획-E RaidServer
+
+```csharp
+// Before — 앰비언트에 묶여 "나"만 열 수 있다
+dbRepo.BeginOwnUserRepo();
 var playerModel = (await dbRepo.OwnUser.Player.GetAsync()).Model;
 
-// ── After : 대상을 직접 연다 (GSA InitUserRepo 패턴 복원)
-var (found, session) = await _db.Identity.TryGetSessionAsync(req.SessionKey);      // (a) 스코프 밖
-var shardId = (await _db.Auth(session.AccountId).GetPlayerMapAsync()).ShardId;   // (b) 스코프 안
-var player  = await _db.User(shardId, session.PlayerId).Owned<PlayerModel>().GetOneAsync();
+// After — 세션이 ShardId 를 이미 갖고 있으므로 PlayerMap 을 거치지 않는다(정정 ④)
+var userScope = _db.User(mgrSession.Model.ShardId, mgrSession.Model.PlayerId);
+var mdlPlayer = await userScope.Owned<PlayerModel>().GetAsync();
 ```
 
-```csharp
-// ── T2 : 보조 인덱스. 선언만 하고 캐시는 넣지 않는다 (§3.9 결정)
-[Entity(Pk = ["Id"], ScopeKey = "Id")]
-[SecondaryIndex("AccountId")]
-public partial class PlayerModel : ModelBase { }
+`AuthenticateAsync` 에 `CommitAsync()` 가 없는 것은 그대로 둔다 — 이 경로는 읽기 전용이고, 소켓 인증에서 세션을 연장하지 않는다는 결정이 이미 있다.
 
-// Before : PlayerComponent.TryGetByAccountIdAsync — DbSession 직접 접근 + 캐시 없음
-// After  : 이름 있는 정식 경로. 동작은 동일(DB 직접), 포인터 캐시는 미도입
-var (found, player) = await user.Owned<PlayerModel>().ByIndexAsync(nameof(PlayerModel.AccountId), accountId);
-```
+#### S7-계획-F S7a 가 안 하는 것
 
-**직후 가능해지는 것**
-- **`RaidGameContext`의 `Ip=""` 스텁이 제거된다** → `SessionModel.PublicIp`에 빈 값이 저장될 수 있던 잠재 버그 소멸(5.5.2)
-- 임의 플레이어를 여는 경로가 **본편과 동일한 API**가 된다(5.5.1)
-
-**확인 필수**: `SessionModel.PublicIp`에 실제 IP가 들어가는지 RaidServer 경로로 수동 확인.
+- **Session 전부**(S7b). `SessionComponent`(122) · `SessionManager`(118) · `AuthService.SetShardId` · `RpcContext` 의 세션 로드
+- **`PlayerManager` 의 패킷 조립**(S10). Kingdom 3종을 직접 부르는 구조라 그때 같이 정리한다
+- **`[SecondaryIndex]` / `ByIndexAsync`**(수요 발생 시). 정정 ①
+- **`AllUserRepo.TryGetPlayerByNameAsync`**(S11). `ChangeNameFirstAsync` 가 유일 호출부이고 그것이 미등록이다
 
 ---
 

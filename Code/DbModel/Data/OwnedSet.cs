@@ -30,12 +30,17 @@ namespace WebStudyServer.Data
             _listKey = CacheKey.For(EntityMeta<T>.CacheTag, scopeKeyValue);
         }
 
+        // 이 세트의 소유자 값. 못 찾았을 때 누구를 찾다 실패했는지 알려주는 데 쓴다.
+        public ulong ScopeKeyValue => _scopeKeyValue;
+
         // 첫 _repository() 호출 = 커넥션 오픈
         public Task<List<T>> GetListAsync()
         {
             return _repository().GetListAsync<T>(_listKey, LoadFromDbAsync);
         }
 
+        // 조건 없는 조회를 안 여는 이유는 소유자 리스트형(Cookie/Item/Point/Ticket)에는
+        // "그 하나"가 없기 때문이다. 스코프당 한 행인 엔티티는 각자의 Queries 에서 연다.
         public async Task<(bool Found, T Value)> TryGetAsync(Func<T, bool> predicate)
         {
             var list = await GetListAsync();

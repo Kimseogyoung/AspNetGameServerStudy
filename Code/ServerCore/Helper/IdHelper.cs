@@ -16,6 +16,12 @@ namespace ServerCore.Helper
             return id;
         }
 
+        // 계정 하나가 가질 수 있는 플레이어 수만큼 자리를 띄운다.
+        public static ulong MakePlayerId(ulong accountId)
+        {
+            return accountId * 10;
+        }
+
         public static string GenerateRandomName()
         {
             var random = new Random();
