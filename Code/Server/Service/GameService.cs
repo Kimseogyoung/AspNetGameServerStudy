@@ -3,11 +3,10 @@ using Proto;
 using Protocol;
 using Server.Repo;
 using WebStudyServer;
+using WebStudyServer.Data;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
-using WebStudyServer.Data;
 using WebStudyServer.Repo;
-using WebStudyServer.Service;
 
 namespace Server.Service
 {

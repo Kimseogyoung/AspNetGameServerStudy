@@ -1,35 +1,23 @@
-using AutoMapper;
-using Proto;
 using Protocol;
-using Server.Repo;
+using Server.Extension;
 using WebStudyServer;
-using WebStudyServer.Helper;
-using WebStudyServer.Model;
 using WebStudyServer.Data;
-using WebStudyServer.Repo;
-using WebStudyServer.Service;
 
 namespace Server.Service
 {
     public class CheatService : ServiceBase
     {
-        public CheatService(GlobalDbRepo dbRepo, GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<CheatService> logger) : base(db, rpcContext, logger)
+        public CheatService(GameDb db, RpcContext rpcContext, ILogger<CheatService> logger) : base(db, rpcContext, logger)
         {
-            _dbRepo = dbRepo;
-            _mapper = mapper;
         }
 
         public async Task<CheatRewardResponsePacket> RewardAsync(CheatRewardRequestPacket req)
         {
-            var mgrPlayerDetail = await _dbRepo.OwnUser.PlayerDetail.TouchAsync(OwnScope);
-            var chgObjList = await mgrPlayerDetail.IncRewardListAsync(req.RewardList, "CHEAT");
+            var changeList = await RewardService.GrantListAsync(OwnScope, req.RewardList, "CHEAT");
             return new CheatRewardResponsePacket
             {
-                ChgObjList = chgObjList
+                ChgObjList = changeList.ToPacketList()
             };
         }
-
-        private readonly GlobalDbRepo _dbRepo;
-        private readonly IMapper _mapper;
     }
 }

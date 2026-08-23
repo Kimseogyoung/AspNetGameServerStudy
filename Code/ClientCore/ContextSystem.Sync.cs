@@ -43,25 +43,15 @@ namespace ClientCore
                     pakTicket.Amount = pakChgObj.TotalAmount;
                     break;
                 case EObjType.COOKIE:
+                    // 소울스톤 환산은 서버가 한다. TotalAmount 가 환산 뒤의 현재 소울스톤이다.
                     var pakCookie = GetCookieForce(pakChgObj.Num);
-                    var prtCookie = ProtoDb.Get<CookieProto>(pakChgObj.Num);
-
-                    var soulStoneCnt = (int)pakChgObj.Amount * prtCookie.InitSoulStone;
-                    if (pakCookie.State != ECookieState.AVAILABLE)
-                    {
-                        pakCookie.State = ECookieState.AVAILABLE;
-                        soulStoneCnt -= prtCookie.InitSoulStone;
-                    }
-
-                    if (soulStoneCnt > 0)
-                    {
-                        pakCookie.SoulStone += soulStoneCnt;
-                    }
+                    pakCookie.State = ECookieState.AVAILABLE;
+                    pakCookie.SoulStone = (int)pakChgObj.TotalAmount;
                     break;
                 case EObjType.SOUL_STONE:
                     var prtCookieSoulStone = ProtoDb.Get<CookieSoulStoneProto>(pakChgObj.Num);
                     var pakCookie2 = GetCookieForce(prtCookieSoulStone.CookieNum);
-                    pakCookie2.SoulStone += (int)pakChgObj.Amount;
+                    pakCookie2.SoulStone = (int)pakChgObj.TotalAmount;
                     break;
                 case EObjType.ITEM:
                     var pakItem = GetItemForce(pakChgObj.Num);

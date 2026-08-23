@@ -1,12 +1,14 @@
 using AutoMapper;
 using Proto;
 using Protocol;
+using Server.Extension;
 using Server.Repo;
 using WebStudyServer;
-using WebStudyServer.Helper;
 using WebStudyServer.Data;
+using WebStudyServer.Data.Queries;
+using WebStudyServer.Helper;
+using WebStudyServer.Model;
 using WebStudyServer.Repo;
-using WebStudyServer.Service;
 
 namespace Server.Service
 {
@@ -23,7 +25,6 @@ namespace Server.Service
             var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var hasItemCnt = await OwnUser.KingdomStructure.GetKingdomStructureCntAsync(prtKingdomItem.Num);
             ReqHelper.ValidContext(hasItemCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_STRUCTURE_CNT",
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = hasItemCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
@@ -32,13 +33,13 @@ namespace Server.Service
             var reason = $"BUY_KINGDOM_STRUCTURE:{req.KingdomItemNum}";
             var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
 
-            var resultCostObj = await mgrPlayerDetail.DecCostAsync(valCostObj, reason);
+            var costChange = await RewardService.PayAsync(OwnScope, valCostObj, reason);
 
             var mgrKingdomStructure = await OwnUser.KingdomStructure.CreateAsync(prtKingdomItem);
             return new KingdomBuyStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
-                ChgObj = resultCostObj,
+                ChgObj = costChange.ToPacket(),
             };
         }
 
@@ -47,7 +48,6 @@ namespace Server.Service
             var prtKingdomItem = ProtoDb.Get<KingdomItemProto>(req.KingdomItemNum);
 
             // Item 최대 보유량 체크
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var mgrKingdomDeco = await OwnUser.KingdomDeco.TouchAsync(prtKingdomItem.Num);
             ReqHelper.ValidContext(mgrKingdomDeco.Model.TotalCnt < prtKingdomItem.MaxCnt, "FULL_KINGDOM_DECO_CNT",
                 () => new { KingdomItemNum = prtKingdomItem.Num, HasItemCnt = mgrKingdomDeco.Model.TotalCnt, MaxItemCnt = prtKingdomItem.MaxCnt });
@@ -56,19 +56,18 @@ namespace Server.Service
             var reason = $"BUY_KINGDOM_DECO:{req.KingdomItemNum}";
             var valCostObj = ReqHelper.ValidCost(req.CostObj, prtKingdomItem.CostObjType, prtKingdomItem.CostObjNum, prtKingdomItem.CostObjAmount, reason);
 
-            var chgCostObj = await mgrPlayerDetail.DecCostAsync(valCostObj, reason);
+            var costChange = await RewardService.PayAsync(OwnScope, valCostObj, reason);
             await mgrKingdomDeco.IncAsync(1, reason);
             return new KingdomBuyDecoResponsePacket
             {
                 KingdomDeco = _mapper.Map<KingdomDecoPacket>(mgrKingdomDeco.Model),
-                ChgObj = chgCostObj,
+                ChgObj = costChange.ToPacket(),
             };
         }
 
         public async Task<KingdomConstructStructureResponsePacket> KingdomConstructStructureAsync(KingdomConstructStructureRequestPacket req)
         {
             var mgrKingdomStructure = await OwnUser.KingdomStructure.GetAsync(req.KingdomStructureId);
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var mgrKingdomMap = await OwnUser.KingdomMap.TouchAsync();
 
             // Tile 위치 중복 체크
@@ -81,7 +80,7 @@ namespace Server.Service
             var valCostObj = ReqHelper.ValidCost(req.CostObjList[0], prtKingdomItem.ConstructObjType, prtKingdomItem.ConstructObjNum, prtKingdomItem.ConstructObjAmount, reason);
 
             // 처리: 건설 재료 소모
-            var chgCostObj = await mgrPlayerDetail.DecCostAsync(valCostObj, reason);
+            var costChange = await RewardService.PayAsync(OwnScope, valCostObj, reason);
 
             // DELETEME: Map 형태로 저장 형식 변경            // 처리: 타일 설치
             // var placedKingdomItem = OwnUser.PlacedKingdomItem.Create(mgrKingdomStructure.Prt, reqStartTilePos.X, reqStartTilePos.Y, mgrKingdomStructure);
@@ -93,7 +92,7 @@ namespace Server.Service
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomStructure.Model),
                 PlacedKingdomItemList = [.. mgrKingdomMap.Snapshot.PlacedObjDict.Values],
-                ChgObjList = [chgCostObj],
+                ChgObjList = [costChange.ToPacket()],
             };
         }
 
@@ -101,7 +100,6 @@ namespace Server.Service
         {
             var mgrKingdomDeco = await OwnUser.KingdomDeco.TouchAsync(req.KingdomItemNum);
 
-            _ = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             var mgrKingdomMap = await OwnUser.KingdomMap.TouchAsync();
 
             // Tile 위치 중복 체크
@@ -197,18 +195,20 @@ namespace Server.Service
         public async Task<KingdomDecTimeStructureResponsePacket> KingdomStructureDecTimeAsync(KingdomDecTimeStructureRequestPacket req)
         {
             var mgrKingdomItem = await OwnUser.KingdomStructure.GetAsync(req.KingdomStructureId);
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
-
 
             // TODO: 남은 시간, 캐시 보유량 일치하는지 검증
             //
 
-            _ = await mgrPlayerDetail.DecCashAsync(req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
+            var userScope = OwnScope;
+            _ = await RewardService.DecCashAsync(userScope, req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
             await mgrKingdomItem.DecTimeAsync();
+
+            // 차감 뒤의 값을 실어야 하므로 차감 후에 읽는다.
+            var detail = await userScope.Owned<PlayerDetailModel>().GetOrCreateAsync();
             return new KingdomDecTimeStructureResponsePacket
             {
                 KingdomStructure = _mapper.Map<KingdomStructurePacket>(mgrKingdomItem.Model),
-                Cash = mgrPlayerDetail.GetCashPacket(),
+                Cash = new CashPacket { FreeCash = detail.FreeCash, RealCash = detail.RealCash },
             };
         }
 

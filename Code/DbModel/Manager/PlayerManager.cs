@@ -5,6 +5,7 @@ using Protocol.Packet.Custom;
 using ServerCore;
 using ServerCore.Helper;
 using WebStudyServer.Data;
+using WebStudyServer.Data.Queries;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
 using WebStudyServer.Repo;
@@ -27,8 +28,7 @@ namespace WebStudyServer.Manager
             // ------------------------------------------------------------ 디폴트 모델 생성
             // PlayerDetail
             var newMdlPlayerDetail = mapper.Map<PlayerDetailModel>(pakDefaultPlayer);
-            newMdlPlayerDetail.PlayerId = RpcCtx.PlayerId;
-            var mdlPlayerDetail = await _userRepo.PlayerDetail.CreateMdlAsync(newMdlPlayerDetail);
+            var mdlPlayerDetail = await userScope.Owned<PlayerDetailModel>().CreateAsync(newMdlPlayerDetail);
 
             // Cookie
             var cookieSet = userScope.Owned<CookieModel>();
@@ -104,13 +104,13 @@ namespace WebStudyServer.Manager
         {
             var pakPlayer = mapper.Map<PlayerPacket>(_model);
 
-            var mdlPlayerDetail = await _userRepo.PlayerDetail.TouchAsync(userScope);
-            pakPlayer.Gold = mdlPlayerDetail.Model.Gold;
-            pakPlayer.AccGold = mdlPlayerDetail.Model.AccGold;
-            pakPlayer.RealCash = mdlPlayerDetail.Model.RealCash;
-            pakPlayer.FreeCash = mdlPlayerDetail.Model.FreeCash;
-            pakPlayer.AccRealCash = mdlPlayerDetail.Model.AccRealCash;
-            pakPlayer.AccFreeCash = mdlPlayerDetail.Model.AccFreeCash;
+            var mdlPlayerDetail = await userScope.Owned<PlayerDetailModel>().GetOrCreateAsync();
+            pakPlayer.Gold = mdlPlayerDetail.Gold;
+            pakPlayer.AccGold = mdlPlayerDetail.AccGold;
+            pakPlayer.RealCash = mdlPlayerDetail.RealCash;
+            pakPlayer.FreeCash = mdlPlayerDetail.FreeCash;
+            pakPlayer.AccRealCash = mdlPlayerDetail.AccRealCash;
+            pakPlayer.AccFreeCash = mdlPlayerDetail.AccFreeCash;
 
             pakPlayer.CookieList = mapper.Map<List<CookiePacket>>(await userScope.Owned<CookieModel>().GetListAsync());
             pakPlayer.PointList = mapper.Map<List<PointPacket>>(await userScope.Owned<PointModel>().GetListAsync());

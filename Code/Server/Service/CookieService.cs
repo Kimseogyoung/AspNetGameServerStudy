@@ -1,21 +1,18 @@
 using AutoMapper;
 using Proto;
 using Protocol;
-using Server.Repo;
+using Server.Extension;
 using WebStudyServer;
 using WebStudyServer.Data;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
-using WebStudyServer.Repo;
-using WebStudyServer.Service;
 
 namespace Server.Service
 {
     public class CookieService : ServiceBase
     {
-        public CookieService(GlobalDbRepo dbRepo, GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<CookieService> logger) : base(db, rpcContext, logger)
+        public CookieService(GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<CookieService> logger) : base(db, rpcContext, logger)
         {
-            _dbRepo = dbRepo;
             _mapper = mapper;
         }
 
@@ -45,7 +42,6 @@ namespace Server.Service
             var userScope = OwnScope;
             var cookieSet = userScope.Owned<CookieModel>();
             var cookie = await GetOwnedCookieAsync(cookieSet, req.CookieNum);
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(userScope);
             var cfgLvCost = 10;
 
             var reason = $"ENHANCE_COOKIE_LV:{req.BefLv}~{req.AftLv}";
@@ -54,14 +50,14 @@ namespace Server.Service
             ReqHelper.ValidContext(req.BefLv == cookie.Lv, "NOT_EQUAL_COOKIE_Lv", () => new { cookie.Num, req.BefLv, CookieLv = cookie.Lv });
             var valCostObj = ReqHelper.ValidCost(req.CostObj, Proto.EObjType.POINT_COOKIE_LV, 0, deltaLv * cfgLvCost, reason);
 
-            var resultCostObj = await mgrPlayerDetail.DecCostAsync(valCostObj, reason);
+            var costChange = await RewardService.PayAsync(userScope, valCostObj, reason);
             cookie.EnhanceLv(req.AftLv);
             await cookieSet.UpdateAsync(cookie);
 
             return new CookieEnhanceLvResponsePacket
             {
                 Cookie = _mapper.Map<CookiePacket>(cookie),
-                ChgObj = resultCostObj,
+                ChgObj = costChange.ToPacket(),
             };
         }
 
@@ -74,9 +70,6 @@ namespace Server.Service
             return cookie;
         }
 
-        private UserRepo OwnUser => _dbRepo.OwnUser;
-
-        private readonly GlobalDbRepo _dbRepo;
         private readonly IMapper _mapper;
     }
 }

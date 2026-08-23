@@ -6,10 +6,7 @@ using Server.Helper;
 using Server.Repo;
 using ServerCore;
 using WebStudyServer;
-using WebStudyServer.Model;
 using WebStudyServer.Data;
-using WebStudyServer.Repo;
-using WebStudyServer.Service;
 
 namespace Server.Service
 {
@@ -35,14 +32,13 @@ namespace Server.Service
         {
             var centerRepo = _dbRepo.Center;
             var scheduleMgr = await centerRepo.Schedule.GetAsync(req.ScheduleNum, EScheduleTimeType.TOTAL);
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
 
             // Cost일치하는지 체크
             var valCnt = scheduleMgr.ValidGachaCnt(req.Cnt);
             var valCost = scheduleMgr.ValidGachaCost(req.CostObj, valCnt);
 
             // 재화 소모
-            var resultCostObj = await mgrPlayerDetail.DecCostAsync(valCost, scheduleMgr.MakeGachaReason(valCnt));
+            var costChange = await RewardService.PayAsync(OwnScope, valCost, scheduleMgr.MakeGachaReason(valCnt));
 
             var gachaRandom = new GachaRandom(scheduleMgr.GachaPrt, RpcContext.ServerTime);
             var rewardObjValList = new List<ObjValue>();
@@ -79,17 +75,15 @@ namespace Server.Service
             }
 
             // TODO: 가챠 전용 Inc로 ㄱㄱ
-            var chgObjList = await mgrPlayerDetail.IncRewardListAsync(rewardObjValList, scheduleMgr.MakeGachaReason(valCnt));
+            var changeList = await RewardService.GrantListAsync(OwnScope, rewardObjValList, scheduleMgr.MakeGachaReason(valCnt));
 
             return new GachaNormalResponsePacket
             {
-                CostChgObj = resultCostObj,
-                GachaResultChgObjList = chgObjList,
+                CostChgObj = costChange.ToPacket(),
+                GachaResultChgObjList = changeList.ToPacketList(),
                 GachaResultList = gachaResultList,
             };
         }
-
-        private UserRepo OwnUser => _dbRepo.OwnUser;
 
         private readonly GlobalDbRepo _dbRepo;
         private readonly IMapper _mapper;

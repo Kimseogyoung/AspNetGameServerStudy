@@ -34,6 +34,8 @@ namespace WebStudyServer.Model
         // 첫 획득이면 한 장이 쿠키 자체가 되고 나머지가 소울스톤이 된다
         public double IncCookie(int amount, CookieProto prt)
         {
+            ReqHelper.ValidUnderFlowParam(amount, "INC_COOKIE");
+
             var soulStoneCnt = amount * prt.InitSoulStone;
             if (State != ECookieState.AVAILABLE)
             {
@@ -47,14 +49,16 @@ namespace WebStudyServer.Model
                 AccSoulStone += soulStoneCnt;
             }
 
-            return AccSoulStone;
+            return SoulStone;
         }
 
         public double IncSoulStone(int amount)
         {
+            ReqHelper.ValidUnderFlowParam(amount, "INC_SOUL_STONE");
+
             SoulStone += amount;
             AccSoulStone += amount;
-            return AccSoulStone;
+            return SoulStone;
         }
     }
 }

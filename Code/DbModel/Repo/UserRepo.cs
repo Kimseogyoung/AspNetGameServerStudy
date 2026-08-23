@@ -8,7 +8,6 @@ namespace WebStudyServer.Repo
     public class UserRepo : RepoBase
     {
         public PlayerComponent Player { get; private set; }
-        public PlayerDetailComponent PlayerDetail { get; private set; }
         public KingdomStructureComponent KingdomStructure { get; private set; }
         public KingdomDecoComponent KingdomDeco { get; private set; }
         public KingdomMapComponent KingdomMap { get; private set; }
@@ -25,7 +24,6 @@ namespace WebStudyServer.Repo
         {
             // TODO: Lazy
             Player = new PlayerComponent(this, Repository);
-            PlayerDetail = new PlayerDetailComponent(this, Repository);
             KingdomStructure = new KingdomStructureComponent(this, Repository);
             KingdomDeco = new KingdomDecoComponent(this, Repository);
             KingdomMap = new KingdomMapComponent(this, Repository);

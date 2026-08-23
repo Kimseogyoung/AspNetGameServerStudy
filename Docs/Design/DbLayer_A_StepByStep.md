@@ -1351,88 +1351,216 @@ public class ServiceBase
 
 ---
 
-### S6 — PlayerDetail 분해 + `RewardHelper` ← **A안 핵심 검증**
+### S6 — PlayerDetail 분해 + `RewardService`
 
-**건드리는 파일**: `Manager/PlayerDetailManager.cs`(330줄) 삭제, `Domain/PlayerDetailModel.Logic.cs` + `Domain/RewardHelper.cs` 추가
+> **2026-08-23 전면 재도출.** 옛 본문은 폐기했다. 코드와 어긋난 곳이 6군데였고 그중 하나는 그대로 옮기면 버그가 됐다. 그리고 **`LoadedObjects` 설계를 철회했다** — 근거였던 "벌크 로드" 이득이 실재하지 않는다(§S6-계획-C).
+
+#### 위상 정정 — 이 스텝은 "A안 핵심 검증"이 아니다
+
+옛 본문은 S6 을 A안 전체의 검증 지점으로 적고 그 근거로 **"`_userRepo` 를 드는 클래스가 하나도 남지 않는다"**를 들었다. **거짓이다.** S6 이 `PlayerDetailComponent`/`PlayerDetailManager` 를 지워도 `UserComponentBase` · `UserManagerBase` + Player/Kingdom×3/World×2 의 Component 6 + Manager 6, 합쳐 **14개가 그대로 `_userRepo` 를 든다.** 그것들이 사라지는 것은 S7 · S9 · S10 이다.
+
+게다가 **의사결정 게이트는 이미 S5 에서 통과했다**(§S5-D, MySQL + Redis 실측 17/17). 그러니 S6 이 답하는 것은 하나다 — **재화 라우팅이 순수해지는가.** §S4-B · §S5-B 에 이어 **앞선 스텝의 결과가 뒷 스텝의 문구를 낡게 만든 네 번째 사례**다.
+
+#### 옛 본문이 코드와 어긋난 곳
+
+| # | 옛 본문 | 실제 |
+|---|---|---|
+| 1 | `MarkDirty()` | §S2-H 에서 철회. 저장은 명시 호출 |
+| 2 | "`_userRepo` 를 드는 클래스가 하나도 안 남는다" | 14개 남는다 (위) |
+| 3 | `loaded.Point(cost.Key.Num)` | **틀린 컬럼.** 현재 라우터는 `(int)objType` 을 쓴다 |
+| 4 | `LoadedObjects` / `user.LoadObjectsAsync(keys)` | 존재하지 않고, 만들지 않기로 했다 |
+| 5 | `Owned<PlayerDetailModel>().GetOneAsync()` | `GetOneAsync` 는 없다. 만들지 않는다 |
+| 6 | `ChangeSet` | S5 에서 미뤘으므로 S6 이 만든다 |
+
+**#3 이 가장 위험하다.** 포인트/티켓의 번호는 `ObjKey.Num` 이 아니라 **`(int)ObjKey.Type`**(enum 값 자체)이다. ITEM/COOKIE 만 `Num` 을 쓴다. 옛 예제대로 옮겼으면 **모든 포인트 차감이 0번 포인트로** 갔고, 예외 없이 조용히 틀렸을 것이다.
+
+#### S6-계획-A census (디렉터리 제외 없이)
+
+| 표면 | 호출부 |
+|---|---|
+| `PlayerDetail.TouchAsync` | 12 — 서비스 5개 + **`PlayerManager.LoadPlayerAsync`** |
+| `DecCostAsync` | 4 (Cookie, Gacha, Kingdom×2) |
+| `IncRewardListAsync` / `IncRewardAsync` | 5 (Cheat, Gacha, World×3) |
+| `DecCashAsync` / `GetCashPacket` | 2 (Kingdom) |
+
+**또 `PlayerManager` 가 끌려온다.** S7 클래스인데 S6 이 건드려야 한다 — §S5-B 와 같은 패턴이라 이번에는 착수 전에 셌다. `KingdomService` 의 `_ = await OwnUser.PlayerDetail.TouchAsync(OwnScope);` 는 로드해서 버리는 줄이라 같이 지운다.
+
+#### S6-계획-B 건드리는 파일
+
+- 삭제: `Manager/PlayerDetailManager.cs`(348줄), `Component/PlayerDetailComponent.cs`
+- 추가: `Domain/PlayerDetailModel.Logic.cs`, `Domain/ChangeSet.cs`, `Service/RewardService.cs`, `Data/Queries/PlayerDetailQueries.cs`
+- 수정: `Repo/UserRepo.cs`, `Manager/PlayerManager.cs`, 서비스 5개(24곳), `ClientCore/ContextSystem.Sync.cs`
+
+#### S6-계획-C `LoadedObjects` 를 만들지 않는다 (사용자 지적으로 철회)
+
+옛 본문은 App Service 가 필요한 모델을 미리 벌크 로드해 `LoadedObjects` 로 넘기고 `RewardHelper` 는 순수 static 이 되는 그림이었다. 사용자가 **"왜 한 번에 로드해야 하는지 모르겠다, 각자 필요할 때 로드하면 되는 것 아닌가"**라고 물었고, 확인해 보니 **철회가 맞다.**
+
+- **벌크 로드 이득이 없다.** `OwnedSet.GetListAsync` 는 **소유자 리스트 전체**를 읽고 캐시에 넣는다. 보상 루프에서 두 번째부터의 `Owned<PointModel>()` 은 DB 가 아니라 **캐시 히트**다. 즉 SELECT 는 이미 엔티티 타입당 1회이고, UPDATE 는 바뀐 행 수만큼으로 `LoadedObjects` 를 써도 동일하다. **DB 왕복이 하나도 안 줄어든다.**
+- **순수성이 잘못된 계층에 있다.** 테스트 가치가 있는 로직은 `DecCash` 의 RealCash 우선 소모 순서, `IncCookie` 의 첫 장 규칙 같은 **모델 메서드**이고 그건 어차피 순수하다. enum switch 하나를 순수하게 만들려고 새 타입과 `NOT_LOADED_OBJECT` 라는 **없던 실패 모드**를 들이는 것은 손해다.
+- §S1-G 에서 `IDataScope` 를 철회할 때와 같은 실수였다 — **"공유가 필요한가"를 안 묻고 "어떻게 공유하나"에 답한 것.**
+
+#### S6-계획-D `RewardService` — 상태 없음, 스코프는 인자, 타입별 개별 구현
 
 ```csharp
-// ── Before : PlayerDetailManager 는 이름과 달리 EObjType 라우터다
-public async Task<double> DecCostAsync(EObjType objType, int objNum, double objAmount, string reason)
+// Domain 이 아니다 - DB 를 지나간다. 상태가 없고 대상은 인자로 받는다.
+public static class RewardService
 {
-    ReqHelper.ValidUnderFlowParam(objAmount, reason);
-    var valObjAmount = ReqHelper.ValidWithoutDecimal(objAmount, reason);
-
-    switch (objType.ToObjTyeCategory())
+    public static async Task<ChangeSet> PayAsync(UserScope userScope, ObjValue cost, string reason)
     {
-        case EObjType.EXP:         return await DecExpInternalAsync(valObjAmount, reason);
-        case EObjType.GOLD:        return await DecGoldInternalAsync(valObjAmount, reason);
-        case EObjType.TOTAL_CASH:  return await DecCashInternalAsync(valObjAmount, reason);
-        case EObjType.POINT_START: return await DecPointInternalAsync((int)objType, valObjAmount, reason);
-        case EObjType.TICKET_START:return await DecTicketInternalAsync((int)objType, valObjAmount, reason);
-        case EObjType.ITEM:        return await DecItemInternalAsync(objNum, valObjAmount, reason);
-        default: throw new GameException(EErrorCode.PARAM, "NO_HANDLING_COST_OBJ_TYPE", new { ObjType = objType });
-    }
-}
+        ReqHelper.ValidUnderFlowParam(cost.Value, reason);
+        var amount = ReqHelper.ValidWithoutDecimal(cost.Value, reason);
 
-private async Task<double> DecPointInternalAsync(int pointNum, double amount, string reason)
-{
-    var mgrPoint = await _userRepo.Point.TouchAsync((EObjType)pointNum);   // ← DB 접근
-    return await mgrPoint.DecAmountAsync(amount, reason);                  // ← 저장
-}
-```
-
-**분해 결과 — 둘로 갈라진다**
-
-```csharp
-// ── After ①: Domain/RewardHelper.cs — 라우팅. 순수. static.
-//    "이미 로드된 모델을 받아 ObjKey 로 골라 적용한다"
-public static class RewardHelper
-{
-    public static ChangeSet Pay(PlayerDetailModel detail, LoadedObjects loaded, ObjValue cost)
-    {
-        ReqHelper.ValidUnderFlowParam(cost.Value, nameof(Pay));
-        var amount = ReqHelper.ValidWithoutDecimal(cost.Value, nameof(Pay));
-
-        return cost.Key.Type.ToObjTyeCategory() switch
+        switch (cost.Key.Type.ToObjTyeCategory())
         {
-            EObjType.EXP          => detail.DecExp(amount),
-            EObjType.GOLD         => detail.DecGold(amount),
-            EObjType.TOTAL_CASH   => detail.DecCash(amount),
-            EObjType.POINT_START  => loaded.Point(cost.Key.Num).DecAmount(amount),
-            EObjType.TICKET_START => loaded.Ticket(cost.Key.Num).DecAmount(amount),
-            EObjType.ITEM         => loaded.Item(cost.Key.Num).DecAmount(amount),
-            _ => throw new GameException(EErrorCode.PARAM, "NO_HANDLING_COST_OBJ_TYPE", new { cost.Key.Type }),
-        };
+            case EObjType.GOLD:         return await DecGoldAsync(userScope, amount, reason);
+            case EObjType.EXP:          return await DecExpAsync(userScope, amount, reason);
+            case EObjType.TOTAL_CASH:   return await DecCashAsync(userScope, amount, reason);
+            // 포인트/티켓의 번호는 enum 값 자체다. cost.Key.Num 이 아니다.
+            case EObjType.POINT_START:  return await DecPointAsync(userScope, (int)cost.Key.Type, amount, reason);
+            case EObjType.TICKET_START: return await DecTicketAsync(userScope, (int)cost.Key.Type, amount, reason);
+            case EObjType.ITEM:         return await DecItemAsync(userScope, cost.Key.Num, amount, reason);
+            default: throw new GameException(EErrorCode.PARAM, "NO_HANDLING_COST_OBJ_TYPE", new { cost.Key.Type });
+        }
     }
 
-    public static IReadOnlyList<ChangeSet> Grant(PlayerDetailModel detail, LoadedObjects loaded,
-                                                 IEnumerable<ObjValue> rewards) => ...;
-}
-
-// ── After ②: Domain/PlayerDetailModel.Logic.cs — 자기 필드(EXP/GOLD/CASH)만
-public partial class PlayerDetailModel
-{
-    public ChangeSet DecGold(double amount)
+    public static async Task<ChangeSet> DecPointAsync(UserScope userScope, int num, double amount, string reason)
     {
-        ReqHelper.ValidEnough(amount, Gold, "GOLD", nameof(DecGold));
-        var before = Gold;
-        Gold -= amount;
-        MarkDirty();
-        return ChangeSet.Of(EObjType.GOLD, 0, before, Gold);
+        var pointSet = userScope.Owned<PointModel>();
+        var point = await pointSet.GetOrCreateAsync(num);
+        var change = point.DecAmount(amount, reason);
+        await pointSet.UpdateAsync(point);
+        return change;
+    }
+
+    public static async Task<ChangeSet> IncPointAsync(UserScope userScope, int num, double amount)
+    {
+        var pointSet = userScope.Owned<PointModel>();
+        var point = await pointSet.GetOrCreateAsync(num);
+        var change = point.IncAmount(amount);
+        await pointSet.UpdateAsync(point);
+        return change;
     }
 }
 ```
 
-`LoadedObjects`는 App Service가 미리 로드해 넘기는 읽기 전용 묶음이다. **`Func<int, PointModel>` 지연 로드를 쓰지 않는다**(§3.6 정정). 필요 대상은 App Service가 1.2의 4단 순서로 확정한다.
+**타입별로 개별 구현한다(사용자 결정).** `Func<PointModel, ChangeSet> apply` 로 일반화하지 않는다 — 라우터에서 중복 5줄보다 **어떤 타입이 어떤 모델을 어떻게 건드리는지 한눈에 보이는 것**이 값이 크다. 이름은 옛 표면과 같은 `Dec*` / `Inc*` 를 쓴다. 필요한 메서드는 Dec 6종(Gold/Exp/Cash/Point/Ticket/Item) · Inc 9종(Gold/Exp/FreeCash/RealCash/Point/Ticket/Item/Cookie/SoulStone)이다.
 
-**직후 가능해지는 것 — 이 스텝이 A안 전체의 검증 지점이다**
-- `_userRepo`를 드는 클래스가 **하나도 남지 않는다** → 5.1.4 해소
-- "이 로직은 어디 소속인가"가 타입으로 결정된다 → **5.4 해소**. `PlayerDetailModel`에 DB 참조가 없으므로 다른 Model을 건드리는 코드는 컴파일이 안 된다
-- 재화 라우팅 전체가 DB 없이 테스트 가능해진다
+**스코프를 필드로 안 들고 인자로 받는 이유**: ① 인스턴스 상태가 사라져 DI 등록이 필요 없다 ② §S5-C 의 "PlayerId 가 요청 도중 정해지는" 함정을 피한다 ③ 나중에 우편·길드처럼 **다른 플레이어에게 지급**하는 경우에 그대로 쓴다.
 
-**아직 안 되는 것**: Player/Session/Schedule/World/Kingdom 미이관. `GlobalDbRepo` 건재.
+#### S6-계획-E `PlayerDetailModel` 도 다른 엔티티와 같은 규칙
 
-**여기까지 통과하면 §0.6의 "유일한 신규 결정"이 실증된 것이다.**
+엔진에 `GetOneAsync` 를 넣지 않는다. **다른 4개와 똑같이 Queries 확장** 하나로 끝난다.
+
+```csharp
+public static class PlayerDetailQueries
+{
+    public static async Task<PlayerDetailModel> GetOrCreateAsync(this OwnedSet<PlayerDetailModel> set)
+    {
+        var list = await set.GetListAsync();
+        return list.Count > 0 ? list[0] : await set.CreateAsync(new PlayerDetailModel());
+    }
+}
+```
+
+캐시 키가 `PlayerDetailModel:{playerId}` 로 **기존과 동일**해 호환되고, 무엇보다 **S7 의 `Single` 정책을 미리 정하지 않는다.** `PlayerDetail` 이 다른 모델과 얽혀 있던 이유는 `PlayerDetailManager` 가 라우터였기 때문이고, 그 얽힘은 `RewardService` 가 떼어간다. 없으면 만드는 동작(`GetOrCreate`)은 유지한다(사용자 확인).
+
+#### S6-계획-F `ChangeSet` 의 의미를 확정한다 — 클라 코드가 이미 그 규칙이다
+
+**`Amount` = 이번에 변화된 양, `TotalAmount` = 현재 값 (사용자 결정).**
+
+```csharp
+public readonly record struct ChangeSet(EObjType Type, int Num, double Before, double After)
+{
+    public double Delta => After - Before;
+    public static ChangeSet Of(EObjType t, int n, double b, double a) => new(t, n, b, a);
+}
+
+public static ChgObjPacket ToPacket(this ChangeSet c)
+    => new() { Type = c.Type, Num = c.Num, Amount = c.Delta, TotalAmount = c.After };
+```
+
+`ClientCore/ContextSystem.SyncChgObj` 를 확인한 결과 **대부분 이미 이 규칙으로 동작한다.**
+
+| 타입 | 클라 동작 | 적용 시 |
+|---|---|---|
+| EXP / GOLD / FREE_CASH / REAL_CASH / POINT / TICKET / ITEM | `TotalAmount` 를 현재값으로 대입 | **무변경** |
+| COOKIE / SOUL_STONE | `Amount`(획득 개수)로 **클라가 소울스톤을 다시 계산** | **클라도 같이 고친다** |
+| TOTAL_CASH | `TotalAmount` 를 차감액처럼 사용 | **클라 버그**(아래) |
+
+COOKIE/SOUL_STONE 분기는 `InitSoulStone` 환산과 "첫 획득이면 한 장은 쿠키" 규칙을 **서버 로직 그대로 복제**하고 있다. 서버가 `Amount` = 실제 증가한 소울스톤, `TotalAmount` = 현재 소울스톤을 보내면 클라 분기는 `pakCookie.SoulStone = TotalAmount` + State 갱신으로 줄어든다. `ClientCore` 가 `Code.sln` 안에 있어 양쪽을 같이 고칠 수 있다.
+
+**덤으로 발견한 클라 버그**: `TOTAL_CASH` 분기가 `TotalAmount`(차감 후 총 캐시)를 비용으로 쓰고 `Player.FreeCash = freeCashCost` 로 대입한다. 서버는 지금도 현재값을 보내므로 **클라가 틀렸다.**
+
+#### S6-계획-G 옮기면서 같이 고치는 기존 이상 2건
+
+- **`DecGold` 에만 잔액 검사가 없다.** `DecExp` · `DecCash` 에는 `ValidEnough` 가 있는데 골드에만 없어서 **골드가 음수로 갈 수 있다.** 모델로 옮기면서 넣는다(사용자 결정).
+- **`Acc*` 가 이름과 다르게 동작한다.** Dec 에서도 `Acc` 를 같이 줄여 `Acc == 현재값` 이 되어 "누적"이 아니었다. 진짜 누적인 것은 `AccSoulStone` 하나뿐이었다. **차감에서 `Acc` 를 건드리지 않도록 고친다(사용자 결정).** Point/Ticket/Item 은 S5 산출물이라 먼저 고쳤고, Gold/Exp/Cash 는 어차피 모델로 새로 쓰므로 여기서 같이 고친다.
+  > **마이그레이션은 없다.** 기존 행의 `Acc` 는 과거분이 틀린 채로 남고, `pakPlayer.AccGold/AccRealCash/AccFreeCash` 와 `pakCookie.AccSoulStone` 은 클라에 노출되므로 **표시되는 숫자의 의미가 바뀐다.**
+
+#### 직후 가능해지는 것
+
+- `PlayerDetailManager`(348줄) 소멸 — 모델 하나의 이름을 달고 여섯을 라우팅하던 클래스가 사라진다
+- 재화 로직이 `PlayerDetailModel` 위의 순수 메서드가 되어 **DB 없이 단위 테스트 가능**해진다
+- 서비스가 재화를 쓸 때 **모델 매니저를 거치지 않는다** — `RewardService.DecCashAsync(OwnScope, ...)` 처럼 대상과 동작이 호출부에 다 보인다
+- `_userRepo` 를 드는 클래스가 16 → 14
+
+#### 아직 안 되는 것
+
+- Player/Session/Schedule/World/Kingdom 미이관. `GlobalDbRepo` 건재. `_userRepo` 14개 잔존
+- 감사 로그 쓰기 경로 없음 → §S2-J 의 `VerifyCacheTags` 역방향 검사는 여전히 S13
+- 신규 행 INSERT 직후 UPDATE(§S5-I)는 여기서도 그대로다 — `GetOrCreateAsync` 뒤에 `UpdateAsync` 를 부르는 형태가 유지된다
+
+---
+
+#### S6-A 실행 결과 (2026-08-23, branch `db-refactor`)
+
+사양대로 실행했다. 계획이 코드에 의해 뒤집힌 곳은 없다 — §S6-계획-C에서 `LoadedObjects`를 미리 걷어낸 것이 컸다.
+
+- 삭제 2: `Manager/PlayerDetailManager.cs`(348줄), `Component/PlayerDetailComponent.cs`
+- 추가 5: `Domain/ChangeSet.cs`, `Domain/PlayerDetailModel.Logic.cs`, `Data/RewardService.cs`, `Data/Queries/PlayerDetailQueries.cs`, `Server/Extension/ChangeSetExtension.cs`
+- 수정 10: `Repo/UserRepo.cs`, `Manager/PlayerManager.cs`, `Domain/{Point,Ticket,Item,Cookie}Model.Logic.cs`, 서비스 6개, `ClientCore/ContextSystem.Sync.cs`
+
+**`RewardService` 는 `Code/DbModel/Data/` 에 두었다**(계획서에는 `Service/` 로 적었다). `GameDb`/`UserScope`/`OwnedSet` 옆이 맞다 — 스코프를 받아 로드·적용·저장하는 것이 이 폴더가 하는 일이고, `Code/Server/Service` 는 RPC 단위 DI 서비스의 자리다.
+
+**규칙 하나로 통일했다: 모델은 값을 바꾸고 바뀐 값을 반환하고, `ChangeSet` 은 `RewardService` 가 만든다.** 모델이 `ChangeSet` 을 만들게 하면 `SOUL_STONE` 에서 깨진다 — 쿠키 모델을 바꾸지만 응답에는 소울스톤 번호가 실려야 하는데 모델은 그 번호를 모른다. `Type`/`Num` 은 요청이 지목한 `ObjKey` 를 그대로 통과시킨다.
+
+**검증**: `Code.sln` 리빌드 0에러 · unique warning **34**(S5 의 35에서 1 감소, `PlayerDetailComponent` 삭제분) · ServerTest **17/17** (InMemory) · **MySQL + Redis + `UseUserLock: true` 17/17**.
+
+`_userRepo` 를 드는 클래스는 16 → **14**. §S6 위상 정정에서 예측한 수와 같다.
+
+#### S6-B 커밋 전 자율 리뷰 3회 (2026-08-23)
+
+**1회차 — 정합성/회귀.** S6 이 만든 죽은 의존성 3건을 찾아 걷어냈다: `CheatService` 의 `GlobalDbRepo`·`IMapper`(둘 다 무사용), `CookieService` 의 `OwnUser`/`GlobalDbRepo`, `GachaService` 의 `OwnUser`(`Center` 는 계속 쓴다). 재화 라우팅이 서비스에서 빠지자 서비스가 `GlobalDbRepo` 를 들 이유가 함께 사라진 것이다.
+
+와이어 의미 변경도 여기서 확인했다 — **`ChgObjPacket.Amount` 가 요청값에서 부호 있는 증감량(`After - Before`)이 됐다.** 차감이면 음수가 나간다. `ClientCore` 와 `ServerTest` 를 전부 훑어 **`Amount` 를 읽는 소비자가 하나도 없음**을 확인했다(클라는 전부 `TotalAmount` 를 쓴다).
+
+**2회차 — 설계/일관성.** 서비스 6개의 `using` 블록을 필요한 것만 남기고 알파벳 순으로 정리했다(제거한 것이 전부 실제 미사용임을 빌드로 확인). §S5-I 에서 "위치가 파일마다 다르다"고 적어두고 넘어갔던 것이 S6 에서 더 늘어서 이번에 정리했다.
+
+`PlayerDetailModel.TotalCash()` 를 **프로퍼티가 아니라 메서드**로 둔 것도 여기서 재확인했다 — `.Logic.cs` 파샬에 public 프로퍼티를 추가하면 `DapperExtension` 의 `GetProperties` 가 그것을 DB 컬럼으로 본다(§S2 의 함정). **`.Logic.cs` 에는 프로퍼티를 만들지 않는다**가 규칙이다.
+
+**3회차 — 경계/실패 경로. 여기서 실제 결함이 나왔다.**
+
+`KingdomStructureDecTimeAsync` 가 클라이언트가 보낸 캐시 금액을 검증 없이 `DecCashAsync` 로 넘긴다. 음수를 넣으면:
+
+```
+DecCash(-100)  ->  ValidEnough(-100, total)          통과 (-100 <= total)
+               ->  realCashCost = Math.Min(RealCash, -100) = -100
+               ->  RealCash -= (-100)                RealCash 가 100 늘어난다
+```
+
+**S6 이 만든 것이 아니다** — 옛 `PlayerDetailManager.DecCashAsync` 직접 호출도 같은 형태였다. `PayAsync` 경로만 `ValidUnderFlowParam` 으로 막혀 있었고 **직접 호출 경로가 뚫려 있었다.**
+
+**심각도 정정**: 조사 중에 `KingdomStructureDecTimeAsync` 가 **RPC 에 등록되어 있지 않다**는 것을 발견했다(`KingdomItemChangeAsync`, `GameService.ChangeNameFirstAsync` 도 같다). 따라서 **오늘 네트워크로 도달할 수 없는 잠재 결함**이다. 그래도 고친다 — 등록되는 날 살아나고, 라우터만 믿는 구조 자체가 문제다.
+
+**고친 자리는 라우터가 아니라 모델이다.** `amount > 0` 은 증감의 불변식이므로 `PlayerDetailModel.Dec/Inc*`, `Point/Ticket/ItemModel.DecAmount/IncAmount`, `CookieModel.IncCookie/IncSoulStone` 에 `ValidUnderFlowParam` 을 넣었다. 라우터에 넣으면 다음에 직접 호출 경로가 생길 때 또 뚫린다.
+
+> 회귀 테스트는 **넣지 못했다.** 엔드포인트가 등록돼 있지 않아 HTTP 로 도달할 수 없고, 이 저장소에는 모델 단위 테스트 자리가 없다(`Code/Server.Tests` 는 bin/obj 만 남은 빈 디렉터리다). 등록되는 날 테스트도 같이 넣어야 한다.
+
+#### S6-C 리뷰에서 나왔으나 안 고친 것
+
+- **등록되지 않은 엔드포인트 3개**(`KingdomStructureDecTimeAsync`, `KingdomItemChangeAsync`, `GameService.ChangeNameFirstAsync`). 지울지 등록할지는 게임 기획 판단이라 손대지 않았다. `KingdomStructureDecTimeAsync` 는 `// TODO: 남은 시간, 캐시 보유량 일치하는지 검증` 이 남아 있어 **등록 전에 그 검증부터 필요하다** — 지금 등록하면 클라가 보낸 금액을 그대로 받는다.
+- **한 요청에서 같은 행을 두 번 UPDATE** 하는 경우가 있다(비용 차감 + 보상 지급이 모두 `PlayerDetail` 을 건드리면). 옛 경로도 같았다. §S5-I 의 "INSERT 직후 UPDATE" 와 같은 계열이라 저장 경로를 손보는 날 함께 본다.
+- **`Acc*` 의미 변경에 마이그레이션이 없다.** 기존 행은 과거분이 틀린 채 남는다(§S6-계획-G).
 
 ---
 
@@ -1921,6 +2049,7 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | **S4** (완료) | Auth 형태 확정 · `Identity`/`AuthScope` 2클래스 · Component/Manager 6개 삭제 · **게이트는 S5 로 옮겨간다** (§S4-B) · `SetShardId` 다리 (§S4-D) |
 | **S4** | 캐시 없는 경로 실증 (Account/Channel/Device는 원래 캐시 없음) · **Auth의 스코프 밖 조회(기기 키·채널 키·세션 키·계정 생성)를 어디로 보낼지 확정 → `[Entity]`에 Auth `ScopeKey`를 붙일지 함께 결정 (§S1-G Q2)** |
 | **S5** (완료, **게이트 통과**) | `PlayerManager` 도 소비자였다(§S5-B) · 스코프를 읽는 *시점*이 함정(§S5-C) · **MySQL+Redis 실측 17/17 — 막고 있던 기존 결함 2개(Ip null, 응답 캐시 오염)를 잡았다(§S5-D)** · `GetOrCreateAsync` 는 엔티티별 확장 유지(§S5-E) · **식 트리 제거, 생성기가 `PkEquals`/`IScopedModel` 접근자를 찍는다(§S5-F)** · 커밋 전 리뷰에서 미보유 쿠키 강화 버그를 잡았다(§S5-G) · `OwnScope` 를 `ServiceBase` 로(§S5-H) · `PlayerDetailManager` 의 region 4개를 같이 고친다(census 재도출) · 스코프는 `PlayerDetail.TouchAsync(userScope)` 로 전달 · **ScopeKey 쓰기 규칙 신설 — 생성은 채우고 수정은 확인한다** · `ChangeSet` 은 S6 으로 · `VerifyCacheTags` 역방향 검사는 S13 으로 재이월 · **캐시·MySQL 경로는 ServerTest 가 못 지나간다** |
+| **S6** (완료) | 위상 정정 — 게이트가 아니고 `_userRepo` 도 14개 남는다 · **`LoadedObjects` 철회**(벌크 로드 이득이 실재하지 않음, §S6-계획-C) · `RewardService` 는 상태 없이 스코프를 인자로, 타입별 개별 구현 · `PlayerDetail` 도 Queries 확장 하나로(`GetOneAsync` 안 만듦) · ChangeSet 의미 확정 + ClientCore COOKIE/SOUL_STONE 같이 수정 · DecGold 잔액검사와 Acc 차감 제거 · **자율 리뷰 3회에서 음수 금액 캐시 증발/증식 결함을 잡아 불변식을 모델로 내렸다(§S6-B)** |
 | **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
 | **S8** | `GlobalList` 정책 실증 · `ScheduleView`가 `ServerTime`을 인자로 (5.10) |
 | **S9** | `scope.Raw` 자동 flush **와** `GameDb.Utility` 무flush 경로 구분 확정 (5.2) |

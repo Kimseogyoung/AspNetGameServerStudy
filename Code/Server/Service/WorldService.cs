@@ -4,10 +4,9 @@ using Protocol;
 using Server.Extension;
 using Server.Repo;
 using WebStudyServer;
-using WebStudyServer.Helper;
 using WebStudyServer.Data;
+using WebStudyServer.Helper;
 using WebStudyServer.Repo;
-using WebStudyServer.Service;
 
 namespace Server.Service
 {
@@ -46,8 +45,7 @@ namespace Server.Service
             var valRewardList = ReqHelper.ValidRewardList(req.RewardValueList, prtRewardList, reason);
 
             // 처리
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
-            var chgObjList = await mgrPlayerDetail.IncRewardListAsync(valRewardList, reason);
+            var changeList = await RewardService.GrantListAsync(OwnScope, valRewardList, reason);
 
             await mgrWorld.FinishStageAsync(mgrWorldStage.Prt);
             await mgrWorldStage.SetStarAsync(valStar);
@@ -56,7 +54,7 @@ namespace Server.Service
             {
                 World = _mapper.Map<WorldPacket>(mgrWorld.Model),
                 WorldStage = _mapper.Map<WorldStagePacket>(mgrWorldStage.Model),
-                ChgObjList = chgObjList,
+                ChgObjList = changeList.ToPacketList(),
             };
         }
 
@@ -86,8 +84,7 @@ namespace Server.Service
             var valRewardList = ReqHelper.ValidRewardList(req.RewardValueList, prtRewardList, reason);
 
             // 처리
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
-            var chgObjList = await mgrPlayerDetail.IncRewardListAsync(valRewardList, reason);
+            var changeList = await RewardService.GrantListAsync(OwnScope, valRewardList, reason);
             await mgrWorld.FinishStageAsync(mgrWorldStage.Prt);
             await mgrWorldStage.SetStarAsync(valStar);
 
@@ -95,7 +92,7 @@ namespace Server.Service
             {
                 World = _mapper.Map<WorldPacket>(mgrWorld.Model),
                 WorldStage = _mapper.Map<WorldStagePacket>(mgrWorldStage.Model),
-                ChgObjList = chgObjList,
+                ChgObjList = changeList.ToPacketList(),
             };
         }
 
@@ -119,14 +116,13 @@ namespace Server.Service
             var valReward = ReqHelper.ValidReward(req.RewardValue, prtReward, reason);
 
             // 처리
-            var mgrPlayerDetail = await OwnUser.PlayerDetail.TouchAsync(OwnScope);
             await mgrWorld.RewardStarAsync(req.AftRewardStar, valTotalStar);
-            var chgObj = await mgrPlayerDetail.IncRewardAsync(valReward, reason);
+            var change = await RewardService.GrantAsync(OwnScope, valReward, reason);
 
             return new WorldRewardStarResponsePacket
             {
                 World = _mapper.Map<WorldPacket>(mgrWorld.Model),
-                ChgObj = chgObj
+                ChgObj = change.ToPacket()
             };
         }
 
