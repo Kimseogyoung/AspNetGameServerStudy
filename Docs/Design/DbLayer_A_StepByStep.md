@@ -2199,9 +2199,9 @@ public void Commit() => _session?.Commit();
 - `Open_WithoutQuery_CreatesNothing` — 열기만 하고 커밋해도 팩토리가 한 번도 안 불린다
 - `Query_CreatesSessionOnce` — 두 번 조회해도 한 번만 만든다
 
-#### S11.5-E 안 한 것
+#### S11.5-E `Open` → `GetOrCreate`
 
-**`DbSessionManager.Open` 개명.** lazy 가 된 뒤로 이 이름은 **실제로 열지 않으므로** 더 어긋난다. §S2-F 의 동사표에 이미 `GetOrCreate` 가 있고 호출부는 둘뿐이다. 사용자 확인 대기 중.
+lazy 가 된 뒤로 `Open` 은 **실제로 열지 않아** 이름이 거짓이 됐다. §S2-F 동사표의 `GetOrCreate`(없으면 만든다)로 바꿨다 — 만드는 것은 `IDbSession` 객체이고 미뤄지는 것은 커넥션이므로 이 동사는 lazy 여도 참이다. 호출부인 `GameDb.GetOrCreateRepository` 가 같은 패턴에 같은 동사를 쓰고 있어 나란히 읽힌다. 명사를 안 붙인 것은 `OwnedSet.GetOrCreateAsync` 와 같은 규칙 — 타입 이름이 명사를 공급한다.
 
 ---
 

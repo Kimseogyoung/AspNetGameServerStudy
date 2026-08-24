@@ -13,7 +13,7 @@ namespace ServerCore.Repo.Database
             _sessionFactory = connectionFactory;
         }
 
-        public IDbSession Open(string connectionString)
+        public IDbSession GetOrCreate(string connectionString)
         {
             if (!_openSession.TryGetValue(connectionString, out var session))
             {

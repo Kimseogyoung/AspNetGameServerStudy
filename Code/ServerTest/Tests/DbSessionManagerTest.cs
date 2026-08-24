@@ -16,8 +16,8 @@ namespace ServerTest.Tests
             var factory = new FakeDbSessionFactory();
             var manager = new DbSessionManager(factory);
 
-            manager.Open("a");
-            manager.Open("b");
+            manager.GetOrCreate("a");
+            manager.GetOrCreate("b");
             manager.Commit();
 
             Assert.Equal(0, factory.CreatedCount);
@@ -29,7 +29,7 @@ namespace ServerTest.Tests
             var factory = new FakeDbSessionFactory();
             var manager = new DbSessionManager(factory);
 
-            var session = manager.Open("a");
+            var session = manager.GetOrCreate("a");
             await session.ExecuteAsync(_ => Task.CompletedTask);
             await session.ExecuteAsync(_ => Task.CompletedTask);
 
@@ -85,7 +85,7 @@ namespace ServerTest.Tests
         {
             foreach (var connectionStr in connectionStrList)
             {
-                await manager.Open(connectionStr).ExecuteAsync(_ => Task.CompletedTask);
+                await manager.GetOrCreate(connectionStr).ExecuteAsync(_ => Task.CompletedTask);
             }
         }
 

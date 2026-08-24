@@ -89,7 +89,7 @@ namespace WebStudyServer.Data
         // 샤드를 특정할 수 없는 경로가 커넥션 문자열로 직접 연다.
         internal IDbSession SessionFor(string connectionString)
         {
-            return _sessions.Open(connectionString);
+            return _sessions.GetOrCreate(connectionString);
         }
 
         internal IRepository UserRepository(int shardId)
@@ -114,7 +114,7 @@ namespace WebStudyServer.Data
                 return existing;
             }
 
-            var dbSession = _sessions.Open(connectionString);
+            var dbSession = _sessions.GetOrCreate(connectionString);
 
             IRepository repo;
             switch (Config<CoreConfig>.Get().DbType)
