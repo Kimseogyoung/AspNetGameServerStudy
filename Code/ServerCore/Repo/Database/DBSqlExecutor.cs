@@ -38,18 +38,29 @@ namespace ServerCore.Repo.Database
             return await func.Invoke(_connection, _transaction);
         }
 
+        // 커밋/롤백이 던져도 커넥션은 닫는다.
         public void Commit()
         {
-            _transaction?.Commit();
-
-            CloseInternal();
+            try
+            {
+                _transaction?.Commit();
+            }
+            finally
+            {
+                CloseInternal();
+            }
         }
 
         public void Rollback()
         {
-            _transaction?.Rollback();
-
-            CloseInternal();
+            try
+            {
+                _transaction?.Rollback();
+            }
+            finally
+            {
+                CloseInternal();
+            }
         }
 
         public void Close()
@@ -57,9 +68,18 @@ namespace ServerCore.Repo.Database
             CloseInternal();
         }
 
+        // 여러 번 불려도 한 번만 정리한다.
         private void CloseInternal()
         {
+            if (_closed)
+            {
+                return;
+            }
+
+            _closed = true;
+
             _transaction?.Dispose();
+            _transaction = null;
 
             if (_connection != null)
             {
@@ -67,5 +87,7 @@ namespace ServerCore.Repo.Database
                 _connection.Dispose();
             }
         }
+
+        private bool _closed;
     }
 }

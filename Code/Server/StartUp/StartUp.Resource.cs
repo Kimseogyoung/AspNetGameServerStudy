@@ -1,4 +1,3 @@
-using Server.Repo;
 using Server.Service;
 using ServerCore;
 using ServerCore.Extension;
@@ -37,7 +36,6 @@ namespace WebStudyServer
             services.AddSingleton<InMemoryStore>();
 
             services.AddScoped<DbSessionManager>();
-            services.AddScoped<GlobalDbRepo>();
             services.AddScoped<GameDb>();
             services.AddScoped<ResponseCacheService>();
 

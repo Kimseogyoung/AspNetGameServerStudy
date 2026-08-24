@@ -1,0 +1,110 @@
+using ServerCore.Repo.Database;
+using Xunit;
+
+namespace ServerTest.Tests
+{
+    /// <summary>
+    /// DbSessionManager 세션 수명 테스트 (DB 없이 돈다)
+    /// - 커밋/롤백이 도중에 실패해도 열린 세션이 전부 닫혀야 한다.
+    /// </summary>
+    public class DbSessionManagerTest
+    {
+        [Fact]
+        public void Commit_PartialFailure_ClosesEverySession()
+        {
+            var factory = new FakeDbSessionFactory();
+            factory.Sessions["b"].ThrowOnCommit = true;
+
+            var manager = new DbSessionManager(factory);
+            manager.Open("a");
+            manager.Open("b");
+            manager.Open("c");
+
+            Assert.ThrowsAny<Exception>(() => manager.Commit());
+
+            // 성공한 것, 실패한 것, 차례가 오지 않은 것 모두 닫혀야 한다.
+            Assert.True(factory.Sessions["a"].Closed, "커밋에 성공한 세션이 안 닫혔다");
+            Assert.True(factory.Sessions["b"].Closed, "커밋에 실패한 세션이 안 닫혔다");
+            Assert.True(factory.Sessions["c"].Closed, "차례가 오지 않은 세션이 안 닫혔다");
+        }
+
+        [Fact]
+        public void Rollback_PartialFailure_ClosesEverySession()
+        {
+            var factory = new FakeDbSessionFactory();
+            factory.Sessions["a"].ThrowOnRollback = true;
+
+            var manager = new DbSessionManager(factory);
+            manager.Open("a");
+            manager.Open("b");
+
+            Assert.ThrowsAny<Exception>(() => manager.Rollback());
+
+            Assert.True(factory.Sessions["a"].Closed, "롤백에 실패한 세션이 안 닫혔다");
+            Assert.True(factory.Sessions["b"].Closed, "차례가 오지 않은 세션이 안 닫혔다");
+        }
+
+        [Fact]
+        public void Dispose_ClosesOpenSessions()
+        {
+            var factory = new FakeDbSessionFactory();
+
+            using (var manager = new DbSessionManager(factory))
+            {
+                manager.Open("a");
+            }
+
+            Assert.True(factory.Sessions["a"].Closed, "커밋도 롤백도 안 탄 세션이 안 닫혔다");
+        }
+
+        private class FakeDbSessionFactory : IDbSessionFactory
+        {
+            public Dictionary<string, FakeDbSession> Sessions { get; } = new()
+            {
+                ["a"] = new FakeDbSession(),
+                ["b"] = new FakeDbSession(),
+                ["c"] = new FakeDbSession(),
+            };
+
+            public IDbSession Create(string connectionString)
+            {
+                return Sessions[connectionString];
+            }
+        }
+
+        private class FakeDbSession : IDbSession
+        {
+            public bool ThrowOnCommit { get; set; }
+            public bool ThrowOnRollback { get; set; }
+            public bool Closed { get; private set; }
+
+            public Task ExecuteAsync(Func<IDbExecutor, Task> action) => Task.CompletedTask;
+            public Task<T> ExecuteAsync<T>(Func<IDbExecutor, Task<T>> func) => Task.FromResult(default(T));
+
+            public void Commit()
+            {
+                if (ThrowOnCommit)
+                {
+                    throw new InvalidOperationException("COMMIT_FAILED");
+                }
+
+                Closed = true;
+            }
+
+            public void Rollback()
+            {
+                if (ThrowOnRollback)
+                {
+                    throw new InvalidOperationException("ROLLBACK_FAILED");
+                }
+
+                Closed = true;
+            }
+
+            public void Close()
+            {
+                Closed = true;
+            }
+        }
+    }
+}

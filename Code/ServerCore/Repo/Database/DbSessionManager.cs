@@ -1,8 +1,9 @@
 namespace ServerCore.Repo.Database
 {
-    // Scoped — 요청 단위로 열린 IDbSession를 추적하고 트랜잭션 라이프사이클을 관리한다.
-    // IDbSessionFactory(Singleton)가 생성을, DbScope(Scoped)가 추적/커밋을 담당한다.
-    public class DbSessionManager
+    // Scoped — 요청 단위로 열린 IDbSession을 커넥션 문자열로 캐시한다.
+    // 커밋/롤백 순서는 GameDb가 정하고, 세션을 닫는 것은 여기가 맡는다.
+    // 커밋도 롤백도 안 탄 세션은 스코프 종료의 Dispose가 닫는다.
+    public class DbSessionManager : IDisposable
     {
         private readonly IDbSessionFactory _sessionFactory;
         private readonly Dictionary<string, IDbSession> _openSession = [];
@@ -23,6 +24,7 @@ namespace ServerCore.Repo.Database
             return session;
         }
 
+        // 도중에 던져도 남은 세션을 닫고 나간다.
         public void Commit()
         {
             try
@@ -34,7 +36,7 @@ namespace ServerCore.Repo.Database
             }
             finally
             {
-                _openSession.Clear();
+                Close();
             }
         }
 
@@ -49,7 +51,7 @@ namespace ServerCore.Repo.Database
             }
             finally
             {
-                _openSession.Clear();
+                Close();
             }
         }
 
@@ -66,6 +68,11 @@ namespace ServerCore.Repo.Database
             {
                 _openSession.Clear();
             }
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
     }
 }

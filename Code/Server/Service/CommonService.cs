@@ -1,8 +1,6 @@
 using Protocol;
 using WebStudyServer;
-using WebStudyServer.Base;
 using WebStudyServer.Data;
-using WebStudyServer.Repo;
 namespace WebStudyServer.Service
 {
     public class CommonService : ServiceBase

@@ -1710,6 +1710,37 @@ SessionManager     ServerTime ×2 · Ip · DeviceKey ×2 · SetSessionKey(쓰기
 
 ---
 
+#### S7b-A 실행 결과 (2026-08-23, 커밋 fd6ad88)
+
+> **이 절과 아래 §S8-A · §S8-B · §S9-A · §S10-A 는 실행 시점이 아니라 2026-08-24 에 커밋 메시지와 diff 로 재구성했다.** S1~S7a 는 실행하면서 썼고 이 넷은 안 썼다. 그래서 여기에는 **결과와 그 근거만** 있고, 실행 중에만 알 수 있는 것 — 시도했다가 되돌린 것, 어디서 오래 막혔는지 — 은 아래 appsettings 건 하나를 빼면 남아 있지 않다. 되살릴 방법이 없으므로 없는 채로 둔다.
+
+**계획-C 의 세 질문에 답이 다 나왔다.**
+
+**Q1 → 따로 둔다.** `Data/SessionStore.cs`. 잠정이 그대로 확정됐다. 근거는 계획이 적은 그대로다 — `Identity`/`AuthScope` 는 "Auth DB 는 캐시를 안 쓴다"를 주석으로 못 박고 있고, 세션은 **매 요청의 인증 경로**라 DB 로 내려가면 전 요청이 느려진다. 합치면 둘 중 하나가 거짓말이 된다. 포인터(세션 키 → accountId)와 값(accountId → `SessionModel` + sliding TTL) 두 키를 그대로 유지했다.
+
+**Q2 → 호출부로 올린다. 그리고 옛 입구를 닫았다.** 키 로테이션은 `StartAsync` 만 할 수 있고, 이전 키를 넘기는 저장은 **private 으로 닫았다.** 이 "닫았다"가 판단의 핵심이다 — 호출부가 모델을 바꾼 뒤에 이전 키를 잡으면 옛 포인터가 남아 **로테이션된 뒤에도 옛 키로 인증이 통과한다.** 순서를 지키라고 문서에 적는 대신 순서를 틀릴 수 있는 입구를 없앴다. §S6-B 가 "불변식은 모델이 든다"로 내린 것과 같은 결이다.
+
+**Q3 → 변동 없음.** `ExtendAsync` 는 소켓 인증에 안 붙인다.
+
+**계획-A ⑤ 가 틀렸다.** "`AuthComponentBase`(64) / `AuthManagerBase`(15) 는 S7b 에서 안 사라진다. PlayerMap 은 S12 다" 였는데 **두 겹으로 틀렸다** — `AuthManagerBase` 는 S7b 에서 바로 나갔고, `AuthComponentBase` 는 S8 에서 나갔다. PlayerMap 이 S12 가 아니라 S8 로 당겨졌기 때문이다. 어느 쪽도 S12 가 아니다.
+
+**계획-B 표의 "컨텍스트 → 호출부" 는 `SessionStamp` 라는 값 타입이 됐다.**
+
+```csharp
+// Data/SessionStamp.cs — 데이터 계층이 IGameContext 를 직접 읽지 않게 값으로 끊었다
+public readonly record struct SessionStamp(DateTime ServerTime, string Ip, string DeviceKey);
+```
+
+데이터 계층이 `RpcContext` 를 읽던 **8곳이 사라졌고**, 그래서 §S4-D 부터 다리로 끌고 온 `AuthService` 의 `SetShardId` 도 같이 없앴다. **§S4-D 가 "`SetShardId` 는 저절로 안 사라진다"고 적어둔 것이 여기서 닫혔다.**
+
+**지운 쓰기 하나.** `SignIn`/`SignUp` 의 `ExpireAsync` 를 뺐다. 바로 뒤 `StartAsync` 가 상태를 ACTIVE 로 덮으므로 쓰기 한 번이 그냥 낭비였다. 옛 키가 막히는 것은 `ExpireAsync` 가 아니라 **포인터 무효화**가 하는 일이고, 임시 테스트로 확인했다.
+
+**`LogoutAsync` 는 호출부 0인데 이번엔 안 지웠다.** `SessionStore` 에 옮겨두고 미사용으로 남겼다. S7a 의 `TryGetByAccountIdAsync`, S8 의 `TryGetPlayerMapAsync` 는 같은 조건에서 지웠으므로 **여기만 기준이 다르다.** 세션 수명 관리의 짝(시작이 있으면 종료가 있다)이라는 것 말고 기록된 근거가 없다. 지울지 살릴지는 열어둔다.
+
+**부수 발견 — 진단 도구가 꺼져 있었다.** `ServerTest/appsettings.yaml` 의 `Game` 항목이 전부 루트에 있어 **통째로 무시되고 있었다**(`GameConfig` 는 `"Game"` 섹션에서 읽는다). 그 안의 `IsShowErrorDetail` 이 꺼진 탓에 MySQL 실패가 6자리 해시로만 보였고 이번 진단에서 한참 돌았다. **설정이 무시되고 있다는 것 자체가 조용하다** — 섹션 이름이 틀리면 예외 없이 기본값으로 돌아간다.
+
+---
+
 ### S8 — Schedule / PlayerMap · T0 확정
 
 #### S8-계획-A 착수 전 census 가 정정한 것
@@ -1749,6 +1780,43 @@ GachaService:36  centerRepo.Schedule.GetAsync(num)    -> 가챠. SelectByPkAsync
 
 ---
 
+#### S8-A 실행 결과 (2026-08-23, 커밋 932f58e)
+
+**계획-B 의 세 질문에 답이 다 나왔다.**
+
+**Q1 → `GlobalList` 캐시를 넣지 않는다.** 도입 근거였던 "매 요청마다 Schedule 전량 조회"가 **사실이 아니었기 때문이다**(계획-A ②). 전량 조회는 `ScheduleLoad` 한 곳이고 가챠는 PK 단건이다. 무효화 설계를 얹을 만큼 이득이 크지 않고, 그 무효화가 필요한 운영툴도 아직 없다. §S7a 가 `[SecondaryIndex]` 를 안 만든 것과 같은 판단이다 — **수요가 생길 때 만든다.**
+
+**Q2 → `Data/ScheduleView.cs`.** `readonly record struct(ScheduleProto Prt, ScheduleModel Mdl)`. Proto 를 아는 타입이라 모델 파샬이 아니고, DB 를 안 타므로 값이다.
+
+**Q3 → `CenterScope` 는 `IDbSession` 직행.** 캐시가 없다는 점에서 Auth 와 같아졌다. 클래스 주석이 그 이유를 든다 — "소유자 축이 없어서 경계가 아니라 **DB 선택**이다. 그래서 인자가 없고 `OwnedSet<T>` 도 못 쓴다."
+
+**`ScheduleManager` 를 뷰로 바꾸면서 겹치기를 생성자에서 복사하지 않았다.**
+
+```csharp
+// 복사해두면 Mdl 을 고쳐도 안 따라온다 → 계산 프로퍼티로
+public DateTime ActiveStartTime => Mdl?.ActiveStartTime ?? Prt.ActiveStartTime;
+```
+
+`Mdl` 이 null 이면 운영 중 바꾼 적이 없다는 뜻이고 `Prt` 의 일정이 그대로 유효하다. **이 결정은 옳았지만 대가가 있었고, 그 대가가 바로 다음 커밋에서 드러난다**(§S8-B ②).
+
+**잡은 버그: `SchedulePacket.State` 가 항상 0 으로 나가고 있었다.** 옛 `ScheduleManager` 가 `State` 를 **선언만 하고 어디서도 대입하지 않았다.** 뷰는 `Mdl` 에서 읽는다. 겹치기를 손으로 조립하던 코드에서 필드 하나가 조용히 빠져 있던 것으로, **계획-A ⑥ 이 "AutoMapper 매핑도 같이 바뀐다"고만 적고 그 매핑이 무엇을 안 채우는지는 안 봤다.**
+
+**`PlayerMapComponent`(29줄, 실기능 INSERT 하나) → `AuthScope` 의 메서드 하나.** `TryGetPlayerMapAsync` 는 호출부가 0이라 옮기지 않고 지웠다 — S7a 의 `TryGetByAccountIdAsync`, S7b 의 `LogoutAsync` 에 이어 **세 번째**다.
+
+**기간 검증이 서버 시각을 인자로 받는다(§5.10 해소).** 이것이 **데이터 계층이 `RpcContext` 를 읽던 마지막 자리**였다.
+
+**여기서 Auth/Center 계열이 통째로 나갔다.** `AuthRepo` · `CenterRepo` · `AuthComponentBase` · `CenterComponentBase` · `CenterManagerBase`. `GlobalDbRepo` 에는 User 계열만 남았다.
+
+#### S8-B 커밋 후 리뷰 반영 (2026-08-23, 커밋 58e31ea)
+
+**① 가챠가 아닌 스케줄 번호가 가챠 API 로 오면 NRE 로 죽었다.** `ScheduleNum` 은 **클라가 보내고** `EScheduleType` 에 `ATTENDANCE` 가 있으므로 도달 가능한 경로다. 가드를 **`GachaPrt` 프로퍼티 게터 안**에 넣어 `NOT_GACHA_SCHEDULE` 로 막았다. 호출부마다 검사하면 새 호출부가 또 뚫리므로 값을 꺼내는 자리 하나에서 막는다 — §S6-B 가 "라우터가 아니라 모델"로 내린 것과 같은 판단이다. 임시로 ATTENDANCE 스케줄을 넣어 실제로 걸리는 것을 확인했다.
+
+**② `ProtoDb` 조회가 가챠 요청 하나에 6번 나가고 있었다. §S8-A 의 "복사하지 않는다"가 만든 대가다.** 옛 `ScheduleManager` 는 생성자에서 한 번만 했다. **결정을 되돌리지는 않았다** — 복사하면 `Mdl` 변경이 안 따라오는 문제가 돌아온다. 대신 메서드가 자기 안에서 두 번 뒤지지 않도록 지역으로 받았다. **정확성을 지키고 중복만 호출 단위로 줄인 것이지 트레이드오프를 없앤 게 아니다.**
+
+**③ `GetScheduleListAsync` → `GetFilledScheduleListAsync`.** DB 행이 없어도 프로토 값으로 채워 돌려주는 것이라, **행이 있어야 찾은 것으로 치는 `TryGetScheduleAsync` 와 기준이 다르다.** 그 차이를 이름이 말하게 했다.
+
+---
+
 ### S9 — World / WorldStage · T3 확정
 
 ```csharp
@@ -1772,6 +1840,46 @@ var totalStar = await user.Raw<int>(
 
 ---
 
+#### S9-A 실행 결과 (2026-08-23, 커밋 ab4f045)
+
+**위 계획의 핵심인 `scope.Raw` 를 만들지 않았다.** 이 스텝이 존재한 이유가 T3 진입점 확정이었으므로 계획이 통째로 뒤집힌 것이다. 근거는 둘이다.
+
+**첫째, 집계를 메모리로 옮겼다.** 월드당 스테이지가 10개 남짓이고 소유자 리스트는 **이미 캐시에 있다.** DB 로 다시 갈 이유가 없다.
+
+```csharp
+// WorldStageQueries.GetTotalStarAsync — T3 가 아니라 T1 이면 충분했다
+var list = await set.GetListAsync();
+return list.Where(x => x.WorldNum == worldNum).Sum(x => x.Star);
+```
+
+**둘째, 계획이 단 주의는 이미 무의미해져 있었다.** "`Raw` 가 실행 전 flush 를 하지 않으면 방금 변경한 값이 집계에서 빠진다"는 dirty 모델 위의 이야기인데, **§S2-H 에서 dirty 를 철회한 순간 flush 할 pending 자체가 없어졌다.** 즉시 저장이라 그냥 보인다. 계획 문구가 **철회된 모델 위에 서 있었다** — §S2-I 의 "S3~S13 은 예정이 아니라 가설"이 또 확인됐다(§S2-B · §S2-J · §S4-B · §S6 · §S7-A · §S7b-A 에 이어서). 따라서 §5.13 표의 S9 행("`scope.Raw` 자동 flush 와 `GameDb.Utility` 무flush 경로 구분 확정")도 앵커가 사라졌다.
+
+**T3 를 안 만든 것이 테스트 가능성을 되찾았다.** 집계 SQL 은 InMemory 모드에서 못 돌아 **이 경로가 테스트에서 통째로 빠져 있던 원인**이기도 했다. 메모리 집계로 바꾸자 `WorldStarTest` 가 HTTP 만으로 InMemory/MySQL 양쪽에서 돈다. §S5-D 가 "캐시·MySQL 경로는 ServerTest 가 못 지나간다"로 적어둔 벽을, 이번엔 **벽을 넘는 대신 벽 이쪽으로 코드를 옮겨서** 지나갔다.
+
+**`WorldRewardStar` 는 지금까지 한 번도 성공한 적이 없었다.** 버그 둘이 서로를 가리고 있었다.
+
+1. 집계 SQL 이 `SUM(RewardAmount)` 를 보는데 `WorldStage` 에 **그런 컬럼이 없다**(실제 컬럼은 `Star`).
+2. `WorldNum` 을 **어디서도 대입하지 않아 늘 0** 이었다.
+
+**하나만 고쳤으면 `WHERE WorldNum = @n` 이 한 행도 못 찾아 여전히 0 이 나왔을 것이다.** 결함 둘이 같은 증상(총별 0)으로 수렴할 때, 하나를 고치고 증상이 그대로면 "안 고쳐졌다"로 오판하기 쉽다.
+
+**옛 행의 `WorldNum` 은 읽는 김에 메운다.**
+
+```csharp
+// GetOrCreateAsync — 신규만 채우면 기존 유저는 영영 0 이라 별 보상이 안 열린다
+if (mdlWorldStage.WorldNum == 0) { mdlWorldStage.WorldNum = worldNum; await set.UpdateAsync(mdlWorldStage); }
+```
+
+§S6 의 `Acc*` 는 마이그레이션 없이 **과거분이 틀린 채 남기기로** 했는데(§S6-계획-G), 여기는 **읽으면서 메우는 쪽**을 골랐다. 차이는 영향이다 — `Acc*` 는 표시되는 숫자의 의미가 바뀌는 것이고, `WorldNum` 은 **보상이 영영 안 열리는 것**이다.
+
+**`req.Star` 경계가 하나 넘쳤다.** 0성 보상까지 리스트에 있으므로 유효한 별은 `0 ~ Count-1` 인데 `<= Count` 로 두고 있어 마지막 인덱스를 넘겼다. **클라가 보내는 값이라 도달 가능한 500** 이었다.
+
+**Manager 를 뷰로 만들지 않았다.** 바로 앞 §S8 이 `ScheduleManager` 를 `ScheduleView` 로 바꿨지만, `WorldManager.Prt` 는 **겹치기가 아니라 `ProtoDb.Get` 한 줄**이라 뷰를 만들 실질이 없다. 앞 스텝에서 만든 형태를 기계적으로 복사하지 않았다 — 뷰가 값이 있는 조건은 "Proto 위에 Model 을 덮는다"이지 "Manager 였다"가 아니다.
+
+**`_userRepo` 를 드는 클래스 12 → 8.** 남은 것은 전부 Kingdom(S10)이다.
+
+---
+
 ### S10 — Kingdom 4종 (628줄, 최대)
 
 ```csharp
@@ -1790,6 +1898,43 @@ public static class KingdomBuilder
 스냅샷(`KingdomMapSnapshotPacket`)은 `ObjKey`로 주소 지정이 불가능하므로 **`ChangeSet` 대상이 아니다**. 자기 응답 패킷으로만 간다(S0-3).
 
 **직후**: 최대 덩어리 완료. 이 시점에 Component/Manager가 전부 비어 있다.
+
+---
+
+#### S10-A 실행 결과 (2026-08-24, 커밋 c6969fa)
+
+**계획의 `KingdomBuilder` 하나가 둘로 갈렸다.** 계획은 "여러 Model 에 걸친 규칙"이라는 §3.6 판정만 보고 정적 도메인 서비스 하나를 뒀는데, 실제로 갈라야 했던 축은 **계산이냐 IO 냐**였다.
+
+| 어디 | 무엇 | 왜 이 자리인가 |
+|---|---|---|
+| `Domain/KingdomTileMap.cs` (internal static) | 타일 판정·배치 시뮬레이션 | DB·스코프·컨텍스트를 모르고 스냅샷만 다룬다. **이 저장소에서 DB 없이 검증할 수 있는 유일한 덩어리**가 됐다 |
+| `Data/KingdomMapService.cs` | 로드·저장 | 푼 것을 고친 뒤 다시 넣는 **세 단계를 한 메서드 안에 묶는다** |
+
+**묶은 이유가 이 스텝의 핵심 판단이다** — 호출부가 마지막 단계(다시 직렬화해서 저장)를 잊어도 **컴파일이 되고 조용히 저장이 안 된다.** §S7-A 가 "모델이 푼 스냅샷을 들고 있지 않기로 한" 이유로 적은 바로 그 위험을, 이번에는 **API 모양으로** 막았다.
+
+`SimulatePlaceItems` 는 **복제 맵에서 보관·이동·배치를 한꺼번에 돌려보고 전부 유효할 때만** 그 스냅샷을 돌려준다. 원본을 안 건드리므로 중간에 던져도 상태가 반쯤 바뀌지 않는다. `out` 대신 튜플로 돌려주는데, `out` 을 쓰면 `async` 를 못 써서 동기 블로킹이 되기 때문이다.
+
+**계획대로 간 것**: 스냅샷(`KingdomMapSnapshotPacket`)은 `ObjKey` 로 주소 지정이 불가능하므로 `ChangeSet` 대상이 아니다. 자기 응답 패킷으로만 간다.
+
+**기존 결함 6건을 잡았다. 전부 이관이 만든 게 아니라 원래 있던 것이다.**
+
+1. **건설 완료가 뒤집혀 있었다.** `SetReady` 의 부등호가 반대라 **진행 중일 때 통과하고 시간이 지나면 오히려 막았다.** 건설 시간을 기다릴 이유가 없었고, 기다리면 완료가 안 되는 상태였다. **기존 테스트 둘이 이 동작을 `Assert.Equal(OK)` 로 굳혀두고 있어 같이 뒤집었다** — 테스트가 버그를 보존하고 있던 사례다. 완료 성공 경로는 API 로는 10초를 기다려야 해서 **모델을 직접 부르는 테스트**로 경계를 덮었다(위 `KingdomTileMap` 분리가 처음 값을 낸 자리).
+2. **데코 수량 검증이 음수에서 무력했다.** `UnplacedCnt >= cnt` 인데 배치는 `cnt` 가 음수로 들어와 **늘 참**이었다. §S6-B 3회차의 음수 금액과 **같은 모양의 결함이 다른 엔티티에서 또 나왔다** — 부호 가정을 검사 없이 믿는 패턴은 한 번 고쳤다고 사라지지 않는다.
+3. **배치가 시작 칸 하나만 마킹하고 저장됐다.** 나머지 칸이 빈 칸으로 남아 다음 요청이 겹쳐 놓을 수 있었다. TRASH 를 뺀 **모든 아이템이 3x3 또는 2x2 라 전부 해당된다.** **이미 저장된 스냅샷은 시작 칸만 찍혀 있으므로 운영 데이터가 있다면 재생성이 필요하다** — 이번 스텝에서 데이터 영향이 남는 유일한 항목이다.
+4. **단건 배치가 타입을 `STRUCTURE` 로 박아 넣었다.** 데코를 놓아도 구조물로 기록되고 나중에 보관이 `NOT_EQUAL_KINGDOM_ITEM_LIST` 로 막혔다. 고친 자리가 판단이다 — 값을 검사하는 대신 **`MakePlacedObj` 에서 매개변수를 없애고 프로토에서 직접 읽게 해 틀린 값을 넘길 방법 자체를 없앴다.**
+5. **`ValidEmptyTile` 만 `TileMap` 을 `[x][y]` 로 읽어 전치된 칸을 검사했다.** 실제 위치가 차 있어도 **거울 위치가 비어 있으면 배치가 통과**했다. `TileMap` 이 `[y][x]` 라는 규칙을 `KingdomTileMap` 주석에 못 박았다.
+6. **`GetTilePosRanges` 의 루프 경계가 `y < sizeX`, `x < sizeY` 로 뒤바뀌어 있었다.** 지금 아이템이 전부 정사각이라 드러나지 않았을 뿐이고, **비정사각이 하나라도 들어오면 바로 터진다.**
+
+**RPC 등록을 둘로 갈라 판단했다.**
+
+- **`kingdom/change-item` 을 등록했다.** 서비스 메서드와 패킷이 다 있는데 라우트만 없어 도달 불가였고, **위 4번·5번 버그가 사는 경로라 붙이지 않으면 검증할 수가 없었다.**
+- **`KingdomStructureDecTime` 은 일부러 등록하지 않았다.** 남은 시간과 캐시 보유량 검증이 TODO 로 남아 있다 — §S6-C 가 "등록 전에 그 검증부터 필요하다"고 적은 그대로다.
+
+**그 결과 §S6-C 의 "등록되지 않은 엔드포인트 3개"와 §S7-계획-F 의 "`ChangeNameFirstAsync` 가 유일 호출부이고 그것이 미등록이다"는 낡았다.** `ChangeNameFirst` 는 S7a(7094407)가, `KingdomItemChange` 는 S10 이 등록했다. **미등록으로 남은 것은 `KingdomStructureDecTime` 하나다.** 특히 §S7-계획-F 는 **자기 커밋(7094407)이 등록한 것을 미등록이라고 적었다** — 계획 문구가 같은 커밋 안에서 이미 낡은 경우다. 이 낡음은 S11 에 직접 영향이 있다: `AllUserRepo` 는 **도달 불가 코드가 아니라 살아 있는 경로**이므로 삭제가 아니라 이관 대상이다.
+
+**검증**: 회귀 테스트 둘은 **수정을 되돌려 실제로 실패하는지 확인했다.** §S6-B 가 "404 를 잡는 테스트는 아무것도 안 지킨다"로 테스트를 되돌린 뒤라, 이번엔 테스트가 실제로 무엇을 잡는지를 먼저 확인한 것이다.
+
+**철거**: `UserComponentBase` · `UserManagerBase` · `UserRepo` · `GlobalDbRepo.OwnUser` · `IRpcAuthPolicy.RequiresUserRepo` 가 같이 나갔다. **`_userRepo` 8 → 0. `DbModel/Component` 와 `DbModel/Manager` 가 비었다.**
 
 ---
 
@@ -1823,6 +1968,182 @@ await _audit.WriteCashChangeAsync(user, action, changes);         // Cash 3종�
 await _audit.WriteGachaLogAsync(user, scheduleNum, cnt, changes); // 가차 축, 별도 조립
 // 비-Cash 재화 전용 테이블은 만들지 않는다 (의도된 설계, §6)
 ```
+
+---
+
+### S11 — 철거 · 착수 전 census (2026-08-24)
+
+#### S11-계획-A census 가 정정한 것
+
+**① 위 "S11 삭제 대상" 4줄 중 3줄이 이미 무효다.**
+
+| 계획이 적은 것 | 실제 |
+|---|---|
+| `DbModel/Base/*` (8) | **2개만 남았다** — `ManagerBase.cs`, `RepoBase.cs`. ComponentBase 3종·`AuthManagerBase`·`CenterManagerBase`·`UserManagerBase` 는 S7b·S8·S10 에서 나갔다 |
+| `DbModel/Repo/` GlobalDbRepo, AuthRepo, CenterRepo, UserRepo | `AuthRepo`·`CenterRepo`·`UserRepo` 는 **이미 없다**. `GlobalDbRepo`·`AllUserRepo` 만 남았다 |
+| `DbModel/Component/` (18) · `DbModel/Manager/` (17) | **빈 디렉터리**다. 파일 0 |
+
+그리고 남은 `ManagerBase`/`RepoBase` 는 **서로만 참조하는 완전 사문**이다(참조 0). **S11 은 "18+17+8 개를 지우는 큰 스텝"이 아니라 파일 2개와 클래스 1개를 지우는 작은 스텝이다.** S10 이 Component/Manager 를 같이 걷어냈기 때문이다.
+
+**② `AllUserRepo` 는 도달 불가 코드가 아니다.** §S10-A 에 적은 그대로다 — §S7-계획-F 의 "`ChangeNameFirstAsync` 가 유일 호출부이고 그것이 미등록이다"를 믿고 지우면 **살아 있는 기능이 사라진다.** 라우트는 S7a(7094407)가 등록했다.
+
+**③ `GlobalDbRepo` 는 이미 껍데기다.** 실체는 `AllUser` 와 `Commit`/`Rollback`/`Close` 뿐이고, 나머지는 죽어 있다.
+
+```
+CreateRepository(95)   호출부 0 — 사문. GameDb.GetOrCreateRepository 가 같은 일을 한다
+_rpcContext(123)       생성자에서 대입만 하고 안 쓴다
+```
+
+**④ `GlobalDbRepo` 를 주입받고 안 쓰는 서비스가 둘이다.** `AuthService`·`GachaService` 는 생성자 대입만 있고 사용 0이다. 실사용은 `GameService:75` 한 곳뿐이다. §S6-B 1회차의 "책임을 옮기면 그 책임 때문에 들고 있던 의존성도 같이 죽는지 매번 확인할 것" 이 여기서 또 확인된다.
+
+**⑤ `IRpcMethod.RunAsync` 의 `dbRepo` 인자는 아무도 안 쓴다.** `RpcMethod.RunAsync`(42)가 받기만 하고 본문에서 안 쓴다 — 서비스는 DI 로 받는다. 이관 다리도 아니고 그냥 잔재다.
+
+**⑥ `Close()` 는 사문이 아니다. 지우면 커넥션이 샌다.** 계획에 "커밋 주체 역전" 한 줄만 있어 `Close` 를 안 봤는데, **커밋도 롤백도 안 타는 경로가 실재한다.**
+
+```
+OnHttpBodyRequestAsync
+  RpcContext.InitAsync → LoadSessionAsync → Auth 커넥션 오픈 (+ 세션 연장 쓰기)
+  ParseRequestAsync    → 415/400 이면 여기서 return       ← 커밋도 롤백도 없다
+  응답 캐시 히트         → HandleMethodAsync 를 통째로 건너뜀 ← 커밋도 롤백도 없다
+```
+
+지금은 `GlobalDbRepo : IDisposable` 이 DI 종료 시 `Close()` 를 불러 이 두 구멍을 메운다. **`DbSessionManager` 는 `IDisposable` 이 아니다.** 그래서 "`GlobalDbRepo` 를 지운다"는 **자동으로 "`DbSessionManager` 가 자기 세션을 닫게 만든다"를 포함한다.** 안 하면 두 경로에서 커넥션이 안 닫힌다.
+
+**⑦ ⑥ 을 조사하다 별건을 찾았다 — 응답 캐시 히트면 세션 연장 쓰기가 유실된다.** `RpcContext.ExtendSessionAsync` 가 `db.Sessions.SaveAsync` 로 **쓰는데**, 캐시 히트 경로는 `HandleMethodAsync` 를 건너뛰므로 커밋이 없고 `Close()` → `_transaction.Dispose()` → **MySQL 이 롤백**한다. S11 이 만든 게 아니라 기존 동작이고, 영향은 "재전송 요청이 세션을 연장하지 못한다"다. **커밋 주인을 바꾸는 스텝이 이걸 만나는 것은 우연이 아니다** — 커밋 경계가 어디인지 다시 그리는 순간이라 지금이 판단할 자리다(Q4).
+
+**⑧ lazy BEGIN 은 이제 "판단"이 아니라 실측이 끝났다.** §S2-A 항목 8 이 "S2 코드는 아무도 안 써서 실증 불가"로 S11 에 미뤘던 것이다.
+
+```csharp
+// MySqlDbSessionFactory.Create → DBSqlExecutor.StartTransaction → Open() : 커넥션 + BEGIN 을 즉시
+// OwnedSet.GetListAsync : _repository() 를 캐시 조회보다 먼저 부른다
+return _repository().GetListAsync<T>(_listKey, LoadFromDbAsync);
+```
+
+`SqlRepository.GetListAsync` 는 캐시를 먼저 보지만, **그 `SqlRepository` 를 얻는 것 자체가 커넥션 오픈 + BEGIN 이다.** 즉 **캐시 히트만으로 끝나는 요청도 MySQL 트랜잭션을 연다.** §5.11 이 "커넥션 오픈 시점이 이르다"고 적은 것의 진짜 자리가 여기다 — S2 가 고친 것은 **스코프 생성** 시점이었고, 남은 것은 **캐시 히트** 경로다.
+
+**⑨ `AllUserRepo` 는 `DbConnectionResolver` 를 안 거친다.** `Config<CoreConfig>.Get().UserDbConnectionStrList` 를 직접 읽는다 — §S2-A 항목 10 이 "`DbConnectionResolver` 추출 — 샤드 맵 2벌 방지"로 만든 규칙에서 **이 하나만 빠져 있다.**
+
+그 결과가 ⑩ 이다.
+
+**⑩ InMemory 에서는 이름 중복 체크가 항상 통과한다.** `ServerTest/appsettings.yaml` 의 `UserDb.ConnectionStrList` 가 `[]` 이므로 `BeginAllUserRepo` 가 **세션을 0개** 만들고, `TryGetPlayerByNameAsync` 는 늘 `(false, null)` 을 돌려준다. **`ServerTest` 로는 이 가드를 검증할 수 없다.** 이관하면서 `DbConnectionResolver` 를 거치게 하면 InMemory 가 `__inmemory__` 단일 키로 풀려 **검증 가능해진다** — §S9-A 의 "T3 를 안 만든 것이 테스트 가능성을 되찾았다"와 같은 종류의 이득이다.
+
+#### S11-계획-B 범위 — 9건 중 설계 결정은 2건
+
+| # | 무엇 | 성격 |
+|---|---|---|
+| 1 | `Base/ManagerBase.cs` · `Base/RepoBase.cs` 삭제 | 기계적 (참조 0) |
+| 2 | 빈 디렉터리 `Component/` · `Manager/` 정리 | 기계적 |
+| 3 | `AuthService` · `GachaService` 의 죽은 `GlobalDbRepo` 주입 제거 | 기계적 (④) |
+| 4 | `IRpcMethod.RunAsync` 에서 `dbRepo` 인자 제거 (인터페이스·구현·호출부 3곳) | 기계적 (⑤) |
+| 5 | `AllUserRepo` → `GameDb.AllShards`, `DbConnectionResolver` 경유 | **설계 결정 (Q2)** |
+| 6 | 커밋 주체 역전 — `RpcService:94/98` 한 곳 | **설계 결정 (Q1)** |
+| 7 | `DbSessionManager` 가 자기 세션을 닫게 (`IDisposable`) | 필수 (⑥) |
+| 8 | RaidServer `PlayerRaidSessionService:41` 의 `using var dbRepo` 대체 | 7의 결과 |
+| 9 | `GlobalDbRepo` 삭제 + DI 등록 2곳 제거 | 위 전부의 결과 |
+
+**8에 대한 판단**: 그 `using` 의 실제 목적은 스코프 종료 시 세션 정리이므로 7이 끝나면 `using var scope` 가 대신한다. `catch` 의 `RollbackAsync()` 는 **읽기 전용 경로라 지금은 의미가 없지만 남긴다** — 이 경로에 나중에 쓰기가 붙었을 때 조용히 커밋 없이 새는 것보다 낫다.
+
+#### S11-계획-C 열린 결정
+
+> **답 (2026-08-24, 사용자 확정): Q1 `GameDb` · Q2 위 형태대로 · Q3 별도 슬라이스 · Q4 범위 밖(현행 문제없음).**
+
+**Q1. 커밋의 새 주인은 `GameDb` 인가 `DbSessionManager` 인가.** `CommitAsync` 의 본체는 "DB 커밋 → 캐시 flush, flush 실패 시 pending 폐기"인데 **캐시 flush 순서가 이 메서드의 존재 이유**다(§5.7 — 응답 캐시가 커밋보다 먼저 쓰여 pending 에 쌓였다가 같이 반영된다). `DbSessionManager` 는 캐시를 모르고 `GameDb` 는 이미 `ICacheSession` 을 든다. **`GameDb` 쪽으로 기운다.** 다만 그러면 `GameDb` 가 "데이터 접근 진입점 + 트랜잭션 주인" 둘을 겸한다.
+
+**Q2. `AllShards` 의 자리와 지연 오픈 형태.** `GameDb.AllShards.FindPlayerByNameAsync(name)`(§5.5)로 두되, ⑨ 때문에 `DbConnectionResolver` 에 전 샤드 커넥션을 돌려주는 접근자를 하나 추가해야 한다. 지연 오픈은 **샤드를 순회하며 그때그때 여는** 형태가 자연스럽다 — 지금은 생성 시 전 샤드를 한꺼번에 열지만 대부분 첫 샤드에서 끝난다.
+
+**Q3. lazy BEGIN(⑧)을 S11 에서 구현하는가.** 실측이 끝났으므로 할 수 있다. 형태는 `DbSessionManager.Open` 이 **첫 `ExecuteAsync` 까지 `StartTransaction` 을 미루는 래퍼**를 돌려주고 `Commit`/`Rollback`/`Close` 는 만들어진 적 없으면 no-op 하는 것이다. **다만 S11 은 철거 스텝이고 이것은 추가다.** 별도 슬라이스로 떼는 쪽을 권한다.
+
+**Q4. ⑦(캐시 히트 시 세션 연장 유실)을 S11 에서 고치는가.** 기존 동작이고 영향이 작지만, 커밋 경계를 다시 그리는 스텝이라 지금 만났다. 고친다면 "세션 연장은 응답 캐시 히트 여부와 무관하게 커밋된다"를 어디서 보장할지가 같이 정해져야 한다.
+
+---
+
+#### S11-A 실행 결과 (2026-08-24)
+
+**계획-B 9건을 그대로 실행했다. 범위가 바뀐 곳은 없고, 계획이 못 본 것이 둘 나왔다.**
+
+**책임이 둘로 갈렸다 — 이것이 Q1 의 실제 결론이다.** "커밋 주인"을 `GameDb` 로 정하자 **세션을 닫는 일은 따라오지 않았다.**
+
+| | 누가 | 왜 |
+|---|---|---|
+| 커밋 / 롤백 | `GameDb` | 캐시 flush 순서를 아는 쪽이다. `DbSessionManager` 는 캐시를 모른다 |
+| 세션 닫기 | `DbSessionManager` (`IDisposable`) | 세션을 **소유한** 쪽이다. 커밋도 롤백도 안 타는 경로(계획-A ⑥)를 DI 가 메운다 |
+
+옛 `GlobalDbRepo` 는 이 둘을 한 클래스에 갖고 있었고, **남의 정리를 대신 불러주는 껍데기**가 그래서 필요했다. 갈라놓으면 껍데기가 사라진다. `GameDb` 는 `IDisposable` 이 아니다 — 닫을 것을 갖고 있지 않기 때문이다.
+
+**`Find*` 를 쓰지 않았다 — §5.5 와 §S2-F 가 충돌했다.** §5.5 는 `GameDb.AllShards.FindPlayerByNameAsync(name)` 라고 적었는데 §S2-F 의 네이밍 규칙은 **"`Find*` 는 쓰지 않는다(`TryGet*` 과 중복)"** 다. §5.5 가 §S2-F 보다 먼저 쓰였다. 규칙을 따라 `TryGetPlayerByNameAsync` 로 갔다 — 반환이 `(bool Found, T Value)` 라 `TryGet` 이 맞기도 하다.
+
+**계획이 못 본 것 ① — 죽은 `using` 3개는 census 에 안 잡혔다.** census 는 `GlobalDbRepo`·`AllUserRepo` 같은 **타입 이름**으로 훑었는데, 지워진 것은 네임스페이스이기도 했다. `RpcContext.cs`·`AuthService.cs`·`CommonService.cs` 가 `using Server.Repo` / `using WebStudyServer.Repo` / `using WebStudyServer.Base` 를 들고 있어 **빌드가 CS0234 5개로 막혔다.** 타입 참조 0이어도 네임스페이스 참조는 남는다 — **다음 철거 스텝의 census 는 `using` 도 같이 센다.**
+
+**계획이 못 본 것 ② — `GameDb` 가 로거를 안 들고 있었다.** 커밋을 옮기면 커밋 실패 로그가 따라온다. `ILogger<GameDb>` 를 생성자에 추가했다. 로그 문구는 옮기기만 하고 손대지 않았다 — 이동 커밋에 문구 변경을 섞지 않는다.
+
+**계획-A ⑩ 이 약속한 이득을 실제로 받았다.** `AllUserRepo` 가 `Config` 를 직접 읽던 것을 `DbConnectionResolver.AllUsers()` 로 돌리자 InMemory 가 `__inmemory__` 단일 키로 풀려 **이름 중복 가드가 처음으로 테스트에서 돈다.** `ChangeNameTest` 를 남겼다.
+
+**그 테스트가 실제로 무엇을 잡는지 확인했다.** `AllUsers()` 를 S11 이전 동작(`return connList;` — InMemory 에서 빈 목록)으로 되돌리자 중복 단정이 **실패**했다. §S10-A 가 "회귀 테스트 둘은 수정을 되돌려 실제로 실패하는지 확인했다"로 세운 절차를 그대로 따랐다 — §S6-B 의 "404 를 잡는 테스트는 아무것도 안 지킨다"가 그 절차의 이유다.
+
+**지연 오픈도 같이 왔다.** 옛 `BeginAllUserRepo` 는 `UserDbConnectionStrList.Select(Open).ToList()` 로 **전 샤드를 한꺼번에** 열었다. 새 `AllShards` 는 순회하며 그때그때 연다 — 대부분 첫 샤드에서 끝난다. §5.5 가 "지연 오픈으로 개선할 기회다"로 적어둔 자리다.
+
+**RaidServer 의 `RollbackAsync` 는 남겼다.** 읽기 전용 경로라 지금은 의미가 없지만, 이 경로에 나중에 쓰기가 붙었을 때 조용히 커밋 없이 새는 것보다 낫다(계획-B).
+
+**검증**: 리빌드 **0에러 / 경고 11**(전부 기존 경고이고 손댄 파일에는 없다) · `ServerTest` InMemory **30/30**(S10 시점 23 + `ChangeNameTest` + 리뷰가 붙인 `DbSessionManagerTest` 3 · `DbSqlExecutorTest` 3) · 되돌리기 확인 3건 · **MySQL+Redis+유저락 30/30**. 실측이 확인한 것: `AllShards` 가 실제 샤드 커넥션을 타고 이름 중복을 잡았고(`Player_*` 행 저장 확인), 약 250건의 실요청 뒤 **Threads_connected 1 · 열린 InnoDB 트랜잭션 0** 으로 누수가 없었다.
+
+**남은 것 — S12 가 두 개 다 풀렸다.**
+
+- **`IGameContext` 의 데이터 계층 소비자가 0이 됐다.** `GlobalDbRepo` 의 안 쓰이던 `_rpcContext` 필드가 마지막이었다. 지금은 `RpcContext`/`RaidGameContext` 가 구현만 하고 **주입받아 쓰는 곳이 하나도 없다** — 두 호스트의 `services.AddScoped<IGameContext>(...)` 등록도 같이 죽었다. S12 의 "Transport 전용으로 축소"는 **축소가 아니라 폐지 판단**이 됐다.
+- `DbModel` 에서 `Component`/`Manager`/`Base`/`Repo` 디렉터리가 전부 사라졌다. 남은 것은 `Data`/`Domain`/`Model`/`Extension`/`Helper`/`GAME` 이다.
+
+#### S11-B 안 고친 것
+
+- **Q4(응답 캐시 히트 시 세션 연장 유실)** — 범위 밖으로 확정했다. 사용자 판단은 "지금도 문제없음"이다. 계획-A ⑦ 에 현상과 원인이 남아 있다.
+- **Q3(lazy BEGIN)** — 별도 슬라이스. 계획-A ⑧ 에 실측과 고칠 형태가 남아 있다. **철거 스텝에 추가를 섞지 않는다.**
+- **`ChangeNameFirstAsync` 의 상태 가드가 무력하다.** `ChangeNameTest` 를 쓰다 발견했다 — `ValidState(CHANGED_NAME_FIRST)` 는 `State <= CHANGED_NAME_FIRST` 인데 **`State` 를 `CHANGED_NAME_FIRST` 로 올리는 코드가 어디에도 없다**(`GameService:137` 이 `PREPARED` 로 올리는 것이 전부). 즉 이름은 몇 번이든 바꿀 수 있다. 기획 판단이 필요한 자리라 S11 에서 손대지 않았다.
+
+---
+
+#### S11-C 커밋 전 자율 리뷰 3회 (2026-08-24)
+
+회차별로 축을 다르게 잡았다(§S6-B 와 같은 방식). **실제 결함은 이번에도 3회차에서만 나왔다.**
+
+| 회차 | 축 | 결과 |
+|---|---|---|
+| 1 | 정합성 / 회귀 — 옮긴 본문이 옛것과 같은가, 호출부가 다 옮겨졌는가 | 결함 없음. 대신 **편집 도구가 만든 변경 1건** |
+| 2 | 설계 / 일관성 — 책임 분리가 실제로 갈렸는가, 진입 경로가 두 벌이 아닌가 | 결함 없음 |
+| 3 | 경계 / 실패 경로 | **결함 1건 — 커밋이 실패하면 커넥션이 샌다** |
+
+**3회차 결함: 커밋이 도중에 실패하면 커넥션이 새고, S11 이 방금 세운 안전망이 정확히 그때 무력하다.**
+
+두 겹이었다.
+
+```csharp
+// ① DBSqlExecutor — CloseInternal 이 트랜잭션 연산 "뒤에" 있다. 던지면 도달하지 않는다
+public void Commit()
+{
+    _transaction?.Commit();   // 여기서 던지면
+    CloseInternal();          // 여기에 안 온다 → 실패한 트랜잭션이 커넥션을 잡은 채 남는다
+}
+
+// ② DbSessionManager — 실패해도 목록을 비운다
+finally { _openSession.Clear(); }   // 차례가 오지 않은 세션까지 잊힌다
+```
+
+**②가 S11 의 계약을 깬다.** 이 스텝은 "커밋도 롤백도 안 타는 경로는 `Dispose` 가 메운다"를 설계로 선언했는데(§S11-계획-A ⑥), **`Clear()` 가 먼저 돌아 `Dispose` 가 그 세션을 찾지 못한다.** 세션이 하나뿐인 요청도 ①만으로 샜다.
+
+**기존 코드다.** `GlobalDbRepo` 시절에도 같았고 S11 이 만든 게 아니다. 그러나 **그 시절에는 안전망을 약속한 적이 없다.** 약속을 새로 한 스텝이 그 약속이 거짓이 되는 자리를 같이 닫는다.
+
+**고친 자리를 관리자가 아니라 원천으로 정한 것이 이번 판단의 핵심이다.**
+
+- `DBSqlExecutor.Commit`/`Rollback` 을 `try`/`finally` 로 — **원천이다.** 세션 하나짜리 요청(대부분)은 이것만으로 닫힌다. `DbSessionManager` 에서만 고치면 `DBSqlExecutor` 를 직접 쓰는 다른 경로(`StartUp.ConnectionTest`)가 그대로 남는다. §S6-B 가 "라우터가 아니라 모델"로 내린 것과 같은 결이다.
+- `DbSessionManager.Commit`/`Rollback` 의 `finally` 를 `Close()` 로 — 차례가 오지 않은 세션까지 닫는다.
+- `CloseInternal` 에서 `_transaction = null` — 두 번 닫히는 경로가 생겼으므로 재진입 안전을 코드로 박는다.
+
+**회귀 테스트는 DB 없이 돈다.** `DbSessionManagerTest` 3개. 가짜 `IDbSessionFactory` 로 "두 번째 세션이 커밋에서 던진다"를 만들고 셋 다 닫혔는지 본다. **고치기 전 2 실패 / 1 통과**였고, 통과한 하나가 `Dispose_ClosesOpenSessions` 다 — **S11 의 새 안전망은 정상 경로에서는 실제로 동작하고 실패 경로에서만 뚫려 있었다.** §S10-A 의 `KingdomTileMap` 에 이어 **DB 없이 검증되는 자리가 하나 늘었다.**
+
+**1회차가 잡은 것 — `DbConnectionResolver.cs` 에 BOM 이 붙어 있었다.** 내용과 무관하고, 편집 스크립트가 그 파일만 `utf-8-sig` 로 쓴 탓이다. 되돌렸다. **편집 도구가 만든 diff 는 빌드도 테스트도 안 잡는다 — 리뷰에서만 잡힌다.**
+
+**4회차 — 고치면서 만든 것을 되짚었고, 심각도를 스스로 낮췄다.** "문제없나"는 물음에 다시 보니 **위 수정이 성공 경로에 double-close 를 만들었다.** `Commit()` 이 커넥션을 닫고 `finally` 의 `Close()` 가 한 번 더 부른다 — 즉 **이미 `Dispose` 된 `MySqlConnection` 에 `Close`/`Dispose` 를 다시 부르는 경로가 커밋되는 모든 요청에 생겼다.** 처음에는 "실제로 위험하다"고 말했다가 **정정했다**: 열지 않은 커넥션으로 double-close 를 태워 보니 드라이버가 던지지 않았다(`DbSqlExecutorTest` 3개, 가드를 빼고도 통과). **버그가 아니라 드라이버 동작에 기대고 있던 것이다.**
+
+그래도 `_closed` 플래그로 막았다. 근거는 두 가지다 — ① 커밋되는 **모든** 요청이 지나는 자리를 드라이버 구현에 기대게 두지 않는다 ② **테스트가 덮은 것은 "열지 않은 커넥션"뿐이고**, 실제로 열려서 풀에 반납된 커넥션을 두 번 닫는 경우는 MySQL 없이 확인할 수 없다. §S6-B 가 "조사 중에 심각도를 스스로 낮췄다"로 남긴 것과 같은 자리다 — **다만 이번엔 내가 만든 위험이었다.**
+
+**안 고친 것**: `DbSessionManager.Close()` 안에서 한 세션의 `Close()` 가 던지면 뒤 세션이 안 닫힌다. 세션별로 삼키려면 로그가 필요한데 이 클래스는 로거를 안 든다. 원천을 고친 뒤로는 `CloseInternal` 이 멱등이라 던질 여지가 거의 없어 남겨둔다.
 
 ---
 
@@ -2167,8 +2488,10 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | **S4** | 캐시 없는 경로 실증 (Account/Channel/Device는 원래 캐시 없음) · **Auth의 스코프 밖 조회(기기 키·채널 키·세션 키·계정 생성)를 어디로 보낼지 확정 → `[Entity]`에 Auth `ScopeKey`를 붙일지 함께 결정 (§S1-G Q2)** |
 | **S5** (완료, **게이트 통과**) | `PlayerManager` 도 소비자였다(§S5-B) · 스코프를 읽는 *시점*이 함정(§S5-C) · **MySQL+Redis 실측 17/17 — 막고 있던 기존 결함 2개(Ip null, 응답 캐시 오염)를 잡았다(§S5-D)** · `GetOrCreateAsync` 는 엔티티별 확장 유지(§S5-E) · **식 트리 제거, 생성기가 `PkEquals`/`IScopedModel` 접근자를 찍는다(§S5-F)** · 커밋 전 리뷰에서 미보유 쿠키 강화 버그를 잡았다(§S5-G) · `OwnScope` 를 `ServiceBase` 로(§S5-H) · `PlayerDetailManager` 의 region 4개를 같이 고친다(census 재도출) · 스코프는 `PlayerDetail.TouchAsync(userScope)` 로 전달 · **ScopeKey 쓰기 규칙 신설 — 생성은 채우고 수정은 확인한다** · `ChangeSet` 은 S6 으로 · `VerifyCacheTags` 역방향 검사는 S13 으로 재이월 · **캐시·MySQL 경로는 ServerTest 가 못 지나간다** |
 | **S6** (완료) | 위상 정정 — 게이트가 아니고 `_userRepo` 도 14개 남는다 · **`LoadedObjects` 철회**(벌크 로드 이득이 실재하지 않음, §S6-계획-C) · `RewardService` 는 상태 없이 스코프를 인자로, 타입별 개별 구현 · `PlayerDetail` 도 Queries 확장 하나로(`GetOneAsync` 안 만듦) · ChangeSet 의미 확정 + ClientCore COOKIE/SOUL_STONE 같이 수정 · DecGold 잔액검사와 Acc 차감 제거 · **자율 리뷰 3회에서 음수 금액 캐시 증발/증식 결함을 잡아 불변식을 모델로 내렸다(§S6-B)** |
-| **S7** | Session 포인터 캐시 **유지** (5.3) · `Single`+`SlidingTtl` 정책 실증 · `PlayerComponent`의 `SetPlayerId` 이동 (5.9) |
-| **S8** | `GlobalList` 정책 실증 · `ScheduleView`가 `ServerTime`을 인자로 (5.10) |
-| **S9** | `scope.Raw` 자동 flush **와** `GameDb.Utility` 무flush 경로 구분 확정 (5.2) |
+| **S7** (완료) | 포인터 캐시 유지 — `SessionStore` 로 분리, `Identity` 와 안 합침 (§S7b-A Q1) · 키 로테이션 입구를 private 으로 닫음 (§S7b-A Q2) · `SetPlayerId`/`SetShardId` 이동 완료, `SessionStamp` 로 컨텍스트 단절 (5.9 해소) · **계획-A ⑤ 가 틀렸다 — Auth base 는 S12 가 아니라 S7b·S8 에서 나갔다** |
+| **S8** (완료) | **`GlobalList` 를 넣지 않았다** — 도입 근거("매 요청 전량 조회")가 사실이 아니었다 (§S8-A Q1) · `ScheduleView` 가 `ServerTime` 을 인자로 (5.10 해소, 데이터 계층의 마지막 `RpcContext` 자리) · `SchedulePacket.State` 가 항상 0 이던 것을 잡음 · 커밋 후 리뷰로 가챠 타입 가드와 `ProtoDb` 6회 조회를 고침 (§S8-B) |
+| **S9** (완료) | **`scope.Raw` 를 만들지 않았다 — 이 행의 과제는 앵커가 사라졌다.** 집계를 메모리로 옮겼고, flush 주의 자체가 §S2-H 의 dirty 철회로 이미 무의미했다 (§S9-A) · `WorldRewardStar` 가 한 번도 성공한 적 없던 원인 2건 + 별 경계 1건 수정 |
+| **S10** (완료) | 계획의 `KingdomBuilder` 하나가 `KingdomTileMap`(순수 계산) / `KingdomMapService`(로드·저장) 둘로 갈림 (§S10-A) · 기존 결함 6건 수정 · `kingdom/change-item` 등록, `KingdomStructureDecTime` 은 검증 TODO 라 보류 · Component/Manager 전부 철거 |
 | **S10.5** (축소) | `MySqlLockService`가 쓰는 `DbUtilityConnection`을 `GameDb.Utility`로 감싸기 — 커넥션 분리 자체는 S0-4에서 완료 (5.2) |
-| **S11** | `AllUserRepo` → `GameDb.AllShards` 형태 확정 (5.5) · 지연 오픈 적용 |
+| **S11** (완료) | **커밋 전 리뷰 3회에서 커밋 실패 시 커넥션 누수를 잡아 원천(`DBSqlExecutor`)에서 고쳤다(§S11-C)** · `AllUserRepo` → `GameDb.AllShards.TryGetPlayerByNameAsync` (§5.5 의 `Find*` 는 §S2-F 규칙과 충돌해 기각) · 순회 중 지연 오픈 · **커밋은 `GameDb`, 세션 닫기는 `DbSessionManager(IDisposable)` 로 책임이 갈렸다** (§S11-A) · census 가 죽은 `using` 을 못 봐 빌드가 한 번 막혔다 · InMemory 에서 이름 중복 가드가 처음 검증 가능해져 `ChangeNameTest` 를 남겼다 |
+| **S11.5** | lazy BEGIN — 캐시 히트만으로 끝나는 요청도 BEGIN 을 연다(§S11-계획-A ⑧). 실측 끝, 형태 확정. 철거 스텝과 섞지 않으려고 뗐다 |

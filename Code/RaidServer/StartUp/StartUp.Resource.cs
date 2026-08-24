@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using RaidServer.Context;
-using Server.Repo;
 using ServerCore;
 using ServerCore.Extension;
 using WebStudyServer.Data;
@@ -33,7 +32,6 @@ namespace RaidServer
             services.AddSingleton<InMemoryStore>();
 
             services.AddScoped<DbSessionManager>();
-            services.AddScoped<GlobalDbRepo>();
             services.AddScoped<GameDb>();
 
             services.AddScoped<RaidGameContext>();

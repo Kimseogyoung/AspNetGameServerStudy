@@ -2,25 +2,25 @@ using Microsoft.OpenApi.Models;
 using Proto;
 using Protocol;
 using Server.Helper;
-using Server.Repo;
 using Server.Service;
 using ServerCore;
 using ServerCore.Serializer;
 using WebStudyServer;
 using ServerCore.Extension;
 using WebStudyServer.Helper;
+using WebStudyServer.Data;
 namespace Server
 {
     public class RpcService
     {
         public RpcService(RpcMethodRegistry registry, RpcContext rpcCtx, ResponseCacheService responseCache,
-            UserLockService userLockSvc, GlobalDbRepo dbRepo, ILogger<RpcService> logger)
+            UserLockService userLockSvc, GameDb db, ILogger<RpcService> logger)
         {
             _registry = registry;
             _rpcCtx = rpcCtx;
             _responseCache = responseCache;
             _userLockSvc = userLockSvc;
-            _dbRepo = dbRepo;
+            _db = db;
             _logger = logger;
         }
 
@@ -85,17 +85,17 @@ namespace Server
             {
                 try
                 {
-                    rpcResObj = await rpcMethod.RunAsync(_rpcCtx, httpCtx, _dbRepo, rpcReqObj);
+                    rpcResObj = await rpcMethod.RunAsync(_rpcCtx, httpCtx, rpcReqObj);
 
                     // 응답 캐시 쓰기는 커밋보다 앞이어야 한다 — 캐시 세션의 pending에 쌓였다가
                     // CommitAsync에서 DB 커밋 후 함께 반영되고, 롤백 시 같이 버려진다.
                     await _responseCache.SetAsync(_rpcCtx, rpcResObj);
 
-                    await _dbRepo.CommitAsync();
+                    await _db.CommitAsync();
                 }
                 catch (Exception)
                 {
-                    await _dbRepo.RollbackAsync();
+                    await _db.RollbackAsync();
                     throw; // 오류 발생 시 ErrorHandler에서 처리
                 }
             });
@@ -107,7 +107,7 @@ namespace Server
         private readonly RpcContext _rpcCtx;
         private readonly ResponseCacheService _responseCache;
         private readonly UserLockService _userLockSvc;
-        private readonly GlobalDbRepo _dbRepo;
+        private readonly GameDb _db;
         private readonly ILogger<RpcService> _logger;
     }
 

@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Protocol.Raid;
 using RaidServer.Context;
 using RaidServer.Network;
-using Server.Repo;
 using WebStudyServer.Data;
 using WebStudyServer.Data.Queries;
 using WebStudyServer.Model;
@@ -38,7 +37,6 @@ namespace RaidServer.Services
             var raidContext = scope.ServiceProvider.GetRequiredService<RaidGameContext>();
             raidContext.Init(req.DeviceKey);
 
-            using var dbRepo = scope.ServiceProvider.GetRequiredService<GlobalDbRepo>();
             var db = scope.ServiceProvider.GetRequiredService<GameDb>();
             try
             {
@@ -89,7 +87,7 @@ namespace RaidServer.Services
             }
             catch (Exception)
             {
-                await dbRepo.RollbackAsync();
+                await db.RollbackAsync();
                 throw;
             }
         }

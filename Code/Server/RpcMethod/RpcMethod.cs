@@ -1,6 +1,5 @@
 using Proto;
 using Protocol;
-using Server.Repo;
 using WebStudyServer;
 
 namespace Server
@@ -39,7 +38,7 @@ namespace Server
             Res = typeof(TRes);
         }
 
-        public async Task<object> RunAsync(RpcContext rpcCtx, HttpContext httpCtx, GlobalDbRepo dbRepo, object rpcReq)
+        public async Task<object> RunAsync(RpcContext rpcCtx, HttpContext httpCtx, object rpcReq)
         {
             _authPolicy?.Validate(rpcCtx);
 

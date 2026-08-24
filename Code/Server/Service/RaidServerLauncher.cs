@@ -25,7 +25,7 @@ namespace Server.Service
                 },
             };
             _process.Start();
-            _logger.LogInformation("RaidServer 프로세스 시작 (PID: {Pid}, Dir: {Dir})", _process.Id, _workingDir);
+            _logger.LogInformation("Started RaidServer process (PID: {Pid}, Dir: {Dir})", _process.Id, _workingDir);
             return Task.CompletedTask;
         }
 
@@ -34,7 +34,7 @@ namespace Server.Service
             if (_process is { HasExited: false })
             {
                 _process.Kill(entireProcessTree: true);
-                _logger.LogInformation("RaidServer 프로세스 종료 (PID: {Pid})", _process.Id);
+                _logger.LogInformation("Stopped RaidServer process (PID: {Pid})", _process.Id);
             }
             _process?.Dispose();
             _process = null;

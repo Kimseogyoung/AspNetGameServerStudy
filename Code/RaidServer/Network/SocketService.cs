@@ -75,7 +75,7 @@ namespace RaidServer.Network
                     int readMessageCnt = BitConverter.ToInt32(lengthBuffer.Reverse().ToArray(), 0);  // Big endian 처리
                     if (readMessageCnt <= 0)
                     {
-                        _logger.LogError($"잘못된 메시지 길이 ({readMessageCnt})");
+                        _logger.LogError("Invalid message length ({Length})", readMessageCnt);
                         break;
                     }
 

@@ -1,22 +1,17 @@
 using Proto;
 using Protocol;
-using Server.Repo;
 using ServerCore;
 using WebStudyServer;
-using WebStudyServer.Base;
 using WebStudyServer.Data;
 using WebStudyServer.Data.Queries;
 using WebStudyServer.Model;
-using WebStudyServer.Repo;
 
 namespace WebStudyServer.Service
 {
     public class AuthService : ServiceBase
     {
-        // 이관 기간에는 두 진입점을 동시에 듦. 같은 DbSessionManager라 같은 트랜잭션.
-        public AuthService(GlobalDbRepo dbRepo, GameDb db, RpcContext rpcContext, ILogger<AuthService> logger) : base(db, rpcContext, logger)
+        public AuthService(GameDb db, RpcContext rpcContext, ILogger<AuthService> logger) : base(db, rpcContext, logger)
         {
-            _dbRepo = dbRepo;
         }
 
         public async Task<AuthSignUpResponsePacket> SignUpAsync(string idfv)
@@ -113,7 +108,5 @@ namespace WebStudyServer.Service
             var (found, mdlSession) = await Db.Sessions.TryGetByAccountIdAsync(accountId);
             return found ? mdlSession : await Db.Sessions.CreateAsync(accountId, shardId, Stamp);
         }
-
-        private readonly GlobalDbRepo _dbRepo;
     }
 }

@@ -2,7 +2,7 @@ using ServerCore;
 
 namespace WebStudyServer.Data
 {
-    // 샤드 -> 커넥션 문자열. GameDb와 GlobalDbRepo가 이 하나를 봄.
+    // 샤드 -> 커넥션 문자열. 샤드 맵이 두 벌이 되지 않게 데이터 계층은 전부 여기를 봄.
     public static class DbConnectionResolver
     {
         // InMemory 모드에서 모든 Repo가 단일 세션을 공유하도록 동일한 키 사용
@@ -31,6 +31,13 @@ namespace WebStudyServer.Data
             }
 
             return connList[shardIdx];
+        }
+
+        // 소유자를 모르는 조회는 샤드를 특정할 수 없어 전부 훑는다. InMemory는 단일 키다.
+        public static IReadOnlyList<string> AllUsers()
+        {
+            var connList = Config<CoreConfig>.Get().UserDbConnectionStrList;
+            return connList.Count > 0 ? connList : [InMemoryConnectionKey];
         }
 
         public static string Auth()

@@ -3,7 +3,6 @@ using Proto;
 using Protocol;
 using Server.Extension;
 using Server.Helper;
-using Server.Repo;
 using ServerCore;
 using WebStudyServer;
 using WebStudyServer.Data;
@@ -14,9 +13,8 @@ namespace Server.Service
 {
     public class GachaService : ServiceBase
     {
-        public GachaService(GlobalDbRepo dbRepo, GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<GachaService> logger) : base(db, rpcContext, logger)
+        public GachaService(GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<GachaService> logger) : base(db, rpcContext, logger)
         {
-            _dbRepo = dbRepo;
             _mapper = mapper;
         }
 
@@ -149,7 +147,6 @@ namespace Server.Service
             mdlCookie.IncSoulStone(amount);
         }
 
-        private readonly GlobalDbRepo _dbRepo;
         private readonly IMapper _mapper;
     }
 }

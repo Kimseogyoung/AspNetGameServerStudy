@@ -5,19 +5,18 @@ using DbType = ServerCore.DbType;
 
 namespace WebStudyServer.Data
 {
-    // 데이터 접근 진입점.
+    // 데이터 접근 진입점이자 트랜잭션 주인.
     //
-    // GlobalDbRepo와 같은 DbSessionManager를 주입받음. DbSessionManager가 커넥션 문자열로
-    // IDbSession을 캐시하므로 문자열이 같으면 같은 트랜잭션. 이관 기간에 옛 경로와 섞어도
-    // 원자성이 안 깨짐.
-    //
-    // 커밋 주체는 이관이 끝날 때까지 GlobalDbRepo 하나. 여기서는 tx를 안 건드림.
+    // DbSessionManager가 커넥션 문자열로 IDbSession을 캐시하므로 문자열이 같으면 같은 트랜잭션.
+    // 커밋은 DB를 먼저 커밋한 뒤 캐시 pending을 flush하고, 롤백은 둘 다 버린다.
+    // 세션을 닫는 것은 DbSessionManager가 한다.
     public class GameDb
     {
-        public GameDb(DbSessionManager sessions, ICacheSession cache)
+        public GameDb(DbSessionManager sessions, ICacheSession cache, ILogger<GameDb> logger)
         {
             _sessions = sessions;
             _cache = cache;
+            _logger = logger;
         }
 
         // accountId를 모르는 Auth 조회
@@ -40,6 +39,57 @@ namespace WebStudyServer.Data
         public CenterScope Center()
         {
             return new CenterScope(this);
+        }
+
+        // 소유자를 모르는 전 샤드 조회. 스코프 밖이다.
+        public AllShards AllShards => _allShards ??= new AllShards(this);
+
+        public async Task CommitAsync()
+        {
+            try
+            {
+                _sessions.Commit();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "DB_COMMIT_FAILED - rolling back");
+                await RollbackAsync();
+                throw;
+            }
+
+            try
+            {
+                await _cache.FlushPendingWritesAsync();
+            }
+            catch (Exception e)
+            {
+                // DB는 이미 커밋됐으므로 되돌릴 수 없다. pending을 버리고 stale로 남긴다.
+                _logger.LogError(e, "CACHE_FLUSH_FAILED - cache left stale, DB already committed");
+                _cache.DiscardPendingWrites();
+            }
+        }
+
+        public Task RollbackAsync()
+        {
+            try
+            {
+                _sessions.Rollback();
+                _cache.DiscardPendingWrites();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "DB_ROLLBACK_FAILED - closing sessions");
+                _sessions.Close();
+                throw;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        // 샤드를 특정할 수 없는 경로가 커넥션 문자열로 직접 연다.
+        internal IDbSession SessionFor(string connectionString)
+        {
+            return _sessions.Open(connectionString);
         }
 
         internal IRepository UserRepository(int shardId)
@@ -85,9 +135,11 @@ namespace WebStudyServer.Data
 
         private readonly DbSessionManager _sessions;
         private readonly ICacheSession _cache;
+        private readonly ILogger _logger;
 
         private Identity _identity;
         private SessionStore _sessionStore;
+        private AllShards _allShards;
 
         private readonly Dictionary<string, IRepository> _repositories = [];
     }

@@ -1,7 +1,6 @@
 using AutoMapper;
 using Proto;
 using Protocol;
-using Server.Repo;
 using ServerCore;
 using ServerCore.Helper;
 using WebStudyServer;
@@ -9,15 +8,13 @@ using WebStudyServer.Data;
 using WebStudyServer.Data.Queries;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
-using WebStudyServer.Repo;
 
 namespace Server.Service
 {
     public class GameService : ServiceBase
     {
-        public GameService(GlobalDbRepo dbRepo, GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(db, rpcContext, logger)
+        public GameService(GameDb db, IMapper mapper, RpcContext rpcContext, ILogger<GameService> logger) : base(db, rpcContext, logger)
         {
-            _dbRepo = dbRepo;
             _mapper = mapper;
         }
 
@@ -72,7 +69,7 @@ namespace Server.Service
             mdlPlayer.ValidState(EPlayerState.CHANGED_NAME_FIRST);
 
             // 중복 체크 (클라에 팝업)
-            var (found, _) = await _dbRepo.AllUser.TryGetPlayerByNameAsync(reqName);
+            var (found, _) = await Db.AllShards.TryGetPlayerByNameAsync(reqName);
             ReqHelper.Valid(!found, EErrorCode.GAME_CHANGE_NAME_EXIST_NAME);
 
             // 변경
@@ -197,7 +194,6 @@ namespace Server.Service
             return pakPlayer;
         }
 
-        private readonly GlobalDbRepo _dbRepo;
         private readonly IMapper _mapper;
     }
 }
