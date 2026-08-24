@@ -40,5 +40,13 @@ namespace WebStudyServer
             [typeof(WorldStageModel)] = WorldStageModel,
             [typeof(SessionModel)] = SessionModel,
         };
+
+        // 소유자 축은 있지만 캐시를 쓰지 않는 엔티티. append-only 원장이라 리스트를 읽지 않는다.
+        // 위 맵과 이 집합 중 정확히 한 곳에 있어야 한다 — EntityMeta.VerifyCacheTags 가 검사.
+        public static readonly IReadOnlySet<Type> NoCacheByDesign = new HashSet<Type>
+        {
+            typeof(CashChangeLogModel),
+            typeof(GachaLogModel),
+        };
     }
 }

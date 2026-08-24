@@ -1,6 +1,7 @@
 using Proto;
 using Protocol;
 using ServerCore;
+using ServerCore.Extension;
 using WebStudyServer.Data.Queries;
 using WebStudyServer.Helper;
 using WebStudyServer.Model;
@@ -19,6 +20,13 @@ namespace WebStudyServer.Data
         // ── 라우팅 ────────────────────────────────────────────────────────
         // 리스트를 반환하는 이유는 TOTAL_CASH 뿐이다. 나머지는 항상 1개다.
         public static async Task<List<ChangeSet>> PayAsync(UserScope userScope, ObjValue cost, string reason)
+        {
+            var changeList = await PayInternalAsync(userScope, cost, reason);
+            LogChanges(userScope, "PAY", reason, changeList);
+            return changeList;
+        }
+
+        private static async Task<List<ChangeSet>> PayInternalAsync(UserScope userScope, ObjValue cost, string reason)
         {
             ReqHelper.ValidUnderFlowParam(cost.Value, reason);
             var amount = ReqHelper.ValidWithoutDecimal(cost.Value, reason);
@@ -57,6 +65,23 @@ namespace WebStudyServer.Data
         // PayAsync 가 TOTAL_CASH 때문에 리스트인 것과 같은 이유다.
         public static async Task<List<ChangeSet>> GrantAsync(UserScope userScope, ObjValue reward, string reason)
         {
+            var changeList = await GrantInternalAsync(userScope, reward, reason);
+            LogChanges(userScope, "GRANT", reason, changeList);
+            return changeList;
+        }
+
+        // 유료 재화 원장은 캐시를 바꾸는 메서드가 직접 쓴다. 여기는 전 축을 로그로만 남긴다.
+        private static void LogChanges(UserScope userScope, string action, string reason, List<ChangeSet> changeList)
+        {
+            foreach (var change in changeList)
+            {
+                Logger.Get().Info("ObjChange Action({Action}) PlayerId({PlayerId}) Reason({Reason}) Type({Type}) Num({Num}) Bef({Bef}) Aft({Aft})",
+                    action, userScope.PlayerId, reason, change.Type, change.Num, change.Before, change.After);
+            }
+        }
+
+        private static async Task<List<ChangeSet>> GrantInternalAsync(UserScope userScope, ObjValue reward, string reason)
+        {
             ReqHelper.ValidUnderFlowParam(reward.Value, reason);
             var amount = ReqHelper.ValidWithoutDecimal(reward.Value, reason);
 
@@ -67,9 +92,9 @@ namespace WebStudyServer.Data
                 case EObjType.EXP:
                     return [await IncExpAsync(userScope, amount)];
                 case EObjType.REAL_CASH:
-                    return [await IncRealCashAsync(userScope, amount)];
+                    return [await IncRealCashAsync(userScope, amount, reason)];
                 case EObjType.FREE_CASH:
-                    return [await IncFreeCashAsync(userScope, amount)];
+                    return [await IncFreeCashAsync(userScope, amount, reason)];
                 case EObjType.POINT_START:
                     return [await IncPointAsync(userScope, reward.Key, amount)];
                 case EObjType.TICKET_START:
@@ -137,6 +162,7 @@ namespace WebStudyServer.Data
             var befFree = detail.FreeCash;
             detail.DecCash(amount, reason);
             await detailSet.UpdateAsync(detail);
+            await AuditService.WriteCashChangeAsync(userScope, reason, detail, befReal, befFree);
 
             var changeList = new List<ChangeSet>(2);
             if (detail.RealCash != befReal)
@@ -152,23 +178,27 @@ namespace WebStudyServer.Data
             return changeList;
         }
 
-        public static async Task<ChangeSet> IncFreeCashAsync(UserScope userScope, double amount)
+        public static async Task<ChangeSet> IncFreeCashAsync(UserScope userScope, double amount, string reason)
         {
             var detailSet = userScope.Owned<PlayerDetailModel>();
             var detail = await detailSet.GetOrCreateAsync();
+            var befReal = detail.RealCash;
             var before = detail.FreeCash;
             var after = detail.IncFreeCash(amount);
             await detailSet.UpdateAsync(detail);
+            await AuditService.WriteCashChangeAsync(userScope, reason, detail, befReal, before);
             return ChangeSet.Of(EObjType.FREE_CASH, 0, before, after);
         }
 
-        public static async Task<ChangeSet> IncRealCashAsync(UserScope userScope, double amount)
+        public static async Task<ChangeSet> IncRealCashAsync(UserScope userScope, double amount, string reason)
         {
             var detailSet = userScope.Owned<PlayerDetailModel>();
             var detail = await detailSet.GetOrCreateAsync();
+            var befFree = detail.FreeCash;
             var before = detail.RealCash;
             var after = detail.IncRealCash(amount);
             await detailSet.UpdateAsync(detail);
+            await AuditService.WriteCashChangeAsync(userScope, reason, detail, before, befFree);
             return ChangeSet.Of(EObjType.REAL_CASH, 0, before, after);
         }
 

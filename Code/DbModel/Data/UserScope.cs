@@ -23,6 +23,20 @@ namespace WebStudyServer.Data
             return new OwnedSet<T>(() => _db.UserRepository(ShardId), PlayerId);
         }
 
+        // 리스트 캐시가 없는 엔티티에 한 행을 넣는다. 읽기 경로가 없으므로 캐시도 안 지난다.
+        // 캐시되는 엔티티를 이 경로로 넣으면 캐시가 조용히 낡으므로 막는다.
+        public Task InsertAsync<T>(T entity) where T : ModelBase, IScopedModel
+        {
+            if (EntityMeta<T>.HasCacheTag)
+            {
+                throw new InvalidOperationException($"CACHED_ENTITY_CANNOT_INSERT:{typeof(T).Name}");
+            }
+
+            entity.SetScopeKey(PlayerId);
+            entity.CreateTime = entity.UpdateTime = DateTime.UtcNow;
+            return _db.UserRepository(ShardId).InsertAsync(entity);
+        }
+
         private readonly GameDb _db;
     }
 }

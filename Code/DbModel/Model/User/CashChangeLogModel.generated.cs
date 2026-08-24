@@ -48,18 +48,6 @@ namespace WebStudyServer.Model
     		public long AccFreeCash { get; set; } = default; //
         
     		
-    		public long ChgTotalCash { get; set; } = default; //
-        
-    		
-    		public long BefTotalCash { get; set; } = default; //
-        
-    		
-    		public long AftTotalCash { get; set; } = default; //
-        
-    		
-    		public long AccTotalCash { get; set; } = default; //
-        
-    		
     		public ulong IapActionId { get; set; } = default; //
         
 		public override bool PkEquals(ModelBase other)

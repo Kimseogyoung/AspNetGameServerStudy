@@ -26,6 +26,11 @@ namespace ServerCore.Repo.Database
             return Db.ExecuteAsync(db => db.InsertAsync<T>(entity));
         }
 
+        public Task<T> InsertAsync<T>(T entity) where T : ModelBase
+        {
+            return Db.ExecuteAsync(db => db.InsertAsync<T>(entity));
+        }
+
         public async Task UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
         {
             await Db.ExecuteAsync(db => db.UpdateAsync<T>(entity));

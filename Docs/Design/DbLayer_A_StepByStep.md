@@ -2257,6 +2257,123 @@ RaidServer 의 등록 표면이 2 → 19 로 넓어진 것을 되돌릴지가 §
 
 ---
 
+### S13 — 감사 로그 · 착수 전 census (2026-08-25)
+
+#### S13-계획-A census 가 정정한 것
+
+**① 이 스텝은 이관이 아니라 신규 구축이다.** `audit` / `LogChanges` 전수 검색 **0건**. 위 S13 코드 3줄은 전부 가설이고, 두 모델은 S1 부터 지금까지 **등록만 되어 있고 소비자가 0**이다. S1~S12 가 "옮기고 지우는" 스텝이었던 것과 성격이 다르다 — **삭제가 없고 순증이다.**
+
+**② `CashChangeLogModel` 의 TotalCash 4컬럼은 채울 원본이 없다.** `PlayerDetailModel` 에는 `RealCash`/`FreeCash`/`AccRealCash`/`AccFreeCash` 뿐이고 `AccTotalCash` 가 없다. `TotalCash()` 는 계산 메서드다. 게다가 커밋 `8bca4b3` 이 TOTAL_CASH 를 와이어에서 없앴다. **테이블이 A안 이전 것이라 §S6 의 `Acc*` 의미 변경을 안 따라왔다.** `IapActionId` 도 IAP 경로가 코드에 없어 채울 원본이 없다.
+
+**③ 두 모델은 `OwnedSet<T>` 로 못 쓴다 — 그리고 그게 맞다.** `ScopeKey` 가 있어 `IScopedModel` 이고 컴파일은 되지만, `CacheKeyTags.ByModelType` 에 없어 생성자가 `NOT_FOUND_CACHE_TAG` 로 던진다. **§S2-J 가 남긴 두 구멍 중 하나가 정확히 이것**인데, 감사 로그는 append-only 라 소유자 리스트를 읽을 일이 없으므로 `OwnedSet` 에 들어가면 안 된다. **`OwnedSet` 아닌 쓰기 경로를 만드는 것이 S13 의 실제 설계 과제다.**
+
+**④ 배선은 이미 되어 있다.** `RewardService.PayAsync`/`GrantAsync` 가 `reason` 을 전 경로로 흘린다 — §S5-I 가 "Inc 계열 5곳에서 미사용이지만 S13 이 쓸 자리라 남겼다"고 적은 그대로다.
+
+**⑤ `GachaLogModel` 의 `ChgObjType`/`ChgObjAmount` 는 결과가 아니라 비용이다.** 계획 단계에서 결과로 잘못 읽고 "1행에 N연차 결과를 못 담는다"고 판단했으나 **틀렸다**(사용자 정정). `ValidGachaCost` 가 `ObjValue` 하나를 돌려주고 그것이 그대로 들어간다. `Num` 컬럼이 없는 것도 맞다 — 가챠 비용은 캐시 아니면 POINT/TICKET 이고 **그 둘은 `(int)ObjKey.Type` 자체가 번호다**(§S6). 따라서 **스키마 변경은 `CashChangeLog` 하나뿐이다.**
+
+**⑥ Cash 를 건드리는 서비스 경로는 4개다.**
+
+```
+GachaService     PayAsync(TOTAL_CASH)      가챠 비용
+KingdomService   DecCashAsync              시간 단축 (RPC 미등록 — §S10-A)
+WorldService     GrantAsync(FREE_CASH)     별 보상
+CheatService     GrantListAsync            치트 지급
+```
+
+`PayAsync` 는 **TOTAL_CASH 만** 캐시로 라우팅하고, `GrantAsync` 는 REAL_CASH/FREE_CASH 를 받는다. 즉 지불 축과 지급 축의 타입이 다르다.
+
+**⑦ `DecCashAsync` 는 `List<ChangeSet>` 을 돌려준다**(Real + Free). 액션당 1행이므로 접어야 한다 — 계획 문구의 fold 가 맞다.
+
+#### S13-계획-B 확정된 결정
+
+| | 결정 | 근거 |
+|---|---|---|
+| 비-Cash 재화 | DB 원장 ✗, 구조화 로그 ✗ — **`Info` 로깅만** | 환불·분쟁이 걸리는 축이 아니다(`NewStructure §6`) |
+| TotalCash 4컬럼 | **삭제** | ② — 채울 원본이 없다. 두 테이블 모두 0행이라 드롭이 안전하다 |
+| `IapActionId` | **남긴다** | 컬럼 유지 비용이 없고 IAP 가 붙으면 쓸 자리다 |
+| `GachaLog` 행 단위 | **가챠 API 호출 1회 = 1행**, `Cnt` 유지 | ⑤ |
+| 감사 쓰기 실패 | **요청을 실패시키지 않는다** | 아래 C-④ |
+| 감사 호출 위치 | **서비스 레벨 명시 호출** | ⑥ — 경로가 4개라 통제 가능하다 |
+| 캐시 미사용 선언 | **`CacheKeyTags` 옆 화이트리스트** | `[Entity]` 는 생성기가 CSV 에서 찍는데 CSV 가 전부 **필드 단위**라 테이블 단위 플래그를 넣을 칸이 없다. attribute 안은 CSV 규약·생성기·attribute 3곳을 건드린다 |
+
+#### S13-계획-C 형태
+
+**① 스키마부터** — 모델 모양이 확정돼야 조립 코드를 쓸 수 있다. `Data/Csv/Model/User/CashChangeLog.csv` 에서 4행 삭제 → 생성기 재실행 → Liquibase changeset.
+
+**② append 쓰기 경로**
+
+```csharp
+// IRepository — 캐시를 안 지나는 삽입
+Task<T> InsertAsync<T>(T entity) where T : ModelBase;
+
+// UserScope — 소유자만 채우고 바로 넣는다. 리스트 캐시가 없으므로 읽기 경로도 없다.
+public Task AppendAsync<T>(T entity) where T : ModelBase, IScopedModel
+```
+
+**가드**: `EntityMeta<T>.HasCacheTag` 이면 던진다. 캐시되는 엔티티를 이 경로로 넣으면 **캐시가 조용히 낡는다**. `OwnedSet` 의 `NOT_FOUND_CACHE_TAG` 와 대칭이다.
+
+**③ 역방향 검사** (§S2-J → S5 → 여기, 두 번 이월)
+
+지금 `VerifyCacheTags` 는 **맵을 기준으로 모델을 본다** — 맵의 각 엔트리가 `[Entity]` 인가/태그가 비었나/중복인가. 역방향은 **모델을 기준으로 맵을 본다**: `ScopeKey` 가 있는 엔티티가 맵에 없으면 컴파일도 부팅도 되고 **첫 `Owned<T>()` 에서야 터진다.** 새 User 모델을 만들고 태그를 잊으면 그 엔티티를 건드리는 첫 요청까지 아무도 모른다.
+
+```csharp
+// CacheKeyTags 옆. 태그 맵과 같이 읽히는 자리다.
+public static readonly IReadOnlySet<Type> NoCacheByDesign = [typeof(CashChangeLogModel), typeof(GachaLogModel)];
+```
+
+`VerifyCacheTags` 가 어셈블리를 받아 `ScopeKey` 있는 엔티티 전부에 대해 (맵에 있음) XOR (여기 있음) 을 강제한다. **선언할 자리가 없어서 못 켜던 검사**이고, S13 이 두 모델에 실제 쓰기 경로를 주면서 "의도적으로 캐시 안 씀"이 확정되므로 이제 켤 수 있다.
+
+**④ 조립** — `AuditService`(정적, 스코프를 인자로. `RewardService`·`KingdomMapService` 와 같은 모양).
+
+쓰기 실패는 **같은 트랜잭션 안에서 try/catch + LogError** 로 삼킨다. 커밋 뒤 별도 쓰기로 빼면 **원자성도 잃고 유실도 그대로**라 둘 다 잃는다. 이쪽은 될 때 재화 변동과 원장이 한 덩어리이고, 안 될 때 요청이 성공한다.
+
+비-Cash 는 `_logger.Info` 한 줄.
+
+#### S13-계획-D 안 하는 것
+
+- **비-Cash 재화의 DB 원장** — `NewStructure §6` 의 의도된 비목표. 재검토 조건은 S0-3.
+- **IAP 결제 경로** — 코드에 없다. `IapActionId` 컬럼만 남겨둔다.
+- **`KingdomStructureDecTime` 등록** — 감사와 무관하고 검증 TODO 가 남아 있다(§S10-A).
+
+---
+
+#### S13-A 실행 결과 (2026-08-25)
+
+계획 5건을 그대로 실행했다. 스키마 정리(①)는 사용자가 먼저 해두었다 — CSV·Excel·생성 모델·`CreateLog_User.json`·로컬 DB 까지 반영돼 있었다.
+
+**검증 방식이 이 스텝의 핵심이다.** 감사 쓰기 실패를 **삼키도록 설계했으므로 테스트가 통과해도 원장이 비어 있을 수 있다.** 초록불이 쓰기 성공을 뜻하지 않는다. 그래서 MySQL 에서 행을 직접 조회해 확인했다.
+
+```
+cashchangelog
+  GACHA             1001001:COOKIE_NORMAL:10   ChgFree -1000  Bef 100000  Aft 99000  Acc 100000
+  WORLD_REWARD_STAR 110100:0~1                 ChgFree   300  Bef    680  Aft   980  Acc   980
+  CHEAT             (빈 detail)                ChgFree 100000 Bef      0  Aft 100000 Acc 100000
+
+gachalog
+  ScheduleNum 1001001  Cnt 10  ChgObjType 5(TOTAL_CASH)  ChgObjAmount 1000  ChgFreeCash -1000
+```
+
+`Acc*` 가 지불에서 안 변하고 지급에서만 오르는 것, `ActionNameHash` 가 같은 이름에 같은 값인 것까지 실측으로 확인했다.
+
+**`GachaLog` 는 테스트로 도달할 수 없었다.** `GachaTest` 가 *"가챠 성공 케이스는 활성화된 스케줄이 필요합니다"* 라고 적어두고 성공 경로를 **주석 처리해 둔 상태**다 — Proto 의 스케줄 `1001001` 이 만료됐기 때문이다. `centerdb.schedule` 에 **임시 행 하나를 넣어 활성화**하고 임시 테스트로 확인한 뒤 되돌렸다. Proto CSV 를 안 건드린 이유는 `ScheduleView` 가 운영 변경(Model)을 기획 데이터(Proto) 위에 덮는 구조라 **DB 행 하나면 충분**해서다 — §S8-A 가 만든 구조가 여기서 값을 냈다.
+
+**역방향 검사도 되돌려 확인했다.** `NoCacheByDesign` 에서 `CashChangeLogModel` 을 빼자 부팅이 `NOT_DECLARED_CACHE_POLICY:CashChangeLogModel` 로 실패했다. §S10-A 이래의 절차다.
+
+**로그 자리는 라우터다.** `RewardService.PayAsync`/`GrantAsync` 두 곳이 모든 재화 변동을 지나므로 여기서 `Info` 를 남긴다 — 호출부에 흩으면 빠뜨린다. **`KingdomService` 의 시간 단축이 라우터를 우회해 `DecCashAsync` 를 직접 부르던 유일한 자리**라 `PayAsync` 로 맞췄다. 우회가 남아 있으면 그 경로만 로그가 빠진다.
+
+**`AppendAsync` 의 가드가 대칭을 이룬다.** `OwnedSet` 은 캐시 태그가 **없으면** 던지고, `AppendAsync` 는 **있으면** 던진다. 캐시되는 엔티티를 append 경로로 넣으면 캐시가 조용히 낡기 때문이다.
+
+**검증**: 리빌드 0에러 · `ServerTest` InMemory **32/32** · **MySQL+Redis+유저락 32/32** · 원장 행 직접 확인 · 되돌리기 확인 2건(역방향 검사, 가챠 원장).
+
+#### S13-B 안 한 것 / 남은 것
+
+- **`GachaTest` 의 성공 경로는 여전히 주석이다.** 활성화하려면 Proto `Schedule.csv` 의 기간을 미래로 옮겨야 하는데 그것은 게임 데이터 변경이라 손대지 않았다. **가챠 성공 경로가 회귀 안전망 밖에 있다**는 사실은 그대로 남는다.
+- **`ExtraData` 는 빈 문자열이다.** 담을 것이 정해지지 않았다. 가챠 결과 목록을 넣을 자리로 보이나 요구가 없다.
+- **`IapActionId` 는 0이다.** IAP 경로가 생기면 채운다.
+- **감사 쓰기 실패는 조용하다.** 로그에만 남고 요청은 성공한다 — 의도한 설계다(§S13-계획-B). 원장 유실을 알아채려면 `AUDIT_WRITE_FAILED` 를 모니터링해야 한다.
+
+---
+
 ## 3. 이관 기간 중 코드는 어떻게 보이는가
 
 S4~S10 사이에는 **구 경로와 신 경로가 한 파일 안에 공존**한다. 이것이 정상 상태다.
@@ -2592,6 +2709,7 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 |---|---|
 | **S0-4** (완료) | **커밋 경계를 유저 락 안으로 이동 (5.1)** · **락 커넥션 분리 (5.2 선결)** — §4.2 |
 | **S1** (완료) | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · **ScopeKey는 User 폴더 한정, `fk` 토큰에서 생성** · 가드 4종 · `AssertMatches` 철회, 검사를 `Init` 안으로 (§S1-D) · 5.8은 해소 |
+| **S13** (완료) | 감사 원장 2종 쓰기 · `UserScope.AppendAsync`(캐시 안 지남) · **`VerifyCacheTags` 역방향 검사** — §S2-J 에서 두 번 이월된 것이 앵커가 생겨 켜졌다 · 비-Cash 는 라우터에서 `Info` 로그만 · **쓰기 실패를 삼키므로 초록불이 아니라 MySQL 행으로 검증했다**(§S13-A) |
 | **S12** (완료) | 손 등록 21줄 제거 · **`IGameContext` 는 축소가 아니라 폐지**(소비자 0, §S12-C) · §S1-F 는 되돌리지 않기로 확정(§S12-B) · **부팅 검사가 이 게이트를 통과시키지 못해 두 목록을 직접 대조했다**(§S12-A) · **`RaidGameContext` 철거** — 채우기만 하고 읽는 곳이 없었다(§S12-D) · 리뷰가 인터페이스에 묶여 public 이던 세터 2개를 private 으로 내렸다(§S12-E) |
 | **S2** (완료) | `OwnedSet<T>`는 캐시되는 소유자 리스트 전용 (5.4.1 → §S2-J) · 스코프 3종은 독립 클래스 (§S1-G) · 커넥션 지연 오픈 (5.11) · **dirty 철회 (§S2-H)** · `GameDb.Utility` 는 S10.5 로, lazy BEGIN 은 S11 로 이월 · 네이밍 규칙 확정 (§S2-F) · Auth 형태 확정 (§S2-E) |
 | **S4** (완료) | Auth 형태 확정 · `Identity`/`AuthScope` 2클래스 · Component/Manager 6개 삭제 · **게이트는 S5 로 옮겨간다** (§S4-B) · `SetShardId` 다리 (§S4-D) |

@@ -212,7 +212,9 @@ namespace Server.Service
             // TODO: 남은 시간, 캐시 보유량 일치하는지 검증
             //
 
-            _ = await RewardService.DecCashAsync(userScope, req.CashCost.Amount, $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}");
+            var reason = $"DEC_TIME_KINGDOM_ITEM:{req.KingdomStructureId}";
+            var costChangeList = await RewardService.PayAsync(
+                userScope, new ObjValue(EObjType.TOTAL_CASH, 0, req.CashCost.Amount), reason);
 
             mdlStructure.DecTime();
             await structureSet.UpdateAsync(mdlStructure);

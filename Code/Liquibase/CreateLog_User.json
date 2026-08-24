@@ -331,46 +331,6 @@
                 },
                 {
                   "column": {
-                    "name": "ChgTotalCash",
-                    "type": "BIGINT",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "BefTotalCash",
-                    "type": "BIGINT",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "AftTotalCash",
-                    "type": "BIGINT",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
-                    "name": "AccTotalCash",
-                    "type": "BIGINT",
-                    "constraints": {
-                      "primaryKey": false,
-                      "nullable": false
-                    }
-                  }
-                },
-                {
-                  "column": {
                     "name": "IapActionId",
                     "type": "BIGINT UNSIGNED",
                     "constraints": {

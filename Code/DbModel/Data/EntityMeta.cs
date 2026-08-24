@@ -42,7 +42,7 @@ namespace WebStudyServer.Data
     public static class EntityMeta
     {
         // 손으로 유지하는 태그 맵의 드리프트를 부팅 시 검사.
-        // 모델 리네임/삭제(엔트리가 [Entity] 없는 타입을 가리킴), 태그 값 중복
+        // 정방향은 맵에서 모델을, 역방향은 모델에서 맵을 본다.
         public static void VerifyCacheTags()
         {
             var seen = new Dictionary<string, Type>();
@@ -68,6 +68,28 @@ namespace WebStudyServer.Data
                 }
 
                 seen[tag] = type;
+            }
+
+            // 역방향 — 소유자 축이 있는 엔티티는 캐시 정책을 선언해야 한다.
+            // 선언이 없으면 컴파일도 부팅도 되고 첫 Owned<T>() 에서야 터진다.
+            // 태그 맵과 모델은 같은 어셈블리에 있다. 인자로 받으면 엉뚱한 어셈블리가
+            // 들어와도 조용히 0건으로 통과한다.
+            foreach (var type in typeof(CacheKeyTags).Assembly.GetTypes())
+            {
+                var entity = type.GetCustomAttribute<EntityAttribute>();
+                if (entity?.ScopeKey == null)
+                {
+                    continue;
+                }
+
+                var hasTag = CacheKeyTags.ByModelType.ContainsKey(type);
+                var noCache = CacheKeyTags.NoCacheByDesign.Contains(type);
+                if (hasTag == noCache)
+                {
+                    throw new InvalidOperationException(hasTag
+                        ? $"CACHE_POLICY_CONFLICT:{type.Name}"
+                        : $"NOT_DECLARED_CACHE_POLICY:{type.Name}");
+                }
             }
         }
     }

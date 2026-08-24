@@ -51,7 +51,8 @@ namespace Server.Service
             var valCost = scheduleView.ValidGachaCost(req.CostObj, valCnt);
 
             // 재화 소모
-            var costChangeList = await RewardService.PayAsync(OwnScope, valCost, scheduleView.MakeGachaReason(valCnt));
+            var gachaReason = scheduleView.MakeGachaReason(valCnt);
+            var costChangeList = await RewardService.PayAsync(OwnScope, valCost, gachaReason);
 
             // 가챠 보상은 COOKIE / SOUL_STONE 뿐이고 둘 다 CookieModel 로 간다. 뽑을 때마다 이 리스트에
             // 바로 적용하고 저장은 마지막에 업서트 한 번만 한다.
@@ -78,6 +79,9 @@ namespace Server.Service
             }
 
             await cookieSet.UpsertListAsync(touchedCookieList);
+
+            // 뽑은 결과를 실어야 하므로 뽑기가 끝난 뒤에 쓴다. 같은 트랜잭션이라 원자성은 그대로다.
+            await AuditService.WriteGachaAsync(OwnScope, req.ScheduleNum, valCnt, valCost, costChangeList, gachaResultList);
 
             return new GachaNormalResponsePacket
             {

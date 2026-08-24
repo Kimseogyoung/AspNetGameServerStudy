@@ -17,6 +17,10 @@ namespace ServerCore.Repo.Database
         // listKey: 컬렉션 키. DB Insert 후 auto PK 포함 entity 반환.
         Task<T> InsertAsync<T>(T entity, CacheKey listKey) where T : ModelBase;
 
+        // ── Insert(캐시 없음): DB Insert 만. 캐시를 지나지 않는다 ────────
+        // 리스트 캐시가 없는 엔티티(감사 원장 등)용. 읽기 경로도 없다.
+        Task<T> InsertAsync<T>(T entity) where T : ModelBase;
+
         // ── Update: DB Update → Cache.Set(listKey, entity, match) ─────────
         Task UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase;
 

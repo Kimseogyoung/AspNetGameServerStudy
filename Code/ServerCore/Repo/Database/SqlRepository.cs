@@ -43,6 +43,12 @@ namespace ServerCore.Repo.Database
             return entity;
         }
 
+        // ── Insert(캐시 없음): 캐시를 안 지난다 ──────────────────────────
+        public Task<T> InsertAsync<T>(T entity) where T : ModelBase
+        {
+            return Db.ExecuteAsync(db => db.InsertAsync<T>(entity));
+        }
+
         // ── Update: DB → 캐시 로드 중이면 match 항목 교체 ────────────────
         public async Task UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
         {
