@@ -2147,6 +2147,64 @@ finally { _openSession.Clear(); }   // 차례가 오지 않은 세션까지 잊�
 
 ---
 
+### S11.5 — lazy BEGIN (2026-08-24, 실행 완료)
+
+#### S11.5-A census 가 §S11-계획-A ⑧ 을 정정했다
+
+⑧ 은 "캐시 히트만으로 끝나는 요청도 MySQL 트랜잭션을 연다"고 뭉뚱그렸는데, **경로마다 다르다.**
+
+| 경로 | 캐시 히트일 때 커넥션을 여나 |
+|---|---|
+| `OwnedSet` | **연다.** `return _repository().GetListAsync(...)` — `_repository()` 가 캐시 조회보다 먼저 평가된다 |
+| `SessionStore` · `Identity` · `AuthScope` · `CenterScope` | **안 연다.** `Db` 가 계산 프로퍼티(`=> _db.AuthRepository().Db`)라 쓰이는 자리에서만 평가된다 |
+
+**그래서 §S11 이 "세션 로드 때문에 매 요청 Auth 커넥션이 열린다"고 본 것은 틀렸다.** 세션이 캐시에 맞으면 그 전에도 Auth 는 안 열렸다. 실제로 남아 있던 자리는 `OwnedSet` 하나다.
+
+#### S11.5-B 형태 — 세션 생성 지점이 하나라서 한 곳만 고쳤다
+
+`IDbSessionFactory.Create` 를 부르는 곳이 저장소에 **`DbSessionManager.Open` 하나뿐**이라, 거기서 `LazyDbSession` 을 돌려주면 모든 경로가 덮인다.
+
+```csharp
+// DbSessionManager.Open
+session = new LazyDbSession(() => _sessionFactory.Create(connectionString));
+
+// LazyDbSession — 만들어진 적이 없으면 정리할 것도 없다
+public void Commit() => _session?.Commit();
+```
+
+**`DBSqlExecutor` 를 lazy 로 만들지 않은 이유**: `StartUp.ConnectionTest` 가 그것을 직접 써서 **부팅 시 접속 확인**을 한다. 거기를 lazy 로 만들면 접속 확인이 아무것도 확인하지 않게 된다.
+
+**동시성**: 요청 스코프 안에서 순차로만 쓰인다. `Task.WhenAll`/`Parallel` 로 DB 를 동시에 치는 곳이 없음을 확인하고 생성에 락을 두지 않았다.
+
+#### S11.5-C 실측 — BEGIN 249 → 141
+
+같은 테스트 묶음을 MySQL+Redis 로 돌리고 `SHOW GLOBAL STATUS` 델타를 비교했다.
+
+| | 전 | 후 |
+|---|---|---|
+| `Com_begin` | 249 | **141** (−43%) |
+| `Com_commit` | 187 | 131 |
+| `Com_rollback` | 62 | **10** |
+
+**롤백이 62 → 10 으로 준 것이 이 변경의 성격을 가장 잘 보여준다.** DB 를 건드리기 전에 검증에서 걸리는 요청이 **빈 트랜잭션을 열었다가 롤백하고 있었다.** 지금은 열지 않으므로 되돌릴 것도 없다.
+
+쓰는 요청은 여전히 BEGIN 을 열지만 **여는 시점이 첫 리포지토리 접근에서 첫 실제 쿼리로 늦춰진다** — 트랜잭션이 열려 있는 구간이 그만큼 짧아진다.
+
+누수 확인: 실행 뒤 `Threads_connected` 1 · 열린 InnoDB 트랜잭션 0.
+
+#### S11.5-D 테스트가 깨진 것이 맞다
+
+`DbSessionManagerTest` 3개가 깨졌다 — **실체화된 적 없는 세션은 닫을 것이 없다**는 새 동작이 옳으므로, 테스트에 실체화 단계를 넣어 고쳤다. 그리고 lazy 자체를 보는 둘을 새로 넣었다.
+
+- `Open_WithoutQuery_CreatesNothing` — 열기만 하고 커밋해도 팩토리가 한 번도 안 불린다
+- `Query_CreatesSessionOnce` — 두 번 조회해도 한 번만 만든다
+
+#### S11.5-E 안 한 것
+
+**`DbSessionManager.Open` 개명.** lazy 가 된 뒤로 이 이름은 **실제로 열지 않으므로** 더 어긋난다. §S2-F 의 동사표에 이미 `GetOrCreate` 가 있고 호출부는 둘뿐이다. 사용자 확인 대기 중.
+
+---
+
 ## 3. 이관 기간 중 코드는 어떻게 보이는가
 
 S4~S10 사이에는 **구 경로와 신 경로가 한 파일 안에 공존**한다. 이것이 정상 상태다.
@@ -2494,4 +2552,4 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 | **S10** (완료) | 계획의 `KingdomBuilder` 하나가 `KingdomTileMap`(순수 계산) / `KingdomMapService`(로드·저장) 둘로 갈림 (§S10-A) · 기존 결함 6건 수정 · `kingdom/change-item` 등록, `KingdomStructureDecTime` 은 검증 TODO 라 보류 · Component/Manager 전부 철거 |
 | **S10.5** (축소) | `MySqlLockService`가 쓰는 `DbUtilityConnection`을 `GameDb.Utility`로 감싸기 — 커넥션 분리 자체는 S0-4에서 완료 (5.2) |
 | **S11** (완료) | **커밋 전 리뷰 3회에서 커밋 실패 시 커넥션 누수를 잡아 원천(`DBSqlExecutor`)에서 고쳤다(§S11-C)** · `AllUserRepo` → `GameDb.AllShards.TryGetPlayerByNameAsync` (§5.5 의 `Find*` 는 §S2-F 규칙과 충돌해 기각) · 순회 중 지연 오픈 · **커밋은 `GameDb`, 세션 닫기는 `DbSessionManager(IDisposable)` 로 책임이 갈렸다** (§S11-A) · census 가 죽은 `using` 을 못 봐 빌드가 한 번 막혔다 · InMemory 에서 이름 중복 가드가 처음 검증 가능해져 `ChangeNameTest` 를 남겼다 |
-| **S11.5** | lazy BEGIN — 캐시 히트만으로 끝나는 요청도 BEGIN 을 연다(§S11-계획-A ⑧). 실측 끝, 형태 확정. 철거 스텝과 섞지 않으려고 뗐다 |
+| **S11.5** (완료) | lazy BEGIN — `DbSessionManager.Open` 이 `LazyDbSession` 을 돌려준다. **MySQL 실측 `Com_begin` 249 → 141**(§S11.5-C) · ⑧ 이 뭉뚱그린 것을 census 가 정정했다 — 늦게 열리던 자리는 `OwnedSet` 하나였다 |

@@ -1,6 +1,6 @@
 namespace ServerCore.Repo.Database
 {
-    // Scoped — 요청 단위로 열린 IDbSession을 커넥션 문자열로 캐시한다.
+    // Scoped — 요청 단위 IDbSession을 커넥션 문자열로 캐시한다. 실제 커넥션은 첫 쿼리에서 열린다.
     // 커밋/롤백 순서는 GameDb가 정하고, 세션을 닫는 것은 여기가 맡는다.
     // 커밋도 롤백도 안 탄 세션은 스코프 종료의 Dispose가 닫는다.
     public class DbSessionManager : IDisposable
@@ -17,7 +17,7 @@ namespace ServerCore.Repo.Database
         {
             if (!_openSession.TryGetValue(connectionString, out var session))
             {
-                session = _sessionFactory.Create(connectionString);
+                session = new LazyDbSession(() => _sessionFactory.Create(connectionString));
                 _openSession[connectionString] = session;
             }
 

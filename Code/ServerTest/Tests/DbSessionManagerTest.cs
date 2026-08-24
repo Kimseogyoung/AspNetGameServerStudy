@@ -5,20 +5,45 @@ namespace ServerTest.Tests
 {
     /// <summary>
     /// DbSessionManager 세션 수명 테스트 (DB 없이 돈다)
-    /// - 커밋/롤백이 도중에 실패해도 열린 세션이 전부 닫혀야 한다.
+    /// - 세션은 첫 쿼리에서 만들어진다. 쿼리가 없으면 아무것도 안 만든다.
+    /// - 커밋/롤백이 도중에 실패해도 만들어진 세션은 전부 닫혀야 한다.
     /// </summary>
     public class DbSessionManagerTest
     {
         [Fact]
-        public void Commit_PartialFailure_ClosesEverySession()
+        public void Open_WithoutQuery_CreatesNothing()
+        {
+            var factory = new FakeDbSessionFactory();
+            var manager = new DbSessionManager(factory);
+
+            manager.Open("a");
+            manager.Open("b");
+            manager.Commit();
+
+            Assert.Equal(0, factory.CreatedCount);
+        }
+
+        [Fact]
+        public async Task Query_CreatesSessionOnce()
+        {
+            var factory = new FakeDbSessionFactory();
+            var manager = new DbSessionManager(factory);
+
+            var session = manager.Open("a");
+            await session.ExecuteAsync(_ => Task.CompletedTask);
+            await session.ExecuteAsync(_ => Task.CompletedTask);
+
+            Assert.Equal(1, factory.CreatedCount);
+        }
+
+        [Fact]
+        public async Task Commit_PartialFailure_ClosesEverySession()
         {
             var factory = new FakeDbSessionFactory();
             factory.Sessions["b"].ThrowOnCommit = true;
 
             var manager = new DbSessionManager(factory);
-            manager.Open("a");
-            manager.Open("b");
-            manager.Open("c");
+            await MaterializeAsync(manager, "a", "b", "c");
 
             Assert.ThrowsAny<Exception>(() => manager.Commit());
 
@@ -29,14 +54,13 @@ namespace ServerTest.Tests
         }
 
         [Fact]
-        public void Rollback_PartialFailure_ClosesEverySession()
+        public async Task Rollback_PartialFailure_ClosesEverySession()
         {
             var factory = new FakeDbSessionFactory();
             factory.Sessions["a"].ThrowOnRollback = true;
 
             var manager = new DbSessionManager(factory);
-            manager.Open("a");
-            manager.Open("b");
+            await MaterializeAsync(manager, "a", "b");
 
             Assert.ThrowsAny<Exception>(() => manager.Rollback());
 
@@ -45,16 +69,24 @@ namespace ServerTest.Tests
         }
 
         [Fact]
-        public void Dispose_ClosesOpenSessions()
+        public async Task Dispose_ClosesOpenSessions()
         {
             var factory = new FakeDbSessionFactory();
 
             using (var manager = new DbSessionManager(factory))
             {
-                manager.Open("a");
+                await MaterializeAsync(manager, "a");
             }
 
             Assert.True(factory.Sessions["a"].Closed, "커밋도 롤백도 안 탄 세션이 안 닫혔다");
+        }
+
+        private static async Task MaterializeAsync(DbSessionManager manager, params string[] connectionStrList)
+        {
+            foreach (var connectionStr in connectionStrList)
+            {
+                await manager.Open(connectionStr).ExecuteAsync(_ => Task.CompletedTask);
+            }
         }
 
         private class FakeDbSessionFactory : IDbSessionFactory
@@ -66,8 +98,11 @@ namespace ServerTest.Tests
                 ["c"] = new FakeDbSession(),
             };
 
+            public int CreatedCount { get; private set; }
+
             public IDbSession Create(string connectionString)
             {
+                CreatedCount++;
                 return Sessions[connectionString];
             }
         }
