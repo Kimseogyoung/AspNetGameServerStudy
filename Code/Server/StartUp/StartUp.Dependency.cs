@@ -54,7 +54,6 @@ namespace WebStudyServer
             services.AddScoped<CheatService>();
 
             services.AddScoped<RpcContext>();
-            services.AddScoped<IGameContext>(sp => sp.GetRequiredService<RpcContext>());
         }
 
         private void AddController(IServiceCollection services)

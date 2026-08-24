@@ -34,9 +34,6 @@ namespace RaidServer.Services
             }
 
             using var scope = _scopeFactory.CreateScope();
-            var raidContext = scope.ServiceProvider.GetRequiredService<RaidGameContext>();
-            raidContext.Init(req.DeviceKey);
-
             var db = scope.ServiceProvider.GetRequiredService<GameDb>();
             try
             {
@@ -51,10 +48,6 @@ namespace RaidServer.Services
                 {
                     return new AuthResponsePacket { Result = EAuthResult.SessionExpired };
                 }
-
-                raidContext.SetAccountId(mdlSession.AccountId);
-                raidContext.SetPlayerId(mdlSession.PlayerId);
-                raidContext.SetShardId(mdlSession.ShardId);
 
                 // 세션이 ShardId 를 들고 있으므로 대상을 바로 연다. 앰비언트("나")에 묶이지 않는다.
                 var userScope = db.User(mdlSession.ShardId, mdlSession.PlayerId);

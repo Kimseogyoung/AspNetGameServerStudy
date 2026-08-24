@@ -2205,6 +2205,58 @@ lazy 가 된 뒤로 `Open` 은 **실제로 열지 않아** 이름이 거짓이 �
 
 ---
 
+### S12 — 손 등록 목록 제거 · `IGameContext` 폐지 (2026-08-24, 실행 완료)
+
+#### S12-A census — `PK_REGISTRATION_CONFLICT` 는 이 게이트를 통과시키지 못한다
+
+손 목록을 지워도 되는지는 **"손 목록에 있는 모델이 전부 `[Entity]` 로도 잡히는가"** 인데, 부팅 시 검사는 그것을 안 본다. `PK_REGISTRATION_CONFLICT` 는 **같은 타입이 다른 PK 로 두 번 등록될 때만** 터진다. 손 목록에만 있고 `[Entity]` 가 없는 모델은 스캔이 아예 안 잡으므로 충돌도 안 나고, 목록을 지우는 순간 **조용히 미등록**이 된다. 그래서 두 목록을 직접 대조했다.
+
+| | 결과 |
+|---|---|
+| `[Entity]` 모델 | 19 |
+| Server 손 등록 | 19 |
+| 손 목록에만 있음 (지우면 미등록) | **없음** |
+| `[Entity]` 에만 있음 | 없음 |
+| PK 가 다른 것 | **없음** |
+
+#### S12-B §S1-F 판단 — 되돌리지 않는다
+
+RaidServer 의 등록 표면이 2 → 19 로 넓어진 것을 되돌릴지가 §S1-F 가 여기로 미룬 결정이다. **되돌리지 않는다.**
+
+- 되돌리려면 RaidServer 전용 목록을 **손으로** 유지해야 하는데, 그것이 §S1 이 없애려던 문제(두 호스트 목록이 어긋나고 요청이 실패할 때까지 안 드러남)를 그대로 되살린다.
+- "RaidServer 는 Session/Player 만 만진다"를 지키던 런타임 가드(`InMemoryPkRegistry` 미등록 예외)는 **S1 에서 스캔 줄이 들어간 시점에 이미 사라져 있었다.** S12 가 없애는 것이 아니다.
+- 범위를 강제하고 싶다면 등록 목록이 아니라 그 계층에서 막는 것이 맞다.
+
+#### S12-C `IGameContext` 는 축소가 아니라 폐지가 됐다
+
+옛 계획은 "Transport 전용으로 축소"였는데 S11 이 상황을 바꿨다 — 마지막 소비자였던 `GlobalDbRepo` 의 안 쓰이던 `_rpcContext` 필드가 같이 나가면서 **주입받아 쓰는 곳이 0**이 됐다. 남아 있던 것은 구현 2개와 **아무도 resolve 하지 않는 DI 등록 2줄**뿐이다.
+
+인터페이스를 지우자 **`RaidGameContext.SetSessionKey` 의 빈 구현이 죽었다** — 인터페이스를 만족시키려고만 있던 것이라 같이 지웠다. `RpcContext`/`RaidGameContext` 는 둘 다 구체 타입으로 주입되고 있어 클래스로 남는다.
+
+#### S12-D `RaidGameContext` 철거 — 쓰기 전용이었다
+
+`PlayerRaidSessionService` 가 `Init(deviceKey)` 로 만들고 `SetAccountId`/`SetPlayerId`/`SetShardId` 로 채우는데, **RaidServer 에서 그 값을 읽는 코드가 하나도 없었다.** 스코프가 `AuthenticateAsync` 끝에서 정리되므로 채운 값은 그대로 사라졌다.
+
+원인은 이 클래스가 죽은 게 아니라 **읽던 쪽이 없어진 것**이다. 데이터 계층이 앰비언트 컨텍스트를 읽던 것을 S7a·S7b 가 스코프 인자와 `SessionStamp` 로 끊었다. §S6-B 1회차의 "책임을 옮기면 그 책임 때문에 들고 있던 의존성도 같이 죽는지 확인" 이 여기서 또 확인된다.
+
+클래스·DI 등록·호출부 4줄을 지웠다. **남은 것 하나**: `AuthRequestPacket.DeviceKey` 의 소비자가 0이 됐다(유일 소비자가 `Init(req.DeviceKey)` 였다). 클라가 계속 보내지만 서버가 안 쓴다 — **와이어를 건드리는 일이라 여기서 하지 않는다.**
+
+#### S12-E 커밋 전 리뷰
+
+**인터페이스가 강제하던 public 이 남아 있었다.** `IGameContext` 를 지우고 나니 `RpcContext.SetAccountId` 와 `SetShardId` 는 **클래스 밖 호출부가 없다** — 세션 로드에서만 정해진다. private 으로 내렸다. `SetPlayerId`(`GameService`)와 `SetSessionKey`(`AuthService`)는 밖에서 부르므로 public 그대로다.
+
+**스캔 범위가 충분한지 확인했다.** `ScanAndRegister` 는 `typeof(PlayerModel).Assembly`(DbModel) 만 훑는다. DbModel 밖에 `ModelBase` 파생이 있으면 손 목록이 사라진 지금 미등록이 되는데, 전수 조사 결과 **없다**(`ServerCore` 쪽 `ModelBase` 등장은 전부 제네릭 제약이다).
+
+`services.AddScoped<UserLockService>();;` 의 세미콜론 둘도 같이 고쳤다.
+
+#### S12-F 검증
+
+리빌드 **0에러 / 경고 11**(전부 기존) · `ServerTest` InMemory **32/32** · **MySQL+Redis+유저락 32/32** · 실행 뒤 `Threads_connected` 1 · 열린 InnoDB 트랜잭션 0.
+
+**이 스텝은 MySQL 실측이 특히 필요하다.** 손 등록 제거는 `DapperExtension` 의 PK 등록을 바꾸는 변경이고 **그 PK 가 MySQL WHERE 절에 그대로 박힌다.** InMemory 는 `InMemoryPkRegistry` 라는 다른 레지스트리를 타므로 여기서 어긋나도 안 드러난다.
+
+---
+
 ## 3. 이관 기간 중 코드는 어떻게 보이는가
 
 S4~S10 사이에는 **구 경로와 신 경로가 한 파일 안에 공존**한다. 이것이 정상 상태다.
@@ -2540,7 +2592,7 @@ A안에서 `GameDb.User(shardId, playerId)`가 즉시 여는지 지연하는지 
 |---|---|
 | **S0-4** (완료) | **커밋 경계를 유저 락 안으로 이동 (5.1)** · **락 커넥션 분리 (5.2 선결)** — §4.2 |
 | **S1** (완료) | attribute는 `Pk` + `ScopeKey` 둘로 한정 · `Table` 미포함(규칙 이탈 0건) · `Cache`/`SlidingTtl`은 TODO (5.4 결론 정정) · **ScopeKey는 User 폴더 한정, `fk` 토큰에서 생성** · 가드 4종 · `AssertMatches` 철회, 검사를 `Init` 안으로 (§S1-D) · 5.8은 해소 |
-| **S12** | RaidServer의 등록 표면이 2 → 19로 넓어진 것을 되돌릴지 판단 (§S1-F) |
+| **S12** (완료) | 손 등록 21줄 제거 · **`IGameContext` 는 축소가 아니라 폐지**(소비자 0, §S12-C) · §S1-F 는 되돌리지 않기로 확정(§S12-B) · **부팅 검사가 이 게이트를 통과시키지 못해 두 목록을 직접 대조했다**(§S12-A) · **`RaidGameContext` 철거** — 채우기만 하고 읽는 곳이 없었다(§S12-D) · 리뷰가 인터페이스에 묶여 public 이던 세터 2개를 private 으로 내렸다(§S12-E) |
 | **S2** (완료) | `OwnedSet<T>`는 캐시되는 소유자 리스트 전용 (5.4.1 → §S2-J) · 스코프 3종은 독립 클래스 (§S1-G) · 커넥션 지연 오픈 (5.11) · **dirty 철회 (§S2-H)** · `GameDb.Utility` 는 S10.5 로, lazy BEGIN 은 S11 로 이월 · 네이밍 규칙 확정 (§S2-F) · Auth 형태 확정 (§S2-E) |
 | **S4** (완료) | Auth 형태 확정 · `Identity`/`AuthScope` 2클래스 · Component/Manager 6개 삭제 · **게이트는 S5 로 옮겨간다** (§S4-B) · `SetShardId` 다리 (§S4-D) |
 | **S4** | 캐시 없는 경로 실증 (Account/Channel/Device는 원래 캐시 없음) · **Auth의 스코프 밖 조회(기기 키·채널 키·세션 키·계정 생성)를 어디로 보낼지 확정 → `[Entity]`에 Auth `ScopeKey`를 붙일지 함께 결정 (§S1-G Q2)** |

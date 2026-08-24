@@ -12,7 +12,7 @@ namespace WebStudyServer
     {
         public void Resource(IServiceCollection services)
         {
-            services.AddScoped<UserLockService>();;
+            services.AddScoped<UserLockService>();
 
             // Db
             switch (Config<CoreConfig>.Get().DbType)
@@ -39,34 +39,7 @@ namespace WebStudyServer
             services.AddScoped<GameDb>();
             services.AddScoped<ResponseCacheService>();
 
-            // Auth
-            ModelRegistration.Init<AccountModel>("Id");
-            ModelRegistration.Init<ChannelModel>("Key");
-            ModelRegistration.Init<DeviceModel>("Key");
-            ModelRegistration.Init<SessionModel>("AccountId");
-            ModelRegistration.Init<PlayerMapModel>("AccountId");
-
-            // User
-            ModelRegistration.Init<PlayerModel>("Id");
-            ModelRegistration.Init<PlayerDetailModel>("PlayerId");
-            ModelRegistration.Init<CookieModel>("PlayerId", "Num");
-            ModelRegistration.Init<KingdomMapModel>("PlayerId");
-            ModelRegistration.Init<KingdomStructureModel>("SfId");
-            ModelRegistration.Init<KingdomDecoModel>("PlayerId", "Num");
-            ModelRegistration.Init<ItemModel>("PlayerId", "Num");
-            ModelRegistration.Init<PointModel>("PlayerId", "Num");
-            ModelRegistration.Init<TicketModel>("PlayerId", "Num");
-            ModelRegistration.Init<CashChangeLogModel>("SfId");
-            ModelRegistration.Init<GachaLogModel>("SfId");
-            ModelRegistration.Init<WorldModel>("PlayerId", "Num");
-            ModelRegistration.Init<WorldStageModel>("PlayerId", "Num");
-
-            // Center
-            ModelRegistration.Init<ScheduleModel>("Num");
-
-            // [Entity] 스캔 등록. 위 목록과 병존시켜 서로 어긋나면 부팅이 실패하게 한다
-            // (ModelRegistration.Init 의 PK_REGISTRATION_CONFLICT). 위 목록은 검증이
-            // 끝나면 제거한다.
+            // [Entity] 가 붙은 모델을 전부 등록한다. 두 호스트가 같은 목록을 갖는다.
             EntityRegistry.ScanAndRegister(typeof(PlayerModel).Assembly);
 
             // 손으로 유지하는 캐시 태그 맵을 [Entity] 와 대조한다.

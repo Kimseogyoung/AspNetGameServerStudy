@@ -12,7 +12,7 @@ using WebStudyServer.Model;
 
 namespace WebStudyServer
 {
-    public class RpcContext : IGameContext
+    public class RpcContext
     {
         public string SessionKey { get; private set; } = string.Empty;
         public ESessionLoadState SessionLoadState { get; private set; } = ESessionLoadState.INITIALIZED;
@@ -54,13 +54,13 @@ namespace WebStudyServer
             await LoadSessionAsync(httpContext);
         }
 
-        // 유저 정보
-        public void SetAccountId(ulong accountId)
+        // 유저 정보. 세션에서만 정해지므로 밖에 열지 않는다.
+        private void SetAccountId(ulong accountId)
         {
             AccountId = accountId;
         }
 
-        public void SetShardId(int shardId)
+        private void SetShardId(int shardId)
         {
             ShardId = shardId;
         }
