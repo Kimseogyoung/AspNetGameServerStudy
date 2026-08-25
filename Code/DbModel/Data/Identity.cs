@@ -45,7 +45,7 @@ namespace WebStudyServer.Data
         }
 
         // Auth DB는 캐시를 안 쓰므로 IRepository의 캐시 경로를 안 지남. 커넥션은 첫 호출에서 열림.
-        private IDbSession Db => _db.AuthRepository().Db;
+        private IDbSession Db => _db.SessionFor(DbConnectionResolver.Auth());
 
         private readonly GameDb _db;
     }

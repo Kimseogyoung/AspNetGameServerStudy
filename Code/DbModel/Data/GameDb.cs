@@ -86,25 +86,18 @@ namespace WebStudyServer.Data
             return Task.CompletedTask;
         }
 
-        // 샤드를 특정할 수 없는 경로가 커넥션 문자열로 직접 연다.
+        // 캐시-어사이드를 안 지나는 경로가 세션을 직접 연다. Auth/Center 가 여기 해당한다.
         internal IDbSession SessionFor(string connectionString)
         {
             return _sessions.GetOrCreate(connectionString);
         }
 
+        // Session 포인터 캐시처럼 엔티티 전용 캐시를 직접 다루는 경로용.
+        internal ICacheSession Cache => _cache;
+
         internal IRepository UserRepository(int shardId)
         {
             return GetOrCreateRepository(DbConnectionResolver.User(shardId));
-        }
-
-        internal IRepository AuthRepository()
-        {
-            return GetOrCreateRepository(DbConnectionResolver.Auth());
-        }
-
-        internal IRepository CenterRepository()
-        {
-            return GetOrCreateRepository(DbConnectionResolver.Center());
         }
 
         private IRepository GetOrCreateRepository(string connectionString)
@@ -120,7 +113,7 @@ namespace WebStudyServer.Data
             switch (Config<CoreConfig>.Get().DbType)
             {
                 case DbType.InMemory:
-                    repo = new InMemoryRepository(_cache, dbSession);
+                    repo = new InMemoryRepository(dbSession);
                     break;
                 case DbType.MySql:
                     repo = new SqlRepository(_cache, dbSession);

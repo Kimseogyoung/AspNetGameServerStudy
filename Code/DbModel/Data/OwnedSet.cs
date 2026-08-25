@@ -61,7 +61,7 @@ namespace WebStudyServer.Data
         {
             EnsureOwned(entity);
             entity.UpdateTime = DateTime.UtcNow;
-            return _repository().UpdateAsync(entity, _listKey, x => x.PkEquals(entity));
+            return _repository().UpdateAsync(entity, _listKey);
         }
 
         // 여러 행을 한 번에 저장. 신규/기존을 구분하지 않으므로 GetOrCreate 왕복이 사라진다.

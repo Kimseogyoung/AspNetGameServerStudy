@@ -7,38 +7,36 @@ namespace ServerCore.Repo.Database
     // InMemoryStore가 영속 저장소이므로 Cache → DB fallback 없이 DbExecutor에 직접 위임.
     public class InMemoryRepository : IRepository
     {
-        public ICacheSession Cache { get; }
-        public IDbSession Db { get; }
-
-        public InMemoryRepository(ICacheSession cache, IDbSession dbFactory)
+        public InMemoryRepository(IDbSession dbSession)
         {
-            Cache = cache;
-            Db = dbFactory;
+            _db = dbSession;
         }
 
         public Task<List<T>> GetListAsync<T>(CacheKey listKey, Func<IDbExecutor, Task<List<T>>> dbFetch) where T : ModelBase
         {
-            return Db.ExecuteAsync(dbFetch);
+            return _db.ExecuteAsync(dbFetch);
         }
 
         public Task<T> InsertAsync<T>(T entity, CacheKey listKey) where T : ModelBase
         {
-            return Db.ExecuteAsync(db => db.InsertAsync<T>(entity));
+            return _db.ExecuteAsync(db => db.InsertAsync<T>(entity));
         }
 
         public Task<T> InsertAsync<T>(T entity) where T : ModelBase
         {
-            return Db.ExecuteAsync(db => db.InsertAsync<T>(entity));
+            return _db.ExecuteAsync(db => db.InsertAsync<T>(entity));
         }
 
-        public async Task UpdateAsync<T>(T entity, CacheKey listKey, Func<T, bool> match) where T : ModelBase
+        public async Task UpdateAsync<T>(T entity, CacheKey listKey) where T : ModelBase
         {
-            await Db.ExecuteAsync(db => db.UpdateAsync<T>(entity));
+            await _db.ExecuteAsync(db => db.UpdateAsync<T>(entity));
         }
 
         public async Task UpsertListAsync<T>(IReadOnlyList<T> entityList, CacheKey listKey) where T : ModelBase
         {
-            await Db.ExecuteAsync(db => db.UpsertListAsync(entityList));
+            await _db.ExecuteAsync(db => db.UpsertListAsync(entityList));
         }
+
+        private readonly IDbSession _db;
     }
 }

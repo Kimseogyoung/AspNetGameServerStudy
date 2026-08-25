@@ -133,8 +133,8 @@ namespace WebStudyServer.Data
 
         private static TimeSpan Ttl => Config<CoreConfig>.Get().CacheDefaultTtl;
 
-        private ICacheSession Cache => _db.AuthRepository().Cache;
-        private IDbSession Db => _db.AuthRepository().Db;
+        private ICacheSession Cache => _db.Cache;
+        private IDbSession Db => _db.SessionFor(DbConnectionResolver.Auth());
 
         private readonly GameDb _db;
     }

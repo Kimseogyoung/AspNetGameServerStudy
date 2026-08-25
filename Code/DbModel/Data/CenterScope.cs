@@ -46,8 +46,8 @@ namespace WebStudyServer.Data
             return view;
         }
 
-        // Center DB 는 캐시를 안 쓰므로 IRepository 의 캐시 경로를 안 지난다.
-        private IDbSession Db => _db.CenterRepository().Db;
+        // Center DB 는 캐시를 안 쓰므로 세션을 직접 연다.
+        private IDbSession Db => _db.SessionFor(DbConnectionResolver.Center());
 
         private readonly GameDb _db;
     }
