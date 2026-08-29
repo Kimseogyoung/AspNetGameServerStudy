@@ -1,4 +1,4 @@
-using ServerCore;
+﻿using ServerCore;
 using ServerCore.Repo.Cache;
 using ServerCore.Repo.Database;
 using DbType = ServerCore.DbType;
@@ -52,7 +52,9 @@ namespace WebStudyServer.Data
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "DB_COMMIT_FAILED - rolling back");
+                // 세션은 순차 커밋이라 앞선 DB 는 이미 커밋됐을 수 있고 그건 되돌릴 수 없다.
+                // 이어지는 롤백은 아직 커밋되지 않은 세션과 캐시 pending 에만 닿는다.
+                _logger.LogError(e, "DB_COMMIT_FAILED - earlier databases may already be committed");
                 await RollbackAsync();
                 throw;
             }
@@ -74,13 +76,17 @@ namespace WebStudyServer.Data
             try
             {
                 _sessions.Rollback();
-                _cache.DiscardPendingWrites();
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "DB_ROLLBACK_FAILED - closing sessions");
                 _sessions.Close();
                 throw;
+            }
+            finally
+            {
+                // 롤백이 던져도 캐시 pending 은 버려야 한다. 남기면 다음 커밋에 섞여 나간다.
+                _cache.DiscardPendingWrites();
             }
 
             return Task.CompletedTask;

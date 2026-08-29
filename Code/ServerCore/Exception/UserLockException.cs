@@ -1,4 +1,4 @@
-using Proto;
+﻿using Proto;
 
 namespace ServerCore
 {
@@ -11,7 +11,7 @@ namespace ServerCore
         public int ErrorCode => Code;
         public object ErrorArgs => new { AccountId };
 
-        public UserLockException(ulong accountId, string message, string internalErrMsg = "") : base(message)
+        public UserLockException(ulong accountId, string message, string internalErrMsg = "", Exception inner = null) : base(message, inner)
         {
             Code = (int)EErrorCode.USER_LOCK;
             AccountId = accountId;

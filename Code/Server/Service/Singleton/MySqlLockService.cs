@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using ServerCore;
 using ServerCore.Repo.Database;
 
@@ -15,7 +15,8 @@ namespace WebStudyServer
         {
             _connection ??= await DbUtilityConnection.OpenAsync(GetConnectionStr());
 
-            var result = await _connection.ExecuteAsync(conn => conn.QuerySingleAsync<long>(
+            // GET_LOCK 은 오류 시 NULL 이다. long 으로 받으면 Dapper 가 매핑에 실패해 던진다.
+            var result = await _connection.ExecuteAsync(conn => conn.QuerySingleAsync<long?>(
                 "SELECT GET_LOCK(@id, @timeout)",
                 new { id = MakeKey(accountId), timeout = Config<CoreConfig>.Get().UserLockTimeoutSpan.TotalSeconds }));
 
@@ -31,7 +32,8 @@ namespace WebStudyServer
 
             try
             {
-                var result = await _connection.ExecuteAsync(conn => conn.QuerySingleAsync<long>(
+                // RELEASE_LOCK 은 이 커넥션이 락을 안 잡고 있으면 NULL 이다.
+                var result = await _connection.ExecuteAsync(conn => conn.QuerySingleAsync<long?>(
                     "SELECT RELEASE_LOCK(@id)",
                     new { id = MakeKey(accountId) }));
 

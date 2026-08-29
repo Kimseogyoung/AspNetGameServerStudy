@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace ServerCore.Repo.Database
@@ -16,8 +16,18 @@ namespace ServerCore.Repo.Database
         public static void Init<T>(params string[] keyFields)
         {
             var type = typeof(T);
+
+            // 모델에 없는 PK 필드를 그냥 두면 키에 "null" 이 들어가 서로 다른 행이
+            // 같은 키를 갖는다. 등록 시점에 막는다.
+            var props = new PropertyInfo[keyFields.Length];
+            for (var i = 0; i < keyFields.Length; i++)
+            {
+                props[i] = type.GetProperty(keyFields[i])
+                    ?? throw new InvalidOperationException($"NOT_FOUND_PK_PROPERTY:{type.Name}.{keyFields[i]}");
+            }
+
             KeyFields[type] = keyFields;
-            PkProps[type] = keyFields.Select(f => type.GetProperty(f)).ToArray();
+            PkProps[type] = props;
         }
 
         public static string[] GetKeyFields(Type type)
@@ -35,8 +45,13 @@ namespace ServerCore.Repo.Database
         public static string ComputePkKey(object entity)
         {
             var type = entity.GetType();
-            var props = PkProps[type];
-            return string.Join(":", props.Select(p => p?.GetValue(entity)?.ToString() ?? "null"));
+            if (!PkProps.TryGetValue(type, out var props))
+            {
+                throw new InvalidOperationException(
+                    $"InMemoryPkRegistry: {type.Name} 미등록. Init<T>()를 먼저 호출하세요.");
+            }
+
+            return string.Join(":", props.Select(p => p.GetValue(entity)?.ToString() ?? "null"));
         }
     }
 }

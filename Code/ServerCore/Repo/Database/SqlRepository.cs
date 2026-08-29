@@ -1,4 +1,4 @@
-using ServerCore;
+﻿using ServerCore;
 using ServerCore.Model;
 using ServerCore.Repo.Cache;
 
@@ -23,7 +23,10 @@ namespace ServerCore.Repo.Database
 
             var result = await _db.ExecuteAsync(dbFetch);
             await _cache.SetAsync(listKey, result, CacheTtl);
-            return result;
+
+            // 캐시에 넣은 것과 같은 인스턴스를 내주면 호출부의 변형이 캐시에 새어든다.
+            // InMemory 캐시 계층은 객체를 참조로 들고 있다.
+            return [.. result];
         }
 
         // ── Insert: DB → 캐시 로드 중이면 항목 추가 ─────────────────────

@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Scriban;
@@ -41,14 +41,21 @@ namespace ClassGenerator
                         values.Add(cell);
                     }
 
-                    //var values = lines[i].Split(',');
-                    values = values.Concat(Enumerable.Repeat("", c_maxColCnt - values.Count)).ToList();
-
-                    if (string.IsNullOrEmpty(lines[i]) || values[0].StartsWith("#"))
+                    if (string.IsNullOrEmpty(lines[i]) || values.Count == 0 || values[0].StartsWith("#"))
                     {
                         // 주석 무시
                         continue;
                     }
+
+                    // 칸이 넘치면 아래 Repeat 이 음수 count 로 죽는다. 어느 파일 몇 행인지 알려준다.
+                    if (values.Count > c_maxColCnt)
+                    {
+                        throw new Exception(
+                            $"TOO_MANY_COLUMNS:{Path.GetFileName(file)}:line {i + 1}:{values.Count}/{c_maxColCnt}"
+                            + " - 따옴표 없는 콤마가 셀에 있는지 확인");
+                    }
+
+                    values = values.Concat(Enumerable.Repeat("", c_maxColCnt - values.Count)).ToList();
 
                     var folderName = dirName != rootDirName ? dirName : "";
                     var fieldName = values[0];

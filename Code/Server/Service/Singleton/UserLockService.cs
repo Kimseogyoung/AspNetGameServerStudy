@@ -1,4 +1,4 @@
-using ServerCore;
+﻿using ServerCore;
 using ServerCore.Extension;
 
 namespace WebStudyServer
@@ -29,6 +29,9 @@ namespace WebStudyServer
                 throw new UserLockException(accountId, "USER_LOCK_DB_TIME_OUT");
             }
 
+            // 해제 실패도 오류로 올린다. 다만 그 예외가 진행 중이던 예외를 그냥 덮으면
+            // 원인을 잃으므로, 붙잡아 두었다가 InnerException 으로 실어보낸다.
+            Exception pending = null;
             try
             {
                 _logger.Debug("EnterUserLock AccountId({AccountId})", accountId);
@@ -36,15 +39,22 @@ namespace WebStudyServer
             }
             catch (TimeoutException exc)
             {
-                throw new UserLockException(accountId, "USER_LOCK_DB_TIME_OUT", exc.Message);
+                pending = new UserLockException(accountId, "USER_LOCK_DB_TIME_OUT", exc.Message, exc);
+                throw pending;
+            }
+            catch (Exception exc)
+            {
+                pending = exc;
+                throw;
             }
             finally
             {
                 _logger.Debug("ExitUserLock AccountId({AccountId})", accountId);
                 if (!await _lockService.ExitAsync(accountId))
                 {
-                    _logger.Error("FAILED_RELEASE_USER_LOCK AccountId({AccountId})", accountId);
-                    throw new UserLockException(accountId, "FAILED_RELEASE_USER_LOCK");
+                    _logger.Error(pending, "FAILED_RELEASE_USER_LOCK AccountId({AccountId})", accountId);
+                    throw new UserLockException(
+                        accountId, "FAILED_RELEASE_USER_LOCK", pending?.Message ?? string.Empty, pending);
                 }
             }
         }
